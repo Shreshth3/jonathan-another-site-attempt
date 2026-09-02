@@ -1,0 +1,1260 @@
+[
+  {
+    "id": "who-keeps-their-job",
+    "input": {
+      "name": "quitting employee",
+      "prompt": "Which employee quits?",
+      "placeholder": "3",
+      "result": "unreached-nodes",
+      "resultLabel": "returned remaining employee IDs"
+    },
+    "vocabulary": {
+      "nodeNames": "employee IDs",
+      "startNode": "quitting employee",
+      "edges": "boss-to-report links",
+      "correctSearch": "employees who leave",
+      "mistakenSearch": "employees the mistaken rule removes"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Upside-down org chart",
+        "presentation": "predict-first",
+        "goal": "Find an org chart where reading every manager link backward changes who leaves.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Manager's manager",
+        "presentation": "smallest-witness",
+        "goal": "Use the smallest team where a report two levels down must also leave.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Missing final hire",
+        "presentation": "repair-case",
+        "goal": "Make the last boss-to-report link matter to the quitting subtree.",
+        "startLabel": "1"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "positive-integer",
+      "description": "Use positive integer IDs, matching the problem input.",
+      "max": 10000
+    }
+  },
+  {
+    "id": "busiest-shelf-level",
+    "vocabulary": {
+      "nodeNames": "shelves and items",
+      "startNode": "outer shelf",
+      "edges": "direct containment links",
+      "correctSearch": "items reached at every depth",
+      "mistakenSearch": "items the shelf scan reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Buried shelf",
+        "presentation": "smallest-witness",
+        "goal": "Nest an item deeply enough that a one-level scan misses it.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Inside-out shelves",
+        "presentation": "repair-case",
+        "goal": "Build nesting where reversing container arrows strands the contents.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Last cubby only",
+        "presentation": "predict-first",
+        "goal": "Give the outer shelf multiple branches so keeping only the last one changes the scan.",
+        "startLabel": "root"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "nested-path",
+      "description": "Use root, root[0], root[1], ... to name nested input items."
+    },
+    "fixedStart": "root",
+    "input": {
+      "name": "outer shelf",
+      "prompt": "Choose the outer shelf",
+      "result": "reached-nodes",
+      "resultLabel": "items reached at every depth"
+    }
+  },
+  {
+    "id": "coins-on-level-k",
+    "vocabulary": {
+      "nodeNames": "boxes and coins",
+      "startNode": "outer box",
+      "edges": "box-to-content links",
+      "correctSearch": "coins found by depth",
+      "mistakenSearch": "coins the flawed search finds"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Lost last coin",
+        "presentation": "exact-difference",
+        "goal": "Place a needed coin behind the final containment link.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong box first",
+        "presentation": "predict-first",
+        "goal": "Make starting inside the first small box change which coin levels are seen.",
+        "startLabel": "root",
+        "mistakenStartLabel": "root[0]"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Deep coin",
+        "presentation": "smallest-witness",
+        "goal": "Create a coin below the first nesting level so a shallow search fails.",
+        "startLabel": "root"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "nested-path",
+      "description": "Use root, root[0], root[1], ... to name nested input items."
+    },
+    "fixedStart": "root",
+    "input": {
+      "name": "outer box",
+      "prompt": "Choose the outer box",
+      "result": "reached-nodes",
+      "resultLabel": "coins found by depth"
+    }
+  },
+  {
+    "id": "counting-constellations",
+    "vocabulary": {
+      "nodeNames": "star coordinates",
+      "startNode": "first star",
+      "edges": "side-or-corner touches",
+      "correctSearch": "stars in the constellation",
+      "mistakenSearch": "stars the flawed sky scan joins"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "remove-diagonals"
+        ],
+        "level": "Corner-touching stars",
+        "presentation": "smallest-witness",
+        "goal": "Use two stars whose only legal connection is diagonal.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Forked constellation",
+        "presentation": "exact-difference",
+        "goal": "Make one star touch two branches so stopping after the first loses stars.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong star chosen",
+        "presentation": "repair-case",
+        "goal": "Separate two star groups so the selected starting star matters.",
+        "startLabel": "(0,0)",
+        "mistakenStartLabel": "(0,1)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0).",
+      "max": 49
+    },
+    "input": {
+      "name": "first star",
+      "prompt": "Choose the first star",
+      "result": "reached-nodes",
+      "resultLabel": "stars in the constellation"
+    }
+  },
+  {
+    "id": "counting-docked-boats",
+    "vocabulary": {
+      "nodeNames": "boat-cell coordinates",
+      "startNode": "first boat cell",
+      "edges": "shared-side links",
+      "correctSearch": "cells in the boat",
+      "mistakenSearch": "cells the flawed marina scan joins"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong docked boat",
+        "presentation": "predict-first",
+        "goal": "Use two valid separated boats, and choose a start cell that is not listed first.",
+        "startLabel": "(0,0)",
+        "mistakenStartLabel": "(0,1)"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Long hull stopped early",
+        "presentation": "smallest-witness",
+        "goal": "Build one straight boat with cells more than one side-step from the start.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Loose dock line",
+        "presentation": "exact-difference",
+        "goal": "Make the final side connection decide whether the boat reaches the border.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0).",
+      "max": 49
+    },
+    "input": {
+      "name": "first boat cell",
+      "prompt": "Choose the first boat cell",
+      "result": "reached-nodes",
+      "resultLabel": "cells in the boat"
+    }
+  },
+  {
+    "id": "routes-past-the-coffee-cart",
+    "vocabulary": {
+      "nodeNames": "intersection IDs",
+      "startNode": "start intersection",
+      "edges": "one-way roads",
+      "correctSearch": "intersections on valid routes",
+      "mistakenSearch": "intersections the flawed route search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Road signs backward",
+        "presentation": "repair-case",
+        "goal": "Choose one-way roads where reversing every arrow blocks the coffee-cart route.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Coffee on the other branch",
+        "presentation": "predict-first",
+        "goal": "Put the coffee cart on a valid route that is not explored first.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Cart two turns away",
+        "presentation": "smallest-witness",
+        "goal": "Put the checkpoint beyond a direct neighbor so one-hop search cannot reach it.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "minNodes": 2,
+    "input": {
+      "name": "start intersection",
+      "prompt": "Choose the start intersection",
+      "result": "reached-nodes",
+      "resultLabel": "intersections on valid routes"
+    },
+    "fixedStart": "0"
+  },
+  {
+    "id": "villages-without-wells",
+    "vocabulary": {
+      "nodeNames": "village IDs",
+      "startNode": "village with a well",
+      "edges": "two-way footpaths",
+      "correctSearch": "villages served by that well",
+      "mistakenSearch": "villages the flawed survey marks served"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "skip-leaf-edges"
+        ],
+        "level": "End-of-road village",
+        "presentation": "exact-difference",
+        "goal": "Make a village at the end of a footpath depend on its only link to a well.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Well in the other village",
+        "presentation": "smallest-witness",
+        "goal": "List a non-well village first so ignoring the chosen well changes the served group.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Two paths from the well",
+        "presentation": "repair-case",
+        "goal": "Branch from a well so following only the last path leaves a village unserved.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "village with a well",
+      "prompt": "Choose the village with a well",
+      "result": "reached-nodes",
+      "resultLabel": "villages served by that well"
+    }
+  },
+  {
+    "id": "gas-pocket-survey",
+    "vocabulary": {
+      "nodeNames": "cave coordinates",
+      "startNode": "drill square",
+      "edges": "shared-side moves",
+      "correctSearch": "cave squares safely revealed",
+      "mistakenSearch": "squares the flawed drill reveals"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Diagonal gas warning",
+        "presentation": "exact-difference",
+        "goal": "Place gas at a corner touch so an invented diagonal changes the reveal.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Long safe tunnel",
+        "presentation": "repair-case",
+        "goal": "Make safe cave squares continue beyond the drill's immediate neighbors.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Fork in the cave",
+        "presentation": "predict-first",
+        "goal": "Create two safe branches so the survey must return after exploring the first.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0).",
+      "max": 49
+    },
+    "input": {
+      "name": "drill square",
+      "prompt": "Choose the drill square",
+      "result": "reached-nodes",
+      "resultLabel": "cave squares safely revealed"
+    }
+  },
+  {
+    "id": "gold-and-silver-lights",
+    "vocabulary": {
+      "nodeNames": "bulb IDs",
+      "startNode": "first gold bulb",
+      "edges": "two-way wires",
+      "correctSearch": "bulbs reached for coloring",
+      "mistakenSearch": "bulbs the flawed coloring walk reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Wire drawn as an arrow",
+        "presentation": "smallest-witness",
+        "goal": "Orient a listed wire toward the gold bulb so a fake arrow blocks coloring.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Gold two wires away",
+        "presentation": "predict-first",
+        "goal": "Use a wire chain where a later bulb must still receive a color.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Two lighting branches",
+        "presentation": "exact-difference",
+        "goal": "Branch the wiring so following only the last branch leaves bulbs uncolored.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "first gold bulb",
+      "prompt": "Choose the first gold bulb",
+      "result": "reached-nodes",
+      "resultLabel": "bulbs reached for coloring"
+    },
+    "fixedStart": "0"
+  },
+  {
+    "id": "dungeon-gold-run",
+    "vocabulary": {
+      "nodeNames": "room IDs",
+      "startNode": "starting room",
+      "edges": "room-to-key arrows",
+      "correctSearch": "rooms that can be opened",
+      "mistakenSearch": "rooms the flawed key search opens"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-two-way"
+        ],
+        "level": "Key used backward",
+        "presentation": "predict-first",
+        "goal": "Use a key arrow whose reverse would unlock extra gold illegally.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong dungeon entrance",
+        "presentation": "repair-case",
+        "goal": "List a locked room first so the declared starting room cannot be ignored.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Key left behind",
+        "presentation": "smallest-witness",
+        "goal": "Make the final key arrow unlock a room that changes the reachable gold.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "starting room",
+      "prompt": "Choose the starting room",
+      "result": "reached-nodes",
+      "resultLabel": "rooms that can be opened"
+    },
+    "fixedStart": "0"
+  },
+  {
+    "id": "flooded-campsite-trails",
+    "vocabulary": {
+      "nodeNames": "campsite IDs",
+      "startNode": "starting campsite",
+      "edges": "two-way dry trails",
+      "correctSearch": "dry campsites reachable from start",
+      "mistakenSearch": "campsites the flawed hike reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong trailhead",
+        "presentation": "predict-first",
+        "goal": "Separate the listed first campsite from the chosen dry trailhead.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      },
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "One-way hiking trail",
+        "presentation": "exact-difference",
+        "goal": "Write a trail in reverse order so treating it as an arrow blocks the dry route.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Flooded dead end",
+        "presentation": "repair-case",
+        "goal": "Put a flooded or dead branch before a second branch that reaches the finish.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "starting campsite",
+      "prompt": "Choose the starting campsite",
+      "result": "reached-nodes",
+      "resultLabel": "dry campsites reachable from start"
+    }
+  },
+  {
+    "id": "longest-freight-train",
+    "vocabulary": {
+      "nodeNames": "train-cell coordinates",
+      "startNode": "first train car",
+      "edges": "shared-side couplings",
+      "correctSearch": "cars in the train",
+      "mistakenSearch": "cars the flawed yard scan joins"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong train selected",
+        "presentation": "repair-case",
+        "goal": "Use two valid separated trains, and choose a start car that is not listed first.",
+        "startLabel": "(0,0)",
+        "mistakenStartLabel": "(0,1)"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Last coupling skipped",
+        "presentation": "smallest-witness",
+        "goal": "Make the final listed side coupling necessary to reach the end of one straight train.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Long freight line",
+        "presentation": "exact-difference",
+        "goal": "Build a train longer than one hop from its first car.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0).",
+      "max": 49
+    },
+    "input": {
+      "name": "first train car",
+      "prompt": "Choose the first train car",
+      "result": "reached-nodes",
+      "resultLabel": "cars in the train"
+    }
+  },
+  {
+    "id": "one-color-metro-ride",
+    "vocabulary": {
+      "nodeNames": "station IDs",
+      "startNode": "source station",
+      "edges": "colored two-way tracks",
+      "correctSearch": "stations reachable without transferring",
+      "mistakenSearch": "stations the flawed metro search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "red-only"
+        ],
+        "level": "Blue line forgotten",
+        "presentation": "predict-first",
+        "goal": "Give the rider a complete blue route and no complete red route.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "ignore-colors"
+        ],
+        "level": "Illegal transfer",
+        "presentation": "exact-difference",
+        "goal": "Make the destination reachable only by switching track colors.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Second same-color route",
+        "presentation": "repair-case",
+        "goal": "Put a dead end before another same-color branch that reaches the destination.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "source station",
+      "prompt": "Choose the source station",
+      "result": "reached-nodes",
+      "resultLabel": "stations reachable without transferring"
+    }
+  },
+  {
+    "id": "office-rumor-reach",
+    "vocabulary": {
+      "nodeNames": "employee IDs",
+      "startNode": "rumor starter",
+      "edges": "two-way friendships",
+      "correctSearch": "employees who hear the rumor",
+      "mistakenSearch": "employees the flawed rumor spread reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Friend of a friend",
+        "presentation": "smallest-witness",
+        "goal": "Use a friendship chain where the rumor must travel more than one hop.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "skip-leaf-edges"
+        ],
+        "level": "Quiet office leaf",
+        "presentation": "exact-difference",
+        "goal": "Make an employee with one friend depend on that single friendship.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Different rumor starter",
+        "presentation": "predict-first",
+        "goal": "Start the real search at employee 0, but make the mistaken search begin at employee 1 outside that friend group.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "rumor starter",
+      "prompt": "Choose the rumor starter",
+      "result": "reached-nodes",
+      "resultLabel": "employees who hear the rumor"
+    }
+  },
+  {
+    "id": "package-to-the-outpost",
+    "vocabulary": {
+      "nodeNames": "warehouse IDs",
+      "startNode": "headquarters",
+      "edges": "two-way timed roads",
+      "correctSearch": "warehouses reachable from HQ",
+      "mistakenSearch": "warehouses the flawed delivery search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Missing final road",
+        "presentation": "repair-case",
+        "goal": "Make the last listed road complete the only route to the outpost.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Road order mistaken",
+        "presentation": "predict-first",
+        "goal": "List a road toward HQ so treating it as one-way blocks the package.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Wrong delivery fork",
+        "presentation": "smallest-witness",
+        "goal": "Branch from HQ so only keeping the last road changes the reached warehouses.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "headquarters",
+      "prompt": "Choose the headquarters",
+      "result": "reached-nodes",
+      "resultLabel": "warehouses reachable from HQ"
+    }
+  },
+  {
+    "id": "perfect-size-campsites",
+    "vocabulary": {
+      "nodeNames": "grass-cell coordinates",
+      "startNode": "first grass square",
+      "edges": "shared-side grass links",
+      "correctSearch": "squares in the campsite",
+      "mistakenSearch": "squares the flawed park scan joins"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Corner-touching campsites",
+        "presentation": "exact-difference",
+        "goal": "Make two separate grass groups touch only at a corner.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Other campsite first",
+        "presentation": "repair-case",
+        "goal": "Include differently sized campsites so the chosen starting square matters.",
+        "startLabel": "(0,0)",
+        "mistakenStartLabel": "(0,1)"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Forked patch",
+        "presentation": "predict-first",
+        "goal": "Build one grass patch with multiple side branches that all count toward its size.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0).",
+      "max": 49
+    },
+    "input": {
+      "name": "first grass square",
+      "prompt": "Choose the first grass square",
+      "result": "reached-nodes",
+      "resultLabel": "squares in the campsite"
+    }
+  },
+  {
+    "id": "count-routes-to-summit",
+    "vocabulary": {
+      "nodeNames": "camp IDs",
+      "startNode": "base camp",
+      "edges": "one-way uphill trails",
+      "correctSearch": "camps reached on summit routes",
+      "mistakenSearch": "camps the flawed route counter reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Second summit route",
+        "presentation": "predict-first",
+        "goal": "Give base camp two distinct uphill branches that both reach the summit.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Trails downhill",
+        "presentation": "smallest-witness",
+        "goal": "Use one uphill arrow whose reversal prevents leaving base camp.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Last climb missing",
+        "presentation": "repair-case",
+        "goal": "Make the final listed trail finish one complete summit route.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "minNodes": 2,
+    "input": {
+      "name": "base camp",
+      "prompt": "Choose the base camp",
+      "result": "reached-nodes",
+      "resultLabel": "camps reached on summit routes"
+    },
+    "fixedStart": "0"
+  },
+  {
+    "id": "runes-on-the-castle-door",
+    "vocabulary": {
+      "nodeNames": "partial rune codes",
+      "startNode": "empty code",
+      "edges": "one-rune extensions",
+      "correctSearch": "legal code prefixes reached",
+      "mistakenSearch": "prefixes the flawed rune search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Code starts halfway",
+        "presentation": "repair-case",
+        "goal": "Make beginning from a nonempty prefix skip legal first-dial choices.",
+        "startLabel": "ε",
+        "mistakenStartLabel": "a"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Last rune only",
+        "presentation": "predict-first",
+        "goal": "Offer several legal next runes so keeping only the last loses valid codes.",
+        "startLabel": "ε"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Three-dial door",
+        "presentation": "exact-difference",
+        "goal": "Require a legal code longer than one rune beyond the empty prefix.",
+        "startLabel": "ε"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "partial-string",
+      "description": "Use ε for the empty root, then lowercase partial strings like a or ab."
+    },
+    "fixedStart": "ε",
+    "input": {
+      "name": "empty code",
+      "prompt": "Choose the empty code",
+      "result": "reached-nodes",
+      "resultLabel": "legal code prefixes reached"
+    }
+  },
+  {
+    "id": "save-the-date-phone-chain",
+    "vocabulary": {
+      "nodeNames": "person IDs",
+      "startNode": "head caller",
+      "edges": "caller-to-listener links",
+      "correctSearch": "people reached by the call chain",
+      "mistakenSearch": "people the flawed call chain reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Caller's caller",
+        "presentation": "exact-difference",
+        "goal": "Put a person two calls away so direct contacts are not enough.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Last invitation lost",
+        "presentation": "smallest-witness",
+        "goal": "Make the final caller row bring one more person into the chain.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Phone chain backward",
+        "presentation": "predict-first",
+        "goal": "Choose a caller link where reversing it stops news from flowing downward.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "head caller",
+      "prompt": "Choose the head caller",
+      "result": "reached-nodes",
+      "resultLabel": "people reached by the call chain"
+    }
+  },
+  {
+    "id": "shut-the-garden-valve",
+    "vocabulary": {
+      "nodeNames": "sprinkler IDs",
+      "startNode": "shut sprinkler",
+      "edges": "feeder-to-sprinkler pipes",
+      "correctSearch": "sprinklers that lose flow",
+      "mistakenSearch": "sprinklers the flawed valve search shuts"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Water flows backward",
+        "presentation": "smallest-witness",
+        "goal": "Use one feeder pipe where reversing flow shuts the wrong sprinkler.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Half-watered fork",
+        "presentation": "repair-case",
+        "goal": "Give one feeder multiple child pipes so every downstream branch must shut.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong valve closed",
+        "presentation": "exact-difference",
+        "goal": "Shut sprinkler 1, but make the mistaken search begin at sprinkler 2.",
+        "startLabel": "1",
+        "mistakenStartLabel": "2"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "positive-integer",
+      "description": "Use positive integer IDs, matching the problem input.",
+      "max": 10000
+    },
+    "input": {
+      "name": "shut sprinkler",
+      "prompt": "Which sprinkler is shut?",
+      "result": "reached-nodes",
+      "resultLabel": "sprinklers that lose flow"
+    }
+  },
+  {
+    "id": "biggest-study-group",
+    "vocabulary": {
+      "nodeNames": "student IDs",
+      "startNode": "first student in the group",
+      "edges": "two-way teamwork links",
+      "correctSearch": "students in the study group",
+      "mistakenSearch": "students the flawed group search joins"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Teamwork as an arrow",
+        "presentation": "predict-first",
+        "goal": "Use a matrix link whose written direction would wrongly block a teammate.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "More than one teammate",
+        "presentation": "exact-difference",
+        "goal": "Give one student separate teamwork branches that belong to the same group.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "skip-leaf-edges"
+        ],
+        "level": "Solo-looking teammate",
+        "presentation": "repair-case",
+        "goal": "Make a degree-one student enlarge the biggest study group.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "first student in the group",
+      "prompt": "Choose the first student in the group",
+      "result": "reached-nodes",
+      "resultLabel": "students in the study group"
+    }
+  },
+  {
+    "id": "kth-song-in-playlist",
+    "vocabulary": {
+      "nodeNames": "folders and song IDs",
+      "startNode": "playlist root",
+      "edges": "folder-to-content links",
+      "correctSearch": "songs reached in play order",
+      "mistakenSearch": "songs the flawed player reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Last album only",
+        "presentation": "smallest-witness",
+        "goal": "Place songs in multiple folders so keeping the last folder changes play order.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Song in a subfolder",
+        "presentation": "predict-first",
+        "goal": "Bury a song more than one folder deep so a shallow player misses it.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Final track missing",
+        "presentation": "repair-case",
+        "goal": "Make the last containment link point to a song needed in the playlist.",
+        "startLabel": "root"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "nested-path",
+      "description": "Use root, root[0], root[1], ... to name nested input items."
+    },
+    "fixedStart": "root",
+    "input": {
+      "name": "playlist root",
+      "prompt": "Choose the playlist root",
+      "result": "reached-nodes",
+      "resultLabel": "songs reached in play order"
+    }
+  },
+  {
+    "id": "museum-vault-keyring",
+    "vocabulary": {
+      "nodeNames": "vault IDs",
+      "startNode": "initial key",
+      "edges": "vault-to-key arrows",
+      "correctSearch": "vaults that can be opened",
+      "mistakenSearch": "vaults the flawed keyring opens"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Key in the last vault",
+        "presentation": "predict-first",
+        "goal": "Make the final key arrow unlock one additional vault.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "make-two-way"
+        ],
+        "level": "Key works backward",
+        "presentation": "exact-difference",
+        "goal": "Use an arrow whose reverse would open a vault without owning its key.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Different starting key",
+        "presentation": "smallest-witness",
+        "goal": "Give an initial key that is not the first vault listed.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "initial key",
+      "prompt": "Choose the initial key",
+      "result": "reached-nodes",
+      "resultLabel": "vaults that can be opened"
+    }
+  },
+  {
+    "id": "top-of-the-pile",
+    "vocabulary": {
+      "nodeNames": "boxes and items",
+      "startNode": "outer box",
+      "edges": "box-to-content links",
+      "correctSearch": "items found by depth",
+      "mistakenSearch": "items the flawed pile search finds"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Pile turned inside out",
+        "presentation": "repair-case",
+        "goal": "Use nested boxes where reversing containment prevents reaching their items.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Start inside the pile",
+        "presentation": "exact-difference",
+        "goal": "Make starting in the first inner box hide a shallower item elsewhere.",
+        "startLabel": "root",
+        "mistakenStartLabel": "root[0]"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Two top-level branches",
+        "presentation": "predict-first",
+        "goal": "Place items in separate branches so the search must return after the first.",
+        "startLabel": "root"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "nested-path",
+      "description": "Use root, root[0], root[1], ... to name nested input items."
+    },
+    "fixedStart": "root",
+    "input": {
+      "name": "outer box",
+      "prompt": "Choose the outer box",
+      "result": "reached-nodes",
+      "resultLabel": "items found by depth"
+    }
+  },
+  {
+    "id": "trusted-courier-networks",
+    "vocabulary": {
+      "nodeNames": "office IDs",
+      "startNode": "first office in the network",
+      "edges": "two-way trusted links",
+      "correctSearch": "offices in the trusted network",
+      "mistakenSearch": "offices the flawed trust search joins"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Different trusted network",
+        "presentation": "exact-difference",
+        "goal": "Create separate office networks so the selected starting office matters.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      },
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Trust treated one-way",
+        "presentation": "repair-case",
+        "goal": "List a qualifying trust link toward the start so a fake arrow blocks it.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Trust through a partner",
+        "presentation": "smallest-witness",
+        "goal": "Connect an office through an intermediate trusted partner, not directly.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "first office in the network",
+      "prompt": "Choose the first office in the network",
+      "result": "reached-nodes",
+      "resultLabel": "offices in the trusted network"
+    }
+  }
+]

@@ -1,0 +1,3377 @@
+[
+  {
+    "id": "ten-kinds-of-people",
+    "visualKind": "grid",
+    "nodeQuestion": {
+      "prompt": "Which cells must appear as nodes when answering every travel query?",
+      "correct": "all-cells",
+      "choices": [
+        {
+          "id": "all-cells",
+          "label": "Every grid cell, whether it contains 0 or 1.",
+          "feedback": "Right. Either kind of traveler may start on its matching cell.",
+          "misconception": null
+        },
+        {
+          "id": "ones-only",
+          "label": "Only cells containing 1.",
+          "feedback": "That erases the regions used by binary travelers.",
+          "misconception": "ignores-binary-regions"
+        },
+        {
+          "id": "query-only",
+          "label": "Only the two endpoints named in the current query.",
+          "feedback": "The cells between the endpoints are needed to form a route.",
+          "misconception": "drops-intermediate-cells"
+        },
+        {
+          "id": "regions",
+          "label": "One node for each finished same-digit region.",
+          "feedback": "Regions are results of connecting cells, not the starting nodes.",
+          "misconception": "confuses-components-with-nodes"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When is there an edge between two cell nodes?",
+      "correct": "same-side",
+      "choices": [
+        {
+          "id": "same-side",
+          "label": "They share a side and contain the same digit.",
+          "feedback": "Right. Movement is four-directional and cannot change ground type.",
+          "misconception": null
+        },
+        {
+          "id": "any-side",
+          "label": "They share a side, even if one is 0 and the other is 1.",
+          "feedback": "A decimal or binary traveler cannot step onto the other digit.",
+          "misconception": "crosses-digit-boundary"
+        },
+        {
+          "id": "same-anywhere",
+          "label": "They contain the same digit anywhere in the grid.",
+          "feedback": "Matching digits far apart do not create a one-step move.",
+          "misconception": "connects-non-neighbors"
+        },
+        {
+          "id": "same-eight",
+          "label": "They contain the same digit and touch by a side or corner.",
+          "feedback": "Corner touching is diagonal and is not allowed here.",
+          "misconception": "allows-diagonals"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "mixed-and-same",
+        "prompt": "For grid [\"1100\"], what are the answers to queries (0,0)→(0,3) and (0,0)→itself?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "[\"neither\", \"decimal\"]",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "[\"decimal\", \"decimal\"]",
+            "feedback": "The first route crosses from 1 ground to 0 ground.",
+            "misconception": "allows-changing-digit"
+          },
+          {
+            "id": "wrong-2",
+            "label": "[\"neither\", \"neither\"]",
+            "feedback": "A zero-step trip on a 1 cell is valid for decimal.",
+            "misconception": "rejects-same-cell"
+          },
+          {
+            "id": "wrong-3",
+            "label": "[\"binary\", \"decimal\"]",
+            "feedback": "The first endpoints have different digits, so neither kind fits both.",
+            "misconception": "uses-target-digit-only"
+          }
+        ],
+        "input": "grid = [\"1100\"], queries = [[0,0,0,3],[0,0,0,0]]"
+      },
+      {
+        "id": "separate-zero-regions",
+        "prompt": "In grid [\"110\",\"010\",\"011\"], what are the answers for (0,0)→(2,2) and (2,0)→(0,2)?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "[\"decimal\", \"neither\"]",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "[\"decimal\", \"binary\"]",
+            "feedback": "The two 0 endpoints sit in separate 0 regions.",
+            "misconception": "connects-all-zero-cells"
+          },
+          {
+            "id": "wrong-2",
+            "label": "[\"neither\", \"neither\"]",
+            "feedback": "A side-connected 1 path joins the first pair.",
+            "misconception": "misses-bending-path"
+          },
+          {
+            "id": "wrong-3",
+            "label": "[\"binary\", \"neither\"]",
+            "feedback": "The first endpoints are 1 cells, so a successful trip is decimal.",
+            "misconception": "swaps-traveler-label"
+          }
+        ],
+        "input": "grid = [\"110\", \"010\", \"011\"], queries = [[0,0,2,2],[2,0,0,2]]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "codewars-array-deep-count",
+    "visualKind": "nested",
+    "nodeQuestion": {
+      "prompt": "What should each node in the nesting picture represent?",
+      "correct": "all-items",
+      "choices": [
+        {
+          "id": "all-items",
+          "label": "The outer array, every inner array, and every plain value.",
+          "feedback": "Right. The root organizes the picture; every non-root item contributes one.",
+          "misconception": null
+        },
+        {
+          "id": "values",
+          "label": "Only numbers, strings, and booleans.",
+          "feedback": "Inner arrays are elements too, so each must be counted.",
+          "misconception": "does-not-count-arrays"
+        },
+        {
+          "id": "arrays",
+          "label": "Only the outer array and inner arrays.",
+          "feedback": "Plain values are also elements and must become nodes.",
+          "misconception": "does-not-count-values"
+        },
+        {
+          "id": "nonempty",
+          "label": "Only items inside non-empty arrays.",
+          "feedback": "An empty inner array still counts as one element.",
+          "misconception": "drops-empty-arrays"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "What creates a parent-child edge in the nesting tree?",
+      "correct": "direct",
+      "choices": [
+        {
+          "id": "direct",
+          "label": "An array points to each item directly inside it.",
+          "feedback": "Right. Deeper items belong under their immediate containing array.",
+          "misconception": null
+        },
+        {
+          "id": "all-desc",
+          "label": "The outer array points directly to every value at every depth.",
+          "feedback": "That flattens away which inner array contains each item.",
+          "misconception": "flattens-nesting"
+        },
+        {
+          "id": "array-only",
+          "label": "Arrays point only to inner arrays, never to plain values.",
+          "feedback": "Plain values are direct children when they sit in that array.",
+          "misconception": "omits-value-edges"
+        },
+        {
+          "id": "siblings",
+          "label": "Items beside each other in one array are connected to each other.",
+          "feedback": "Siblings share a parent; they do not contain one another.",
+          "misconception": "connects-siblings"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "nested-seven",
+        "prompt": "What is deepCount([1, 2, [3, 4, [5]]])?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "7",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "5",
+            "feedback": "This counts plain values but not the two inner arrays.",
+            "misconception": "counts-values-only"
+          },
+          {
+            "id": "wrong-2",
+            "label": "6",
+            "feedback": "This misses one inner array level.",
+            "misconception": "misses-deep-array"
+          },
+          {
+            "id": "wrong-3",
+            "label": "8",
+            "feedback": "The outer root array itself is not one of its own elements.",
+            "misconception": "counts-root-array"
+          }
+        ],
+        "input": "deepCount([1, 2, [3, 4, [5]]])"
+      },
+      {
+        "id": "strings-four",
+        "prompt": "What is deepCount([\"x\", \"y\", [\"z\"]])?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "4",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "3",
+            "feedback": "The inner array counts as an element as well as z.",
+            "misconception": "does-not-count-inner-array"
+          },
+          {
+            "id": "wrong-2",
+            "label": "2",
+            "feedback": "The nested z still counts.",
+            "misconception": "counts-top-level-values-only"
+          },
+          {
+            "id": "wrong-3",
+            "label": "5",
+            "feedback": "The outer array itself is not added to the result.",
+            "misconception": "counts-root-array"
+          }
+        ],
+        "input": "deepCount([\"x\", \"y\", [\"z\"]])"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Use `outer array` for the root. Name inner arrays `[path] array` and values `[path]=value`, such as `[1] array` or `[1][0]=2`. Copy values exactly, including quotes around text.",
+      "pattern": "^(?:outer array|(?:\\[\\d+\\])+(?: array|=.+))$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "gfg-grid-path-exists",
+    "visualKind": "grid",
+    "nodeQuestion": {
+      "prompt": "Which squares belong in the walkable graph?",
+      "correct": "nonwalls",
+      "choices": [
+        {
+          "id": "nonwalls",
+          "label": "The source, destination, and every open 3 cell.",
+          "feedback": "Right. Every non-wall square can be part of a route.",
+          "misconception": null
+        },
+        {
+          "id": "special",
+          "label": "Only the source 1 and destination 2.",
+          "feedback": "Open 3 cells are the intermediate steps of a path.",
+          "misconception": "drops-open-cells"
+        },
+        {
+          "id": "all",
+          "label": "Every square, including walls marked 0.",
+          "feedback": "Walls cannot be entered and should not be graph nodes.",
+          "misconception": "treats-walls-as-walkable"
+        },
+        {
+          "id": "threes",
+          "label": "Only cells marked 3.",
+          "feedback": "The route must include its source and destination too.",
+          "misconception": "drops-endpoints"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which pair gets a walkable edge?",
+      "correct": "side-open",
+      "choices": [
+        {
+          "id": "side-open",
+          "label": "Two non-wall cells that share a side.",
+          "feedback": "Right. That is one legal up, down, left, or right step.",
+          "misconception": null
+        },
+        {
+          "id": "diag-open",
+          "label": "Two non-wall cells that share a side or corner.",
+          "feedback": "Diagonal movement is not allowed.",
+          "misconception": "allows-diagonals"
+        },
+        {
+          "id": "through-wall",
+          "label": "Two open cells with one wall between them.",
+          "feedback": "A wall blocks the route; it cannot be jumped.",
+          "misconception": "jumps-walls"
+        },
+        {
+          "id": "toward-target",
+          "label": "Only moves that get geometrically closer to the destination.",
+          "feedback": "A valid path may need to detour around walls.",
+          "misconception": "forbids-detours"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "winding-true",
+        "prompt": "Which explanation gives the correct result for [[1,3,0],[0,3,0],[0,3,2]]?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "true — the 3 cells form a side-connected route",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "false — the route must be a straight line",
+            "feedback": "The open 3 cells make a winding side-connected route.",
+            "misconception": "checks-direct-line-only"
+          },
+          {
+            "id": "wrong-2",
+            "label": "true only with diagonal moves",
+            "feedback": "No diagonal is needed; every step shares a side.",
+            "misconception": "misreads-valid-route"
+          },
+          {
+            "id": "wrong-3",
+            "label": "false because 3 is not the destination",
+            "feedback": "Cells marked 3 are legal intermediate steps.",
+            "misconception": "treats-open-as-wall"
+          }
+        ],
+        "input": "grid = [[1,3,0],[0,3,0],[0,3,2]]"
+      },
+      {
+        "id": "boxed-false",
+        "prompt": "Which explanation gives the correct result for [[1,0,3],[0,0,3],[3,3,2]]?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "false — walls box the source away from every 3",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "true — the lower 3 region touches the destination",
+            "feedback": "The source is boxed by walls and cannot reach the lower open region.",
+            "misconception": "ignores-source-enclosure"
+          },
+          {
+            "id": "wrong-2",
+            "label": "true only by moving diagonally",
+            "feedback": "Diagonal movement is never allowed.",
+            "misconception": "allows-diagonals"
+          },
+          {
+            "id": "wrong-3",
+            "label": "false only because source is on an edge",
+            "feedback": "Being on the grid edge is legal; the walls cause failure.",
+            "misconception": "blames-border"
+          }
+        ],
+        "input": "grid = [[1,0,3],[0,0,3],[3,3,2]]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "hackerrank-connected-cells",
+    "visualKind": "grid",
+    "nodeQuestion": {
+      "prompt": "What is one node when measuring a region?",
+      "correct": "ones",
+      "choices": [
+        {
+          "id": "ones",
+          "label": "Each cell containing 1.",
+          "feedback": "Right. A region's size is its number of land-cell nodes.",
+          "misconception": null
+        },
+        {
+          "id": "all",
+          "label": "Every 0 and 1 cell.",
+          "feedback": "Zero cells are outside every region.",
+          "misconception": "includes-zero-cells"
+        },
+        {
+          "id": "row",
+          "label": "Each row containing at least one 1.",
+          "feedback": "Several separate regions can occupy one row.",
+          "misconception": "uses-rows-as-nodes"
+        },
+        {
+          "id": "region",
+          "label": "Each completed region of 1s.",
+          "feedback": "A region is a component made from cell nodes.",
+          "misconception": "confuses-region-with-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which neighboring 1 cells are directly connected?",
+      "correct": "eight",
+      "choices": [
+        {
+          "id": "eight",
+          "label": "Any pair touching by a side or a corner.",
+          "feedback": "Right. This problem uses all eight directions.",
+          "misconception": null
+        },
+        {
+          "id": "four",
+          "label": "Only pairs touching up, down, left, or right.",
+          "feedback": "This misses the diagonal rule that makes this problem unusual.",
+          "misconception": "forgets-diagonals"
+        },
+        {
+          "id": "diagonal",
+          "label": "Only pairs touching at a corner.",
+          "feedback": "Side-touching 1s connect too.",
+          "misconception": "allows-only-diagonals"
+        },
+        {
+          "id": "same-row",
+          "label": "Any two 1s in the same row or column.",
+          "feedback": "Cells must be immediate neighbors, not merely aligned.",
+          "misconception": "connects-distant-cells"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "largest-five",
+        "prompt": "What is the largest region size in [[1,1,0,0],[0,1,1,0],[0,0,1,0],[1,0,0,0]]?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "5",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "4",
+            "feedback": "This misses a diagonally connected 1.",
+            "misconception": "forgets-diagonal"
+          },
+          {
+            "id": "wrong-2",
+            "label": "6",
+            "feedback": "The lone bottom-left 1 is separate.",
+            "misconception": "merges-separated-region"
+          },
+          {
+            "id": "wrong-3",
+            "label": "2",
+            "feedback": "This counts only one row instead of the full region.",
+            "misconception": "stops-after-row"
+          }
+        ],
+        "input": "grid = [[1,1,0,0],[0,1,1,0],[0,0,1,0],[1,0,0,0]]"
+      },
+      {
+        "id": "corner-star",
+        "prompt": "What is the largest region size in [[1,0,1],[0,1,0],[1,0,1]]?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "5",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "1",
+            "feedback": "The center joins all four corners diagonally.",
+            "misconception": "uses-four-directions"
+          },
+          {
+            "id": "wrong-2",
+            "label": "4",
+            "feedback": "The center cell counts as part of the region too.",
+            "misconception": "counts-neighbors-not-center"
+          },
+          {
+            "id": "wrong-3",
+            "label": "3",
+            "feedback": "All four diagonal links belong to the same component.",
+            "misconception": "splits-one-component"
+          }
+        ],
+        "input": "grid = [[1,0,1],[0,1,0],[1,0,1]]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "count-sub-islands",
+    "visualKind": "grid",
+    "nodeQuestion": {
+      "prompt": "Which cells form the islands that are being judged?",
+      "correct": "grid2-land",
+      "choices": [
+        {
+          "id": "grid2-land",
+          "label": "Every land cell in grid2.",
+          "feedback": "Right. First find each complete grid2 island, then compare its cells with grid1.",
+          "misconception": null
+        },
+        {
+          "id": "both-land",
+          "label": "Only positions that are land in both grids.",
+          "feedback": "Removing a bad grid2 cell can split or hide an island that should fail as a whole.",
+          "misconception": "filters-before-flood-fill"
+        },
+        {
+          "id": "grid1-land",
+          "label": "Every land cell in grid1.",
+          "feedback": "The counted islands belong to grid2, not grid1.",
+          "misconception": "searches-wrong-grid"
+        },
+        {
+          "id": "mismatches",
+          "label": "Only grid2 land cells sitting over grid1 water.",
+          "feedback": "Those cells mark failure, but they are not the whole island graph.",
+          "misconception": "uses-only-invalid-cells"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "How do two grid2 land nodes join the same island?",
+      "correct": "four",
+      "choices": [
+        {
+          "id": "four",
+          "label": "They touch up, down, left, or right in grid2.",
+          "feedback": "Right. Grid1 changes validity, not grid2 connectivity.",
+          "misconception": null
+        },
+        {
+          "id": "both-grids",
+          "label": "They share a side and both positions must also be land in grid1.",
+          "feedback": "A bad overlap still remains part of its grid2 island and makes it fail.",
+          "misconception": "changes-connectivity-with-grid1"
+        },
+        {
+          "id": "eight",
+          "label": "They touch by a side or corner in grid2.",
+          "feedback": "Diagonal cells belong to separate islands here.",
+          "misconception": "allows-diagonals"
+        },
+        {
+          "id": "matching-shape",
+          "label": "Their surrounding 3×3 patterns match in both grids.",
+          "feedback": "Only direct side contact defines an island edge.",
+          "misconception": "compares-neighborhoods"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "one-sub",
+        "prompt": "For grid1 [[1,1,0],[0,1,1],[0,0,0]] and grid2 [[1,0,0],[0,1,1],[0,1,0]], how many sub-islands are there?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "1",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "2",
+            "feedback": "The larger grid2 island contains a cell over grid1 water.",
+            "misconception": "checks-some-cells-only"
+          },
+          {
+            "id": "wrong-2",
+            "label": "3",
+            "feedback": "Grid2 has only two islands, not three.",
+            "misconception": "counts-cells-as-islands"
+          },
+          {
+            "id": "wrong-3",
+            "label": "0",
+            "feedback": "The single cell at (0,0) is fully supported by grid1 land.",
+            "misconception": "rejects-valid-single-cell"
+          }
+        ],
+        "input": "grid1 = [[1,1,0],[0,1,1],[0,0,0]], grid2 = [[1,0,0],[0,1,1],[0,1,0]]"
+      },
+      {
+        "id": "two-diagonal",
+        "prompt": "If grid1 is all land and grid2 is [[1,0],[0,1]], how many sub-islands are there?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "2",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "1",
+            "feedback": "Diagonal land cells are separate islands.",
+            "misconception": "allows-diagonals"
+          },
+          {
+            "id": "wrong-2",
+            "label": "0",
+            "feedback": "Both single-cell islands sit on grid1 land.",
+            "misconception": "rejects-single-cell-islands"
+          },
+          {
+            "id": "wrong-3",
+            "label": "4",
+            "feedback": "The answer counts grid2 islands, not all grid1 land cells.",
+            "misconception": "counts-grid1-cells"
+          }
+        ],
+        "input": "grid1 = [[1,1],[1,1]], grid2 = [[1,0],[0,1]]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "employee-importance",
+    "visualKind": "directed-graph",
+    "nodeQuestion": {
+      "prompt": "What does one node in the company graph represent?",
+      "correct": "employee",
+      "choices": [
+        {
+          "id": "employee",
+          "label": "One employee record, identified by its id.",
+          "feedback": "Right. Importance is a value stored on that employee node.",
+          "misconception": null
+        },
+        {
+          "id": "score",
+          "label": "One importance point.",
+          "feedback": "Importance is data on a person, not a separate graph item.",
+          "misconception": "uses-score-as-node"
+        },
+        {
+          "id": "team",
+          "label": "One manager together with their entire team.",
+          "feedback": "Reports must remain separate nodes so DFS can follow each level.",
+          "misconception": "collapses-subtree"
+        },
+        {
+          "id": "report-list",
+          "label": "One subordinates array.",
+          "feedback": "The array describes outgoing relationships from an employee.",
+          "misconception": "uses-adjacency-list-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "What does a directed edge manager → worker mean?",
+      "correct": "direct-report",
+      "choices": [
+        {
+          "id": "direct-report",
+          "label": "The worker's id appears in the manager's subordinates list.",
+          "feedback": "Right. The arrow follows authority from manager to direct report.",
+          "misconception": null
+        },
+        {
+          "id": "reverse",
+          "label": "The manager's id appears in the worker's subordinates list.",
+          "feedback": "That would reverse the reporting direction.",
+          "misconception": "reverses-management-edge"
+        },
+        {
+          "id": "all-below",
+          "label": "The worker is anywhere below the manager, even several levels down.",
+          "feedback": "Several reporting steps form a path, not one direct edge.",
+          "misconception": "turns-path-into-edge"
+        },
+        {
+          "id": "score-order",
+          "label": "The manager has a larger importance score than the worker.",
+          "feedback": "Scores do not decide reporting relationships.",
+          "misconception": "derives-edge-from-score"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "manager-eleven",
+        "prompt": "Employee 1 has importance 5 and direct reports 2 and 3, each worth 3. What total is returned for id 1?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "11",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "5",
+            "feedback": "Direct and indirect reports must be included.",
+            "misconception": "counts-manager-only"
+          },
+          {
+            "id": "wrong-2",
+            "label": "6",
+            "feedback": "This adds only the reports and omits the manager.",
+            "misconception": "omits-start-employee"
+          },
+          {
+            "id": "wrong-3",
+            "label": "8",
+            "feedback": "Both report branches must be counted.",
+            "misconception": "follows-one-report"
+          }
+        ],
+        "input": "employees = [{id: 1, importance: 5, subordinates: [2, 3]}, {id: 2, importance: 3, subordinates: []}, {id: 3, importance: 3, subordinates: []}], id = 1"
+      },
+      {
+        "id": "negative-minus-one",
+        "prompt": "Employee 5 has importance -3 and report 6 has importance 2. What total is returned for id 5?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "-1",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "2",
+            "feedback": "The starting employee's negative score still counts.",
+            "misconception": "drops-negative-manager"
+          },
+          {
+            "id": "wrong-2",
+            "label": "5",
+            "feedback": "Importance values are added with their signs, not absolute values.",
+            "misconception": "uses-absolute-values"
+          },
+          {
+            "id": "wrong-3",
+            "label": "-3",
+            "feedback": "The reachable report's score must be included.",
+            "misconception": "counts-manager-only"
+          }
+        ],
+        "input": "employees = [{id: 5, importance: -3, subordinates: [6]}, {id: 6, importance: 2, subordinates: []}], id = 5"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each employee `id:importance`. Example: `4:7`. Do not add spaces.",
+      "pattern": "^\\d+:-?\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "evaluate-boolean-binary-tree",
+    "visualKind": "tree",
+    "nodeQuestion": {
+      "prompt": "What should each circle in the evaluation tree represent?",
+      "correct": "tree-object",
+      "choices": [
+        {
+          "id": "tree-object",
+          "label": "One tree node: a leaf value or an OR/AND gate.",
+          "feedback": "Right. Its val tells whether it is data or an operator.",
+          "misconception": null
+        },
+        {
+          "id": "boolean-only",
+          "label": "Only leaves containing 0 or 1.",
+          "feedback": "Operator nodes are needed to combine the leaf results.",
+          "misconception": "drops-gates"
+        },
+        {
+          "id": "gate-only",
+          "label": "Only inner nodes containing 2 or 3.",
+          "feedback": "The gates need leaf values as their base answers.",
+          "misconception": "drops-leaves"
+        },
+        {
+          "id": "truth-result",
+          "label": "One node for each possible answer true and false.",
+          "feedback": "Many different tree objects can evaluate to the same boolean.",
+          "misconception": "confuses-value-with-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which links become edges?",
+      "correct": "children",
+      "choices": [
+        {
+          "id": "children",
+          "label": "A parent points to its left and right child.",
+          "feedback": "Right. Each gate receives exactly the two child results below it.",
+          "misconception": null
+        },
+        {
+          "id": "same-op",
+          "label": "All OR gates connect together, and all AND gates connect together.",
+          "feedback": "Matching operator types do not create tree links.",
+          "misconception": "connects-same-operators"
+        },
+        {
+          "id": "leaf-gate",
+          "label": "Every leaf points directly to the root gate.",
+          "feedback": "Leaves feed their immediate parent; deeper results rise step by step.",
+          "misconception": "skips-levels"
+        },
+        {
+          "id": "reverse-only",
+          "label": "Only child-to-parent links, because answers move upward.",
+          "feedback": "The tree structure is still defined by parent left/right pointers.",
+          "misconception": "confuses-evaluation-flow-with-edge"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "or-and",
+        "prompt": "Which evaluation correctly handles a root OR with left true and right (false AND true)?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "true — the root OR accepts its true left child",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "false — evaluate the root OR as if it were AND",
+            "feedback": "The root is OR, so its true left child is enough.",
+            "misconception": "treats-or-as-and"
+          },
+          {
+            "id": "wrong-2",
+            "label": "false — return only the right subtree's result",
+            "feedback": "Both root children matter; OR accepts the true left subtree.",
+            "misconception": "uses-only-right-branch"
+          },
+          {
+            "id": "wrong-3",
+            "label": "false — stop after evaluating the false right subtree",
+            "feedback": "A false OR input does not erase the other true input.",
+            "misconception": "short-circuits-or-on-false"
+          }
+        ],
+        "input": "root = {val: 2, left: {val: 1}, right: {val: 3, left: {val: 0}, right: {val: 1}}}"
+      },
+      {
+        "id": "single-false",
+        "prompt": "Which explanation correctly evaluates a one-node leaf with val 0?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "false — a leaf returns its stored Boolean value",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "true — mistakenly decode stored 0 as true",
+            "feedback": "The encoding is fixed: leaf 0 means false and leaf 1 means true.",
+            "misconception": "swaps-leaf-values"
+          },
+          {
+            "id": "wrong-2",
+            "label": "true — use a base case that returns true for every leaf",
+            "feedback": "A leaf must return its stored value, not one fixed default.",
+            "misconception": "ignores-leaf-value"
+          },
+          {
+            "id": "wrong-3",
+            "label": "true — test whether the leaf object exists instead of reading val",
+            "feedback": "The node exists, but its stored val is 0, so the result is false.",
+            "misconception": "tests-node-existence"
+          }
+        ],
+        "input": "root = {val: 0}"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each tree node `levelOrderIndex:value`, using `true`, `false`, `AND`, or `OR`. Example: `2:AND`.",
+      "pattern": "^\\d+:(?:true|false|AND|OR)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "usaco-fence-planning",
+    "visualKind": "undirected-graph",
+    "nodeQuestion": {
+      "prompt": "What belongs at each plotted node?",
+      "correct": "cow",
+      "choices": [
+        {
+          "id": "cow",
+          "label": "One cow, carrying its x,y position.",
+          "feedback": "Right. Herd membership comes from edges; fence bounds come from node coordinates.",
+          "misconception": null
+        },
+        {
+          "id": "pair",
+          "label": "One mooing pair.",
+          "feedback": "A pair is an edge between two cow nodes.",
+          "misconception": "swaps-nodes-and-edges"
+        },
+        {
+          "id": "herd",
+          "label": "One whole herd.",
+          "feedback": "You must first discover a herd from its individual cows.",
+          "misconception": "collapses-components"
+        },
+        {
+          "id": "corner",
+          "label": "One possible fence corner.",
+          "feedback": "Fence corners are computed from cow coordinates after DFS.",
+          "misconception": "uses-output-geometry-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When do two cow nodes share an edge?",
+      "correct": "pair",
+      "choices": [
+        {
+          "id": "pair",
+          "label": "Their cow numbers appear together in a listed moo pair.",
+          "feedback": "Right. The link is two-way, regardless of coordinate distance.",
+          "misconception": null
+        },
+        {
+          "id": "near",
+          "label": "Their pasture coordinates are close together.",
+          "feedback": "Distance does not create moo links in this problem.",
+          "misconception": "derives-edge-from-distance"
+        },
+        {
+          "id": "same-box",
+          "label": "They fit inside the same smallest rectangle.",
+          "feedback": "The rectangle is measured after the herd is known.",
+          "misconception": "derives-edge-from-fence"
+        },
+        {
+          "id": "directed",
+          "label": "The first cow in [a,b] can moo only to the second.",
+          "feedback": "Each listed moo pair works in both directions.",
+          "misconception": "treats-pair-as-directed"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "two-herds-six",
+        "prompt": "What minimum fence perimeter is returned for the shown cows and friendships?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "6",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "10",
+            "feedback": "Only one whole herd must fit, so choose the smaller fence.",
+            "misconception": "chooses-first-herd"
+          },
+          {
+            "id": "wrong-2",
+            "label": "16",
+            "feedback": "Do not add the perimeters of separate herd fences.",
+            "misconception": "sums-herd-perimeters"
+          },
+          {
+            "id": "wrong-3",
+            "label": "8",
+            "feedback": "The answer is a perimeter, not an average.",
+            "misconception": "averages-perimeters"
+          }
+        ],
+        "input": "minFencePerimeter(\n  [[0, 0], [3, 1], [1, 2], [10, 10], [12, 11]],\n  [[0, 1], [1, 2], [3, 4]]\n)"
+      },
+      {
+        "id": "flat-herd-ten",
+        "prompt": "What minimum fence perimeter is returned for the shown cows and friendships?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "10",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "0",
+            "feedback": "Zero height is allowed, but width 5 still contributes twice.",
+            "misconception": "zeroes-flat-rectangle"
+          },
+          {
+            "id": "wrong-2",
+            "label": "5",
+            "feedback": "Perimeter is 2×(width+height).",
+            "misconception": "forgets-doubling"
+          },
+          {
+            "id": "wrong-3",
+            "label": "18",
+            "feedback": "This computes the other herd's perimeter correctly but returns the larger herd instead of the minimum.",
+            "misconception": "chooses-larger-herd"
+          }
+        ],
+        "input": "minFencePerimeter(\n  [[2, 5], [2, 9], [7, 5], [4, 4], [6, 6]],\n  [[0, 2], [1, 3], [3, 4]]\n)"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each cow `0BasedIndex:(x,y)`. Example: `2:(4,1)`. Do not add spaces.",
+      "pattern": "^\\d+:\\(-?\\d+,-?\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "find-all-groups-of-farmland",
+    "visualKind": "grid",
+    "nodeQuestion": {
+      "prompt": "Which cells become nodes before rectangle corners are reported?",
+      "correct": "farmland",
+      "choices": [
+        {
+          "id": "farmland",
+          "label": "Every cell containing 1.",
+          "feedback": "Right. Each rectangular component is made from its farmland cells.",
+          "misconception": null
+        },
+        {
+          "id": "corners",
+          "label": "Only the top-left and bottom-right cell of each group.",
+          "feedback": "Those corners are outputs; the other farmland cells still form the group.",
+          "misconception": "uses-output-only"
+        },
+        {
+          "id": "top-left",
+          "label": "Only a farmland cell with no farmland above or left.",
+          "feedback": "That can identify a group start, but it is not the full graph.",
+          "misconception": "uses-scan-starts-as-nodes"
+        },
+        {
+          "id": "all",
+          "label": "Every forest and farmland cell.",
+          "feedback": "Forest cells do not belong to farmland groups.",
+          "misconception": "includes-forest"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which farmland cells share an edge?",
+      "correct": "four",
+      "choices": [
+        {
+          "id": "four",
+          "label": "Cells containing 1 that share a side.",
+          "feedback": "Right. Side connections form each guaranteed rectangle.",
+          "misconception": null
+        },
+        {
+          "id": "eight",
+          "label": "Cells containing 1 that share a side or corner.",
+          "feedback": "Diagonal contact does not join farmland groups.",
+          "misconception": "allows-diagonals"
+        },
+        {
+          "id": "row",
+          "label": "Any farmland cells in the same row of a rectangle.",
+          "feedback": "Only immediate neighbors create direct edges.",
+          "misconception": "connects-distant-row-cells"
+        },
+        {
+          "id": "corner-edge",
+          "label": "Only the top-left cell connects directly to the bottom-right cell.",
+          "feedback": "The corners are connected through the intervening cells, not one shortcut edge.",
+          "misconception": "turns-component-into-edge"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "two-rectangles",
+        "prompt": "What rectangles are reported for [[1,0,0],[0,1,1],[0,1,1]]?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "[[0,0,0,0],[1,1,2,2]]",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "[[0,0,0,0],[1,1,1,2],[2,1,2,2]]",
+            "feedback": "The 2×2 patch is one rectangular group, not two rows.",
+            "misconception": "splits-rectangle"
+          },
+          {
+            "id": "wrong-2",
+            "label": "[[0,0,2,2]]",
+            "feedback": "Forest gaps keep the two groups separate.",
+            "misconception": "uses-whole-bounding-box"
+          },
+          {
+            "id": "wrong-3",
+            "label": "[[0,0,0,0],[1,1,1,1]]",
+            "feedback": "This uses each group’s top-left cell as both corners and loses the full 2×2 boundary.",
+            "misconception": "uses-top-left-as-both-corners"
+          }
+        ],
+        "input": "land = [[1,0,0],[0,1,1],[0,1,1]]"
+      },
+      {
+        "id": "whole-grid",
+        "prompt": "What is reported for farmland [[1,1],[1,1]]?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "[[0,0,1,1]]",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "[[0,0,0,1],[1,0,1,1]]",
+            "feedback": "All side-connected cells form one group.",
+            "misconception": "splits-by-row"
+          },
+          {
+            "id": "wrong-2",
+            "label": "[[0,0,2,2]]",
+            "feedback": "Indexes end at 1 in a 2×2 grid.",
+            "misconception": "off-by-one-corner"
+          },
+          {
+            "id": "wrong-3",
+            "label": "[[1,1,0,0]]",
+            "feedback": "Corners are ordered top-left then bottom-right.",
+            "misconception": "reverses-corners"
+          }
+        ],
+        "input": "land = [[1,1],[1,1]]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "flood-fill",
+    "visualKind": "grid",
+    "nodeQuestion": {
+      "prompt": "Which pixels belong to the graph explored by the paint bucket?",
+      "correct": "start-color",
+      "choices": [
+        {
+          "id": "start-color",
+          "label": "Every pixel whose original color equals the start pixel's color.",
+          "feedback": "Right. Reachability then decides which of those pixels actually changes.",
+          "misconception": null
+        },
+        {
+          "id": "all",
+          "label": "Every pixel in the image.",
+          "feedback": "Other colors are boundaries the fill cannot cross.",
+          "misconception": "crosses-color-boundaries"
+        },
+        {
+          "id": "new-color",
+          "label": "Only pixels that already have the requested new color.",
+          "feedback": "The search follows the original start color, not the replacement color.",
+          "misconception": "searches-new-color"
+        },
+        {
+          "id": "reachable-only",
+          "label": "Only pixels already known to be reachable from the start.",
+          "feedback": "Reachability is what DFS discovers from the candidate nodes and edges.",
+          "misconception": "assumes-result-up-front"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "How may paint spread from one candidate pixel to another?",
+      "correct": "four",
+      "choices": [
+        {
+          "id": "four",
+          "label": "Across a shared side to a pixel of the original start color.",
+          "feedback": "Right. Paint spreads up, down, left, and right only.",
+          "misconception": null
+        },
+        {
+          "id": "eight",
+          "label": "Across a shared side or corner to the original color.",
+          "feedback": "Diagonal pixels do not touch for flood fill.",
+          "misconception": "allows-diagonals"
+        },
+        {
+          "id": "any-color",
+          "label": "Across a shared side regardless of the neighbor's original color.",
+          "feedback": "That would leak through color boundaries.",
+          "misconception": "ignores-original-color"
+        },
+        {
+          "id": "same-row",
+          "label": "To any matching-color pixel in the same row or column.",
+          "feedback": "The fill moves one adjacent pixel at a time.",
+          "misconception": "jumps-gaps"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "paint-blob",
+        "prompt": "Starting at the center of [[1,1,1],[1,1,0],[1,0,1]] and painting 2, what image results?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "[[2,2,2],[2,2,0],[2,0,1]]",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "[[2,2,2],[2,2,0],[2,0,2]]",
+            "feedback": "The bottom-right 1 touches only diagonally.",
+            "misconception": "paints-diagonal"
+          },
+          {
+            "id": "wrong-2",
+            "label": "[[1,2,1],[2,2,0],[1,0,1]]",
+            "feedback": "The fill continues through every connected original-color pixel.",
+            "misconception": "paints-direct-neighbors-only"
+          },
+          {
+            "id": "wrong-3",
+            "label": "[[2,2,2],[2,2,2],[2,2,2]]",
+            "feedback": "Zero pixels are color boundaries.",
+            "misconception": "paints-all-cells"
+          }
+        ],
+        "input": "image = [[1,1,1],[1,1,0],[1,0,1]], sr = 1, sc = 1, color = 2"
+      },
+      {
+        "id": "same-color",
+        "prompt": "What happens when a grid of 0s is flood-filled from 0 to new color 0?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "The image stays unchanged.",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "Every 0 is changed to 1.",
+            "feedback": "The requested replacement is 0, not 1.",
+            "misconception": "uses-default-color"
+          },
+          {
+            "id": "wrong-2",
+            "label": "Only the starting 0 is removed.",
+            "feedback": "Flood fill does not remove pixels.",
+            "misconception": "deletes-start"
+          },
+          {
+            "id": "wrong-3",
+            "label": "The function returns an empty image.",
+            "feedback": "Equal colors are a no-op, not deletion.",
+            "misconception": "returns-empty-on-no-op"
+          }
+        ],
+        "input": "image = [[0,0,0],[0,0,0]], sr = 0, sc = 0, color = 0"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "kattis-getting-gold",
+    "visualKind": "state",
+    "nodeQuestion": {
+      "prompt": "What should be a location node in the dungeon picture?",
+      "correct": "nonwall",
+      "choices": [
+        {
+          "id": "nonwall",
+          "label": "Every non-wall square: floor, start, gold, and trap.",
+          "feedback": "Right. The movement rule will prevent unsafe outgoing steps.",
+          "misconception": null
+        },
+        {
+          "id": "safe-known",
+          "label": "Only squares that are not traps and not beside traps.",
+          "feedback": "The explorer may enter a draft square; it becomes a stopping point.",
+          "misconception": "removes-draft-squares"
+        },
+        {
+          "id": "gold",
+          "label": "Only the start and squares containing gold.",
+          "feedback": "Plain floor squares can connect the route to gold.",
+          "misconception": "drops-floor"
+        },
+        {
+          "id": "all",
+          "label": "Every square, including walls.",
+          "feedback": "Walls can never be entered.",
+          "misconception": "includes-walls"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which movement arrows should leave a square?",
+      "correct": "draft-rule",
+      "choices": [
+        {
+          "id": "draft-rule",
+          "label": "A safe non-trap square points to non-trap side neighbors; trap nodes have no edges, and draft squares have no outgoing arrows.",
+          "feedback": "Right. A draft square may be entered but cannot expand, while a trap cannot be entered at all.",
+          "misconception": null
+        },
+        {
+          "id": "normal",
+          "label": "Every non-wall square points to all non-wall side neighbors.",
+          "feedback": "That ignores the rule to stop exploring when a draft is felt.",
+          "misconception": "ignores-drafts"
+        },
+        {
+          "id": "remove-draft",
+          "label": "No arrow may enter or leave a square beside a trap.",
+          "feedback": "The explorer may safely enter a draft square before stopping.",
+          "misconception": "cannot-enter-draft"
+        },
+        {
+          "id": "trap-only",
+          "label": "Only trap squares have no outgoing arrows.",
+          "feedback": "The stopping rule applies one square before the trap.",
+          "misconception": "stops-too-late"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "draft-one",
+        "prompt": "In the first shown dungeon, how many safe gold pieces can the explorer collect?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "1",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "0",
+            "feedback": "One gold is reachable before the draft stops expansion.",
+            "misconception": "stops-before-draft-cell"
+          },
+          {
+            "id": "wrong-2",
+            "label": "3",
+            "feedback": "Gold beyond a draft square cannot be explored.",
+            "misconception": "walks-through-draft"
+          },
+          {
+            "id": "wrong-3",
+            "label": "4",
+            "feedback": "This counts all four G tiles, including three that safe exploration cannot reach.",
+            "misconception": "counts-all-gold"
+          }
+        ],
+        "input": "collectSafeGold([\n  \"#######\",\n  \"#P.GTG#\",\n  \"#..TGG#\",\n  \"#######\"\n])"
+      },
+      {
+        "id": "draft-four",
+        "prompt": "In the second shown dungeon, how many safe gold pieces are collectible?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "4",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "3",
+            "feedback": "A gold square with a draft may be entered and collected before stopping.",
+            "misconception": "cannot-enter-draft"
+          },
+          {
+            "id": "wrong-2",
+            "label": "7",
+            "feedback": "Three right-column gold pieces lie beyond draft squares.",
+            "misconception": "ignores-draft-stop"
+          },
+          {
+            "id": "wrong-3",
+            "label": "2",
+            "feedback": "Safe exploration branches to two additional draft-edge gold squares.",
+            "misconception": "stops-search-too-early"
+          }
+        ],
+        "input": "collectSafeGold([\n  \"########\",\n  \"#...GTG#\",\n  \"#..PG.G#\",\n  \"#...G#G#\",\n  \"#..TG.G#\",\n  \"########\"\n])"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "ladder-takahashi",
+    "visualKind": "undirected-graph",
+    "nodeQuestion": {
+      "prompt": "Which floors need nodes in this sparse skyscraper graph?",
+      "correct": "listed-plus-one",
+      "choices": [
+        {
+          "id": "listed-plus-one",
+          "label": "Floor 1 and every floor number appearing in a ladder.",
+          "feedback": "Right. Unlisted floors cannot be reached or affect the answer.",
+          "misconception": null
+        },
+        {
+          "id": "billion",
+          "label": "All one billion possible floors.",
+          "feedback": "The graph is sparse; almost all floors have no ladder and need no stored node.",
+          "misconception": "builds-huge-empty-graph"
+        },
+        {
+          "id": "high",
+          "label": "Only the higher endpoint of each ladder.",
+          "feedback": "Both endpoints are places the climber can stand.",
+          "misconception": "drops-lower-endpoints"
+        },
+        {
+          "id": "reachable",
+          "label": "Only floors already known to be reachable from floor 1.",
+          "feedback": "DFS must discover which listed floors are reachable.",
+          "misconception": "assumes-search-result"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "What connection does ladder [a,b] create?",
+      "correct": "both",
+      "choices": [
+        {
+          "id": "both",
+          "label": "One two-way edge between floors a and b.",
+          "feedback": "Right. The ladder may be climbed in either direction.",
+          "misconception": null
+        },
+        {
+          "id": "up",
+          "label": "Only a → b when b is higher.",
+          "feedback": "Ladders also allow climbing back down.",
+          "misconception": "makes-ladders-one-way"
+        },
+        {
+          "id": "adjacent",
+          "label": "Edges between every numbered floor from a through b.",
+          "feedback": "The ladder connects only its two endpoints; intermediate numbers are irrelevant.",
+          "misconception": "creates-intermediate-floors"
+        },
+        {
+          "id": "floor-one",
+          "label": "An edge only when one endpoint is floor 1.",
+          "feedback": "Reachable ladders can continue the route far beyond floor 1.",
+          "misconception": "searches-one-step-only"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "highest-ten",
+        "prompt": "From floor 1 with ladders [[1,4],[4,3],[4,10],[8,3]], what highest floor is reachable?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "10",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "8",
+            "feedback": "Floor 10 is directly connected to reachable floor 4.",
+            "misconception": "chooses-last-discovered"
+          },
+          {
+            "id": "wrong-2",
+            "label": "4",
+            "feedback": "The route may continue through more ladders after leaving floor 1.",
+            "misconception": "checks-one-step"
+          },
+          {
+            "id": "wrong-3",
+            "label": "1",
+            "feedback": "A ladder touches floor 1, so movement is possible.",
+            "misconception": "ignores-ladders"
+          }
+        ],
+        "input": "ladders = [[1,4],[4,3],[4,10],[8,3]]"
+      },
+      {
+        "id": "disconnected-high",
+        "prompt": "If ladders connect only floors 500000000 through 800000000, what is the answer from floor 1?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "1",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "800000000",
+            "feedback": "The globally highest ladder is disconnected from floor 1.",
+            "misconception": "takes-global-maximum"
+          },
+          {
+            "id": "wrong-2",
+            "label": "500000000",
+            "feedback": "No route reaches the lowest listed endpoint either.",
+            "misconception": "assumes-first-ladder-reachable"
+          },
+          {
+            "id": "wrong-3",
+            "label": "0",
+            "feedback": "The starting floor itself is always reachable.",
+            "misconception": "forgets-start-node"
+          }
+        ],
+        "input": "ladders = [[500000000,600000000],[600000000,700000000],[700000000,800000000]]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Use the exact floor number only. Example: `500000000`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "structy-largest-component",
+    "visualKind": "undirected-graph",
+    "nodeQuestion": {
+      "prompt": "What is one node in the adjacency-list object?",
+      "correct": "keys",
+      "choices": [
+        {
+          "id": "keys",
+          "label": "Each object key, including keys with an empty neighbor list.",
+          "feedback": "Right. An isolated key is a one-node component.",
+          "misconception": null
+        },
+        {
+          "id": "nonempty",
+          "label": "Only keys whose neighbor array is non-empty.",
+          "feedback": "This wrongly drops isolated nodes.",
+          "misconception": "drops-isolated-nodes"
+        },
+        {
+          "id": "arrays",
+          "label": "Each neighbor array.",
+          "feedback": "The arrays describe edges leaving the keyed nodes.",
+          "misconception": "uses-adjacency-arrays-as-nodes"
+        },
+        {
+          "id": "component",
+          "label": "Each already-completed connected component.",
+          "feedback": "Components must be found by traversing individual nodes.",
+          "misconception": "confuses-components-with-nodes"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When do two keyed nodes share an edge?",
+      "correct": "listed",
+      "choices": [
+        {
+          "id": "listed",
+          "label": "Each appears in the other's neighbor list, because the graph is undirected.",
+          "feedback": "Right. The two adjacency entries describe one two-way connection.",
+          "misconception": null
+        },
+        {
+          "id": "oneway",
+          "label": "Only from a key to names in its own list; reverse travel is forbidden.",
+          "feedback": "The problem promises an undirected graph.",
+          "misconception": "treats-graph-as-directed"
+        },
+        {
+          "id": "same-component",
+          "label": "Any two nodes that eventually belong to the same component.",
+          "feedback": "A path through other nodes is not one direct edge.",
+          "misconception": "turns-path-into-edge"
+        },
+        {
+          "id": "alphabetical",
+          "label": "Keys next to each other alphabetically.",
+          "feedback": "Names do not create graph connections.",
+          "misconception": "derives-edge-from-label"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "largest-three",
+        "prompt": "What largest-component size is returned for the shown adjacency list?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "3",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "2",
+            "feedback": "The function chooses the larger component.",
+            "misconception": "chooses-smaller-component"
+          },
+          {
+            "id": "wrong-2",
+            "label": "5",
+            "feedback": "Disconnected components are not added together.",
+            "misconception": "counts-all-nodes"
+          },
+          {
+            "id": "wrong-3",
+            "label": "4",
+            "feedback": "This counts the two undirected edges twice from the adjacency lists instead of counting three nodes.",
+            "misconception": "counts-adjacency-entries"
+          }
+        ],
+        "input": "graph = { a: ['b'], b: ['a','c'], c: ['b'], d: ['e'], e: ['d'] }"
+      },
+      {
+        "id": "isolated-pair",
+        "prompt": "For graph {x:[], y:[z], z:[y]}, what size is returned?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "2",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "1",
+            "feedback": "The connected pair is larger than isolated x.",
+            "misconception": "chooses-isolated-node"
+          },
+          {
+            "id": "wrong-2",
+            "label": "3",
+            "feedback": "x is disconnected from y and z.",
+            "misconception": "merges-components"
+          },
+          {
+            "id": "wrong-3",
+            "label": "0",
+            "feedback": "An undirected y-z edge forms a nonempty component.",
+            "misconception": "ignores-listed-edge"
+          }
+        ],
+        "input": "graph = { x: [], y: ['z'], z: ['y'] }"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Use the exact object key from `graph` only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "max-area-of-island",
+    "visualKind": "grid",
+    "nodeQuestion": {
+      "prompt": "What contributes one unit to an island's area?",
+      "correct": "land",
+      "choices": [
+        {
+          "id": "land",
+          "label": "Each cell containing 1.",
+          "feedback": "Right. Component size equals its number of land nodes.",
+          "misconception": null
+        },
+        {
+          "id": "all",
+          "label": "Every land and water cell inside the island's bounding box.",
+          "feedback": "Water gaps are not island area.",
+          "misconception": "counts-bounding-box"
+        },
+        {
+          "id": "edge",
+          "label": "Each side shared by two land cells.",
+          "feedback": "The output counts cells, not connections.",
+          "misconception": "counts-edges"
+        },
+        {
+          "id": "island",
+          "label": "Each whole island counts as one node and one area unit.",
+          "feedback": "Area is the number of cells inside the component.",
+          "misconception": "counts-components"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which land cells join the same island?",
+      "correct": "four",
+      "choices": [
+        {
+          "id": "four",
+          "label": "Immediate land neighbors up, down, left, or right.",
+          "feedback": "Right. Side contact creates the island component.",
+          "misconception": null
+        },
+        {
+          "id": "eight",
+          "label": "Land cells touching by a side or corner.",
+          "feedback": "Diagonal contact does not join islands.",
+          "misconception": "allows-diagonals"
+        },
+        {
+          "id": "row",
+          "label": "Any land cells in the same row or column.",
+          "feedback": "Water or distance between cells breaks a direct connection.",
+          "misconception": "jumps-water"
+        },
+        {
+          "id": "largest-only",
+          "label": "Only edges inside the island that will turn out largest.",
+          "feedback": "All islands must be explored before the maximum is known.",
+          "misconception": "assumes-winner-up-front"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "area-five",
+        "prompt": "What maximum island area is returned for the shown grid?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "5",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "8",
+            "feedback": "Separate islands are not combined.",
+            "misconception": "sums-islands"
+          },
+          {
+            "id": "wrong-2",
+            "label": "3",
+            "feedback": "The output asks for the larger island.",
+            "misconception": "chooses-first-island"
+          },
+          {
+            "id": "wrong-3",
+            "label": "2",
+            "feedback": "The output is cells, not the number of islands.",
+            "misconception": "counts-components"
+          }
+        ],
+        "input": "grid = [[0,1,0,0],[1,1,0,1],[0,0,0,1],[0,1,1,1]]"
+      },
+      {
+        "id": "no-land",
+        "prompt": "What is max area for [[0,0],[0,0]]?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "0",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "1",
+            "feedback": "No land means there is not even a one-cell island.",
+            "misconception": "forces-minimum-one"
+          },
+          {
+            "id": "wrong-2",
+            "label": "4",
+            "feedback": "Water cells do not count as area.",
+            "misconception": "counts-water"
+          },
+          {
+            "id": "wrong-3",
+            "label": "2",
+            "feedback": "Rows are not islands.",
+            "misconception": "counts-rows"
+          }
+        ],
+        "input": "grid = [[0,0],[0,0]]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "structy-max-root-to-leaf-path-sum",
+    "visualKind": "tree",
+    "nodeQuestion": {
+      "prompt": "What does each node in the path-sum picture hold?",
+      "correct": "object-value",
+      "choices": [
+        {
+          "id": "object-value",
+          "label": "One tree object and its numeric val, including negative values.",
+          "feedback": "Right. Every visited node's val contributes to its path.",
+          "misconception": null
+        },
+        {
+          "id": "positive",
+          "label": "Only nodes with positive values.",
+          "feedback": "A valid root-to-leaf path cannot skip a negative node.",
+          "misconception": "drops-negative-nodes"
+        },
+        {
+          "id": "leaf",
+          "label": "Only leaf nodes.",
+          "feedback": "The root and inner-node values also contribute to each sum.",
+          "misconception": "counts-only-leaves"
+        },
+        {
+          "id": "path",
+          "label": "One node for each complete root-to-leaf path.",
+          "feedback": "Paths are sequences made from the tree's object nodes.",
+          "misconception": "uses-paths-as-nodes"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which downward steps are valid edges?",
+      "correct": "children",
+      "choices": [
+        {
+          "id": "children",
+          "label": "A parent connects to its existing left and right child.",
+          "feedback": "Right. A path follows child pointers until a leaf.",
+          "misconception": null
+        },
+        {
+          "id": "best-child",
+          "label": "Only the child with the larger immediate value.",
+          "feedback": "A smaller child may lead to a much larger total below.",
+          "misconception": "greedy-edge-pruning"
+        },
+        {
+          "id": "leaf-shortcut",
+          "label": "The root connects directly to every leaf.",
+          "feedback": "That shortcut skips inner values that belong in the sum.",
+          "misconception": "skips-intermediate-nodes"
+        },
+        {
+          "id": "positive-edge",
+          "label": "An edge exists only when the child value is positive.",
+          "feedback": "Negative nodes remain required parts of their branches.",
+          "misconception": "removes-negative-branches"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "max-eighteen",
+        "prompt": "What maximum root-to-leaf path sum is returned for the shown tree?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "18",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "12",
+            "feedback": "The function returns the maximum, not the middle branch.",
+            "misconception": "chooses-wrong-branch"
+          },
+          {
+            "id": "wrong-2",
+            "label": "38",
+            "feedback": "Do not add separate path totals together.",
+            "misconception": "sums-all-paths"
+          },
+          {
+            "id": "wrong-3",
+            "label": "11",
+            "feedback": "The largest single node is not the full path sum.",
+            "misconception": "chooses-largest-node"
+          }
+        ],
+        "input": "const root = {\n  val: 3,\n  left: {\n    val: 11,\n    left:  { val: 4,  left: null, right: null },\n    right: { val: -2, left: null, right: null }\n  },\n  right: {\n    val: 4,\n    left: null,\n    right: { val: 1, left: null, right: null }\n  }\n};\nmaxPathSum(root)"
+      },
+      {
+        "id": "short-leaf-twelve",
+        "prompt": "What maximum root-to-leaf path sum is returned for the shown tree?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "12",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "10",
+            "feedback": "The root value is included with leaf 10.",
+            "misconception": "omits-root"
+          },
+          {
+            "id": "wrong-2",
+            "label": "8",
+            "feedback": "The shorter right path has the larger total.",
+            "misconception": "prefers-longest-path"
+          },
+          {
+            "id": "wrong-3",
+            "label": "22",
+            "feedback": "This adds every node in the tree; the function must add only one complete root-to-leaf path.",
+            "misconception": "sums-all-tree-nodes"
+          }
+        ],
+        "input": "const root = {\n  val: 2,\n  left: {\n    val: -1,\n    left:  { val: 4, left: null, right: null },\n    right: { val: 7, left: null, right: null }\n  },\n  right: { val: 10, left: null, right: null }\n};\nmaxPathSum(root)"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each tree node `node levelOrderIndex: value`. Example: `node 2: -3`.",
+      "pattern": "^node \\d+: -?\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "maximum-number-of-fish-in-a-grid",
+    "visualKind": "grid",
+    "nodeQuestion": {
+      "prompt": "Which pond cells become weighted nodes?",
+      "correct": "water",
+      "choices": [
+        {
+          "id": "water",
+          "label": "Every cell with a value greater than 0, weighted by its fish count.",
+          "feedback": "Right. A component's total is the sum of its node weights.",
+          "misconception": null
+        },
+        {
+          "id": "all",
+          "label": "Every cell, including 0-valued land.",
+          "feedback": "Land cannot be entered and must separate pools.",
+          "misconception": "walks-on-land"
+        },
+        {
+          "id": "max",
+          "label": "Only cells tied for the largest individual fish value.",
+          "feedback": "Several smaller connected cells can have the best total.",
+          "misconception": "chooses-largest-cell"
+        },
+        {
+          "id": "pool",
+          "label": "One node per finished pool, storing only its largest cell.",
+          "feedback": "A pool total uses all connected water-cell values.",
+          "misconception": "collapses-and-maxes-component"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When can the fisher move between two water nodes?",
+      "correct": "four",
+      "choices": [
+        {
+          "id": "four",
+          "label": "The positive cells share a side.",
+          "feedback": "Right. Movement is up, down, left, or right.",
+          "misconception": null
+        },
+        {
+          "id": "eight",
+          "label": "The positive cells share a side or corner.",
+          "feedback": "Diagonal pools stay separate.",
+          "misconception": "allows-diagonals"
+        },
+        {
+          "id": "same-fish",
+          "label": "The cells contain the same number of fish.",
+          "feedback": "Fish amounts do not control movement.",
+          "misconception": "connects-equal-values"
+        },
+        {
+          "id": "through-zero",
+          "label": "The cells are in the same row with only 0s between them.",
+          "feedback": "Land blocks movement; it cannot be crossed.",
+          "misconception": "crosses-land"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "best-seven",
+        "prompt": "What maximum fish total is returned for the shown grid?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "7",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "20",
+            "feedback": "The fisher chooses one pool, not all disconnected water.",
+            "misconception": "sums-all-pools"
+          },
+          {
+            "id": "wrong-2",
+            "label": "5",
+            "feedback": "A different connected pool has a larger total.",
+            "misconception": "chooses-first-pool"
+          },
+          {
+            "id": "wrong-3",
+            "label": "4",
+            "feedback": "The answer is fish total, not number of pools.",
+            "misconception": "counts-components"
+          }
+        ],
+        "input": "grid = [[0,2,1,0],[4,0,0,3],[1,0,0,4],[0,3,2,0]]"
+      },
+      {
+        "id": "two-corners",
+        "prompt": "What maximum fish total is returned for the shown grid?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "1",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "2",
+            "feedback": "The fisher cannot cross land between the corners.",
+            "misconception": "combines-disconnected-water"
+          },
+          {
+            "id": "wrong-2",
+            "label": "0",
+            "feedback": "Either corner is a valid starting water cell.",
+            "misconception": "requires-movement"
+          },
+          {
+            "id": "wrong-3",
+            "label": "16",
+            "feedback": "This treats each of the 16 grid cells as one fish; land contributes zero and separates the two water cells.",
+            "misconception": "counts-grid-cells"
+          }
+        ],
+        "input": "grid = [[1,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,1]]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "usaco-milk-factory",
+    "visualKind": "directed-graph",
+    "nodeQuestion": {
+      "prompt": "What does one node represent in the factory graph?",
+      "correct": "station",
+      "choices": [
+        {
+          "id": "station",
+          "label": "Each station numbered 1 through n.",
+          "feedback": "Right. Every station must be able to reach the chosen pickup node.",
+          "misconception": null
+        },
+        {
+          "id": "belt",
+          "label": "Each conveyor belt.",
+          "feedback": "Belts are directed edges between station nodes.",
+          "misconception": "swaps-nodes-and-edges"
+        },
+        {
+          "id": "sink-only",
+          "label": "Only stations with no outgoing belt.",
+          "feedback": "All stations matter when checking whether everyone can send a crate.",
+          "misconception": "drops-sources"
+        },
+        {
+          "id": "candidate",
+          "label": "Only the smallest-numbered possible pickup station.",
+          "feedback": "The candidate cannot be known before reachability is checked.",
+          "misconception": "assumes-answer"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "How should belt [a,b] be drawn?",
+      "correct": "a-to-b",
+      "choices": [
+        {
+          "id": "a-to-b",
+          "label": "One arrow a → b.",
+          "feedback": "Right. A crate can travel only in the listed direction.",
+          "misconception": null
+        },
+        {
+          "id": "both",
+          "label": "A two-way line between a and b.",
+          "feedback": "Belts are one-way, even though the underlying stations form a tree.",
+          "misconception": "makes-belts-undirected"
+        },
+        {
+          "id": "reverse",
+          "label": "One arrow b → a.",
+          "feedback": "That reverses the input's direction.",
+          "misconception": "reverses-belts"
+        },
+        {
+          "id": "toward-small",
+          "label": "An arrow from the larger number toward the smaller number.",
+          "feedback": "Station numbers do not decide belt direction.",
+          "misconception": "derives-direction-from-label"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "sink-two",
+        "prompt": "For belts 1→2 and 3→2, which pickup station works?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "2",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "1",
+            "feedback": "Station 3 cannot send a crate to 1.",
+            "misconception": "chooses-source"
+          },
+          {
+            "id": "wrong-2",
+            "label": "3",
+            "feedback": "Station 1 cannot send a crate to 3.",
+            "misconception": "reverses-belt"
+          },
+          {
+            "id": "wrong-3",
+            "label": "-1",
+            "feedback": "Both other stations can reach 2.",
+            "misconception": "misses-common-sink"
+          }
+        ],
+        "input": "n = 3, belts = [[1,2],[3,2]]"
+      },
+      {
+        "id": "no-sink",
+        "prompt": "For belts 2→1 and 2→3, which pickup station works?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "-1",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "1",
+            "feedback": "Station 3 cannot reach 1.",
+            "misconception": "checks-some-stations"
+          },
+          {
+            "id": "wrong-2",
+            "label": "2",
+            "feedback": "The arrows leave 2; stations 1 and 3 cannot return to it.",
+            "misconception": "treats-belts-undirected"
+          },
+          {
+            "id": "wrong-3",
+            "label": "3",
+            "feedback": "Station 1 cannot reach 3.",
+            "misconception": "checks-some-stations"
+          }
+        ],
+        "input": "n = 3, belts = [[2,1],[2,3]]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 1-based number only. Example: `2`.",
+      "pattern": "^[1-9]\\d*$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "structy-minimum-island",
+    "visualKind": "grid",
+    "nodeQuestion": {
+      "prompt": "What should count as one unit when measuring an island?",
+      "correct": "land",
+      "choices": [
+        {
+          "id": "land",
+          "label": "Each cell containing L.",
+          "feedback": "Right. The smallest component size is its land-node count.",
+          "misconception": null
+        },
+        {
+          "id": "water",
+          "label": "Each W cell surrounding the island.",
+          "feedback": "Water separates islands but is not part of their size.",
+          "misconception": "counts-water"
+        },
+        {
+          "id": "island",
+          "label": "Each whole island as one node.",
+          "feedback": "You need the individual land cells to measure island size.",
+          "misconception": "counts-components-not-cells"
+        },
+        {
+          "id": "border",
+          "label": "Only L cells on an island's outer border.",
+          "feedback": "Interior land cells count toward size too.",
+          "misconception": "counts-perimeter-cells"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which L cells belong together by one-step connections?",
+      "correct": "four",
+      "choices": [
+        {
+          "id": "four",
+          "label": "Immediate land neighbors through a shared side.",
+          "feedback": "Right. This problem uses four-directional islands.",
+          "misconception": null
+        },
+        {
+          "id": "eight",
+          "label": "Land cells touching by a side or corner.",
+          "feedback": "Diagonal touching does not merge islands.",
+          "misconception": "allows-diagonals"
+        },
+        {
+          "id": "smallest",
+          "label": "Only connections inside the island that looks smallest.",
+          "feedback": "Every island must be measured before choosing the minimum.",
+          "misconception": "assumes-smallest-up-front"
+        },
+        {
+          "id": "same-row",
+          "label": "Any L cells in the same row.",
+          "feedback": "Cells separated by water do not connect.",
+          "misconception": "jumps-water"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "minimum-one",
+        "prompt": "What minimum island size is returned for the shown grid?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "1",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "2",
+            "feedback": "The smaller island is the one-cell island.",
+            "misconception": "chooses-first-island"
+          },
+          {
+            "id": "wrong-2",
+            "label": "3",
+            "feedback": "Do not add separate island sizes.",
+            "misconception": "sums-islands"
+          },
+          {
+            "id": "wrong-3",
+            "label": "0",
+            "feedback": "The problem guarantees at least one land island.",
+            "misconception": "returns-water-default"
+          }
+        ],
+        "input": "grid = [['W','L','W'],['W','L','W'],['W','W','L']]"
+      },
+      {
+        "id": "only-three",
+        "prompt": "What minimum island size is returned for the shown grid?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "3",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "1",
+            "feedback": "Connected land cells form one size-3 island.",
+            "misconception": "counts-cell-as-island"
+          },
+          {
+            "id": "wrong-2",
+            "label": "2",
+            "feedback": "There is no separate two-cell component.",
+            "misconception": "splits-component"
+          },
+          {
+            "id": "wrong-3",
+            "label": "0",
+            "feedback": "Water is not an island.",
+            "misconception": "chooses-water"
+          }
+        ],
+        "input": "grid = [['L','L'],['L','W']]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "moocast",
+    "visualKind": "directed-graph",
+    "nodeQuestion": {
+      "prompt": "What does each radio node represent?",
+      "correct": "cow",
+      "choices": [
+        {
+          "id": "cow",
+          "label": "One cow, with its position and transmission power.",
+          "feedback": "Right. Power is data attached to the sending cow.",
+          "misconception": null
+        },
+        {
+          "id": "range",
+          "label": "One circular transmission range.",
+          "feedback": "The range belongs to a cow; the cow is the graph node.",
+          "misconception": "uses-range-as-node"
+        },
+        {
+          "id": "message",
+          "label": "One relayed message.",
+          "feedback": "Messages travel through the fixed cow graph.",
+          "misconception": "uses-traversal-event-as-node"
+        },
+        {
+          "id": "pair",
+          "label": "One pair of cows close enough in either direction.",
+          "feedback": "Each cow stays separate because reach can be one-way.",
+          "misconception": "collapses-pair"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When should arrow i → j be drawn?",
+      "correct": "sender-range",
+      "choices": [
+        {
+          "id": "sender-range",
+          "label": "Cow j is within cow i's power radius; only i's power is used.",
+          "feedback": "Right. The sender decides whether this directed transmission exists.",
+          "misconception": null
+        },
+        {
+          "id": "either",
+          "label": "Either cow can reach the other, so arrows always go both ways.",
+          "feedback": "A strong cow may reach a weak cow that cannot answer.",
+          "misconception": "makes-range-symmetric"
+        },
+        {
+          "id": "receiver",
+          "label": "Cow i lies within cow j's power radius.",
+          "feedback": "That condition describes the reverse arrow j → i.",
+          "misconception": "uses-receiver-power"
+        },
+        {
+          "id": "relay",
+          "label": "Cow j is reachable from i after any number of relays.",
+          "feedback": "A relay chain is a path, not one direct radio edge.",
+          "misconception": "turns-path-into-edge"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "relay-three",
+        "prompt": "What maximum broadcast count is returned for the shown cows?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "3",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "2",
+            "feedback": "Cow 1 relays the message onward to cow 2.",
+            "misconception": "counts-direct-only"
+          },
+          {
+            "id": "wrong-2",
+            "label": "1",
+            "feedback": "The starting cow counts and can reach another cow.",
+            "misconception": "ignores-transmissions"
+          },
+          {
+            "id": "wrong-3",
+            "label": "4",
+            "feedback": "A cow outside the directed relay chain is not reached.",
+            "misconception": "counts-all-cows"
+          }
+        ],
+        "input": "cows = [[1,3,5],[5,4,3],[7,2,1],[6,1,1]]"
+      },
+      {
+        "id": "middle-cow-three",
+        "prompt": "What maximum broadcast count is returned for the shown cows?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "3",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "2",
+            "feedback": "Start at the middle cow to reach both others.",
+            "misconception": "chooses-end-cow"
+          },
+          {
+            "id": "wrong-2",
+            "label": "1",
+            "feedback": "The best start is not required to be cow 0.",
+            "misconception": "always-starts-zero"
+          },
+          {
+            "id": "wrong-3",
+            "label": "4",
+            "feedback": "There are only three cows and each counts once.",
+            "misconception": "double-counts-start"
+          }
+        ],
+        "input": "cows = [[0,0,2],[3,0,3],[5,0,1]]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each cow `0BasedIndex: (x,y) p=power`. Example: `1: (3,0) p=2`.",
+      "pattern": "^\\d+: \\(-?\\d+,-?\\d+\\) p=\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "path-sum",
+    "visualKind": "tree",
+    "nodeQuestion": {
+      "prompt": "What contributes a value to a candidate path?",
+      "correct": "tree-node",
+      "choices": [
+        {
+          "id": "tree-node",
+          "label": "Every tree node object on the route, including root and leaf.",
+          "feedback": "Right. Add each val along one complete root-to-leaf route.",
+          "misconception": null
+        },
+        {
+          "id": "positive",
+          "label": "Only nodes whose val is positive.",
+          "feedback": "Negative values cannot be skipped when they lie on the path.",
+          "misconception": "drops-negative-values"
+        },
+        {
+          "id": "leaf",
+          "label": "Only leaf nodes.",
+          "feedback": "Root and inner-node values also belong in the sum.",
+          "misconception": "counts-only-leaf"
+        },
+        {
+          "id": "target",
+          "label": "Only nodes whose val equals targetSum.",
+          "feedback": "The target is compared with the total, not individual nodes.",
+          "misconception": "matches-individual-values"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which links may a root-to-leaf path follow?",
+      "correct": "children",
+      "choices": [
+        {
+          "id": "children",
+          "label": "From a parent to its existing left or right child.",
+          "feedback": "Right. The route begins at root and must end at a true leaf.",
+          "misconception": null
+        },
+        {
+          "id": "stop-sum",
+          "label": "A path may stop at any inner node as soon as its running sum hits targetSum.",
+          "feedback": "Success counts only when the matching route ends at a leaf.",
+          "misconception": "stops-before-leaf"
+        },
+        {
+          "id": "either-direction",
+          "label": "A path may move from child back to parent and down another branch.",
+          "feedback": "A root-to-leaf path only moves downward.",
+          "misconception": "allows-backtracking-in-path"
+        },
+        {
+          "id": "leaf-shortcut",
+          "label": "The root connects directly to every leaf.",
+          "feedback": "That skips inner nodes whose values must be included.",
+          "misconception": "skips-intermediate-values"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "target-22",
+        "prompt": "Which explanation correctly evaluates the shown tree for targetSum = 22?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "true — one complete path has sum 22",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "false — require every complete path to sum to 22",
+            "feedback": "The function needs at least one matching complete path, not all paths.",
+            "misconception": "requires-all-paths-match"
+          },
+          {
+            "id": "wrong-2",
+            "label": "false — check only the leftmost complete path, whose sum is 27",
+            "feedback": "A failed first path does not stop the search; another complete path sums to 22.",
+            "misconception": "checks-leftmost-path-only"
+          },
+          {
+            "id": "wrong-3",
+            "label": "false — check only the shortest complete path, whose sum is 26",
+            "feedback": "Path length does not choose the branch; every complete root-to-leaf sum must be tested.",
+            "misconception": "checks-shortest-path-only"
+          }
+        ],
+        "input": "root = {val: 5, left: {val: 4, left: {val: 11, left: {val: 7}, right: {val: 2}}}, right: {val: 8, left: {val: 13}, right: {val: 4, right: {val: 1}}}} (children not shown are null), targetSum = 22"
+      },
+      {
+        "id": "target-five",
+        "prompt": "Which explanation correctly evaluates the shown tree for targetSum = 5?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "false — neither complete path has sum 5",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "true — add the two leaf values 2 + 3",
+            "feedback": "Those leaves belong to different branches; one complete path must total 5.",
+            "misconception": "combines-branches"
+          },
+          {
+            "id": "wrong-2",
+            "label": "true — accept any complete path whose sum is at most 5",
+            "feedback": "The comparison must be exact; sums 3 and 4 do not equal 5.",
+            "misconception": "uses-target-as-upper-bound"
+          },
+          {
+            "id": "wrong-3",
+            "label": "true — stop at an inner node when its running sum is below 5",
+            "feedback": "A valid answer needs equality at a leaf, not merely a smaller partial sum.",
+            "misconception": "accepts-partial-path"
+          }
+        ],
+        "input": "root = {val: 1, left: {val: 2}, right: {val: 3}}, targetSum = 5"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each tree node `node levelOrderIndex: value`. Example: `node 2: -3`.",
+      "pattern": "^node \\d+: -?\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "properties-graph",
+    "visualKind": "undirected-graph",
+    "nodeQuestion": {
+      "prompt": "What does node i stand for?",
+      "correct": "row",
+      "choices": [
+        {
+          "id": "row",
+          "label": "The entire row properties[i], treated as a set for comparison.",
+          "feedback": "Right. There is exactly one node per input row.",
+          "misconception": null
+        },
+        {
+          "id": "value",
+          "label": "One distinct integer appearing anywhere in properties.",
+          "feedback": "Integers are features of row nodes, not graph nodes here.",
+          "misconception": "uses-values-as-nodes"
+        },
+        {
+          "id": "duplicate",
+          "label": "One occurrence of every integer, including duplicates in a row.",
+          "feedback": "Duplicates do not create nodes and do not increase intersection.",
+          "misconception": "counts-duplicates"
+        },
+        {
+          "id": "pair",
+          "label": "One pair of rows whose overlap was tested.",
+          "feedback": "A tested pair may become an edge; the rows are nodes.",
+          "misconception": "uses-pairs-as-nodes"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When do row nodes i and j get an edge?",
+      "correct": "distinct-k",
+      "choices": [
+        {
+          "id": "distinct-k",
+          "label": "Their rows share at least k distinct values.",
+          "feedback": "Right. Sets ensure repeated values count only once.",
+          "misconception": null
+        },
+        {
+          "id": "occurrences-k",
+          "label": "They have at least k matching occurrences, counting duplicates repeatedly.",
+          "feedback": "The intersection counts distinct shared integers.",
+          "misconception": "counts-duplicates"
+        },
+        {
+          "id": "union-k",
+          "label": "Together their rows contain at least k distinct values.",
+          "feedback": "The rule uses intersection, not union.",
+          "misconception": "uses-union"
+        },
+        {
+          "id": "path-k",
+          "label": "They can be linked through k other row nodes.",
+          "feedback": "Connectivity through other rows is a path, not the direct overlap rule.",
+          "misconception": "confuses-path-with-edge"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "three-components",
+        "prompt": "How many connected components are returned for the shown rows and k?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "3",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "2",
+            "feedback": "Node 5 is an isolated third component.",
+            "misconception": "drops-isolated-node"
+          },
+          {
+            "id": "wrong-2",
+            "label": "4",
+            "feedback": "This counts the three edges plus isolated node 5 as four groups instead of merging connected edges.",
+            "misconception": "counts-edges-plus-isolated"
+          },
+          {
+            "id": "wrong-3",
+            "label": "6",
+            "feedback": "Connected rows merge into components.",
+            "misconception": "counts-nodes"
+          }
+        ],
+        "input": "properties = [[1,2],[1,1],[3,4],[4,5],[5,6],[7,7]], k = 1"
+      },
+      {
+        "id": "chain-one",
+        "prompt": "How many connected components are returned for the shown rows and k?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "1",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "2",
+            "feedback": "Node 1 connects all three through a path.",
+            "misconception": "requires-clique"
+          },
+          {
+            "id": "wrong-2",
+            "label": "3",
+            "feedback": "Direct edge 0-2 is not needed for connectivity.",
+            "misconception": "ignores-transitive-connectivity"
+          },
+          {
+            "id": "wrong-3",
+            "label": "0",
+            "feedback": "A nonempty graph has at least one component.",
+            "misconception": "returns-zero-for-connected"
+          }
+        ],
+        "input": "properties = [[1,2,3],[2,3,4],[4,3,5]], k = 2"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each row `row index: {comma-separated set values}`. Example: `row 1: {2,3}`. Do not add spaces inside the braces.",
+      "pattern": "^row \\d+: \\{[^{}]*\\}$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "reachable-nodes-with-restrictions",
+    "visualKind": "undirected-graph",
+    "nodeQuestion": {
+      "prompt": "Which items remain nodes in the tree picture?",
+      "correct": "all",
+      "choices": [
+        {
+          "id": "all",
+          "label": "All nodes 0 through n−1, with restricted nodes clearly marked.",
+          "feedback": "Right. Restricted nodes remain in the input tree but cannot be entered.",
+          "misconception": null
+        },
+        {
+          "id": "allowed",
+          "label": "Only unrestricted nodes; erase restricted nodes and all context immediately.",
+          "feedback": "Traversal may treat them as blocked, but the picture should show where they cut off branches.",
+          "misconception": "hides-restriction-boundaries"
+        },
+        {
+          "id": "reachable",
+          "label": "Only nodes already known reachable from 0.",
+          "feedback": "Reachability is the result DFS must discover.",
+          "misconception": "assumes-result"
+        },
+        {
+          "id": "restricted",
+          "label": "Only the forbidden nodes.",
+          "feedback": "The answer counts allowed nodes reached from 0.",
+          "misconception": "focuses-only-on-blockers"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "How should a listed edge [a,b] behave?",
+      "correct": "two-way-blocked",
+      "choices": [
+        {
+          "id": "two-way-blocked",
+          "label": "It is two-way, but traversal must not enter a restricted endpoint.",
+          "feedback": "Right. A restriction blocks that node and every route through it.",
+          "misconception": null
+        },
+        {
+          "id": "directed",
+          "label": "It goes only from a to b.",
+          "feedback": "The tree edges are undirected.",
+          "misconception": "treats-tree-as-directed"
+        },
+        {
+          "id": "skip",
+          "label": "If b is restricted, connect a directly to b's children instead.",
+          "feedback": "You cannot jump over a forbidden node.",
+          "misconception": "bypasses-restricted-node"
+        },
+        {
+          "id": "remove-branch-edges",
+          "label": "Only edges touching unrestricted nodes that are already reachable should be drawn.",
+          "feedback": "That assumes the traversal result instead of modeling the input tree.",
+          "misconception": "prunes-before-search"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "cutoff-four",
+        "prompt": "How many nodes are reachable from 0 for the shown tree and restrictions?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "4",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "6",
+            "feedback": "This counts restricted neighbors 4 and 5 as reachable but correctly stops before node 6.",
+            "misconception": "counts-restricted-neighbors"
+          },
+          {
+            "id": "wrong-2",
+            "label": "7",
+            "feedback": "This ignores both restrictions and walks through node 5 to count all seven nodes.",
+            "misconception": "walks-through-restricted"
+          },
+          {
+            "id": "wrong-3",
+            "label": "3",
+            "feedback": "The starting node 0 counts too.",
+            "misconception": "omits-start"
+          }
+        ],
+        "input": "n = 7, edges = [[0,1],[1,2],[3,1],[4,0],[0,5],[5,6]], restricted = [4,5]"
+      },
+      {
+        "id": "branch-three",
+        "prompt": "How many nodes are reachable from 0 for the shown tree and restrictions?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "3",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "4",
+            "feedback": "Node 3 cannot be reached without entering restricted node 2.",
+            "misconception": "jumps-restricted-node"
+          },
+          {
+            "id": "wrong-2",
+            "label": "6",
+            "feedback": "This adds restricted neighbors 1, 2, and 4 to valid nodes 0, 5, and 6, producing 6.",
+            "misconception": "counts-all-nonhidden"
+          },
+          {
+            "id": "wrong-3",
+            "label": "2",
+            "feedback": "Node 0 counts along with 5 and 6.",
+            "misconception": "omits-start"
+          }
+        ],
+        "input": "n = 7, edges = [[0,1],[0,2],[0,5],[0,4],[3,2],[6,5]], restricted = [4,2,1]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Use the 0-based node number. Add ` (restricted)` only to restricted nodes. Example: `3 (restricted)`.",
+      "pattern": "^\\d+(?: \\(restricted\\))?$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "transitive-closure",
+    "visualKind": "directed-graph",
+    "nodeQuestion": {
+      "prompt": "What should be a node in the road graph?",
+      "correct": "indices",
+      "choices": [
+        {
+          "id": "indices",
+          "label": "Every index 0 through n−1, including isolated nodes.",
+          "feedback": "Right. Every index must also reach itself in the output.",
+          "misconception": null
+        },
+        {
+          "id": "ones",
+          "label": "Every matrix cell containing 1.",
+          "feedback": "A 1 describes a road between two indexed nodes.",
+          "misconception": "uses-matrix-entries-as-nodes"
+        },
+        {
+          "id": "active",
+          "label": "Only indexes whose row contains an outgoing 1.",
+          "feedback": "A node with no outgoing road still exists and reaches itself.",
+          "misconception": "drops-sinks"
+        },
+        {
+          "id": "pairs",
+          "label": "Every ordered pair (i,j).",
+          "feedback": "Ordered pairs are output questions about reachability, not graph nodes.",
+          "misconception": "uses-output-cells-as-nodes"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "What direct edge is encoded by graph[i][j] = 1?",
+      "correct": "i-j",
+      "choices": [
+        {
+          "id": "i-j",
+          "label": "One arrow i → j.",
+          "feedback": "Right. Row i lists direct destinations from i.",
+          "misconception": null
+        },
+        {
+          "id": "both",
+          "label": "A two-way connection between i and j.",
+          "feedback": "Roads are directed unless the reverse matrix entry is also 1.",
+          "misconception": "makes-roads-undirected"
+        },
+        {
+          "id": "reverse",
+          "label": "One arrow j → i.",
+          "feedback": "That reads the matrix direction backward.",
+          "misconception": "reverses-matrix"
+        },
+        {
+          "id": "reachable",
+          "label": "An arrow i → j whenever j is eventually reachable from i.",
+          "feedback": "That describes the closure result, not an input edge.",
+          "misconception": "confuses-path-with-direct-edge"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "chain-matrix",
+        "prompt": "For roads 0→1 and 1→2, which reachability matrix is correct?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "[[1,1,1],[0,1,1],[0,0,1]]",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "[[0,1,0],[0,0,1],[0,0,0]]",
+            "feedback": "Closure includes paths and self-reachability, not only direct roads.",
+            "misconception": "copies-input-matrix"
+          },
+          {
+            "id": "wrong-2",
+            "label": "[[1,1,1],[1,1,1],[1,1,1]]",
+            "feedback": "Directed roads do not allow travel backward.",
+            "misconception": "makes-graph-undirected"
+          },
+          {
+            "id": "wrong-3",
+            "label": "[[0,1,1],[0,0,1],[0,0,0]]",
+            "feedback": "Every diagonal entry must be 1.",
+            "misconception": "forgets-self-reachability"
+          }
+        ],
+        "input": "graph = [[0,1,0],[0,0,1],[0,0,0]]"
+      },
+      {
+        "id": "cycle-matrix",
+        "prompt": "In 0↔1→2→3, which rows should be all 1s?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "Rows 0 and 1.",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "Row 0 only.",
+            "feedback": "Node 1 returns to 0, so it reaches everything 0 reaches.",
+            "misconception": "misses-cycle-reach"
+          },
+          {
+            "id": "wrong-2",
+            "label": "Rows 0, 1, and 2.",
+            "feedback": "Node 2 cannot travel backward to 0 or 1.",
+            "misconception": "reverses-directed-path"
+          },
+          {
+            "id": "wrong-3",
+            "label": "All four rows.",
+            "feedback": "Node 3 has no outgoing path except to itself.",
+            "misconception": "makes-all-nodes-mutual"
+          }
+        ],
+        "input": "graph = [[0,1,0,0],[1,0,1,0],[0,0,0,1],[0,0,0,0]]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "structy-tree-sum",
+    "visualKind": "tree",
+    "nodeQuestion": {
+      "prompt": "What contributes exactly once to the total?",
+      "correct": "objects",
+      "choices": [
+        {
+          "id": "objects",
+          "label": "Every existing tree node object, using its val.",
+          "feedback": "Right. Visit each node once and add its stored number.",
+          "misconception": null
+        },
+        {
+          "id": "leaves",
+          "label": "Only nodes with no children.",
+          "feedback": "Root and inner nodes contribute too.",
+          "misconception": "sums-only-leaves"
+        },
+        {
+          "id": "positive",
+          "label": "Only nodes with a positive val.",
+          "feedback": "Negative values must reduce the total.",
+          "misconception": "drops-negatives"
+        },
+        {
+          "id": "null",
+          "label": "Existing nodes plus every null child pointer as a zero-valued node.",
+          "feedback": "Null is the absence of a node, not another node to visit.",
+          "misconception": "treats-null-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which parent-child connections belong in the tree?",
+      "correct": "pointers",
+      "choices": [
+        {
+          "id": "pointers",
+          "label": "A parent connects to each non-null left and right child.",
+          "feedback": "Right. Those pointers define the whole tree.",
+          "misconception": null
+        },
+        {
+          "id": "both-required",
+          "label": "Edges exist only when a parent has both children.",
+          "feedback": "A node with just one child still has that valid edge.",
+          "misconception": "drops-single-child"
+        },
+        {
+          "id": "same-sign",
+          "label": "A parent connects only to children with the same sign.",
+          "feedback": "Values do not control tree structure.",
+          "misconception": "derives-edge-from-value"
+        },
+        {
+          "id": "level",
+          "label": "All nodes on the same depth connect to each other.",
+          "feedback": "Sharing a level does not create parent-child links.",
+          "misconception": "connects-level-peers"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "sum-21",
+        "prompt": "What is the sum of tree values 3, 11, 4, -2, 4, and 1?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "21",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "23",
+            "feedback": "The -2 must subtract from the total.",
+            "misconception": "drops-negative-sign"
+          },
+          {
+            "id": "wrong-2",
+            "label": "25",
+            "feedback": "Negative nodes cannot be skipped.",
+            "misconception": "omits-negative-node"
+          },
+          {
+            "id": "wrong-3",
+            "label": "19",
+            "feedback": "Both value-4 nodes are separate and both count.",
+            "misconception": "deduplicates-equal-values"
+          }
+        ],
+        "input": "const root = {\n  val: 3,\n  left: {\n    val: 11,\n    left:  { val: 4,  left: null, right: null },\n    right: { val: -2, left: null, right: null }\n  },\n  right: {\n    val: 4,\n    left: null,\n    right: { val: 1, left: null, right: null }\n  }\n};\ntreeSum(root)"
+      },
+      {
+        "id": "sum-three",
+        "prompt": "What is the sum of tree values 1, 6, 0, and -4?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "3",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "7",
+            "feedback": "The negative child still belongs to the tree.",
+            "misconception": "drops-negative-node"
+          },
+          {
+            "id": "wrong-2",
+            "label": "11",
+            "feedback": "Use -4 with its sign, not absolute value.",
+            "misconception": "uses-absolute-value"
+          },
+          {
+            "id": "wrong-3",
+            "label": "2",
+            "feedback": "This omits the root value 1 and adds only 6 + 0 - 4.",
+            "misconception": "omits-root"
+          }
+        ],
+        "input": "const root = {\n  val: 1,\n  left:  { val: 6, left: null, right: null },\n  right: {\n    val: 0,\n    left:  { val: -4, left: null, right: null },\n    right: null\n  }\n};\ntreeSum(root)"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Name each tree node `node levelOrderIndex: value`. Example: `node 2: -3`.",
+      "pattern": "^node \\d+: -?\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "wheres-my-internet",
+    "visualKind": "undirected-graph",
+    "nodeQuestion": {
+      "prompt": "Which houses must appear as nodes?",
+      "correct": "all",
+      "choices": [
+        {
+          "id": "all",
+          "label": "Every house numbered 1 through n, even if it has no cable.",
+          "feedback": "Right. An isolated house is still a house and is offline unless it is 1.",
+          "misconception": null
+        },
+        {
+          "id": "cabled",
+          "label": "Only house numbers appearing in cables.",
+          "feedback": "This would lose isolated offline houses.",
+          "misconception": "drops-isolated-houses"
+        },
+        {
+          "id": "online",
+          "label": "Only house 1 and houses already known online.",
+          "feedback": "DFS must determine which of all houses are online.",
+          "misconception": "assumes-result"
+        },
+        {
+          "id": "components",
+          "label": "One node for the online group and one for every offline group.",
+          "feedback": "Groups are components made from individual house nodes.",
+          "misconception": "collapses-components"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "What does cable [a,b] add to the network?",
+      "correct": "both",
+      "choices": [
+        {
+          "id": "both",
+          "label": "A two-way connection between houses a and b.",
+          "feedback": "Right. Internet can travel through the cable in either direction.",
+          "misconception": null
+        },
+        {
+          "id": "a-b",
+          "label": "A one-way arrow a → b.",
+          "feedback": "The cables are not directed.",
+          "misconception": "makes-cable-directed"
+        },
+        {
+          "id": "toward-one",
+          "label": "An edge only when one endpoint is house 1.",
+          "feedback": "Chains through other houses can carry internet farther.",
+          "misconception": "checks-direct-cables-only"
+        },
+        {
+          "id": "same-status",
+          "label": "An edge between any two houses that are both online or both offline.",
+          "feedback": "Status comes from listed cable paths; it does not create cables.",
+          "misconception": "derives-edge-from-status"
+        }
+      ]
+    },
+    "pictureQuestions": [
+      {
+        "id": "offline-five-six",
+        "prompt": "For cables 1-2-3-4 and a separate cable 5-6, which houses are offline?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "[5, 6]",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "[]",
+            "feedback": "The 5-6 group has no cable path to house 1.",
+            "misconception": "assumes-any-cable-gives-internet"
+          },
+          {
+            "id": "wrong-2",
+            "label": "[4, 5, 6]",
+            "feedback": "House 4 reaches house 1 through 3 and 2.",
+            "misconception": "checks-direct-cable-only"
+          },
+          {
+            "id": "wrong-3",
+            "label": "[6]",
+            "feedback": "House 5 and 6 share the same disconnected component.",
+            "misconception": "marks-one-per-component"
+          }
+        ],
+        "input": "n = 6, cables = [[1,2],[2,3],[3,4],[5,6]]"
+      },
+      {
+        "id": "reverse-pair-online",
+        "prompt": "For n=2 and cable [2,1], which houses are offline?",
+        "correct": "correct",
+        "choices": [
+          {
+            "id": "correct",
+            "label": "[]",
+            "feedback": "Right. The picture gives exactly this result.",
+            "misconception": null
+          },
+          {
+            "id": "wrong-1",
+            "label": "[2]",
+            "feedback": "The cable works both ways, so house 2 reaches 1.",
+            "misconception": "treats-cable-as-directed"
+          },
+          {
+            "id": "wrong-2",
+            "label": "[1]",
+            "feedback": "House 1 is the internet source and is always online.",
+            "misconception": "marks-source-offline"
+          },
+          {
+            "id": "wrong-3",
+            "label": "[1, 2]",
+            "feedback": "The listed cable connects the entire two-house town.",
+            "misconception": "ignores-cable"
+          }
+        ],
+        "input": "n = 2, cables = [[2,1]]"
+      }
+    ],
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 1-based number only. Example: `2`.",
+      "pattern": "^[1-9]\\d*$",
+      "showExactLabels": false
+    }
+  }
+]

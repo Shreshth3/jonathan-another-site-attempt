@@ -1,0 +1,1247 @@
+[
+  {
+    "id": "ten-kinds-of-people",
+    "vocabulary": {
+      "nodeNames": "map cells",
+      "startNode": "question start",
+      "edges": "same-digit side links",
+      "correctSearch": "cells the real search reaches",
+      "mistakenSearch": "cells the learner reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Corner shortcut",
+        "presentation": "smallest-witness",
+        "goal": "Make one corner touch falsely join two same-digit groups.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Long district",
+        "presentation": "predict-first",
+        "goal": "Build a same-digit route that continues beyond one move.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Split neighborhood",
+        "presentation": "exact-difference",
+        "goal": "Let the start reach two same-digit branches, not just the last.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0)."
+    },
+    "input": {
+      "name": "question start",
+      "prompt": "Choose the question start",
+      "result": "reached-nodes",
+      "resultLabel": "cells the real search reaches"
+    }
+  },
+  {
+    "id": "codewars-array-deep-count",
+    "vocabulary": {
+      "nodeNames": "arrays and values",
+      "startNode": "outer array",
+      "edges": "contains-directly arrows",
+      "correctSearch": "items the deep walk reaches",
+      "mistakenSearch": "items the broken walk reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Nested layer",
+        "presentation": "repair-case",
+        "goal": "Nest a value deeply enough that one-level counting misses it.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Containment reversal",
+        "presentation": "exact-difference",
+        "goal": "Make reversed containment arrows strand the outer array.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Final item",
+        "presentation": "smallest-witness",
+        "goal": "Put a countable item behind the final contains arrow.",
+        "startLabel": "root"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "nested-path",
+      "description": "Use root, root[0], root[1], ... to name nested input items."
+    },
+    "fixedStart": "root",
+    "input": {
+      "name": "outer array",
+      "prompt": "Choose the outer array",
+      "result": "reached-nodes",
+      "resultLabel": "items the deep walk reaches"
+    }
+  },
+  {
+    "id": "gfg-grid-path-exists",
+    "vocabulary": {
+      "nodeNames": "open grid cells",
+      "startNode": "source cell",
+      "edges": "open side passages",
+      "correctSearch": "open cells reachable from source",
+      "mistakenSearch": "open cells the faulty search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Source mix-up",
+        "presentation": "predict-first",
+        "goal": "Use (0,0) as the real source, but make the mistaken search begin at (0,1).",
+        "startLabel": "(0,0)",
+        "mistakenStartLabel": "(0,1)"
+      },
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Blocked corner",
+        "presentation": "smallest-witness",
+        "goal": "Use a corner touch that must not become a path.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Dead-end detour",
+        "presentation": "repair-case",
+        "goal": "Give the source a dead end before the route to the destination.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0)."
+    },
+    "input": {
+      "name": "source cell",
+      "prompt": "Choose the source cell",
+      "result": "reached-nodes",
+      "resultLabel": "open cells reachable from source"
+    }
+  },
+  {
+    "id": "hackerrank-connected-cells",
+    "vocabulary": {
+      "nodeNames": "filled cells",
+      "startNode": "region seed",
+      "edges": "side-or-corner contacts",
+      "correctSearch": "filled cells in the region",
+      "mistakenSearch": "filled cells the mistaken scan finds"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "remove-diagonals"
+        ],
+        "level": "Corner bridge",
+        "presentation": "exact-difference",
+        "goal": "Join a region only through a legal corner contact.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Eight-way fork",
+        "presentation": "smallest-witness",
+        "goal": "Make several filled neighbors matter, not only the last.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Growing region",
+        "presentation": "predict-first",
+        "goal": "Extend a region past the seed's immediate neighbors.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0)."
+    },
+    "input": {
+      "name": "region seed",
+      "prompt": "Choose the region seed",
+      "result": "reached-nodes",
+      "resultLabel": "filled cells in the region"
+    }
+  },
+  {
+    "id": "count-sub-islands",
+    "vocabulary": {
+      "nodeNames": "grid2 land cells",
+      "startNode": "island seed",
+      "edges": "grid2 side links",
+      "correctSearch": "land cells in the real island",
+      "mistakenSearch": "land cells in the claimed island"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Missing shoreline link",
+        "presentation": "smallest-witness",
+        "goal": "Make the last side link decide whether all cells are checked.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "False island merge",
+        "presentation": "repair-case",
+        "goal": "Keep corner-touching grid2 land in separate islands.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong island seed",
+        "presentation": "exact-difference",
+        "goal": "Make the declared seed differ from the first land cell.",
+        "startLabel": "(0,0)",
+        "mistakenStartLabel": "(0,1)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0)."
+    },
+    "input": {
+      "name": "island seed",
+      "prompt": "Choose the island seed",
+      "result": "reached-nodes",
+      "resultLabel": "land cells in the real island"
+    }
+  },
+  {
+    "id": "employee-importance",
+    "vocabulary": {
+      "nodeNames": "employee ids",
+      "startNode": "requested employee",
+      "edges": "manager-to-report arrows",
+      "correctSearch": "team members included",
+      "mistakenSearch": "team members the buggy total includes"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Org-chart reversal",
+        "presentation": "predict-first",
+        "goal": "Make reversed reporting arrows reach the wrong team.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Indirect report",
+        "presentation": "exact-difference",
+        "goal": "Put an employee two levels below the requested manager.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Requested-id check",
+        "presentation": "repair-case",
+        "goal": "List someone else first so only the requested id is valid.",
+        "startLabel": "1",
+        "mistakenStartLabel": "2"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "positive-integer",
+      "description": "Use positive integer IDs, matching the problem input."
+    },
+    "input": {
+      "name": "requested employee",
+      "prompt": "Choose the requested employee",
+      "result": "reached-nodes",
+      "resultLabel": "team members included"
+    }
+  },
+  {
+    "id": "evaluate-boolean-binary-tree",
+    "vocabulary": {
+      "nodeNames": "gates and leaves",
+      "startNode": "root gate",
+      "edges": "parent-to-child arrows",
+      "correctSearch": "tree nodes evaluation must use",
+      "mistakenSearch": "tree nodes the broken evaluation uses"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "skip-leaf-edges"
+        ],
+        "level": "Lost truth leaves",
+        "presentation": "repair-case",
+        "goal": "Make leaf values essential to the root result.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "One-child gate",
+        "presentation": "predict-first",
+        "goal": "Give a gate two children whose values cannot be reduced to the last.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Missing operand",
+        "presentation": "exact-difference",
+        "goal": "Put a required child on the final parent arrow.",
+        "startLabel": "root"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "tree-path",
+      "description": "Use root, L, R, LL, LR, ... to name tree positions."
+    },
+    "fixedStart": "root",
+    "input": {
+      "name": "root gate",
+      "prompt": "Choose the root gate",
+      "result": "reached-nodes",
+      "resultLabel": "tree nodes evaluation must use"
+    }
+  },
+  {
+    "id": "usaco-fence-planning",
+    "vocabulary": {
+      "nodeNames": "cows",
+      "startNode": "chosen cow",
+      "edges": "two-way moo pairs",
+      "correctSearch": "cows in the herd",
+      "mistakenSearch": "cows in the mistaken herd"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Backward moo pair",
+        "presentation": "exact-difference",
+        "goal": "Write a pair backward so its two-way nature is essential.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Herd seed",
+        "presentation": "smallest-witness",
+        "goal": "Make two herds so starting at the wrong cow changes the fence.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Wide pasture chain",
+        "presentation": "repair-case",
+        "goal": "Put an extreme-position cow more than one moo away.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "chosen cow",
+      "prompt": "Choose the chosen cow",
+      "result": "reached-nodes",
+      "resultLabel": "cows in the herd"
+    }
+  },
+  {
+    "id": "find-all-groups-of-farmland",
+    "vocabulary": {
+      "nodeNames": "farmland cells",
+      "startNode": "plot seed",
+      "edges": "farmland side contacts",
+      "correctSearch": "cells in the plot",
+      "mistakenSearch": "cells in the reported plot"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Long field",
+        "presentation": "smallest-witness",
+        "goal": "Grow a rectangular plot farther than one side step.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Plot corner split",
+        "presentation": "exact-difference",
+        "goal": "Make the seed's row and column branches both necessary.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Touching plots",
+        "presentation": "predict-first",
+        "goal": "Let two separate plots touch only at a corner.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0)."
+    },
+    "input": {
+      "name": "plot seed",
+      "prompt": "Choose the plot seed",
+      "result": "reached-nodes",
+      "resultLabel": "cells in the plot"
+    }
+  },
+  {
+    "id": "flood-fill",
+    "vocabulary": {
+      "nodeNames": "original-color pixels",
+      "startNode": "starting pixel",
+      "edges": "same-color side contacts",
+      "correctSearch": "pixels recolored",
+      "mistakenSearch": "pixels the faulty fill recolors"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Color at the corner",
+        "presentation": "repair-case",
+        "goal": "Place matching colors diagonally with no side path between them.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Pixel-coordinate check",
+        "presentation": "predict-first",
+        "goal": "Make the selected pixel different from the first matching pixel.",
+        "startLabel": "(0,0)",
+        "mistakenStartLabel": "(0,1)"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Last color bridge",
+        "presentation": "smallest-witness",
+        "goal": "Make the final side contact carry the fill to another pixel.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0)."
+    },
+    "input": {
+      "name": "starting pixel",
+      "prompt": "Choose the starting pixel",
+      "result": "reached-nodes",
+      "resultLabel": "pixels recolored"
+    }
+  },
+  {
+    "id": "kattis-getting-gold",
+    "vocabulary": {
+      "nodeNames": "dungeon squares",
+      "startNode": "player square",
+      "edges": "safe one-way moves",
+      "correctSearch": "safe squares the player reaches",
+      "mistakenSearch": "squares the risky search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Lost corridor",
+        "presentation": "exact-difference",
+        "goal": "Put reachable gold behind the final safe move.",
+        "startLabel": "(1,1)"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Gold-room fork",
+        "presentation": "smallest-witness",
+        "goal": "Place gold on two safe branches from one room.",
+        "startLabel": "(1,1)"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Player-position check",
+        "presentation": "predict-first",
+        "goal": "Make the player start away from the first floor square.",
+        "startLabel": "(1,1)",
+        "mistakenStartLabel": "(1,2)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "interior-coordinate",
+      "description": "Use interior grid coordinates like (1,1); row 0 and column 0 are walls.",
+      "max": 48
+    },
+    "input": {
+      "name": "player square",
+      "prompt": "Choose the player square",
+      "result": "reached-nodes",
+      "resultLabel": "safe squares the player reaches"
+    }
+  },
+  {
+    "id": "ladder-takahashi",
+    "vocabulary": {
+      "nodeNames": "floors",
+      "startNode": "floor 1",
+      "edges": "two-way ladders",
+      "correctSearch": "floors Takahashi can visit",
+      "mistakenSearch": "floors the broken climb visits"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Ladder chain",
+        "presentation": "predict-first",
+        "goal": "Reach the highest floor through two or more ladders.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Down-listed ladder",
+        "presentation": "repair-case",
+        "goal": "List a useful ladder in the opposite order of the climb.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Two stairwells",
+        "presentation": "smallest-witness",
+        "goal": "Give floor 1 two ladder branches with different high points.",
+        "startLabel": "1"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "positive-integer",
+      "description": "Use positive integer IDs, matching the problem input.",
+      "max": 1000000000
+    },
+    "fixedStart": "1",
+    "input": {
+      "name": "floor 1",
+      "prompt": "Choose the floor 1",
+      "result": "reached-nodes",
+      "resultLabel": "floors Takahashi can visit"
+    }
+  },
+  {
+    "id": "structy-largest-component",
+    "vocabulary": {
+      "nodeNames": "graph nodes",
+      "startNode": "component seed",
+      "edges": "two-way neighbor links",
+      "correctSearch": "nodes in the component",
+      "mistakenSearch": "nodes in the measured component"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "skip-leaf-edges"
+        ],
+        "level": "Outer-node loss",
+        "presentation": "smallest-witness",
+        "goal": "Make degree-one nodes decide which component is largest.",
+        "startLabel": "A"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Deep component",
+        "presentation": "repair-case",
+        "goal": "Build a component whose size is hidden beyond one hop.",
+        "startLabel": "A"
+      },
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Neighbor-list order",
+        "presentation": "predict-first",
+        "goal": "Start where a written two-way link would point the wrong way.",
+        "startLabel": "A"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "free",
+      "description": "Use short, unique names for separate input objects."
+    },
+    "input": {
+      "name": "component seed",
+      "prompt": "Choose the component seed",
+      "result": "reached-nodes",
+      "resultLabel": "nodes in the component"
+    }
+  },
+  {
+    "id": "max-area-of-island",
+    "vocabulary": {
+      "nodeNames": "land cells",
+      "startNode": "island seed",
+      "edges": "land side contacts",
+      "correctSearch": "land cells in the island",
+      "mistakenSearch": "land cells counted by the bug"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Area fork",
+        "presentation": "repair-case",
+        "goal": "Shape an island with two arms that both add area.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Corner islands",
+        "presentation": "exact-difference",
+        "goal": "Make two islands touch only at one corner.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Long coastline",
+        "presentation": "smallest-witness",
+        "goal": "Extend land beyond every direct neighbor of the seed.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0)."
+    },
+    "input": {
+      "name": "island seed",
+      "prompt": "Choose the island seed",
+      "result": "reached-nodes",
+      "resultLabel": "land cells in the island"
+    }
+  },
+  {
+    "id": "structy-max-root-to-leaf-path-sum",
+    "vocabulary": {
+      "nodeNames": "weighted tree nodes",
+      "startNode": "root",
+      "edges": "parent-to-child arrows",
+      "correctSearch": "nodes on candidate root-to-leaf paths",
+      "mistakenSearch": "nodes the faulty path search considers"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Wrong leaf choice",
+        "presentation": "exact-difference",
+        "goal": "Make the left path sum larger than the last-listed right path.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "skip-leaf-edges"
+        ],
+        "level": "Leaf value loss",
+        "presentation": "predict-first",
+        "goal": "Put the deciding positive or negative value on a leaf.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Hidden final path",
+        "presentation": "repair-case",
+        "goal": "Make the best root-to-leaf route use the final child arrow.",
+        "startLabel": "root"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "tree-path",
+      "description": "Use root, L, R, LL, LR, ... to name tree positions."
+    },
+    "fixedStart": "root",
+    "input": {
+      "name": "root",
+      "prompt": "Choose the root",
+      "result": "reached-nodes",
+      "resultLabel": "nodes on candidate root-to-leaf paths"
+    }
+  },
+  {
+    "id": "maximum-number-of-fish-in-a-grid",
+    "vocabulary": {
+      "nodeNames": "fish cells",
+      "startNode": "fishing start",
+      "edges": "positive side contacts",
+      "correctSearch": "fish cells in the water region",
+      "mistakenSearch": "fish cells the buggy trip reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Boat launch",
+        "presentation": "smallest-witness",
+        "goal": "Create two water regions so the chosen start matters.",
+        "startLabel": "(0,0)",
+        "mistakenStartLabel": "(0,1)"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Fish upstream",
+        "presentation": "predict-first",
+        "goal": "Place valuable fish more than one move from the start.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Dry corner",
+        "presentation": "repair-case",
+        "goal": "Keep diagonally touching fish in separate water regions.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0)."
+    },
+    "input": {
+      "name": "fishing start",
+      "prompt": "Choose the fishing start",
+      "result": "reached-nodes",
+      "resultLabel": "fish cells in the water region"
+    }
+  },
+  {
+    "id": "usaco-milk-factory",
+    "vocabulary": {
+      "nodeNames": "stations",
+      "startNode": "test station",
+      "edges": "one-way paths",
+      "correctSearch": "stations reachable by following arrows",
+      "mistakenSearch": "stations the flawed route reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-two-way"
+        ],
+        "level": "One-way factory path",
+        "presentation": "repair-case",
+        "goal": "Make backward travel falsely create a universal station.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Reversed milk routes",
+        "presentation": "smallest-witness",
+        "goal": "Choose arrows whose reversal changes the candidate station.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Candidate mix-up",
+        "presentation": "exact-difference",
+        "goal": "Make the declared test station differ from station 1.",
+        "startLabel": "1",
+        "mistakenStartLabel": "2"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-one",
+      "description": "Use numeric IDs 1, 2, 3, ... with no gaps."
+    },
+    "input": {
+      "name": "test station",
+      "prompt": "Choose the test station",
+      "result": "reached-nodes",
+      "resultLabel": "stations reachable by following arrows"
+    }
+  },
+  {
+    "id": "structy-minimum-island",
+    "vocabulary": {
+      "nodeNames": "land cells",
+      "startNode": "island seed",
+      "edges": "land side contacts",
+      "correctSearch": "cells in the island",
+      "mistakenSearch": "cells in the claimed smallest island"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Corner merger",
+        "presentation": "predict-first",
+        "goal": "Make a tiny island touch a larger one only diagonally.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Split smallest island",
+        "presentation": "exact-difference",
+        "goal": "Make the final side contact change an island's size.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Branching shoreline",
+        "presentation": "repair-case",
+        "goal": "Shape one island so counting only its last arm is misleading.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0)."
+    },
+    "input": {
+      "name": "island seed",
+      "prompt": "Choose the island seed",
+      "result": "reached-nodes",
+      "resultLabel": "cells in the island"
+    }
+  },
+  {
+    "id": "moocast",
+    "vocabulary": {
+      "nodeNames": "cows",
+      "startNode": "broadcasting cow",
+      "edges": "in-range transmission arrows",
+      "correctSearch": "cows that receive the broadcast",
+      "mistakenSearch": "cows the faulty broadcast reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-two-way"
+        ],
+        "level": "Unequal radio power",
+        "presentation": "smallest-witness",
+        "goal": "Let a strong cow reach a weak cow that cannot transmit back.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Relay broadcast",
+        "presentation": "repair-case",
+        "goal": "Put a cow in range only through a second broadcaster.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Competing relays",
+        "presentation": "exact-difference",
+        "goal": "Give the starting cow two useful transmission branches.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "broadcasting cow",
+      "prompt": "Choose the broadcasting cow",
+      "result": "reached-nodes",
+      "resultLabel": "cows that receive the broadcast"
+    }
+  },
+  {
+    "id": "path-sum",
+    "vocabulary": {
+      "nodeNames": "numbered tree nodes",
+      "startNode": "root",
+      "edges": "parent-to-child arrows",
+      "correctSearch": "nodes on root-to-leaf paths",
+      "mistakenSearch": "nodes the broken check visits"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Missing target leaf",
+        "presentation": "predict-first",
+        "goal": "Put the only target-sum path behind the final child arrow.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "First path matters",
+        "presentation": "smallest-witness",
+        "goal": "Make only the earlier root-to-leaf branch hit the target.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "skip-leaf-edges"
+        ],
+        "level": "Leaf completes the sum",
+        "presentation": "exact-difference",
+        "goal": "Require a leaf value to finish the exact target total.",
+        "startLabel": "root"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "tree-path",
+      "description": "Use root, L, R, LL, LR, ... to name tree positions."
+    },
+    "fixedStart": "root",
+    "input": {
+      "name": "root",
+      "prompt": "Choose the root",
+      "result": "reached-nodes",
+      "resultLabel": "nodes on root-to-leaf paths"
+    }
+  },
+  {
+    "id": "properties-graph",
+    "vocabulary": {
+      "nodeNames": "property rows",
+      "startNode": "chosen row",
+      "edges": "two-way k-match links",
+      "correctSearch": "rows in the component",
+      "mistakenSearch": "rows in the buggy component"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Symmetric overlap",
+        "presentation": "repair-case",
+        "goal": "Order two rows so a one-way reading blocks a valid match.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Shared-property chain",
+        "presentation": "exact-difference",
+        "goal": "Reach a row through another row, not by direct overlap alone.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Row-index check",
+        "presentation": "predict-first",
+        "goal": "Make the chosen row different from the first row listed.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "chosen row",
+      "prompt": "Choose the chosen row",
+      "result": "reached-nodes",
+      "resultLabel": "rows in the component"
+    }
+  },
+  {
+    "id": "reachable-nodes-with-restrictions",
+    "vocabulary": {
+      "nodeNames": "numbered nodes",
+      "startNode": "node 0",
+      "edges": "allowed two-way links",
+      "correctSearch": "unrestricted nodes reachable from 0",
+      "mistakenSearch": "nodes the restricted bug reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Source-zero rule",
+        "presentation": "exact-difference",
+        "goal": "List another node first while keeping node 0 as the source.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      },
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Reverse-listed road",
+        "presentation": "predict-first",
+        "goal": "Write a usable undirected edge opposite the travel direction.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Restricted dead end",
+        "presentation": "smallest-witness",
+        "goal": "Put a blocked branch before a separate allowed route.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "fixedStart": "0",
+    "input": {
+      "name": "node 0",
+      "prompt": "Choose the node 0",
+      "result": "reached-nodes",
+      "resultLabel": "unrestricted nodes reachable from 0"
+    }
+  },
+  {
+    "id": "transitive-closure",
+    "vocabulary": {
+      "nodeNames": "graph indices",
+      "startNode": "source index",
+      "edges": "direct arrows",
+      "correctSearch": "indices reachable from the source",
+      "mistakenSearch": "indices marked reachable by the bug"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Multi-hop closure",
+        "presentation": "smallest-witness",
+        "goal": "Make a source reach a node only through an intermediate index.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "make-two-way"
+        ],
+        "level": "False backward reach",
+        "presentation": "exact-difference",
+        "goal": "Use one arrow whose reverse must stay unreachable.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Closure transpose",
+        "presentation": "repair-case",
+        "goal": "Build an arrow chain whose reversed reachability is clearly different.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "source index",
+      "prompt": "Choose the source index",
+      "result": "reached-nodes",
+      "resultLabel": "indices reachable from the source"
+    }
+  },
+  {
+    "id": "structy-tree-sum",
+    "vocabulary": {
+      "nodeNames": "weighted tree nodes",
+      "startNode": "root",
+      "edges": "parent-to-child arrows",
+      "correctSearch": "nodes included in the sum",
+      "mistakenSearch": "nodes the faulty sum includes"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "skip-leaf-edges"
+        ],
+        "level": "Leaf weights",
+        "presentation": "predict-first",
+        "goal": "Put important positive and negative values on leaves.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Grandchild value",
+        "presentation": "repair-case",
+        "goal": "Make a grandchild change the whole-tree total.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Both subtrees count",
+        "presentation": "smallest-witness",
+        "goal": "Give both root branches nonzero values that must be added.",
+        "startLabel": "root"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "tree-path",
+      "description": "Use root, L, R, LL, LR, ... to name tree positions."
+    },
+    "fixedStart": "root",
+    "input": {
+      "name": "root",
+      "prompt": "Choose the root",
+      "result": "reached-nodes",
+      "resultLabel": "nodes included in the sum"
+    }
+  },
+  {
+    "id": "wheres-my-internet",
+    "vocabulary": {
+      "nodeNames": "houses",
+      "startNode": "house 1",
+      "edges": "two-way cables",
+      "correctSearch": "houses online from house 1",
+      "mistakenSearch": "houses the broken network marks online"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Neighborhood split",
+        "presentation": "smallest-witness",
+        "goal": "Cable house 1 into two branches with online houses in both.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Reverse cable listing",
+        "presentation": "repair-case",
+        "goal": "List a cable toward house 1 so direction must not matter.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Final hookup",
+        "presentation": "predict-first",
+        "goal": "Make the last cable bring a distant house online.",
+        "startLabel": "1"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-one",
+      "description": "Use numeric IDs 1, 2, 3, ... with no gaps."
+    },
+    "fixedStart": "1",
+    "input": {
+      "name": "house 1",
+      "prompt": "Choose the house 1",
+      "result": "reached-nodes",
+      "resultLabel": "houses online from house 1"
+    }
+  }
+]

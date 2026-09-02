@@ -1,0 +1,3377 @@
+[
+  {
+    "id": "who-keeps-their-job",
+    "visualKind": "tree",
+    "pictureQuestions": [
+      {
+        "id": "quit-middle",
+        "input": "ids = [10,2,7,15], bosses = [0,10,10,2], quitId = 2",
+        "prompt": "The chart has 10 above 2 and 7, and 2 above 15. If employee 2 quits, which sorted IDs remain?",
+        "correct": "seven-ten",
+        "choices": [
+          {
+            "id": "seven-ten",
+            "label": "`[7,10]`",
+            "feedback": "Correct. Employee 2 and their report 15 leave; numeric sorting puts 7 before 10.",
+            "misconception": null
+          },
+          {
+            "id": "ten-seven",
+            "label": "`[10,7]`",
+            "feedback": "Those are the right people but the wrong numeric order; 7 comes before 10.",
+            "misconception": "string-sort"
+          },
+          {
+            "id": "seven-ten-fifteen",
+            "label": "`[7,10,15]`",
+            "feedback": "Employee 15 reports below quitter 2, so 15 leaves too.",
+            "misconception": "remove-quitter-only"
+          },
+          {
+            "id": "ten",
+            "label": "`[10]`",
+            "feedback": "Employee 7 is the quitter's sibling, not their report, so 7 keeps the job.",
+            "misconception": "remove-siblings"
+          }
+        ]
+      },
+      {
+        "id": "quit-leaf",
+        "input": "ids = [6,1,8,3], bosses = [0,6,6,1], quitId = 3",
+        "prompt": "The chart has 6 above 1 and 8, and 1 above leaf employee 3. If 3 quits, which sorted IDs remain?",
+        "correct": "one-six-eight",
+        "choices": [
+          {
+            "id": "one-six-eight",
+            "label": "`[1,6,8]`",
+            "feedback": "Correct. A leaf has no reports, so only employee 3 leaves.",
+            "misconception": null
+          },
+          {
+            "id": "six-eight",
+            "label": "`[6,8]`",
+            "feedback": "Employee 1 is above the quitter, so 1 stays.",
+            "misconception": "remove-ancestor"
+          },
+          {
+            "id": "one-six",
+            "label": "`[1,6]`",
+            "feedback": "Employee 8 is in another branch and is unaffected.",
+            "misconception": "remove-other-branch"
+          },
+          {
+            "id": "six",
+            "label": "`[6]`",
+            "feedback": "Quitting does not remove the whole level beneath the CEO.",
+            "misconception": "remove-level"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "In the company picture, what should each node represent?",
+      "correct": "employees",
+      "choices": [
+        {
+          "id": "employees",
+          "label": "One employee ID, including employees who manage nobody.",
+          "feedback": "Correct. Every employee can stay or leave, so every ID needs its own node.",
+          "misconception": null
+        },
+        {
+          "id": "bosses",
+          "label": "Only employees who manage at least one person.",
+          "feedback": "Individual contributors can also leave when a boss above them quits, so they cannot be omitted.",
+          "misconception": "omit-leaves"
+        },
+        {
+          "id": "departments",
+          "label": "One whole department below each manager.",
+          "feedback": "A department is a group of employee nodes. Combining it early hides exactly who leaves.",
+          "misconception": "collapse-subtree"
+        },
+        {
+          "id": "boss-links",
+          "label": "One reporting relationship such as `10 → 20`.",
+          "feedback": "That relationship is an edge. The employee IDs at its ends are the nodes.",
+          "misconception": "swap-node-edge"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which arrow should the picture draw for one boss-report pair?",
+      "correct": "boss-to-report",
+      "choices": [
+        {
+          "id": "boss-to-report",
+          "label": "Boss → direct report, so a quitting boss leads downward through the team.",
+          "feedback": "Correct. Downward arrows let DFS collect the quitter and every person below them.",
+          "misconception": null
+        },
+        {
+          "id": "report-to-boss",
+          "label": "Direct report → boss, because the input names each worker's boss.",
+          "feedback": "That follows the input storage rather than the needed search direction. It would walk toward ancestors.",
+          "misconception": "reverse-hierarchy"
+        },
+        {
+          "id": "both-directions",
+          "label": "Two arrows between every boss and report.",
+          "feedback": "Reporting is not a friendship. A quitter affects descendants, not bosses and siblings reached by walking backward.",
+          "misconception": "make-undirected"
+        },
+        {
+          "id": "all-descendants",
+          "label": "A direct arrow from each boss to every person anywhere below them.",
+          "feedback": "Only direct reports are edges. DFS discovers deeper employees one reporting step at a time.",
+          "misconception": "transitive-edge"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use the exact ID from the input only. Example: `15`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "busiest-shelf-level",
+    "visualKind": "nested",
+    "pictureQuestions": [
+      {
+        "id": "deepest-busy",
+        "input": "items = [1,[2,3],[[4],[5,6,7]]]",
+        "prompt": "For `items = [1,[2,3],[[4],[5,6,7]]]`, which depth has the most integer items?",
+        "correct": "three",
+        "choices": [
+          {
+            "id": "three",
+            "label": "Depth `3`",
+            "feedback": "Correct. Depth 3 holds 4, 5, 6, and 7: four items.",
+            "misconception": null
+          },
+          {
+            "id": "two",
+            "label": "Depth `2`",
+            "feedback": "Depth 2 has only 2 and 3; the inner boxes place 4–7 one level deeper.",
+            "misconception": "ignore-inner-box"
+          },
+          {
+            "id": "one",
+            "label": "Depth `1`",
+            "feedback": "Depth 1 holds only integer 1; boxes themselves are not counted as items.",
+            "misconception": "count-containers"
+          },
+          {
+            "id": "four",
+            "label": "Depth `4`",
+            "feedback": "The integers 4–7 are inside two boxes from the root, so they sit at depth 3, not 4.",
+            "misconception": "off-by-one-depth"
+          }
+        ]
+      },
+      {
+        "id": "shallow-tie",
+        "input": "items = [[],1,[2,[]]]",
+        "prompt": "For `items = [[],1,[2,[]]]`, depths 1 and 2 each hold one item. Which depth is returned?",
+        "correct": "one",
+        "choices": [
+          {
+            "id": "one",
+            "label": "Depth `1`",
+            "feedback": "Correct. Ties go to the smaller depth.",
+            "misconception": null
+          },
+          {
+            "id": "two",
+            "label": "Depth `2`",
+            "feedback": "Depth 2 ties with depth 1 but loses the shallower-depth tiebreak.",
+            "misconception": "prefer-deeper-tie"
+          },
+          {
+            "id": "three",
+            "label": "Depth `3`",
+            "feedback": "The depth-3 box is empty, so it contributes no item.",
+            "misconception": "count-empty-box"
+          },
+          {
+            "id": "zero",
+            "label": "Depth `0`",
+            "feedback": "The outer array is the container; its direct integer 1 is at depth 1.",
+            "misconception": "start-at-zero"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What needs its own node in the nested shelf picture?",
+      "correct": "arrays-and-items",
+      "choices": [
+        {
+          "id": "arrays-and-items",
+          "label": "Every array container and every integer item.",
+          "feedback": "Correct. Arrays create levels, and integers are the items counted at those levels.",
+          "misconception": null
+        },
+        {
+          "id": "items-only",
+          "label": "Only the integers; arrays are just punctuation with no place in the picture.",
+          "feedback": "Without array nodes, the picture loses the nesting that determines each item's depth.",
+          "misconception": "omit-containers"
+        },
+        {
+          "id": "arrays-only",
+          "label": "Only arrays, because the answer asks for a depth rather than an item count.",
+          "feedback": "The winning depth depends on how many integer items sit there, so items must appear too.",
+          "misconception": "omit-items"
+        },
+        {
+          "id": "one-per-depth",
+          "label": "One node for depth 1, one for depth 2, and so on.",
+          "feedback": "Many different boxes and items can share a depth. Collapsing them loses the counts.",
+          "misconception": "collapse-level"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When should the nesting picture connect a container to something below it?",
+      "correct": "direct-content",
+      "choices": [
+        {
+          "id": "direct-content",
+          "label": "Connect an array to each item or inner array written directly inside it.",
+          "feedback": "Correct. Each such edge moves from a box to one direct child; crossing it adds one level.",
+          "misconception": null
+        },
+        {
+          "id": "all-descendants",
+          "label": "Connect an array directly to every integer anywhere inside it.",
+          "feedback": "That creates shortcuts across nested boxes and makes deep items look too shallow.",
+          "misconception": "skip-levels"
+        },
+        {
+          "id": "same-depth",
+          "label": "Connect items that happen to sit at the same depth.",
+          "feedback": "Sharing a depth does not mean one item contains another. Depth is measured through containers.",
+          "misconception": "peer-edge"
+        },
+        {
+          "id": "nonempty-only",
+          "label": "Connect to an inner array only when that array contains an integer.",
+          "feedback": "Empty arrays still occupy a real nesting position, even though they add no item to the tally.",
+          "misconception": "drop-empty-array"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `root=[]` for the outer list. Then use each index path and value, such as `root[1]=[]` or `root[1][0]=7`.",
+      "pattern": "^root(?:\\[\\d+\\])*(?:=\\[\\]|=-?\\d+)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "coins-on-level-k",
+    "visualKind": "nested",
+    "pictureQuestions": [
+      {
+        "id": "sum-level-two",
+        "input": "items = [[2,[3]],[[5],7],1], k = 2",
+        "prompt": "In `[[2,[3]],[[5],7],1]` with `k=2`, what sum comes from exactly level 2?",
+        "correct": "nine",
+        "choices": [
+          {
+            "id": "nine",
+            "label": "`9`",
+            "feedback": "Correct. Coins 2 and 7 are at level 2, so 2 + 7 = 9.",
+            "misconception": null
+          },
+          {
+            "id": "eighteen",
+            "label": "`18`",
+            "feedback": "That includes coins 3 and 5 from level 3 and coin 1 from level 1.",
+            "misconception": "sum-all-coins"
+          },
+          {
+            "id": "six",
+            "label": "`6`",
+            "feedback": "That counts 1, 2, and 3 while missing the separate level-2 coin 7.",
+            "misconception": "flatten-by-order"
+          },
+          {
+            "id": "eight",
+            "label": "`8`",
+            "feedback": "Coin 1 is at level 1, while level 2 contains 2 and 7.",
+            "misconception": "count-top-and-seven"
+          }
+        ]
+      },
+      {
+        "id": "deep-single-coin",
+        "input": "items = [10,[20,[30,[40]]]], k = 4",
+        "prompt": "In `[10,[20,[30,[40]]]]` with `k=4`, which total is returned?",
+        "correct": "forty",
+        "choices": [
+          {
+            "id": "forty",
+            "label": "`40`",
+            "feedback": "Correct. Coin 40 is the only coin at level 4.",
+            "misconception": null
+          },
+          {
+            "id": "one-hundred",
+            "label": "`100`",
+            "feedback": "That adds coins from every level instead of exactly level 4.",
+            "misconception": "sum-all-depths"
+          },
+          {
+            "id": "thirty",
+            "label": "`30`",
+            "feedback": "Coin 30 is at level 3, one level too shallow.",
+            "misconception": "off-by-one-shallow"
+          },
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "The nested chain does reach level 4, where coin 40 sits.",
+            "misconception": "stop-too-early"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "Which things become nodes in the boxes-and-coins picture?",
+      "correct": "boxes-coins",
+      "choices": [
+        {
+          "id": "boxes-coins",
+          "label": "Every array box and every integer coin, including coins outside the target level.",
+          "feedback": "Correct. The full nesting tree is needed to know which coins land exactly at level k.",
+          "misconception": null
+        },
+        {
+          "id": "target-coins",
+          "label": "Only coins whose final depth equals k.",
+          "feedback": "You do not know which coins are at depth k until you follow the box structure from the root.",
+          "misconception": "pre-filter-answer"
+        },
+        {
+          "id": "positive-coins",
+          "label": "Only positive-valued coins, since negative coins lower the sum.",
+          "feedback": "Negative coins at depth k still contribute and must remain in the model.",
+          "misconception": "drop-negative"
+        },
+        {
+          "id": "levels",
+          "label": "One node for each numeric depth from 1 through k.",
+          "feedback": "Depth labels are not the contents. Separate coins at one depth can have different parents and values.",
+          "misconception": "depth-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "What does one parent-child edge mean in this nesting tree?",
+      "correct": "box-contains",
+      "choices": [
+        {
+          "id": "box-contains",
+          "label": "A box points to each coin or smaller box directly inside it.",
+          "feedback": "Correct. Following one box-to-child edge increases the child's depth by one.",
+          "misconception": null
+        },
+        {
+          "id": "coin-value",
+          "label": "Connect coins whose values add up to k.",
+          "feedback": "k is a depth, not a target coin sum. Coin values do not create connections.",
+          "misconception": "k-as-sum"
+        },
+        {
+          "id": "flattened-order",
+          "label": "Connect each item to the next item seen after flattening the arrays.",
+          "feedback": "Flattened order erases which boxes contain which coins, so it cannot preserve depth.",
+          "misconception": "flatten-first"
+        },
+        {
+          "id": "deepest-box",
+          "label": "Connect every coin straight to the deepest box that contains it.",
+          "feedback": "A coin connects to its immediate box. Skipping outer boxes gives the wrong depth.",
+          "misconception": "skip-parent-boxes"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `root=[]` for the outer list. Then use each index path and value, such as `root[1]=[]` or `root[1][0]=7`.",
+      "pattern": "^root(?:\\[\\d+\\])*(?:=\\[\\]|=-?\\d+)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "counting-constellations",
+    "visualKind": "grid",
+    "pictureQuestions": [
+      {
+        "id": "three-diagonal-groups",
+        "input": "sky = [[1,0,0,0,1],[0,1,0,0,0],[0,0,0,1,0],[0,0,0,0,1]]",
+        "prompt": "The shown sky has diagonal pairs `(0,0)-(1,1)` and `(2,3)-(3,4)`, plus lone star `(0,4)`. How many constellations?",
+        "correct": "three",
+        "choices": [
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "Correct. Each corner-touching pair joins, and the lone star is a third group.",
+            "misconception": null
+          },
+          {
+            "id": "five",
+            "label": "`5`",
+            "feedback": "That ignores diagonal connections and treats every star as separate.",
+            "misconception": "four-direction-rule"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "The lone top-right star touches neither diagonal pair.",
+            "misconception": "drop-isolated-star"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "The two pairs and lone star have empty gaps between them.",
+            "misconception": "connect-distant-diagonals"
+          }
+        ]
+      },
+      {
+        "id": "diamond-stars",
+        "input": "sky = [[0,1,0],[1,0,1],[0,1,0]]",
+        "prompt": "Four stars form a diamond: top, left, right, and bottom around an empty center. How many constellations?",
+        "correct": "one",
+        "choices": [
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Correct. Each star touches its neighbors diagonally, forming one chain.",
+            "misconception": null
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "That uses side-only island rules and misses every diagonal edge.",
+            "misconception": "ignore-diagonals"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "The two diagonal pairs also connect through the other diamond corners.",
+            "misconception": "pair-only"
+          },
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "The four `1` cells are stars even though the center is empty.",
+            "misconception": "require-center-star"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "Which cells should become nodes when drawing the star graph?",
+      "correct": "stars",
+      "choices": [
+        {
+          "id": "stars",
+          "label": "Every cell containing `1`; empty `0` cells are not nodes.",
+          "feedback": "Correct. A constellation is a connected group of star cells.",
+          "misconception": null
+        },
+        {
+          "id": "all-cells",
+          "label": "Every grid cell, with `0` cells acting as passable space between stars.",
+          "feedback": "Empty cells cannot carry a connection. Making them nodes would join stars across empty space.",
+          "misconception": "empty-passable"
+        },
+        {
+          "id": "brightest-row",
+          "label": "Only star cells in rows containing at least two stars.",
+          "feedback": "A single isolated star is still a one-node constellation.",
+          "misconception": "omit-isolated"
+        },
+        {
+          "id": "constellations",
+          "label": "One node for each finished constellation.",
+          "feedback": "Constellations are the connected components we must discover, not the starting nodes.",
+          "misconception": "component-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Exactly when do two star nodes share an edge?",
+      "correct": "eight-way",
+      "choices": [
+        {
+          "id": "eight-way",
+          "label": "When their cells touch by a side or a corner: any of 8 directions.",
+          "feedback": "Correct. Diagonal corner contact joins stars in this problem.",
+          "misconception": null
+        },
+        {
+          "id": "four-way",
+          "label": "Only when they share a side; diagonal stars stay separate.",
+          "feedback": "That is the common island rule, but constellations also connect diagonally.",
+          "misconception": "omit-diagonals"
+        },
+        {
+          "id": "same-diagonal",
+          "label": "Any two stars lying somewhere on the same diagonal line.",
+          "feedback": "They must be immediate neighboring cells. Empty gaps do not create an edge.",
+          "misconception": "long-range-diagonal"
+        },
+        {
+          "id": "same-row-column",
+          "label": "Any two stars in the same row or column, even with zeros between them.",
+          "feedback": "Only touching cells connect; a row or column does not bridge empty space.",
+          "misconception": "line-of-sight"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "counting-docked-boats",
+    "visualKind": "grid",
+    "pictureQuestions": [
+      {
+        "id": "two-border-boats",
+        "input": "marina = [[\".\",\"B\",\"B\",\".\",\".\",\".\"],[\".\",\".\",\".\",\".\",\".\",\".\"],[\"B\",\".\",\"B\",\".\",\"B\",\".\"],[\"B\",\".\",\".\",\".\",\"B\",\".\"],[\"B\",\".\",\".\",\".\",\".\",\".\"]]",
+        "prompt": "A marina shows four boats: two touch a border and two sit fully offshore. How many are docked?",
+        "correct": "two",
+        "choices": [
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Correct. Only the top-row boat and left-column boat touch the marina border.",
+            "misconception": null
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "That counts offshore boats too; a docked boat must touch a border.",
+            "misconception": "count-all-boats"
+          },
+          {
+            "id": "five",
+            "label": "`5`",
+            "feedback": "Connected B squares form one boat, so multi-square boats are not counted per cell.",
+            "misconception": "count-border-cells"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Both the top border and left border qualify, so two separate boats are docked.",
+            "misconception": "top-border-only"
+          }
+        ]
+      },
+      {
+        "id": "single-row-border",
+        "input": "marina = [[\"B\",\".\",\"B\",\"B\"]]",
+        "prompt": "In the one-row marina `B . B B`, how many docked boats are shown?",
+        "correct": "two",
+        "choices": [
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Correct. Both the lone B and the connected BB pair are boats on the border.",
+            "misconception": null
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "The adjacent final two B cells are one boat, not two.",
+            "misconception": "count-cells"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "The B at column 0 and the BB pair are separated by water.",
+            "misconception": "merge-row-boats"
+          },
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "In a one-row grid, that row is both the top and bottom border.",
+            "misconception": "miss-degenerate-border"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is one node in the marina graph?",
+      "correct": "boat-square",
+      "choices": [
+        {
+          "id": "boat-square",
+          "label": "Each grid square marked `B`, including border squares.",
+          "feedback": "Correct. Connected B squares combine into one boat.",
+          "misconception": null
+        },
+        {
+          "id": "whole-boat",
+          "label": "One completed boat, whether it covers one square or many.",
+          "feedback": "A boat is the component the search discovers. Its individual B squares are the nodes.",
+          "misconception": "boat-as-node"
+        },
+        {
+          "id": "docked-only",
+          "label": "Only `B` squares that are not on the marina border.",
+          "feedback": "Border B squares still belong to boats; the border decides whether a boat is docked.",
+          "misconception": "drop-border"
+        },
+        {
+          "id": "water-and-boat",
+          "label": "Both water and `B` squares, so DFS can move around the marina.",
+          "feedback": "Water separates boats. Making it traversable would merge unrelated B groups.",
+          "misconception": "water-passable"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which neighboring boat squares should be joined?",
+      "correct": "side-boat",
+      "choices": [
+        {
+          "id": "side-boat",
+          "label": "Two `B` squares that share an up, down, left, or right side.",
+          "feedback": "Correct. Side-connected B squares form one boat.",
+          "misconception": null
+        },
+        {
+          "id": "eight-way",
+          "label": "Two `B` squares that touch by a side or just a corner.",
+          "feedback": "Diagonal contact is not part of a boat. Only shared sides create edges.",
+          "misconception": "allow-diagonal"
+        },
+        {
+          "id": "border-link",
+          "label": "Connect every `B` square on the same border of the marina.",
+          "feedback": "Border position tells whether a boat is docked; it does not join separated boats.",
+          "misconception": "border-as-edge"
+        },
+        {
+          "id": "straight-only",
+          "label": "Join horizontal neighbors only for horizontal boats and vertical neighbors only for vertical boats, deciding orientation first.",
+          "feedback": "The search can simply join every side-touching B pair; no guessed orientation is needed.",
+          "misconception": "preclassify-orientation"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "routes-past-the-coffee-cart",
+    "visualKind": "backtracking",
+    "pictureQuestions": [
+      {
+        "id": "two-cart-routes",
+        "input": "graph = [[1,2],[3],[3,4],[5],[5],[]], checkpoint = 3",
+        "prompt": "The picture has three depot-to-customer routes; two pass intersection 3, the coffee cart. What is returned?",
+        "correct": "two-routes",
+        "choices": [
+          {
+            "id": "two-routes",
+            "label": "`[[0,1,3,5],[0,2,3,5]]`",
+            "feedback": "Correct. Those are exactly the complete routes containing checkpoint 3.",
+            "misconception": null
+          },
+          {
+            "id": "all-routes",
+            "label": "`[[0,1,3,5],[0,2,3,5],[0,2,4,5]]`",
+            "feedback": "The last route reaches the customer but skips checkpoint 3.",
+            "misconception": "ignore-checkpoint"
+          },
+          {
+            "id": "cart-prefixes",
+            "label": "`[[0,1,3],[0,2,3]]`",
+            "feedback": "A route must continue from the cart to customer 5.",
+            "misconception": "stop-at-checkpoint"
+          },
+          {
+            "id": "one-route",
+            "label": "`[[0,1,3,5]]`",
+            "feedback": "The separate prefix 0→2 also reaches 3 and then 5.",
+            "misconception": "return-first-route"
+          }
+        ]
+      },
+      {
+        "id": "checkpoint-dead-end",
+        "input": "graph = [[1,3],[2],[],[4],[]], checkpoint = 2",
+        "prompt": "One branch reaches checkpoint 2 but stops there; the only customer route skips 2. What route list is returned?",
+        "correct": "empty",
+        "choices": [
+          {
+            "id": "empty",
+            "label": "`[]`",
+            "feedback": "Correct. No complete depot-to-customer route includes the checkpoint.",
+            "misconception": null
+          },
+          {
+            "id": "checkpoint-prefix",
+            "label": "`[[0,1,2]]`",
+            "feedback": "That path reaches the cart but never reaches the customer.",
+            "misconception": "accept-incomplete-route"
+          },
+          {
+            "id": "customer-route",
+            "label": "`[[0,3,4]]`",
+            "feedback": "That route reaches the customer but skips checkpoint 2.",
+            "misconception": "ignore-checkpoint"
+          },
+          {
+            "id": "both",
+            "label": "`[[0,1,2],[0,3,4]]`",
+            "feedback": "Neither listed path satisfies both requirements at once.",
+            "misconception": "separate-requirements"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What should each node represent in the route picture?",
+      "correct": "intersections",
+      "choices": [
+        {
+          "id": "intersections",
+          "label": "Every intersection `0` through `n−1`, including the depot, cart, and customer.",
+          "feedback": "Correct. Those special places are ordinary intersections with special roles.",
+          "misconception": null
+        },
+        {
+          "id": "valid-routes",
+          "label": "Each complete depot-to-customer route that passes the cart.",
+          "feedback": "Those routes are outputs assembled by walking the graph, not its starting nodes.",
+          "misconception": "output-as-node"
+        },
+        {
+          "id": "special-only",
+          "label": "Only intersection 0, the checkpoint, and intersection `n−1`.",
+          "feedback": "Other intersections can be required steps along a valid route.",
+          "misconception": "omit-intermediate"
+        },
+        {
+          "id": "streets",
+          "label": "Each listed one-way street.",
+          "feedback": "Streets are edges; their endpoint intersections are nodes.",
+          "misconception": "street-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "How does `graph[i]` become arrows in the picture?",
+      "correct": "listed-arrows",
+      "choices": [
+        {
+          "id": "listed-arrows",
+          "label": "Draw `i → j` for each `j` listed in `graph[i]`.",
+          "feedback": "Correct. The adjacency list already gives every legal one-step direction.",
+          "misconception": null
+        },
+        {
+          "id": "reverse-arrows",
+          "label": "Draw `j → i`, because a route later returns its nodes in reverse recursion order.",
+          "feedback": "Return order does not reverse the streets. Travel follows i to each value listed in graph[i].",
+          "misconception": "reverse-adjacency"
+        },
+        {
+          "id": "two-way",
+          "label": "Draw both `i → j` and `j → i` for every listed street.",
+          "feedback": "The streets are one-way. Adding reverse arrows invents routes that do not exist.",
+          "misconception": "make-street-undirected"
+        },
+        {
+          "id": "cart-only",
+          "label": "Keep only streets touching the checkpoint, since every accepted route must visit it.",
+          "feedback": "A valid route also needs streets from the depot to the cart and from the cart to the customer.",
+          "misconception": "filter-edges-early"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "villages-without-wells",
+    "visualKind": "undirected-graph",
+    "pictureQuestions": [
+      {
+        "id": "one-dry-cluster",
+        "input": "n = 7, paths = [[0,1],[2,3],[3,4],[5,6]], wells = [4,6]",
+        "prompt": "The map has clusters `{0,1}`, `{2,3,4}`, and `{5,6}`. Wells are at 4 and 6. How many new wells are needed?",
+        "correct": "one",
+        "choices": [
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Correct. Only cluster {0,1} has no well.",
+            "misconception": null
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "A well at 4 supplies all of {2,3,4}, and a well at 6 supplies {5,6}.",
+            "misconception": "well-covers-only-node"
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "The answer counts dry clusters, not all clusters.",
+            "misconception": "one-per-cluster"
+          },
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "No path connects cluster {0,1} to either existing well.",
+            "misconception": "wells-global"
+          }
+        ]
+      },
+      {
+        "id": "two-dry-clusters",
+        "input": "n = 5, paths = [[0,1],[1,2],[2,0],[3,4]], wells = []",
+        "prompt": "Villages `{0,1,2}` form one cycle and `{3,4}` form another cluster. There are no wells. How many are needed?",
+        "correct": "two",
+        "choices": [
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Correct. One new well is enough for each of the two clusters.",
+            "misconception": null
+          },
+          {
+            "id": "five",
+            "label": "`5`",
+            "feedback": "Villages in one cluster can share a well through paths.",
+            "misconception": "one-per-village"
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "The cycle has three villages but is still one supplied cluster.",
+            "misconception": "count-cycle-edges"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "The two clusters have no path between them, so one well cannot supply both.",
+            "misconception": "merge-components"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "Which villages belong as nodes?",
+      "correct": "all-villages",
+      "choices": [
+        {
+          "id": "all-villages",
+          "label": "Every village `0` through `n−1`, even a village with no footpaths.",
+          "feedback": "Correct. An isolated village is its own cluster and may need its own well.",
+          "misconception": null
+        },
+        {
+          "id": "path-villages",
+          "label": "Only village numbers that appear in `paths`.",
+          "feedback": "That drops isolated villages, which are valid one-village clusters.",
+          "misconception": "omit-isolated"
+        },
+        {
+          "id": "without-wells",
+          "label": "Only villages not already listed in `wells`.",
+          "feedback": "Well villages must remain in the graph so their whole cluster is recognized as supplied.",
+          "misconception": "remove-well-nodes"
+        },
+        {
+          "id": "clusters",
+          "label": "One node per connected village cluster.",
+          "feedback": "Clusters are discovered from village nodes and footpath edges; they are not known first.",
+          "misconception": "cluster-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "What connection does one path `[a,b]` create?",
+      "correct": "two-way-path",
+      "choices": [
+        {
+          "id": "two-way-path",
+          "label": "One two-way footpath between villages a and b.",
+          "feedback": "Correct. A cluster can be explored from either endpoint.",
+          "misconception": null
+        },
+        {
+          "id": "a-to-b",
+          "label": "A one-way path from a to b only, following the pair's written order.",
+          "feedback": "Footpaths are walkable both ways; array order does not create direction.",
+          "misconception": "directed-by-order"
+        },
+        {
+          "id": "well-bridge",
+          "label": "An edge between any two villages that both have wells.",
+          "feedback": "Wells are properties of nodes. Only listed footpaths join villages.",
+          "misconception": "well-creates-edge"
+        },
+        {
+          "id": "same-cluster-shortcut",
+          "label": "A direct edge between every pair that can be reached through a chain of paths.",
+          "feedback": "A chain is a multi-edge route. Adding shortcuts changes the given graph.",
+          "misconception": "transitive-edge"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "gas-pocket-survey",
+    "visualKind": "grid",
+    "pictureQuestions": [
+      {
+        "id": "two-side-gas",
+        "input": "cave = [[\"U\",\"G\"],[\"G\",\"U\"]], row = 0, col = 0",
+        "prompt": "Drill at `(0,0)` in the 2×2 cave `U G / G U`. What does the drilled cell become?",
+        "correct": "two",
+        "choices": [
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Correct. Gas is directly right and directly below.",
+            "misconception": null
+          },
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "Both side-neighbor gas cells must be counted.",
+            "misconception": "miss-side-gas"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "There are two gas neighbors, not just the first one checked.",
+            "misconception": "stop-after-first"
+          },
+          {
+            "id": "safe",
+            "label": "`S`",
+            "feedback": "A cell becomes S only when it has no side-adjacent gas.",
+            "misconception": "ignore-danger-count"
+          }
+        ]
+      },
+      {
+        "id": "diagonal-safe",
+        "input": "cave = [[\"U\",\"U\",\"U\",\"U\"],[\"U\",\"G\",\"U\",\"U\"],[\"U\",\"U\",\"U\",\"U\"]], row = 0, col = 3",
+        "prompt": "In the larger cave picture, cell `(0,2)` touches gas only diagonally. What label does the reveal place there?",
+        "correct": "safe",
+        "choices": [
+          {
+            "id": "safe",
+            "label": "`S`",
+            "feedback": "Correct. Diagonal gas does not count, so the cell is safe and the reveal can spread through it.",
+            "misconception": null
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "That incorrectly counts diagonal gas as a neighbor.",
+            "misconception": "count-diagonal"
+          },
+          {
+            "id": "gas",
+            "label": "`G`",
+            "feedback": "The survey never turns an unknown cell into a gas pocket.",
+            "misconception": "copy-neighbor-type"
+          },
+          {
+            "id": "unknown",
+            "label": "`U`",
+            "feedback": "This cell is reachable from the drill through safe cells, so it is revealed.",
+            "misconception": "stop-spread-too-soon"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What should be treated as a position node during the cave survey?",
+      "correct": "cells",
+      "choices": [
+        {
+          "id": "cells",
+          "label": "Each cave cell at its own `(row,column)` position.",
+          "feedback": "Correct. Contents may change as cells are revealed, but the positions are the states visited.",
+          "misconception": null
+        },
+        {
+          "id": "unknown-only",
+          "label": "Only cells currently marked unknown `U`.",
+          "feedback": "Known gas cells still matter when counting danger around an unknown cell.",
+          "misconception": "omit-known-gas"
+        },
+        {
+          "id": "gas-only",
+          "label": "Only gas cells, because the task is a gas survey.",
+          "feedback": "The reveal spreads through safe unknown cells, so those positions must be modeled too.",
+          "misconception": "gas-only"
+        },
+        {
+          "id": "regions",
+          "label": "One node for each area that will eventually be revealed.",
+          "feedback": "The revealed areas are outcomes of walking between individual cells.",
+          "misconception": "region-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which cells are direct neighbors for both danger counting and reveal spreading?",
+      "correct": "four-way",
+      "choices": [
+        {
+          "id": "four-way",
+          "label": "Only cells sharing a side: up, down, left, or right.",
+          "feedback": "Correct. Diagonal gas neither raises the count nor blocks the side-based spread.",
+          "misconception": null
+        },
+        {
+          "id": "eight-way",
+          "label": "All eight surrounding cells, including the four diagonals.",
+          "feedback": "That is a common Minesweeper rule, but this survey uses four directions only.",
+          "misconception": "borrow-minesweeper-rule"
+        },
+        {
+          "id": "gas-jumps",
+          "label": "Any gas cell in the same row or column until a wall is reached.",
+          "feedback": "Danger comes only from immediately adjacent side cells, not line of sight.",
+          "misconception": "line-of-sight"
+        },
+        {
+          "id": "unknown-chain-edge",
+          "label": "Any two unknown cells connected by a chain of safe cells share one direct edge.",
+          "feedback": "That chain is a path made of several side edges, not one edge.",
+          "misconception": "path-as-edge"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "gold-and-silver-lights",
+    "visualKind": "undirected-graph",
+    "pictureQuestions": [
+      {
+        "id": "seven-bulbs",
+        "input": "n = 7, wires = [[0,1],[0,2],[1,3],[1,4],[4,5],[2,6]]",
+        "prompt": "From gold bulb 0, bulbs 1 and 2 are one wire away; bulbs 3, 4, and 6 are two wires away; bulb 5 is three away. How many are gold?",
+        "correct": "four",
+        "choices": [
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "Correct. Even-distance bulbs 0, 3, 4, and 6 are gold.",
+            "misconception": null
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "That misses bulb 0, which starts gold and counts.",
+            "misconception": "exclude-root"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Gold is not limited to leaves; all even-distance bulbs are gold.",
+            "misconception": "gold-leaves-only"
+          },
+          {
+            "id": "seven",
+            "label": "`7`",
+            "feedback": "Wired neighbors alternate, so odd-distance bulbs are silver.",
+            "misconception": "all-gold"
+          }
+        ]
+      },
+      {
+        "id": "six-bulbs",
+        "input": "n = 6, wires = [[0,1],[1,2],[1,3],[3,4],[3,5]]",
+        "prompt": "In the second tree, gold bulbs are 0, 2, and 3, while 1, 4, and 5 are silver. What gold count is returned?",
+        "correct": "three",
+        "choices": [
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "Correct. Exactly bulbs 0, 2, and 3 are gold.",
+            "misconception": null
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "Bulbs 4 and 5 are three wires from 0, so both are silver.",
+            "misconception": "wrong-depth-parity"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Bulb 3 is two wires from 0 and is gold along with 0 and 2.",
+            "misconception": "miss-branch-node"
+          },
+          {
+            "id": "six",
+            "label": "`6`",
+            "feedback": "The coloring alternates; silver bulbs are not included in the gold count.",
+            "misconception": "count-all-bulbs"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What gets one node in the light display?",
+      "correct": "bulbs",
+      "choices": [
+        {
+          "id": "bulbs",
+          "label": "Each bulb `0` through `n−1`, before choosing its gold or silver color.",
+          "feedback": "Correct. Color is a state assigned to a bulb node during traversal.",
+          "misconception": null
+        },
+        {
+          "id": "gold-only",
+          "label": "Only bulbs that end up gold, because those are the ones counted.",
+          "feedback": "Silver bulbs still constrain their neighbors and are needed to determine which bulbs can be gold.",
+          "misconception": "omit-silver"
+        },
+        {
+          "id": "colors",
+          "label": "Two nodes total: one gold node and one silver node.",
+          "feedback": "Gold and silver are labels, not bulbs. Many different bulb nodes receive those labels.",
+          "misconception": "color-as-node"
+        },
+        {
+          "id": "wire-groups",
+          "label": "One node for each connected group of wired bulbs.",
+          "feedback": "The alternating colors must be assigned inside each group, so bulbs cannot be collapsed.",
+          "misconception": "component-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "What does one wire mean in the bulb graph?",
+      "correct": "two-way-wire",
+      "choices": [
+        {
+          "id": "two-way-wire",
+          "label": "A two-way edge whose endpoints must receive opposite colors.",
+          "feedback": "Correct. The wire is undirected, and it creates the gold/silver constraint.",
+          "misconception": null
+        },
+        {
+          "id": "gold-direction",
+          "label": "An arrow from the gold bulb to the silver bulb.",
+          "feedback": "Color is not known while building the graph, and the wire has no direction.",
+          "misconception": "color-defines-direction"
+        },
+        {
+          "id": "same-color-edge",
+          "label": "Join bulbs only when they should receive the same color.",
+          "feedback": "The rule is the opposite: wired neighbors must alternate colors.",
+          "misconception": "same-color-neighbors"
+        },
+        {
+          "id": "distance-two",
+          "label": "Join bulbs two wires apart because they will share a color.",
+          "feedback": "Sharing a final color does not make a direct wire. Only listed wire endpoints share an edge.",
+          "misconception": "derived-color-edge"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "dungeon-gold-run",
+    "visualKind": "directed-graph",
+    "pictureQuestions": [
+      {
+        "id": "reachable-gold",
+        "input": "rooms = [[1,3],[2],[1],[],[5],[4]], gold = [5,10,1,8,50,50]",
+        "prompt": "From room 0, rooms 0,1,2,3 are reachable with gold 5,10,1,8; rooms 4 and 5 are locked away with 50 each. What total is collected?",
+        "correct": "twenty-four",
+        "choices": [
+          {
+            "id": "twenty-four",
+            "label": "`24`",
+            "feedback": "Correct. The reachable rooms contribute 5 + 10 + 1 + 8.",
+            "misconception": null
+          },
+          {
+            "id": "one-twenty-four",
+            "label": "`124`",
+            "feedback": "That includes 100 gold from unreachable rooms 4 and 5.",
+            "misconception": "count-unreachable"
+          },
+          {
+            "id": "twenty-three",
+            "label": "`23`",
+            "feedback": "Room 2 is reachable and contributes its 1 gold even though its key points backward.",
+            "misconception": "skip-cycle-room"
+          },
+          {
+            "id": "fifteen",
+            "label": "`15`",
+            "feedback": "That stops after rooms 0 and 1 and misses keys leading to rooms 2 and 3.",
+            "misconception": "direct-rooms-only"
+          }
+        ]
+      },
+      {
+        "id": "self-key",
+        "input": "rooms = [[0],[2],[1]], gold = [7,3,3]",
+        "prompt": "Room 0 has 7 gold and only a key back to room 0. Rooms 1 and 2 are unreachable. What total is collected?",
+        "correct": "seven",
+        "choices": [
+          {
+            "id": "seven",
+            "label": "`7`",
+            "feedback": "Correct. The self-key adds no new room, so only room 0 is looted.",
+            "misconception": null
+          },
+          {
+            "id": "fourteen",
+            "label": "`14`",
+            "feedback": "A key back to room 0 must not count room 0's gold twice.",
+            "misconception": "double-count-self-loop"
+          },
+          {
+            "id": "thirteen",
+            "label": "`13`",
+            "feedback": "Rooms 1 and 2 cannot be entered from room 0.",
+            "misconception": "count-all-rooms"
+          },
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "Room 0 is reachable immediately and its 7 gold is collected.",
+            "misconception": "self-loop-invalidates-start"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is one node in the dungeon graph?",
+      "correct": "rooms",
+      "choices": [
+        {
+          "id": "rooms",
+          "label": "Each room index, including reachable zero-gold rooms and unreachable rooms.",
+          "feedback": "Correct. Gold is a value on a room; keys determine which room nodes can be reached.",
+          "misconception": null
+        },
+        {
+          "id": "positive-rooms",
+          "label": "Only rooms holding at least one piece of gold.",
+          "feedback": "A zero-gold room may contain a key leading to more gold, so it cannot be omitted.",
+          "misconception": "drop-zero-gold"
+        },
+        {
+          "id": "keys",
+          "label": "Each key found in the dungeon.",
+          "feedback": "A key describes a directed connection. The room it opens is the destination node.",
+          "misconception": "key-as-node"
+        },
+        {
+          "id": "reachable-only",
+          "label": "Only rooms already known to be reachable from room 0.",
+          "feedback": "Reachability is what DFS must discover after the whole room graph is modeled.",
+          "misconception": "precompute-reachable"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "If room i contains key k, which connection is real?",
+      "correct": "i-to-k",
+      "choices": [
+        {
+          "id": "i-to-k",
+          "label": "A one-way arrow `i → k`, because entering i lets you unlock room k.",
+          "feedback": "Correct. Keys create directed travel from their containing room to the opened room.",
+          "misconception": null
+        },
+        {
+          "id": "k-to-i",
+          "label": "A one-way arrow `k → i`, because k is written as the key value.",
+          "feedback": "That reverses what the key does. The key found in i opens k.",
+          "misconception": "reverse-key"
+        },
+        {
+          "id": "both",
+          "label": "A two-way edge between i and k, like a hallway.",
+          "feedback": "A key grants entry in one direction; room k need not contain a key back to i.",
+          "misconception": "keys-undirected"
+        },
+        {
+          "id": "gold-condition",
+          "label": "Add `i → k` only when room k contains more gold than room i.",
+          "feedback": "Gold affects the total, not whether a key opens a room.",
+          "misconception": "gold-controls-edge"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Name each room `roomIndex:goldAmountg`. Example: `2:5g`. Do not add spaces.",
+      "pattern": "^\\d+:\\d+g$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "flooded-campsite-trails",
+    "visualKind": "undirected-graph",
+    "pictureQuestions": [
+      {
+        "id": "dry-detour",
+        "input": "n = 6, trails = [[0,3],[3,4],[4,5],[0,1],[1,2],[2,5]], flooded = [4], start = 0, finish = 5",
+        "prompt": "Campsite 4 floods the route `0–3–4–5`, but `0–1–2–5` stays dry. Can 0 reach 5?",
+        "correct": "true",
+        "choices": [
+          {
+            "id": "true",
+            "label": "`true`",
+            "feedback": "Correct. The dry upper route reaches campsite 5.",
+            "misconception": null
+          },
+          {
+            "id": "false-first",
+            "label": "`false`: the route through 3 reaches a flooded dead end.",
+            "feedback": "One failed branch does not erase the separate dry route through 1 and 2.",
+            "misconception": "stop-after-first-branch"
+          },
+          {
+            "id": "false-any",
+            "label": "`false`: any flooded campsite ruins the whole map.",
+            "feedback": "Only routes that enter flooded campsite 4 are blocked.",
+            "misconception": "global-flood"
+          },
+          {
+            "id": "false-short",
+            "label": "`false`: the dry route has too many trails.",
+            "feedback": "Any dry route is allowed; it need not be shortest.",
+            "misconception": "shortest-only"
+          }
+        ]
+      },
+      {
+        "id": "flooded-finish",
+        "input": "n = 3, trails = [[0,1],[1,2]], flooded = [2], start = 0, finish = 2",
+        "prompt": "A trail reaches finish campsite 2, but campsite 2 itself is flooded. Can the trip succeed?",
+        "correct": "false",
+        "choices": [
+          {
+            "id": "false",
+            "label": "`false`",
+            "feedback": "Correct. A valid trip cannot enter a flooded finish.",
+            "misconception": null
+          },
+          {
+            "id": "true-arrive",
+            "label": "`true`: reaching the finish ends the trip before flooding matters.",
+            "feedback": "Arrival requires stepping onto campsite 2, which is forbidden.",
+            "misconception": "goal-before-blocked"
+          },
+          {
+            "id": "true-trail",
+            "label": "`true`: a complete trail chain connects start to finish.",
+            "feedback": "Connectivity through a blocked node is not a legal dry route.",
+            "misconception": "ignore-flood-status"
+          },
+          {
+            "id": "depends",
+            "label": "`true` only if no other campsite is flooded.",
+            "feedback": "Other camps do not make the flooded finish usable.",
+            "misconception": "check-other-floods"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "Which campsites belong in the trail graph?",
+      "correct": "all-camps",
+      "choices": [
+        {
+          "id": "all-camps",
+          "label": "Every campsite `0` through `n−1`, with flooded status marked on the affected nodes.",
+          "feedback": "Correct. Flooded camps remain known locations, but the search must not enter them.",
+          "misconception": null
+        },
+        {
+          "id": "flooded-only",
+          "label": "Only flooded campsites, because those are the places that can stop a trip.",
+          "feedback": "Dry campsites are the places the route actually explores, so they must be the graph nodes too.",
+          "misconception": "model-obstacles-only"
+        },
+        {
+          "id": "route-only",
+          "label": "Only campsites on the shortest-looking route from start to finish.",
+          "feedback": "A longer dry detour may be the only valid route, so all campsites must remain available.",
+          "misconception": "keep-shortest-only"
+        },
+        {
+          "id": "flood-zones",
+          "label": "One node for all flooded campsites and one node for all dry campsites.",
+          "feedback": "Different dry camps may be disconnected. Combining by status invents connections.",
+          "misconception": "collapse-by-status"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "How should one listed trail `[a,b]` appear?",
+      "correct": "two-way-trail",
+      "choices": [
+        {
+          "id": "two-way-trail",
+          "label": "A two-way edge a—b; traversal may use it only when the next campsite is dry.",
+          "feedback": "Correct. The trail is undirected, while flooding blocks entry to a node.",
+          "misconception": null
+        },
+        {
+          "id": "ordered-trail",
+          "label": "An arrow a→b because a is listed first.",
+          "feedback": "Trail pairs have no travel direction; they can be walked both ways.",
+          "misconception": "array-order-direction"
+        },
+        {
+          "id": "delete-near-flood",
+          "label": "Delete every trail touching a campsite next to a flooded campsite.",
+          "feedback": "Only entering the flooded campsite is forbidden. Nearby dry trails still work.",
+          "misconception": "flood-spreads"
+        },
+        {
+          "id": "dry-shortcut",
+          "label": "Join any two dry campsites if some route connects them through flooded camps.",
+          "feedback": "A route through a flooded node is unusable; it cannot become a shortcut edge.",
+          "misconception": "path-through-blocked"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "longest-freight-train",
+    "visualKind": "grid",
+    "pictureQuestions": [
+      {
+        "id": "vertical-trains",
+        "input": "yard = [T.T / T.T / ..T]",
+        "prompt": "The yard picture has separate vertical trains of lengths 2 and 3. What is returned?",
+        "correct": "three",
+        "choices": [
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "Correct. The longest connected train has three cars.",
+            "misconception": null
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "That is the shorter left train, not the maximum.",
+            "misconception": "first-component"
+          },
+          {
+            "id": "five",
+            "label": "`5`",
+            "feedback": "The empty middle column separates the two trains, so their cars are not added together.",
+            "misconception": "sum-components"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Vertical side-touching T cells belong to the same train.",
+            "misconception": "horizontal-only"
+          }
+        ]
+      },
+      {
+        "id": "tied-trains",
+        "input": "yard = [TTT. / .... / .TTT]",
+        "prompt": "Two separate horizontal trains each contain 3 cars. What longest length is returned?",
+        "correct": "three",
+        "choices": [
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "Correct. A tie still has maximum length 3.",
+            "misconception": null
+          },
+          {
+            "id": "six",
+            "label": "`6`",
+            "feedback": "The answer does not combine cars from separate trains.",
+            "misconception": "sum-tie"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "The answer is a train length, not the number of tied trains.",
+            "misconception": "count-trains"
+          },
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "A tie does not cancel the two valid trains.",
+            "misconception": "tie-no-winner"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is one node when the rail yard becomes a graph?",
+      "correct": "train-cars",
+      "choices": [
+        {
+          "id": "train-cars",
+          "label": "Each grid cell containing `T`; empty `.` cells are not nodes.",
+          "feedback": "Correct. A train is one connected component of T-cell nodes.",
+          "misconception": null
+        },
+        {
+          "id": "whole-train",
+          "label": "Each completed train, no matter how many cars it contains.",
+          "feedback": "Train size is found by counting its connected car nodes, so a whole train cannot start as one node.",
+          "misconception": "component-as-node"
+        },
+        {
+          "id": "all-yard",
+          "label": "Every yard cell, allowing movement through empty track space.",
+          "feedback": "Empty cells separate trains. Making them passable would merge different trains.",
+          "misconception": "empty-passable"
+        },
+        {
+          "id": "straight-cars",
+          "label": "Only T cells that have another T directly left or right.",
+          "feedback": "Vertical cars and isolated one-car trains are valid and must be represented.",
+          "misconception": "horizontal-only-nodes"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When are two train-car nodes directly connected?",
+      "correct": "side-touch",
+      "choices": [
+        {
+          "id": "side-touch",
+          "label": "Their T cells share one side: up, down, left, or right.",
+          "feedback": "Correct. Side-connected car cells make one train.",
+          "misconception": null
+        },
+        {
+          "id": "diagonal",
+          "label": "Their T cells touch at a side or a diagonal corner.",
+          "feedback": "Corner contact does not join cars in this yard.",
+          "misconception": "allow-diagonal"
+        },
+        {
+          "id": "same-row",
+          "label": "They appear anywhere in the same row, even with dots between them.",
+          "feedback": "An empty gap splits trains. Cars must be immediate neighbors.",
+          "misconception": "bridge-gap"
+        },
+        {
+          "id": "orientation",
+          "label": "Only horizontal T neighbors; vertical neighbors belong to separate trains.",
+          "feedback": "The rule includes up and down, so vertical train segments connect too.",
+          "misconception": "horizontal-only-edges"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "one-color-metro-ride",
+    "visualKind": "undirected-graph",
+    "pictureQuestions": [
+      {
+        "id": "blue-detour",
+        "input": "n = 7, tracks = [[0,1],[1,2],[2,3],[0,4],[4,5],[5,3],[2,6]], colors = [red,red,blue,blue,blue,blue,red], source = 0, destination = 3",
+        "prompt": "A mixed red-then-blue route reaches station 3, and a separate route `0–4–5–3` is all blue. Is the trip possible?",
+        "correct": "true",
+        "choices": [
+          {
+            "id": "true",
+            "label": "`true`",
+            "feedback": "Correct. The all-blue route is enough.",
+            "misconception": null
+          },
+          {
+            "id": "false-mixed",
+            "label": "`false`: the shorter route changes color.",
+            "feedback": "A bad route does not matter when another legal one-color route exists.",
+            "misconception": "judge-first-route"
+          },
+          {
+            "id": "false-red",
+            "label": "`false`: red alone cannot reach station 3.",
+            "feedback": "Either color may work; blue reaches 3.",
+            "misconception": "red-only"
+          },
+          {
+            "id": "false-both",
+            "label": "`false`: both red and blue must independently reach 3.",
+            "feedback": "The rule needs one successful color, not both.",
+            "misconception": "require-both-colors"
+          }
+        ]
+      },
+      {
+        "id": "mixed-chain",
+        "input": "n = 5, tracks = [[0,1],[1,2],[2,3],[3,4]], colors = [red,blue,red,blue], source = 0, destination = 4",
+        "prompt": "A chain from 0 to 4 alternates red, blue, red, blue, and neither color alone spans the chain. Is the trip possible?",
+        "correct": "false",
+        "choices": [
+          {
+            "id": "false",
+            "label": "`false`",
+            "feedback": "Correct. Every 0-to-4 route changes color.",
+            "misconception": null
+          },
+          {
+            "id": "true-connected",
+            "label": "`true`: the full uncolored chain is connected.",
+            "feedback": "Combined connectivity illegally mixes track colors.",
+            "misconception": "ignore-colors"
+          },
+          {
+            "id": "true-each-edge",
+            "label": "`true`: every individual track has a valid color.",
+            "feedback": "The whole chosen route must keep one color, not merely each edge separately.",
+            "misconception": "local-color-only"
+          },
+          {
+            "id": "true-two",
+            "label": "`true`: using exactly two colors is allowed.",
+            "feedback": "No transfers means exactly one color for the entire trip.",
+            "misconception": "allow-one-transfer"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What gets a node in the colored metro picture?",
+      "correct": "stations",
+      "choices": [
+        {
+          "id": "stations",
+          "label": "Every station `0` through `n−1`, even if it has no track.",
+          "feedback": "Correct. Track color belongs to edges; a station can touch either color or both.",
+          "misconception": null
+        },
+        {
+          "id": "colored-stations",
+          "label": "A separate red copy and blue copy of each station, with a transfer edge between them.",
+          "feedback": "A transfer edge would allow the exact color change the trip forbids. The lesson instead checks each color's edges separately.",
+          "misconception": "allow-transfer-state"
+        },
+        {
+          "id": "used-stations",
+          "label": "Only source, destination, and stations on the first route found.",
+          "feedback": "Another route may be the legal one-color route, so all n stations belong in the model.",
+          "misconception": "first-route-only"
+        },
+        {
+          "id": "colors",
+          "label": "Two nodes total, one red and one blue.",
+          "feedback": "Colors label tracks. The station endpoints are the graph nodes.",
+          "misconception": "color-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "How should `tracks[i]=[u,v]` with `colors[i]` be drawn?",
+      "correct": "colored-undirected",
+      "choices": [
+        {
+          "id": "colored-undirected",
+          "label": "One two-way u—v edge carrying exactly `colors[i]`.",
+          "feedback": "Correct. The pair is undirected and its matching color controls which search may use it.",
+          "misconception": null
+        },
+        {
+          "id": "directed",
+          "label": "One arrow u→v colored `colors[i]`, following the pair order.",
+          "feedback": "Metro tracks are two-way; reversing the written pair must not change travel.",
+          "misconception": "pair-order-direction"
+        },
+        {
+          "id": "both-colors",
+          "label": "Put every listed track into both the red and blue maps.",
+          "feedback": "That erases the no-transfer rule by pretending either color can use every track.",
+          "misconception": "ignore-edge-color"
+        },
+        {
+          "id": "station-color",
+          "label": "Color u and v instead of the edge, then connect only stations with the same color.",
+          "feedback": "Stations have no permanent color. A station may touch red and blue tracks.",
+          "misconception": "color-nodes"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "office-rumor-reach",
+    "visualKind": "undirected-graph",
+    "pictureQuestions": [
+      {
+        "id": "start-big-group",
+        "input": "n = 8, friendships = [[0,1],[1,2],[2,3],[3,0],[2,4],[5,6]], start = 2",
+        "prompt": "Starting from employee 2, the picture's friendship component is `{0,1,2,3,4}`. How many people hear?",
+        "correct": "five",
+        "choices": [
+          {
+            "id": "five",
+            "label": "`5`",
+            "feedback": "Correct. Everyone in the starter's component hears once.",
+            "misconception": null
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "That counts only employee 2 and direct friends, missing friends reached through them.",
+            "misconception": "direct-friends-only"
+          },
+          {
+            "id": "eight",
+            "label": "`8`",
+            "feedback": "Employees 5, 6, and isolated 7 have no friendship path from 2.",
+            "misconception": "whole-office"
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "The starting employee also hears and belongs in the count.",
+            "misconception": "exclude-starter"
+          }
+        ]
+      },
+      {
+        "id": "start-small-group",
+        "input": "n = 8, friendships = [[0,1],[1,2],[2,3],[3,0],[2,4],[5,6]], start = 6",
+        "prompt": "On the same office map, employee 6 belongs only to the pair `{5,6}`. How many people hear from start 6?",
+        "correct": "two",
+        "choices": [
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Correct. Only employees 6 and 5 are connected to the start.",
+            "misconception": null
+          },
+          {
+            "id": "five",
+            "label": "`5`",
+            "feedback": "That is the size of a different friendship component.",
+            "misconception": "choose-largest-component"
+          },
+          {
+            "id": "seven",
+            "label": "`7`",
+            "feedback": "The rumor cannot jump between disconnected groups, and isolated 7 does not hear.",
+            "misconception": "count-nonisolated"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Employee 6 has a direct friendship with employee 5.",
+            "misconception": "starter-only"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What should one node stand for in the office rumor graph?",
+      "correct": "employees",
+      "choices": [
+        {
+          "id": "employees",
+          "label": "Each employee `0` through `n−1`, including employees with no friends.",
+          "feedback": "Correct. An isolated employee is still a node and can hear only if they are the starter.",
+          "misconception": null
+        },
+        {
+          "id": "friendships",
+          "label": "Each friendship pair, because that is what appears in the input list.",
+          "feedback": "Friendship pairs are edges. Employee numbers are their endpoint nodes.",
+          "misconception": "edge-as-node"
+        },
+        {
+          "id": "reachable-team",
+          "label": "One node for everyone who will eventually hear the rumor.",
+          "feedback": "That reachable group is the result of DFS, not a node known before the search.",
+          "misconception": "component-as-node"
+        },
+        {
+          "id": "nonisolated",
+          "label": "Only employees named in at least one friendship pair.",
+          "feedback": "Employees with no friendships still exist among 0 through n−1.",
+          "misconception": "omit-isolated"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "How does friendship `[a,b]` appear in the graph?",
+      "correct": "mutual",
+      "choices": [
+        {
+          "id": "mutual",
+          "label": "A two-way edge a—b, since either friend can tell the other.",
+          "feedback": "Correct. Store b under a and a under b.",
+          "misconception": null
+        },
+        {
+          "id": "a-tells-b",
+          "label": "Only an arrow a→b, following the pair's written order.",
+          "feedback": "Friendship is mutual; the input order does not control rumor direction.",
+          "misconception": "directed-friendship"
+        },
+        {
+          "id": "common-friend",
+          "label": "Add an edge only after a and b share another mutual friend.",
+          "feedback": "The listed pair itself is already a direct friendship.",
+          "misconception": "require-triangle"
+        },
+        {
+          "id": "reachable-shortcut",
+          "label": "Directly join the starter to everyone a friendship chain can reach.",
+          "feedback": "Those people are reached through paths; inventing direct edges hides the traversal.",
+          "misconception": "transitive-shortcut"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "package-to-the-outpost",
+    "visualKind": "undirected-graph",
+    "pictureQuestions": [
+      {
+        "id": "twelve-hour-route",
+        "input": "n = 6, roads = [[0,1,3],[1,2,2],[1,3,4],[0,4,1],[4,5,6]], hq = 2, target = 5",
+        "prompt": "The unique route from warehouse 2 to 5 has road times 2, 3, 1, and 6. What arrival time is returned?",
+        "correct": "twelve",
+        "choices": [
+          {
+            "id": "twelve",
+            "label": "`12`",
+            "feedback": "Correct. Travel times add: 2 + 3 + 1 + 6.",
+            "misconception": null
+          },
+          {
+            "id": "six",
+            "label": "`6`",
+            "feedback": "That keeps only the final road instead of the full trip total.",
+            "misconception": "overwrite-total"
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "That counts roads rather than their hours.",
+            "misconception": "count-edges"
+          },
+          {
+            "id": "sixteen",
+            "label": "`16`",
+            "feedback": "The dead-end branch to warehouse 3 is not part of the route to 5.",
+            "misconception": "add-dead-end"
+          }
+        ]
+      },
+      {
+        "id": "shared-neighbor",
+        "input": "n = 4, roads = [[0,1,10],[1,2,1],[1,3,1]], hq = 3, target = 2",
+        "prompt": "Warehouse 3 reaches 2 through shared neighbor 1 using two 1-hour roads. How long does delivery take?",
+        "correct": "two",
+        "choices": [
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Correct. The route is 3→1→2, one hour per road.",
+            "misconception": null
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Warehouses 3 and 2 have no direct road; both road times must be counted.",
+            "misconception": "treat-siblings-adjacent"
+          },
+          {
+            "id": "twelve",
+            "label": "`12`",
+            "feedback": "The 10-hour road from 1 to warehouse 0 is outside this route.",
+            "misconception": "include-other-branch"
+          },
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "Different warehouses require travel; they are not the same starting node.",
+            "misconception": "shared-parent-zero"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What becomes a node on the delivery map?",
+      "correct": "warehouses",
+      "choices": [
+        {
+          "id": "warehouses",
+          "label": "Every warehouse `0` through `n−1`; travel time is not part of its identity.",
+          "feedback": "Correct. Road times belong on edges between warehouse nodes.",
+          "misconception": null
+        },
+        {
+          "id": "roads",
+          "label": "Each road triple `[a,b,hours]`.",
+          "feedback": "A road is a weighted edge. Warehouses a and b are its node endpoints.",
+          "misconception": "road-as-node"
+        },
+        {
+          "id": "arrival-times",
+          "label": "A separate node for every possible arrival time at a warehouse.",
+          "feedback": "The algorithm stores the best time as state for one warehouse node; it does not duplicate the map by time.",
+          "misconception": "time-expanded-unneeded"
+        },
+        {
+          "id": "best-route",
+          "label": "Only warehouses on the first route found from headquarters to the outpost.",
+          "feedback": "A later route may be faster, so every warehouse in the road network must remain available.",
+          "misconception": "first-route-only"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "How should road `[a,b,hours]` appear?",
+      "correct": "weighted-two-way",
+      "choices": [
+        {
+          "id": "weighted-two-way",
+          "label": "A two-way a—b edge labeled with that road's travel time.",
+          "feedback": "Correct. The same road can be driven either way and adds its hours to the trip.",
+          "misconception": null
+        },
+        {
+          "id": "a-to-b",
+          "label": "A one-way arrow a→b because a is listed first.",
+          "feedback": "Road pairs are undirected; both warehouses must list the other as a neighbor.",
+          "misconception": "directed-road"
+        },
+        {
+          "id": "ignore-weight",
+          "label": "An unweighted edge, because only the number of roads matters.",
+          "feedback": "A route with more roads can still be faster. The hours label is essential.",
+          "misconception": "fewest-edges"
+        },
+        {
+          "id": "hours-node",
+          "label": "Insert a new node named `hours` between a and b.",
+          "feedback": "Hours is the cost of crossing the road, not a location the package visits.",
+          "misconception": "weight-as-node"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "perfect-size-campsites",
+    "visualKind": "grid",
+    "pictureQuestions": [
+      {
+        "id": "two-size-three",
+        "input": "park = [[1,1,0,1,1],[0,1,0,0,1],[0,0,0,0,0],[1,0,0,1,1]], k = 3",
+        "prompt": "The park shows campsite sizes 3, 3, 1, and 2. With `k=3`, how many are perfect-sized?",
+        "correct": "two",
+        "choices": [
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Correct. Exactly the two size-3 components match k.",
+            "misconception": null
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "That confuses target size 3 with the number of qualifying campsites.",
+            "misconception": "return-k"
+          },
+          {
+            "id": "nine",
+            "label": "`9`",
+            "feedback": "The answer counts matching campsites, not all grass squares.",
+            "misconception": "count-cells"
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "The size-1 and size-2 campsites do not match k.",
+            "misconception": "count-all-components"
+          }
+        ]
+      },
+      {
+        "id": "all-three-match",
+        "input": "park = [[1,0,1],[1,0,1],[0,0,0],[1,1,0]], k = 2",
+        "prompt": "The picture has three separate campsites, each with exactly 2 grass squares. With `k=2`, what is returned?",
+        "correct": "three",
+        "choices": [
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "Correct. All three components have exactly two squares.",
+            "misconception": null
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "That returns the target size rather than how many campsites match it.",
+            "misconception": "return-k"
+          },
+          {
+            "id": "six",
+            "label": "`6`",
+            "feedback": "That counts qualifying grass cells, not qualifying campsites.",
+            "misconception": "sum-matching-area"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "A tie does not reduce three separate matching campsites to one.",
+            "misconception": "unique-size-only"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is one node in the park's grass graph?",
+      "correct": "grass-cells",
+      "choices": [
+        {
+          "id": "grass-cells",
+          "label": "Each grass cell marked `1`; non-grass `0` cells are not nodes.",
+          "feedback": "Correct. A campsite's size is the number of connected grass-cell nodes.",
+          "misconception": null
+        },
+        {
+          "id": "size-k-only",
+          "label": "Only grass cells that eventually belong to a component of size k.",
+          "feedback": "Component size is unknown until DFS explores its cells, so they cannot be filtered first.",
+          "misconception": "pre-filter-size"
+        },
+        {
+          "id": "whole-campsites",
+          "label": "One node for each completed patch of grass.",
+          "feedback": "Those patches are connected components formed from individual grass nodes.",
+          "misconception": "component-as-node"
+        },
+        {
+          "id": "all-cells",
+          "label": "Every park cell, with zeros usable to cross between grass patches.",
+          "feedback": "Zeros separate campsites. Making them nodes would merge distinct patches.",
+          "misconception": "zero-passable"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which grass cells share a direct edge?",
+      "correct": "four-way",
+      "choices": [
+        {
+          "id": "four-way",
+          "label": "Grass cells that share a side: up, down, left, or right.",
+          "feedback": "Correct. DFS counts each side-connected grass component.",
+          "misconception": null
+        },
+        {
+          "id": "eight-way",
+          "label": "Grass cells touching by a side or a diagonal corner.",
+          "feedback": "Diagonal contact does not join campsites here.",
+          "misconception": "allow-diagonal"
+        },
+        {
+          "id": "within-k",
+          "label": "Any two grass cells at most k steps apart.",
+          "feedback": "k describes the desired component size, not an edge distance.",
+          "misconception": "k-as-distance"
+        },
+        {
+          "id": "same-row",
+          "label": "All grass cells in one row, even across zero cells.",
+          "feedback": "Only immediate side neighbors connect; zero gaps break a campsite.",
+          "misconception": "bridge-zero-gap"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
+      "pattern": "^\\(\\d+,\\d+\\)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "count-routes-to-summit",
+    "visualKind": "directed-graph",
+    "pictureQuestions": [
+      {
+        "id": "three-summit-routes",
+        "input": "graph = [[1,2],[3],[3,4],[5],[5],[]]",
+        "prompt": "The directed picture shows routes `0→1→3→5`, `0→2→3→5`, and `0→2→4→5`. How many summit routes?",
+        "correct": "three",
+        "choices": [
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "Correct. All three node sequences are distinct complete routes.",
+            "misconception": null
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "The two routes that share suffix 3→5 still have different prefixes and both count.",
+            "misconception": "merge-shared-suffix"
+          },
+          {
+            "id": "five",
+            "label": "`5`",
+            "feedback": "The answer counts complete routes, not intermediate camps visited.",
+            "misconception": "count-camps"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "The problem asks for every route, not only the first one found.",
+            "misconception": "first-route-only"
+          }
+        ]
+      },
+      {
+        "id": "one-success-branch",
+        "input": "graph = [[1,2],[4],[3],[],[]]",
+        "prompt": "From camp 0, branch `0→1→4` reaches the summit while `0→2→3` ends early. How many summit routes?",
+        "correct": "one",
+        "choices": [
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Correct. Only the branch ending at summit 4 counts.",
+            "misconception": null
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "A dead end at camp 3 is not a summit route.",
+            "misconception": "count-dead-end"
+          },
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "Route 0→1→4 reaches the summit successfully.",
+            "misconception": "failed-branch-cancels"
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "The result counts routes, not the four reachable camps.",
+            "misconception": "count-reachable-nodes"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What does each node represent on the summit map?",
+      "correct": "camps",
+      "choices": [
+        {
+          "id": "camps",
+          "label": "Every camp `0` through `n−1`, including dead ends and the summit.",
+          "feedback": "Correct. Dead ends are still nodes; they simply contribute zero summit routes.",
+          "misconception": null
+        },
+        {
+          "id": "routes",
+          "label": "Each full route from the starting camp to the summit.",
+          "feedback": "Routes are sequences of camp nodes produced by following trail edges.",
+          "misconception": "output-as-node"
+        },
+        {
+          "id": "summit-reaching",
+          "label": "Only camps that lie on at least one successful summit route.",
+          "feedback": "The search must explore a camp to learn whether it reaches the summit.",
+          "misconception": "pre-filter-success"
+        },
+        {
+          "id": "branch-points",
+          "label": "Only camps with two or more outgoing trails.",
+          "feedback": "Single-trail camps and the summit remain necessary parts of routes.",
+          "misconception": "omit-linear-camps"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "What arrow comes from an entry `j` inside `graph[i]`?",
+      "correct": "i-to-j",
+      "choices": [
+        {
+          "id": "i-to-j",
+          "label": "A one-way trail `i → j`.",
+          "feedback": "Correct. From camp i, that entry is one legal next camp.",
+          "misconception": null
+        },
+        {
+          "id": "j-to-i",
+          "label": "A one-way trail `j → i`, because recursion returns from j to i.",
+          "feedback": "Call-return direction does not reverse travel. The adjacency list says i can go to j.",
+          "misconception": "reverse-call-direction"
+        },
+        {
+          "id": "two-way",
+          "label": "A two-way trail i—j.",
+          "feedback": "These trails are directed. Adding a return direction creates extra routes.",
+          "misconception": "make-undirected"
+        },
+        {
+          "id": "summit-shortcut",
+          "label": "A direct arrow i→summit whenever j can eventually reach the summit.",
+          "feedback": "That reachability is a multi-edge path whose routes must be counted separately.",
+          "misconception": "collapse-path"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "runes-on-the-castle-door",
+    "visualKind": "backtracking",
+    "pictureQuestions": [
+      {
+        "id": "one-valid-code",
+        "input": "dials = [ab,ab,a]",
+        "prompt": "For dials `ab`, `ab`, `a`, which complete code list obeys the no-equal-neighbors rule?",
+        "correct": "aba",
+        "choices": [
+          {
+            "id": "aba",
+            "label": "Only code `aba`",
+            "feedback": "Correct. a→b→a changes rune at both boundaries.",
+            "misconception": null
+          },
+          {
+            "id": "aba-bab",
+            "label": "Codes `aba` and `baa`",
+            "feedback": "This keeps `baa` after checking only the first neighboring pair and skipping the final a→a check.",
+            "misconception": "allow-equal-final"
+          },
+          {
+            "id": "baa",
+            "label": "Only code `baa`",
+            "feedback": "The last two neighboring runes are both a.",
+            "misconception": "check-first-pair-only"
+          },
+          {
+            "id": "empty",
+            "label": "No codes",
+            "feedback": "The branch a→b→a completes legally.",
+            "misconception": "ban-repeated-anywhere"
+          }
+        ]
+      },
+      {
+        "id": "no-valid-code",
+        "input": "dials = [ab,c,c]",
+        "prompt": "For dials `ab`, `c`, `c`, how many complete codes are valid?",
+        "correct": "zero",
+        "choices": [
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "Correct. The last two forced c runes always match.",
+            "misconception": null
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Both possible starts still end with illegal c→c.",
+            "misconception": "ignore-last-pair"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "This accepts the first two-dial prefix `ac` as a complete code before processing the final dial.",
+            "misconception": "finish-one-dial-early"
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "This counts the four legal nonempty partial prefixes `a`, `b`, `ac`, and `bc` instead of completed three-rune codes.",
+            "misconception": "count-partial-prefixes"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is a node in the code-building decision tree?",
+      "correct": "partial-code",
+      "choices": [
+        {
+          "id": "partial-code",
+          "label": "A legal partial code made from the first few dials; the root is the empty code.",
+          "feedback": "Correct. Each level records one more dial choice.",
+          "misconception": null
+        },
+        {
+          "id": "rune",
+          "label": "One rune character, no matter which dial offered it.",
+          "feedback": "The same rune at different positions has different context. A node must remember the whole prefix.",
+          "misconception": "forget-prefix"
+        },
+        {
+          "id": "full-code",
+          "label": "Only a completed code using every dial.",
+          "feedback": "Completed codes are leaves; partial-code nodes are needed to show the choices leading to them.",
+          "misconception": "leaves-only"
+        },
+        {
+          "id": "dial",
+          "label": "One node per dial string.",
+          "feedback": "A dial offers choices, but the search state is which runes have been chosen so far.",
+          "misconception": "dial-as-state"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When does a partial code have an edge to a longer prefix?",
+      "correct": "legal-next-rune",
+      "choices": [
+        {
+          "id": "legal-next-rune",
+          "label": "Choose one rune from the next dial that differs from the prefix's last rune.",
+          "feedback": "Correct. The edge appends one legal next-dial choice.",
+          "misconception": null
+        },
+        {
+          "id": "globally-new",
+          "label": "Choose only a rune that has never appeared anywhere earlier in the code.",
+          "feedback": "Only adjacent equal runes are banned. A rune may reappear after a different rune.",
+          "misconception": "global-uniqueness"
+        },
+        {
+          "id": "skip-dial",
+          "label": "If every rune repeats, jump to the following dial without adding a character.",
+          "feedback": "A full code needs one rune from every dial. A blocked prefix has no child.",
+          "misconception": "skip-blocked-dial"
+        },
+        {
+          "id": "any-later-dial",
+          "label": "Choose a rune from any remaining dial and mark that dial used.",
+          "feedback": "Dial order is fixed; an edge always advances to exactly the next dial.",
+          "misconception": "reorder-dials"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `start` for the empty root. After that, use the partial rune string itself. Example: `ab`.",
+      "pattern": "^(?:start|[a-z]+)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "save-the-date-phone-chain",
+    "visualKind": "tree",
+    "pictureQuestions": [
+      {
+        "id": "deadline-three",
+        "input": "n = 7, headId = 0, caller = [-1,0,0,1,1,2,2], waitDays = [1,2,4,0,0,0,0], deadline = 3",
+        "prompt": "Head 0 calls people 1 and 2 on day 1. People 3 and 4 hear on day 3; people 5 and 6 hear on day 5. With deadline 3, how many people count?",
+        "correct": "five",
+        "choices": [
+          {
+            "id": "five",
+            "label": "`5`",
+            "feedback": "Correct. People 0–4 hear on or before day 3.",
+            "misconception": null
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "People hearing exactly on deadline day 3 also count.",
+            "misconception": "strict-before-deadline"
+          },
+          {
+            "id": "seven",
+            "label": "`7`",
+            "feedback": "People 5 and 6 hear on day 5, after the deadline.",
+            "misconception": "count-all-people"
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "The head already knows on day 0 and belongs in the count.",
+            "misconception": "exclude-head"
+          }
+        ]
+      },
+      {
+        "id": "head-not-zero",
+        "input": "n = 4, headId = 2, caller = [2,0,-1,2], waitDays = [1,0,2,0], deadline = 0",
+        "prompt": "Person 2 is the head and knows on day 0. Everyone else first hears after day 0. With deadline 0, how many count?",
+        "correct": "one",
+        "choices": [
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Correct. Only head person 2 knows by day 0.",
+            "misconception": null
+          },
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "The head starts informed on day 0 and counts.",
+            "misconception": "exclude-head"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "No listener hears until after the head's wait.",
+            "misconception": "call-immediately"
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "A place in the phone tree does not mean a person hears before the deadline.",
+            "misconception": "ignore-time"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What should each node represent in the phone-chain tree?",
+      "correct": "people",
+      "choices": [
+        {
+          "id": "people",
+          "label": "Each of the n people, with `headId` as the root.",
+          "feedback": "Correct. Wait days are values on people; calls are the links between them.",
+          "misconception": null
+        },
+        {
+          "id": "on-time-only",
+          "label": "Only people who hear before the deadline.",
+          "feedback": "Whether someone is on time depends on the chain above them and must be computed by traversal.",
+          "misconception": "pre-filter-deadline"
+        },
+        {
+          "id": "call-days",
+          "label": "One node for each calendar day on which a call can happen.",
+          "feedback": "Days are accumulated timing state. The people receiving and making calls are the tree nodes.",
+          "misconception": "time-as-node"
+        },
+        {
+          "id": "callers-only",
+          "label": "Only people who call at least one listener.",
+          "feedback": "Leaf listeners still count if they hear by the deadline.",
+          "misconception": "omit-leaves"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "For a non-head person i, which arrow does `caller[i]` define?",
+      "correct": "caller-to-listener",
+      "choices": [
+        {
+          "id": "caller-to-listener",
+          "label": "`caller[i] → i`, from the caller to the listener.",
+          "feedback": "Correct. Time flows down the phone tree from the head toward listeners.",
+          "misconception": null
+        },
+        {
+          "id": "listener-to-caller",
+          "label": "`i → caller[i]`, because i's row stores the caller.",
+          "feedback": "That follows storage direction instead of call direction and walks back toward the head.",
+          "misconception": "reverse-parent-array"
+        },
+        {
+          "id": "two-way-call",
+          "label": "A two-way edge because either person knows the other's number.",
+          "feedback": "The scheduled chain says who calls whom; information flows in one direction.",
+          "misconception": "make-call-undirected"
+        },
+        {
+          "id": "same-day",
+          "label": "Connect any two people who happen to hear on the same day.",
+          "feedback": "Equal timing does not create a phone call. Only the caller array defines edges.",
+          "misconception": "time-creates-edge"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "shut-the-garden-valve",
+    "visualKind": "tree",
+    "pictureQuestions": [
+      {
+        "id": "shut-two",
+        "input": "ids = [1,2,3,4,5,6,7], feeds = [0,1,1,2,2,3,4], liters = [4,6,3,8,2,10,5], shutId = 2",
+        "prompt": "Shutting sprinkler 2 also stops descendants 4, 5, and 7. Their flows are 6, 8, 2, and 5 L/h. How much is saved?",
+        "correct": "twenty-one",
+        "choices": [
+          {
+            "id": "twenty-one",
+            "label": "`21`",
+            "feedback": "Correct. 6 + 8 + 2 + 5 = 21 L/h.",
+            "misconception": null
+          },
+          {
+            "id": "sixteen",
+            "label": "`16`",
+            "feedback": "That misses sprinkler 7, which is downstream through sprinkler 4.",
+            "misconception": "direct-children-only"
+          },
+          {
+            "id": "fifteen",
+            "label": "`15`",
+            "feedback": "That counts descendants but omits the shut sprinkler's own 6 L/h.",
+            "misconception": "exclude-shut-node"
+          },
+          {
+            "id": "ten",
+            "label": "`10`",
+            "feedback": "That adds sprinkler 2 and its upstream parent 1 instead of downstream sprinklers.",
+            "misconception": "sum-ancestors"
+          }
+        ]
+      },
+      {
+        "id": "arbitrary-ids",
+        "input": "ids = [30,10,20], feeds = [0,30,10], liters = [7,1,9], shutId = 10",
+        "prompt": "Sprinkler 30 feeds 10, and 10 feeds 20. Flows are 7, 1, and 9. If 10 is shut, how much is saved?",
+        "correct": "ten",
+        "choices": [
+          {
+            "id": "ten",
+            "label": "`10`",
+            "feedback": "Correct. Sprinklers 10 and 20 stop: 1 + 9.",
+            "misconception": null
+          },
+          {
+            "id": "seventeen",
+            "label": "`17`",
+            "feedback": "Root sprinkler 30 is upstream of the shut valve and keeps running.",
+            "misconception": "include-ancestor"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Sprinkler 20 depends on 10 and also stops.",
+            "misconception": "shut-node-only"
+          },
+          {
+            "id": "nine",
+            "label": "`9`",
+            "feedback": "The shut sprinkler's own 1 L/h is saved along with its descendant.",
+            "misconception": "descendants-only"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What becomes a node in the sprinkler tree?",
+      "correct": "sprinklers",
+      "choices": [
+        {
+          "id": "sprinklers",
+          "label": "Each sprinkler ID, including the root sprinkler fed by 0.",
+          "feedback": "Correct. Each node carries its own liters-per-hour value.",
+          "misconception": null
+        },
+        {
+          "id": "liters",
+          "label": "One node for each distinct liters-per-hour amount.",
+          "feedback": "Two sprinklers can use the same amount and still be separate parts of the tree.",
+          "misconception": "merge-by-value"
+        },
+        {
+          "id": "pipes",
+          "label": "Each feeder relationship in the arrays.",
+          "feedback": "Feeder relationships are edges. Sprinkler IDs are their endpoints.",
+          "misconception": "pipe-as-node"
+        },
+        {
+          "id": "shut-subtree",
+          "label": "Only the sprinkler being shut and descendants already known to be below it.",
+          "feedback": "The full feeder tree must be built before the descendants of an arbitrary shut sprinkler are known.",
+          "misconception": "pre-filter-subtree"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "For index i, what arrow is described by `feeds[i]` and `ids[i]`?",
+      "correct": "feeder-to-sprinkler",
+      "choices": [
+        {
+          "id": "feeder-to-sprinkler",
+          "label": "`feeds[i] → ids[i]`, from the feeder down to the sprinkler it supplies.",
+          "feedback": "Correct. Following arrows from a shut sprinkler finds every downstream sprinkler that also loses water.",
+          "misconception": null
+        },
+        {
+          "id": "sprinkler-to-feeder",
+          "label": "`ids[i] → feeds[i]`, from a sprinkler back toward its source.",
+          "feedback": "That would sum ancestors rather than the downstream subtree affected by the shut valve.",
+          "misconception": "reverse-pipes"
+        },
+        {
+          "id": "two-way-pipe",
+          "label": "Edges in both directions because water pipes are physically connected.",
+          "feedback": "Supply has a direction. Walking upward would wrongly include unaffected ancestors and branches.",
+          "misconception": "make-pipe-undirected"
+        },
+        {
+          "id": "same-flow",
+          "label": "Join sprinklers whenever they use the same liters per hour.",
+          "feedback": "Flow amount is a node value; only the feeds array defines the supply tree.",
+          "misconception": "flow-creates-edge"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Name each sprinkler `id:litersPerHour`. Example: sprinkler 7 using 10 L/h is `7:10`. Do not add spaces.",
+      "pattern": "^\\d+:\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "biggest-study-group",
+    "visualKind": "undirected-graph",
+    "pictureQuestions": [
+      {
+        "id": "ring-pair-loner",
+        "input": "worked groups: ring {0,1,2,3}, pair {4,5}, isolated {6}",
+        "prompt": "The picture has a 4-student ring, a 2-student pair, and one isolated student. What is the biggest group size?",
+        "correct": "four",
+        "choices": [
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "Correct. The connected ring contains students 0,1,2,3.",
+            "misconception": null
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "Closing the ring does not remove a student; all four are connected.",
+            "misconception": "stop-at-cycle"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "The separate pair is smaller than the four-student ring.",
+            "misconception": "last-component"
+          },
+          {
+            "id": "seven",
+            "label": "`7`",
+            "feedback": "Disconnected groups cannot be combined into one study group.",
+            "misconception": "count-all-students"
+          }
+        ]
+      },
+      {
+        "id": "tied-pairs",
+        "input": "worked groups: pair {0,1}, pair {2,3}, isolated {4}",
+        "prompt": "Two separate groups each have 2 students, and one student is alone. What largest size is returned?",
+        "correct": "two",
+        "choices": [
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Correct. The maximum of group sizes 2, 2, and 1 is 2.",
+            "misconception": null
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "The two pairs are disconnected and cannot be merged because they tie.",
+            "misconception": "combine-tied-groups"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "The isolated student is smaller than both pairs.",
+            "misconception": "last-group"
+          },
+          {
+            "id": "five",
+            "label": "`5`",
+            "feedback": "The answer is one connected group's size, not the total number of students.",
+            "misconception": "total-students"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What should each node mean in the study graph?",
+      "correct": "students",
+      "choices": [
+        {
+          "id": "students",
+          "label": "One student for each row index `0` through `n−1`.",
+          "feedback": "Correct. Even an isolated student's diagonal 1 represents that student node.",
+          "misconception": null
+        },
+        {
+          "id": "study-groups",
+          "label": "One node for each finished group of students.",
+          "feedback": "Groups are connected components discovered from student nodes.",
+          "misconception": "component-as-node"
+        },
+        {
+          "id": "worked-pairs",
+          "label": "One node for every `1` entry in the matrix.",
+          "feedback": "Matrix entries describe relationships; row and column indexes identify the student endpoints.",
+          "misconception": "matrix-cell-as-node"
+        },
+        {
+          "id": "nonisolated",
+          "label": "Only students whose row contains a 1 outside the diagonal.",
+          "feedback": "A student who worked only with themself is still a one-person study group.",
+          "misconception": "omit-isolated"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which matrix entries create edges between different students?",
+      "correct": "worked-one",
+      "choices": [
+        {
+          "id": "worked-one",
+          "label": "For different i and j, `worked[i][j] = 1` creates the undirected edge i—j.",
+          "feedback": "Correct. Working together is mutual, and the diagonal self-entry adds no new neighbor.",
+          "misconception": null
+        },
+        {
+          "id": "zero-edge",
+          "label": "`worked[i][j] = 0` creates an edge because they are available to study together.",
+          "feedback": "Zero means no recorded work together, so no connection exists.",
+          "misconception": "invert-matrix"
+        },
+        {
+          "id": "diagonal-loop",
+          "label": "Each diagonal 1 must be drawn as a self-loop and counted as another group member.",
+          "feedback": "The diagonal only says a student relates to themself; it does not add a new person or size.",
+          "misconception": "count-self-loop"
+        },
+        {
+          "id": "shared-partner",
+          "label": "Connect i and j when they have worked with any common third student.",
+          "feedback": "A common partner gives a two-edge path, not a direct worked-together edge.",
+          "misconception": "common-neighbor-edge"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "kth-song-in-playlist",
+    "visualKind": "nested",
+    "pictureQuestions": [
+      {
+        "id": "fourth-song",
+        "input": "playlist = [3,[8,[5,9]],[],4], k = 4",
+        "prompt": "Flattening playlist `[3,[8,[5,9]],[],4]` gives play order `3,8,5,9,4`. What is the 4th song?",
+        "correct": "nine",
+        "choices": [
+          {
+            "id": "nine",
+            "label": "`9`",
+            "feedback": "Correct. Song 9 is fourth in depth-first play order.",
+            "misconception": null
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "Song 4 is fifth; the nested songs play before it.",
+            "misconception": "skip-nested-folder"
+          },
+          {
+            "id": "five",
+            "label": "`5`",
+            "feedback": "Song 5 is third, not fourth.",
+            "misconception": "zero-based-k"
+          },
+          {
+            "id": "eight",
+            "label": "`8`",
+            "feedback": "Song 8 is second; the inner folder continues with 5 and 9.",
+            "misconception": "count-folder-as-item"
+          }
+        ]
+      },
+      {
+        "id": "deep-first-song",
+        "input": "playlist = [[[2]],6], k = 1",
+        "prompt": "For playlist `[[[2]],6]`, which song plays first?",
+        "correct": "two",
+        "choices": [
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Correct. Playback dives through both folders before moving to song 6.",
+            "misconception": null
+          },
+          {
+            "id": "six",
+            "label": "`6`",
+            "feedback": "Top-level placement does not make 6 first; depth-first order fully opens the first folder.",
+            "misconception": "top-level-first"
+          },
+          {
+            "id": "none",
+            "label": "`-1`",
+            "feedback": "The nested folders contain a valid first song, 2.",
+            "misconception": "ignore-deep-folders"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "The return value is a song ID, not the number of folders opened.",
+            "misconception": "return-depth"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What needs a node in the nested playlist picture?",
+      "correct": "folders-songs",
+      "choices": [
+        {
+          "id": "folders-songs",
+          "label": "Every folder array and every song ID; the outer playlist is the root folder.",
+          "feedback": "Correct. Folder nodes preserve the nesting, while song nodes appear in playback order.",
+          "misconception": null
+        },
+        {
+          "id": "songs-only",
+          "label": "Only song IDs, connected in the order they are first seen.",
+          "feedback": "That can show the final flat list but cannot show the nesting the recursive helper must traverse.",
+          "misconception": "flatten-model-early"
+        },
+        {
+          "id": "folders-only",
+          "label": "Only folders, with each folder labeled by how many songs it contains.",
+          "feedback": "The answer is a specific song ID, so individual songs cannot be collapsed into counts.",
+          "misconception": "omit-song-nodes"
+        },
+        {
+          "id": "kth-only",
+          "label": "Only the song that eventually lands at position k.",
+          "feedback": "The traversal must process earlier songs to determine which one is kth.",
+          "misconception": "preselect-answer"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "What does a parent-child edge mean in the playlist tree?",
+      "correct": "directly-inside",
+      "choices": [
+        {
+          "id": "directly-inside",
+          "label": "A folder points to each song or folder directly inside it, in listed order.",
+          "feedback": "Correct. Depth-first reading of those ordered children produces the flat playlist.",
+          "misconception": null
+        },
+        {
+          "id": "all-songs",
+          "label": "Every folder points directly to every song anywhere below it.",
+          "feedback": "That duplicates descendant songs and skips the inner-folder structure.",
+          "misconception": "transitive-containment"
+        },
+        {
+          "id": "next-song",
+          "label": "Each song points to the next numeric song ID.",
+          "feedback": "Song numbers are IDs, not an ordering rule. Array position controls playback order.",
+          "misconception": "sort-by-id"
+        },
+        {
+          "id": "skip-empty",
+          "label": "A folder gets an edge only if that child eventually contains a song.",
+          "feedback": "An empty folder is still a real child in the nested input, even though it appends nothing.",
+          "misconception": "drop-empty-folder"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `root=[]` for the outer list. Then use each index path and value, such as `root[1]=[]` or `root[1][0]=7`.",
+      "pattern": "^root(?:\\[\\d+\\])*(?:=\\[\\]|=-?\\d+)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "museum-vault-keyring",
+    "visualKind": "directed-graph",
+    "pictureQuestions": [
+      {
+        "id": "two-start-chains",
+        "input": "vaults = [[1],[2],[],[2,5],[],[]], startKeys = [0,3]",
+        "prompt": "Starting keys 0 and 3 open vaults `{0,1,2}` and `{3,2,5}`. Vault 4 stays sealed. How many distinct vaults open?",
+        "correct": "five",
+        "choices": [
+          {
+            "id": "five",
+            "label": "`5`",
+            "feedback": "Correct. The union is {0,1,2,3,5}.",
+            "misconception": null
+          },
+          {
+            "id": "six",
+            "label": "`6`",
+            "feedback": "No opened vault contains key 4.",
+            "misconception": "assume-all-open"
+          },
+          {
+            "id": "seven",
+            "label": "`7`",
+            "feedback": "Vault 2 is reached from both chains but must be counted once.",
+            "misconception": "double-count-shared-vault"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Starting keys open roots that reveal more keys; they are not the only opened vaults.",
+            "misconception": "start-keys-only"
+          }
+        ]
+      },
+      {
+        "id": "key-cycle",
+        "input": "vaults = [[1],[2],[0],[]], startKeys = [1]",
+        "prompt": "Starting at vault 1, keys lead `1→2→0→1`, while vault 3 is unreachable. How many distinct vaults open?",
+        "correct": "three",
+        "choices": [
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "Correct. Vaults 1, 2, and 0 open once each.",
+            "misconception": null
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "The key cycle never provides key 3.",
+            "misconception": "cycle-reaches-all"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "That counts only newly discovered vaults 2 and 0 but forgets that starting vault 1 is open too.",
+            "misconception": "exclude-start-vault"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Vault 1 contains key 2, and that chain continues to vault 0.",
+            "misconception": "start-only"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What should each node represent in the vault map?",
+      "correct": "vaults",
+      "choices": [
+        {
+          "id": "vaults",
+          "label": "Every vault index `0` through `n−1`, whether initially openable or not.",
+          "feedback": "Correct. Starting keys choose roots, and discovered keys may reach other vault nodes.",
+          "misconception": null
+        },
+        {
+          "id": "start-vaults",
+          "label": "Only vaults named in `startKeys`.",
+          "feedback": "Those are only the starting points. Keys inside them may unlock many other vaults.",
+          "misconception": "roots-only"
+        },
+        {
+          "id": "keys",
+          "label": "Each physical key, even when two vaults contain a key for the same vault.",
+          "feedback": "The key identifies a destination vault. Reachability is tracked by vault, not by duplicate key objects.",
+          "misconception": "key-instance-as-node"
+        },
+        {
+          "id": "keyrings",
+          "label": "One node for the entire starting keyring and one for each vault's key collection.",
+          "feedback": "Collections describe outgoing edges; individual vault indexes are the search states.",
+          "misconception": "collection-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "If vault i contains key j, what arrow belongs in the graph?",
+      "correct": "i-to-j",
+      "choices": [
+        {
+          "id": "i-to-j",
+          "label": "`i → j`, because after opening i you can open vault j.",
+          "feedback": "Correct. Keys make directed reachability from containing vault to unlocked vault.",
+          "misconception": null
+        },
+        {
+          "id": "j-to-i",
+          "label": "`j → i`, because the key is labeled j.",
+          "feedback": "The label tells which vault opens; the key is found in i, so travel is i to j.",
+          "misconception": "reverse-key"
+        },
+        {
+          "id": "two-way",
+          "label": "A two-way edge i—j, since opening either vault reveals the connection.",
+          "feedback": "Vault j need not contain a key back to i. Key access is one-way.",
+          "misconception": "make-keys-undirected"
+        },
+        {
+          "id": "start-only-edges",
+          "label": "Keep the edge only if i is named in `startKeys`.",
+          "feedback": "A later-opened vault's keys can continue the chain and must remain in the graph.",
+          "misconception": "discard-deep-keys"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "top-of-the-pile",
+    "visualKind": "nested",
+    "pictureQuestions": [
+      {
+        "id": "shallow-sum-nine",
+        "input": "items = [[[6],5],[[3,[8]]],[4]]",
+        "prompt": "In `[[[6],5],[[3,[8]]],[4]]`, the shallowest loose items are 5 and 4 at depth 2. What sum is returned?",
+        "correct": "nine",
+        "choices": [
+          {
+            "id": "nine",
+            "label": "`9`",
+            "feedback": "Correct. Only 5 and 4 lie at the first occupied depth.",
+            "misconception": null
+          },
+          {
+            "id": "twenty-six",
+            "label": "`26`",
+            "feedback": "That adds deeper items 6, 3, and 8 too.",
+            "misconception": "sum-all-depths"
+          },
+          {
+            "id": "sixteen",
+            "label": "`17`",
+            "feedback": "That skips the shallowest values and instead adds every deeper item: 6 + 3 + 8.",
+            "misconception": "skip-shallowest-level"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "The result sums item values; it does not return their depth.",
+            "misconception": "return-depth"
+          }
+        ]
+      },
+      {
+        "id": "shallow-cancel",
+        "input": "items = [[],[[-5]],[6,-6],[]]",
+        "prompt": "At the shallowest occupied level, the picture has items 6 and −6. What sum is returned?",
+        "correct": "zero",
+        "choices": [
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "Correct. 6 + (−6) cancels to zero.",
+            "misconception": null
+          },
+          {
+            "id": "six",
+            "label": "`6`",
+            "feedback": "Negative values are real items and must be included.",
+            "misconception": "ignore-negative"
+          },
+          {
+            "id": "minus-five",
+            "label": "`−5`",
+            "feedback": "The −5 sits one level deeper and is ignored.",
+            "misconception": "choose-deeper-item"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Zero is a valid sum; it does not mean the level had no items.",
+            "misconception": "zero-means-empty"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What gets its own node in the pile's nesting tree?",
+      "correct": "arrays-integers",
+      "choices": [
+        {
+          "id": "arrays-integers",
+          "label": "Every array box and every integer item; the outer array is the root.",
+          "feedback": "Correct. Box nodes determine depth, and integer leaves are the values that may be summed.",
+          "misconception": null
+        },
+        {
+          "id": "integers-only",
+          "label": "Only integers, labeled with their final depth.",
+          "feedback": "That records an answer after depth is known but does not model how recursion discovers depth through boxes.",
+          "misconception": "omit-boxes"
+        },
+        {
+          "id": "nonempty-arrays",
+          "label": "Every integer and only arrays that contain at least one integer somewhere below.",
+          "feedback": "Empty arrays still occupy positions and matter when finding whether a level has items.",
+          "misconception": "drop-empty-boxes"
+        },
+        {
+          "id": "depths",
+          "label": "One node per depth, holding all item values found there.",
+          "feedback": "That collapses separate branches and hides parent-child nesting.",
+          "misconception": "collapse-by-depth"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "Which direct containment relationship becomes an edge?",
+      "correct": "array-child",
+      "choices": [
+        {
+          "id": "array-child",
+          "label": "An array connects to each item or inner array directly inside it.",
+          "feedback": "Correct. Crossing one such edge moves to contents one level deeper.",
+          "misconception": null
+        },
+        {
+          "id": "shallowest-only",
+          "label": "Connect the root directly to every item at the shallowest occupied depth.",
+          "feedback": "That uses the result to redraw the input and removes deeper branches needed to find that result.",
+          "misconception": "answer-driven-edges"
+        },
+        {
+          "id": "all-descendants",
+          "label": "Every outer array connects directly to all integers anywhere inside it.",
+          "feedback": "Skipping intermediate boxes makes deep items appear too shallow.",
+          "misconception": "skip-nesting-levels"
+        },
+        {
+          "id": "adjacent-values",
+          "label": "Connect integers that appear next to each other when the input is printed.",
+          "feedback": "Printed neighbors may live in different boxes. Containment, not text position, defines edges.",
+          "misconception": "text-adjacency"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `root=[]` for the outer list. Then use each index path and value, such as `root[1]=[]` or `root[1][0]=7`.",
+      "pattern": "^root(?:\\[\\d+\\])*(?:=\\[\\]|=-?\\d+)$",
+      "showExactLabels": false
+    }
+  },
+  {
+    "id": "trusted-courier-networks",
+    "visualKind": "undirected-graph",
+    "pictureQuestions": [
+      {
+        "id": "threshold-six",
+        "input": "trust lines at k=6: 0-1 (9), 1-2 (7), 3-4 (8); offices 0..5",
+        "prompt": "With `k=6`, secure lines leave components `{0,1,2}`, `{3,4}`, and `{5}`. How many networks?",
+        "correct": "three",
+        "choices": [
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "Correct. The qualifying lines form exactly three connected components.",
+            "misconception": null
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Scores 5 and 4 are below k and cannot bridge the three groups.",
+            "misconception": "keep-below-threshold"
+          },
+          {
+            "id": "six",
+            "label": "`6`",
+            "feedback": "Offices joined by secure paths belong to the same network.",
+            "misconception": "count-offices"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "Isolated office 5 is a third one-office network.",
+            "misconception": "omit-isolated"
+          }
+        ]
+      },
+      {
+        "id": "threshold-four",
+        "input": "same trust matrix with k=4; qualifying chain 0-1-2-3-4-5",
+        "prompt": "On the same trust picture, lowering `k` to 4 creates a chain `0–1–2–3–4–5`. How many networks remain?",
+        "correct": "one",
+        "choices": [
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "Correct. Every office is connected through the qualifying chain.",
+            "misconception": null
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "That reuses the old k=6 graph instead of adding the newly qualifying lines.",
+            "misconception": "ignore-new-threshold"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "The score-4 line qualifies because the rule is at least k.",
+            "misconception": "strict-threshold"
+          },
+          {
+            "id": "six",
+            "label": "`6`",
+            "feedback": "A connected chain makes one network even without every possible pairwise line.",
+            "misconception": "require-clique"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What should each node represent in the courier network?",
+      "correct": "offices",
+      "choices": [
+        {
+          "id": "offices",
+          "label": "Every office index `0` through `n−1`, even one trusted by nobody.",
+          "feedback": "Correct. An isolated office forms its own one-office network.",
+          "misconception": null
+        },
+        {
+          "id": "trusted-offices",
+          "label": "Only offices that have at least one trust score at or above k.",
+          "feedback": "An office with no qualifying line still exists as an isolated network.",
+          "misconception": "omit-isolated"
+        },
+        {
+          "id": "trust-scores",
+          "label": "Each distinct score found in the trust matrix.",
+          "feedback": "Scores decide whether office pairs have edges; they are not places in the network.",
+          "misconception": "weight-as-node"
+        },
+        {
+          "id": "networks",
+          "label": "One node for each final trusted component.",
+          "feedback": "Those components are what DFS must discover from office nodes.",
+          "misconception": "component-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When should offices i and j share an edge?",
+      "correct": "threshold",
+      "choices": [
+        {
+          "id": "threshold",
+          "label": "When `trust[i][j] >= k`; the qualifying edge is undirected.",
+          "feedback": "Correct. Meeting the threshold creates a usable secure line in both directions.",
+          "misconception": null
+        },
+        {
+          "id": "positive",
+          "label": "Whenever `trust[i][j] > 0`, with low scores treated as weak edges.",
+          "feedback": "A below-k score creates no edge at all, not a weaker usable connection.",
+          "misconception": "ignore-threshold"
+        },
+        {
+          "id": "strict",
+          "label": "Only when `trust[i][j] > k`; a score exactly k is rejected.",
+          "feedback": "The rule is at least k, so equality must create an edge.",
+          "misconception": "strict-threshold"
+        },
+        {
+          "id": "transitive-trust",
+          "label": "Connect i and j directly when a chain of high-trust offices links them.",
+          "feedback": "That chain makes them reachable in one component, but it is not one direct trust edge.",
+          "misconception": "path-as-edge"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use each node's 0-based number only. Example: `2`.",
+      "pattern": "^\\d+$",
+      "showExactLabels": false
+    }
+  }
+]

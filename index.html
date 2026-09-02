@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Build graphs and answer visual questions to prove you understand DFS problems.">
+  <title>DFS Visual Proof Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Manrope:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=20260901-2">
+</head>
+<body>
+  <section id="pair-picker" class="pair-picker" aria-label="Visual problem library"></section>
+
+  <header class="topbar" hidden>
+    <a class="brand" href="/" aria-label="All visual problems">
+      <span class="brand-mark" aria-hidden="true">∴</span>
+      <span><b>DFS</b> Visual Proof</span>
+    </a>
+    <div class="top-controls">
+      <div class="current-pair" aria-label="Current problem">
+        <strong id="current-problem-label"></strong>
+      </div>
+      <button id="section-nav-btn" class="section-nav-btn" type="button">Skip to Step 2 <span>→</span></button>
+      <button id="reset-btn" class="ghost-btn" type="button">Restart</button>
+    </div>
+  </header>
+
+  <main class="workspace" hidden>
+    <section class="problem-pane" aria-label="Problem statement">
+      <div class="pane-head">
+        <div><h1 id="problem-title"></h1></div>
+      </div>
+      <div class="problem-tabs" aria-label="Problem sections">
+        <button class="tab active" aria-pressed="true" data-tab="description">Description</button>
+        <button class="tab" aria-pressed="false" data-tab="examples">Examples</button>
+        <button class="tab" aria-pressed="false" data-tab="constraints">Constraints</button>
+      </div>
+      <div id="problem-content" class="problem-content"></div>
+    </section>
+
+    <section class="test-pane" aria-label="Visual proof lesson">
+      <div class="gate-head">
+        <div>
+          <span class="eyebrow" id="section-kicker">STEP 1 · VISUAL PROOF</span>
+          <h2 id="section-title">Build it. Read it. Prove it.</h2>
+          <p id="section-subtitle">Answer each question and build exact graphs from fresh inputs.</p>
+        </div>
+        <div class="gate-head-actions"><div class="evidence-chip" id="evidence-chip"><span class="pulse-dot"></span><span>Checking pictures</span></div><button id="next-question-btn" class="ghost-btn next-question-btn" type="button">Skip to next question <span>→</span></button></div>
+      </div>
+
+      <div class="evidence-strip" aria-label="Lesson progress">
+        <div class="evidence-meta"><span id="evidence-label" aria-live="polite">0 of 9 checks passed</span><span id="attempt-label">Clean run</span></div>
+        <div class="evidence-track" role="progressbar" aria-label="Lesson checks passed" aria-valuemin="0" aria-valuemax="9" aria-valuenow="0"><div id="evidence-fill"></div></div>
+        <div id="facet-list" class="facet-list"></div>
+      </div>
+
+      <div class="activity-layout">
+        <div id="challenge" class="challenge"></div>
+
+        <section id="graph-lab" class="graph-lab" aria-labelledby="graph-lab-title" hidden>
+        <div class="graph-lab-head">
+          <h3 id="graph-lab-title">Build a graph</h3>
+          <label class="direction-toggle"><input id="graph-directed" type="checkbox"><span id="graph-direction-label">Directed edges</span></label>
+        </div>
+        <div class="graph-toolbar" aria-label="Graph tools">
+          <button id="graph-add-node" class="graph-tool-primary" type="button"><span aria-hidden="true">＋</span> Add node</button>
+          <label class="edge-width-control" for="graph-edge-width"><span>Edge width</span><input id="graph-edge-width" type="range" min="2" max="8" step="1"><output id="graph-edge-width-value"></output></label>
+          <button id="graph-label" class="graph-tool" type="button" disabled>Rename</button>
+          <button id="graph-color" class="graph-tool" type="button" disabled>Color</button>
+          <button id="graph-clear" class="graph-tool" type="button">Clear</button>
+        </div>
+        <div id="graph-board" class="graph-board" aria-label="Graph drawing canvas">
+          <svg id="graph-svg" role="group" aria-label="Interactive graph. Add nodes, then select two nodes to connect them."></svg>
+          <div id="graph-empty" class="graph-empty"><span class="graph-empty-icon">＋</span><span>Use “Add node” above.</span></div>
+          <div id="graph-rename" class="graph-rename" hidden><label for="graph-rename-input">Node name</label><input id="graph-rename-input" maxlength="24"><span>Enter to save · Esc to cancel</span></div>
+          <div id="graph-color-menu" class="graph-color-menu" role="group" aria-label="Color and delete options" hidden></div>
+        </div>
+        <p id="graph-status" class="graph-status" aria-live="polite"></p>
+        <div id="graph-lab-actions" class="graph-lab-actions" hidden></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="mobile-switcher" class="mobile-switcher" aria-label="Choose pane" hidden>
+    <button class="active" data-pane="test" aria-pressed="true">Lesson</button>
+    <button data-pane="problem" aria-pressed="false">Problem</button>
+  </div>
+
+  <script src="/visual-data.js?v=20260901-2"></script>
+  <script src="/character-names.js?v=20260829-2"></script>
+  <script src="/graph.js?v=20260830-8"></script>
+  <script src="/visual-library.js?v=20260901-2"></script>
+</body>
+</html>

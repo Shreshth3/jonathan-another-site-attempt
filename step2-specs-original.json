@@ -1,0 +1,1256 @@
+[
+  {
+    "id": "all-paths-from-source-to-target",
+    "vocabulary": {
+      "nodeNames": "DAG nodes",
+      "startNode": "source node",
+      "edges": "one-way arrows",
+      "correctSearch": "nodes the full path search visits",
+      "mistakenSearch": "nodes the broken path search visits"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-two-way"
+        ],
+        "level": "Illegal return trip",
+        "presentation": "smallest-witness",
+        "goal": "Use one arrow whose backward trip invents a route from the source.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Path cut short",
+        "presentation": "predict-first",
+        "goal": "Make the target reachable only after at least two arrows.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Earlier path erased",
+        "presentation": "exact-difference",
+        "goal": "Branch toward two destinations so keeping only the last branch loses nodes.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "minNodes": 2,
+    "fixedStart": "0",
+    "input": {
+      "name": "source node",
+      "prompt": "Choose the source node",
+      "result": "reached-nodes",
+      "resultLabel": "nodes the full path search visits"
+    }
+  },
+  {
+    "id": "battleships-in-a-board",
+    "vocabulary": {
+      "nodeNames": "X-cell coordinates",
+      "startNode": "first ship cell",
+      "edges": "side-sharing ship links",
+      "correctSearch": "ship cells actually connected",
+      "mistakenSearch": "ship cells the flawed scan connects"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong ship selected",
+        "presentation": "exact-difference",
+        "goal": "Use two valid separated ships, and choose a start cell that is not listed first.",
+        "startLabel": "(0,0)",
+        "mistakenStartLabel": "(0,1)"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Missing hull segment",
+        "presentation": "repair-case",
+        "goal": "Make the final side link necessary to reach the end of one straight ship.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Long ship stopped early",
+        "presentation": "predict-first",
+        "goal": "Use one legal straight ship with an X cell more than one side-step from the start.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0).",
+      "max": 199
+    },
+    "input": {
+      "name": "first ship cell",
+      "prompt": "Choose the first ship cell",
+      "result": "reached-nodes",
+      "resultLabel": "ship cells actually connected"
+    }
+  },
+  {
+    "id": "course-schedule",
+    "vocabulary": {
+      "nodeNames": "course numbers",
+      "startNode": "course to inspect",
+      "edges": "prerequisite arrows",
+      "correctSearch": "courses truly unlocked",
+      "mistakenSearch": "courses the flawed planner marks"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-two-way"
+        ],
+        "level": "Prerequisite runs backward",
+        "presentation": "repair-case",
+        "goal": "Choose an arrow where walking backward falsely unlocks a prerequisite.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong course opened",
+        "presentation": "exact-difference",
+        "goal": "Use course 0 as the chosen course, but make the mistaken search begin at course 1; give them different futures.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "One elective only",
+        "presentation": "smallest-witness",
+        "goal": "Let one course unlock two branches so both must be explored.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "course to inspect",
+      "prompt": "Choose the course to inspect",
+      "result": "reached-nodes",
+      "resultLabel": "courses truly unlocked"
+    }
+  },
+  {
+    "id": "detonate-the-maximum-bombs",
+    "vocabulary": {
+      "nodeNames": "bomb indices",
+      "startNode": "first detonated bomb",
+      "edges": "blast-trigger arrows",
+      "correctSearch": "bombs truly detonated",
+      "mistakenSearch": "bombs the faulty chain reaction reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-two-way"
+        ],
+        "level": "One-sided blast",
+        "presentation": "predict-first",
+        "goal": "Use a small bomb inside a large bomb's range but not the reverse.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Only the final fuse",
+        "presentation": "smallest-witness",
+        "goal": "Give the starting bomb two trigger routes and make the earlier one matter.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Lost chain reaction",
+        "presentation": "repair-case",
+        "goal": "End a multi-bomb chain with one essential final trigger arrow.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "first detonated bomb",
+      "prompt": "Choose the first detonated bomb",
+      "result": "reached-nodes",
+      "resultLabel": "bombs truly detonated"
+    }
+  },
+  {
+    "id": "evaluate-division",
+    "vocabulary": {
+      "nodeNames": "variable names",
+      "startNode": "query numerator",
+      "edges": "ratio arrows (weights omitted here)",
+      "correctSearch": "variables connected by valid ratios",
+      "mistakenSearch": "variables the broken ratio walk reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Final ratio arrow skipped",
+        "presentation": "smallest-witness",
+        "goal": "Make the last listed ratio arrow necessary to connect one more variable.",
+        "startLabel": "a"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Ratio chain stopped",
+        "presentation": "exact-difference",
+        "goal": "Make one variable discoverable only through two known equations.",
+        "startLabel": "a"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong query numerator",
+        "presentation": "predict-first",
+        "goal": "Choose a start variable that is not listed first and has a different ratio component.",
+        "startLabel": "a",
+        "mistakenStartLabel": "b"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "identifier",
+      "description": "Use lowercase variables of 1 to 5 letters or digits, like a or rate1."
+    },
+    "input": {
+      "name": "query numerator",
+      "prompt": "Choose the query numerator",
+      "result": "reached-nodes",
+      "resultLabel": "variables connected by valid ratios"
+    }
+  },
+  {
+    "id": "find-if-path-exists-in-graph",
+    "vocabulary": {
+      "nodeNames": "vertex numbers",
+      "startNode": "source vertex",
+      "edges": "two-way edges",
+      "correctSearch": "vertices reachable from source",
+      "mistakenSearch": "vertices the buggy DFS visits"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Two-way road made one-way",
+        "presentation": "exact-difference",
+        "goal": "Write an edge in the opposite order from the trip the source needs.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "DFS never returns",
+        "presentation": "repair-case",
+        "goal": "Give the source a short branch and a separate branch containing more vertices.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Source field ignored",
+        "presentation": "smallest-witness",
+        "goal": "Use a nonfirst source whose component differs from the first vertex's component.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "source vertex",
+      "prompt": "Choose the source vertex",
+      "result": "reached-nodes",
+      "resultLabel": "vertices reachable from source"
+    }
+  },
+  {
+    "id": "flatten-nested-list-iterator",
+    "vocabulary": {
+      "nodeNames": "list and integer labels",
+      "startNode": "outer list",
+      "edges": "contains arrows",
+      "correctSearch": "nested items fully visited",
+      "mistakenSearch": "items the faulty iterator opens"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Containment arrows reversed",
+        "presentation": "repair-case",
+        "goal": "Start at root so reversing every containment arrow blocks all nested items.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Only final item kept",
+        "presentation": "predict-first",
+        "goal": "Put useful integers in multiple child lists, not only the last one.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Nested list left closed",
+        "presentation": "exact-difference",
+        "goal": "Hide an integer at least two contains-arrows below the outer list.",
+        "startLabel": "root"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "nested-path",
+      "description": "Use root, root[0], root[1], ... to name nested input items."
+    },
+    "fixedStart": "root",
+    "input": {
+      "name": "outer list",
+      "prompt": "Choose the outer list",
+      "result": "reached-nodes",
+      "resultLabel": "nested items fully visited"
+    }
+  },
+  {
+    "id": "is-graph-bipartite",
+    "vocabulary": {
+      "nodeNames": "graph nodes",
+      "startNode": "coloring start",
+      "edges": "two-way neighbor links",
+      "correctSearch": "nodes the color check reaches",
+      "mistakenSearch": "nodes the flawed color check reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Neighbor relation halved",
+        "presentation": "predict-first",
+        "goal": "Orient the written pair away from the traversal the coloring check needs.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "skip-leaf-edges"
+        ],
+        "level": "Leaf colors forgotten",
+        "presentation": "smallest-witness",
+        "goal": "Attach degree-one neighbors whose opposite colors still matter.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Final color branch only",
+        "presentation": "repair-case",
+        "goal": "Branch from one node so an earlier neighbor is lost when only the last route is followed.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "coloring start",
+      "prompt": "Choose the coloring start",
+      "result": "reached-nodes",
+      "resultLabel": "nodes the color check reaches"
+    }
+  },
+  {
+    "id": "keys-and-rooms",
+    "vocabulary": {
+      "nodeNames": "room numbers",
+      "startNode": "unlocked room",
+      "edges": "key arrows",
+      "correctSearch": "rooms truly enterable",
+      "mistakenSearch": "rooms the careless visitor enters"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-two-way"
+        ],
+        "level": "Key works backward",
+        "presentation": "smallest-witness",
+        "goal": "Put a key in a locked room so treating its arrow as two-way falsely opens it.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Last key misplaced",
+        "presentation": "predict-first",
+        "goal": "Make the final listed key the only way into one room.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Doorway not revisited",
+        "presentation": "exact-difference",
+        "goal": "Place keys for two room chains in the starting room.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "minNodes": 2,
+    "fixedStart": "0",
+    "input": {
+      "name": "unlocked room",
+      "prompt": "Choose the unlocked room",
+      "result": "reached-nodes",
+      "resultLabel": "rooms truly enterable"
+    }
+  },
+  {
+    "id": "kill-process",
+    "vocabulary": {
+      "nodeNames": "process IDs",
+      "startNode": "process to kill",
+      "edges": "parent-to-child arrows",
+      "correctSearch": "processes truly terminated",
+      "mistakenSearch": "processes the faulty command terminates"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-two-way"
+        ],
+        "level": "Parent killed by child",
+        "presentation": "exact-difference",
+        "goal": "Start at a child so an illegal upward move would terminate its parent.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong PID selected",
+        "presentation": "repair-case",
+        "goal": "Use process 1 as the kill ID, but make the mistaken search begin at process 2; give them different subtrees.",
+        "startLabel": "1",
+        "mistakenStartLabel": "2"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Earlier child survives",
+        "presentation": "smallest-witness",
+        "goal": "Give the killed process multiple children so following only the last child is visibly wrong.",
+        "startLabel": "1"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "positive-integer",
+      "description": "Use positive integer IDs, matching the problem input.",
+      "max": 50000
+    },
+    "input": {
+      "name": "process to kill",
+      "prompt": "Choose the process to kill",
+      "result": "reached-nodes",
+      "resultLabel": "processes truly terminated"
+    }
+  },
+  {
+    "id": "letter-combinations-of-a-phone-number",
+    "vocabulary": {
+      "nodeNames": "partial strings",
+      "startNode": "empty prefix",
+      "edges": "append-letter arrows",
+      "correctSearch": "prefixes the full generator explores",
+      "mistakenSearch": "prefixes the broken generator explores"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Choice arrows reversed",
+        "presentation": "repair-case",
+        "goal": "Start at ε so reversing every choice arrow blocks all longer strings.",
+        "startLabel": "ε"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "One keypad choice",
+        "presentation": "smallest-witness",
+        "goal": "Give a prefix at least two next-letter choices so one combination is not enough.",
+        "startLabel": "ε"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Final letter option dropped",
+        "presentation": "predict-first",
+        "goal": "Make the last append arrow lead to a unique complete combination.",
+        "startLabel": "ε"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "partial-string",
+      "description": "Use ε for the empty root, then lowercase partial strings like a or ab."
+    },
+    "fixedStart": "ε",
+    "input": {
+      "name": "empty prefix",
+      "prompt": "Choose the empty prefix",
+      "result": "reached-nodes",
+      "resultLabel": "prefixes the full generator explores"
+    }
+  },
+  {
+    "id": "longest-increasing-path-in-a-matrix",
+    "vocabulary": {
+      "nodeNames": "cell coordinates",
+      "startNode": "starting cell",
+      "edges": "sideways increasing arrows",
+      "correctSearch": "cells reachable by increases",
+      "mistakenSearch": "cells the flawed climb reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Diagonal climb",
+        "presentation": "smallest-witness",
+        "goal": "Place a larger value only at a diagonal, where no legal move exists.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Climb ends early",
+        "presentation": "repair-case",
+        "goal": "Create a strictly increasing side path at least two moves long.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "One ascent kept",
+        "presentation": "exact-difference",
+        "goal": "Give a low cell two increasing side-neighbors and make the earlier branch distinct.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0).",
+      "max": 199
+    },
+    "input": {
+      "name": "starting cell",
+      "prompt": "Choose the starting cell",
+      "result": "reached-nodes",
+      "resultLabel": "cells reachable by increases"
+    }
+  },
+  {
+    "id": "minesweeper",
+    "vocabulary": {
+      "nodeNames": "board coordinates",
+      "startNode": "clicked square",
+      "edges": "eight-neighbor links",
+      "correctSearch": "squares truly examined",
+      "mistakenSearch": "squares the faulty reveal examines"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "remove-diagonals"
+        ],
+        "level": "Corner neighbor ignored",
+        "presentation": "predict-first",
+        "goal": "Put the only relevant neighbor diagonally beside the clicked square.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong square clicked",
+        "presentation": "exact-difference",
+        "goal": "Choose a click that is not the first coordinate and sits in a different region.",
+        "startLabel": "(0,0)",
+        "mistakenStartLabel": "(0,1)"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Reveal stops on one ray",
+        "presentation": "repair-case",
+        "goal": "Give the clicked square multiple surrounding routes that lead to different squares.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0).",
+      "max": 49
+    },
+    "input": {
+      "name": "clicked square",
+      "prompt": "Choose the clicked square",
+      "result": "reached-nodes",
+      "resultLabel": "squares truly examined"
+    }
+  },
+  {
+    "id": "nested-list-weight-sum",
+    "vocabulary": {
+      "nodeNames": "list and integer labels",
+      "startNode": "outer list",
+      "edges": "direct-containment arrows",
+      "correctSearch": "items included in the depth sum",
+      "mistakenSearch": "items the broken sum discovers"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Depth arrows reversed",
+        "presentation": "exact-difference",
+        "goal": "Start at root so reversing every depth arrow blocks all nested values.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Deep value omitted",
+        "presentation": "smallest-witness",
+        "goal": "Place an integer two or more bracket levels under the outer list.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Only last bracket counted",
+        "presentation": "predict-first",
+        "goal": "Give the outer list multiple nested children containing different integers.",
+        "startLabel": "root"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "nested-path",
+      "description": "Use root, root[0], root[1], ... to name nested input items."
+    },
+    "fixedStart": "root",
+    "input": {
+      "name": "outer list",
+      "prompt": "Choose the outer list",
+      "result": "reached-nodes",
+      "resultLabel": "items included in the depth sum"
+    }
+  },
+  {
+    "id": "nested-list-weight-sum-ii",
+    "vocabulary": {
+      "nodeNames": "containers and integers",
+      "startNode": "root container",
+      "edges": "one-level containment arrows",
+      "correctSearch": "items assigned inverse depths",
+      "mistakenSearch": "items the flawed weighting walk finds"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Containment arrows reversed",
+        "presentation": "repair-case",
+        "goal": "Start at root so reversing every containment arrow blocks all deeper items.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Deepest item detached",
+        "presentation": "exact-difference",
+        "goal": "Make the final containment arrow attach the deepest integer.",
+        "startLabel": "root"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong container measured",
+        "presentation": "smallest-witness",
+        "goal": "Select a nonfirst container whose descendants differ from the first label's descendants.",
+        "startLabel": "root",
+        "mistakenStartLabel": "root[0]"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "nested-path",
+      "description": "Use root, root[0], root[1], ... to name nested input items."
+    },
+    "fixedStart": "root",
+    "input": {
+      "name": "root container",
+      "prompt": "Choose the root container",
+      "result": "reached-nodes",
+      "resultLabel": "items assigned inverse depths"
+    }
+  },
+  {
+    "id": "network-delay-time",
+    "vocabulary": {
+      "nodeNames": "network nodes",
+      "startNode": "signal source",
+      "edges": "one-way timed wires",
+      "correctSearch": "nodes that truly receive the signal",
+      "mistakenSearch": "nodes the faulty network walk reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-two-way"
+        ],
+        "level": "Wire sends backward",
+        "presentation": "smallest-witness",
+        "goal": "Aim a wire toward the source so a false return direction reaches its sender.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Only final wire followed",
+        "presentation": "repair-case",
+        "goal": "Give the signal source two outgoing routes and put a receiver on the earlier one.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Relay never forwards",
+        "presentation": "predict-first",
+        "goal": "Require a middle node to relay the signal to a node two hops away.",
+        "startLabel": "1"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-one",
+      "description": "Use numeric IDs 1, 2, 3, ... with no gaps."
+    },
+    "input": {
+      "name": "signal source",
+      "prompt": "Choose the signal source",
+      "result": "reached-nodes",
+      "resultLabel": "nodes that truly receive the signal"
+    }
+  },
+  {
+    "id": "number-of-connected-components-in-an-undirected-graph",
+    "vocabulary": {
+      "nodeNames": "node numbers",
+      "startNode": "component seed",
+      "edges": "two-way links",
+      "correctSearch": "nodes in the real component",
+      "mistakenSearch": "nodes in the broken component scan"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Component split by order",
+        "presentation": "predict-first",
+        "goal": "List a two-way edge opposite the direction needed from the component seed.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Component split too soon",
+        "presentation": "smallest-witness",
+        "goal": "Let the final listed link be the bridge to one more node.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Partial component",
+        "presentation": "exact-difference",
+        "goal": "Build a branching component where a full DFS must return and explore again.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "component seed",
+      "prompt": "Choose the component seed",
+      "result": "reached-nodes",
+      "resultLabel": "nodes in the real component"
+    }
+  },
+  {
+    "id": "number-of-increasing-paths-in-a-grid",
+    "vocabulary": {
+      "nodeNames": "grid coordinates",
+      "startNode": "path's first cell",
+      "edges": "side-neighbor increase arrows",
+      "correctSearch": "cells on valid increasing continuations",
+      "mistakenSearch": "cells the bad path counter reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Corner path invented",
+        "presentation": "repair-case",
+        "goal": "Put a larger cell diagonally adjacent but give it no side connection.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Only final increase",
+        "presentation": "predict-first",
+        "goal": "Offer two increasing side moves and extend the earlier choice.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Path endpoint lost",
+        "presentation": "smallest-witness",
+        "goal": "Use a final increase arrow that is necessary to reach the largest cell.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0).",
+      "max": 999
+    },
+    "input": {
+      "name": "path's first cell",
+      "prompt": "Choose the path's first cell",
+      "result": "reached-nodes",
+      "resultLabel": "cells on valid increasing continuations"
+    }
+  },
+  {
+    "id": "number-of-islands",
+    "vocabulary": {
+      "nodeNames": "land-cell coordinates",
+      "startNode": "first land cell",
+      "edges": "side-sharing land links",
+      "correctSearch": "land cells in the island",
+      "mistakenSearch": "land cells the faulty flood reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Two islands fused",
+        "presentation": "exact-difference",
+        "goal": "Use two land cells that meet at a corner but do not share a side.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Long island clipped",
+        "presentation": "repair-case",
+        "goal": "Make a land strip that extends beyond the starting cell's direct neighbors.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Different island chosen",
+        "presentation": "predict-first",
+        "goal": "Choose a nonfirst land cell in a component different from the first coordinate.",
+        "startLabel": "(0,0)",
+        "mistakenStartLabel": "(0,1)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0).",
+      "max": 299
+    },
+    "input": {
+      "name": "first land cell",
+      "prompt": "Choose the first land cell",
+      "result": "reached-nodes",
+      "resultLabel": "land cells in the island"
+    }
+  },
+  {
+    "id": "number-of-provinces",
+    "vocabulary": {
+      "nodeNames": "city numbers",
+      "startNode": "province seed city",
+      "edges": "two-way roads",
+      "correctSearch": "cities in the true province",
+      "mistakenSearch": "cities the faulty province scan groups"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Road direction invented",
+        "presentation": "smallest-witness",
+        "goal": "Write a road pair opposite the trip needed from the chosen city.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong city surveyed",
+        "presentation": "predict-first",
+        "goal": "Select a city other than the first label and place it in another province.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      },
+      {
+        "bugs": [
+          "skip-leaf-edges"
+        ],
+        "level": "Small city cut off",
+        "presentation": "repair-case",
+        "goal": "Attach degree-one cities that still belong to their province.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "province seed city",
+      "prompt": "Choose the province seed city",
+      "result": "reached-nodes",
+      "resultLabel": "cities in the true province"
+    }
+  },
+  {
+    "id": "possible-bipartition",
+    "vocabulary": {
+      "nodeNames": "person numbers",
+      "startNode": "first person colored",
+      "edges": "two-way dislike links",
+      "correctSearch": "people reached by the real coloring",
+      "mistakenSearch": "people reached by the broken grouping"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Dislike made one-sided",
+        "presentation": "repair-case",
+        "goal": "Order a dislike pair so the chosen person's conflict disappears under arrows.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Last conflict only",
+        "presentation": "exact-difference",
+        "goal": "Give one person several dislike neighbors and make an earlier neighbor matter.",
+        "startLabel": "1"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Final conflict omitted",
+        "presentation": "smallest-witness",
+        "goal": "Make the last dislike edge connect a person not otherwise reached.",
+        "startLabel": "1"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-one",
+      "description": "Use numeric IDs 1, 2, 3, ... with no gaps."
+    },
+    "input": {
+      "name": "first person colored",
+      "prompt": "Choose the first person colored",
+      "result": "reached-nodes",
+      "resultLabel": "people reached by the real coloring"
+    }
+  },
+  {
+    "id": "smallest-string-with-swaps",
+    "vocabulary": {
+      "nodeNames": "string positions",
+      "startNode": "position to group",
+      "edges": "two-way swap links",
+      "correctSearch": "positions in the real swap group",
+      "mistakenSearch": "positions in the flawed swap group"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-one-way"
+        ],
+        "level": "Swap allowed one direction",
+        "presentation": "predict-first",
+        "goal": "List a pair backward from the direction the chosen position needs to travel.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "Swap group cut short",
+        "presentation": "smallest-witness",
+        "goal": "Connect one position to two swap chains so all interchangeable letters are found.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong position grouped",
+        "presentation": "exact-difference",
+        "goal": "Choose a nonfirst position in a different swap component from the first label.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "input": {
+      "name": "position to group",
+      "prompt": "Choose the position to group",
+      "result": "reached-nodes",
+      "resultLabel": "positions in the real swap group"
+    }
+  },
+  {
+    "id": "time-needed-to-inform-all-employees",
+    "vocabulary": {
+      "nodeNames": "employee IDs",
+      "startNode": "company head",
+      "edges": "manager-to-report arrows",
+      "correctSearch": "employees truly informed",
+      "mistakenSearch": "employees the flawed message reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "reverse-arrows"
+        ],
+        "level": "Message arrows reversed",
+        "presentation": "exact-difference",
+        "goal": "Start at the company head so reversing every manager-to-report arrow blocks the team.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Last report forgotten",
+        "presentation": "predict-first",
+        "goal": "Make the final reporting edge the only route to one employee.",
+        "startLabel": "0"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Second-level team uninformed",
+        "presentation": "repair-case",
+        "goal": "Put an employee under a manager who is below the head.",
+        "startLabel": "0"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "contiguous-zero",
+      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+    },
+    "startRule": "graph-root",
+    "input": {
+      "name": "company head",
+      "prompt": "Choose the company head",
+      "result": "reached-nodes",
+      "resultLabel": "employees truly informed"
+    }
+  },
+  {
+    "id": "water-and-jug-problem",
+    "vocabulary": {
+      "nodeNames": "jug states",
+      "startNode": "starting state",
+      "edges": "legal-operation arrows",
+      "correctSearch": "states truly reachable",
+      "mistakenSearch": "states the faulty simulator reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "make-two-way"
+        ],
+        "level": "Operation undone for free",
+        "presentation": "smallest-witness",
+        "goal": "Use a legal operation whose reverse is not one legal operation from the chosen state.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Wrong jug state loaded",
+        "presentation": "repair-case",
+        "goal": "Choose a start state other than the first label and give the two states different legal futures.",
+        "startLabel": "(0,0)",
+        "mistakenStartLabel": "(0,1)"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Only one pour tried",
+        "presentation": "predict-first",
+        "goal": "Offer several legal operations from one state and extend an earlier option.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "state-pair",
+      "description": "Use jug states like (0,0).",
+      "max": 1000000
+    },
+    "fixedStart": "(0,0)",
+    "input": {
+      "name": "starting state",
+      "prompt": "Choose the starting state",
+      "result": "reached-nodes",
+      "resultLabel": "states truly reachable"
+    }
+  },
+  {
+    "id": "word-search",
+    "vocabulary": {
+      "nodeNames": "letter-cell coordinates",
+      "startNode": "word's first cell",
+      "edges": "side-neighbor letter steps",
+      "correctSearch": "cells reachable by valid steps",
+      "mistakenSearch": "cells the broken word walk visits"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "add-diagonals"
+        ],
+        "level": "Diagonal spelling",
+        "presentation": "repair-case",
+        "goal": "Put the next needed letter only on a corner-touching cell.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "first-branch"
+        ],
+        "level": "First matching letter only",
+        "presentation": "exact-difference",
+        "goal": "Give a letter cell two possible side-neighbor continuations and make both visible.",
+        "startLabel": "(0,0)"
+      },
+      {
+        "bugs": [
+          "drop-last-edge"
+        ],
+        "level": "Word loses final step",
+        "presentation": "predict-first",
+        "goal": "Make the final side link necessary to reach the word's last letter.",
+        "startLabel": "(0,0)"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "coordinate",
+      "description": "Use grid coordinates like (0,0).",
+      "max": 5
+    },
+    "input": {
+      "name": "word's first cell",
+      "prompt": "Choose the word's first cell",
+      "result": "reached-nodes",
+      "resultLabel": "cells reachable by valid steps"
+    }
+  }
+]
