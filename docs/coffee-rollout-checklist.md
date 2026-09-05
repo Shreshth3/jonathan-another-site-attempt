@@ -40,14 +40,16 @@ This is the acceptance checklist for all 75 lessons.
 
 - Show the raw input without a redundant “Mini-example input” label.
 - Put the exact graph build before the three Yes/No claims.
-- Keep exactly three concise claims: node membership, direct edge versus reachability, and local degree.
+- Keep exactly five concise claims total, one beside each exact graph build.
+- Across those five claims, cover node membership, direct edge versus reachability, local degree, direction, and one edge-detail or reachability-boundary idea.
 - Do not reveal a prewritten correct graph model.
 - Reveal claim feedback only after all answers and the graph are submitted.
 - Remove extra case labels, headings, directions, and repeated check-button instructions.
 
 ## Step 4
 
-- Use one deep, real, problem-specific code-reasoning question.
+- Use at least three deep, real, problem-specific code-reasoning questions.
+- Make every question test a different, realistic, single code mistake. Never repeat one bug on new inputs.
 - Show the raw input and graph build before the code and answer fields.
 - Do not reveal a prewritten correct graph model.
 - Grade the exact graph, the code’s graph-level behavior, and the exact returned value.

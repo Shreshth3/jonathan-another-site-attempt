@@ -7,6 +7,30 @@
   const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char]);
   const categoryNames = { original: "Original", variant: "Variants", new: "New" };
   const colorValues = { slate: "#8392a8", red: "#ff7e82", blue: "#72a7ff", amber: "#f1b75b" };
+  const STEP3_MEMBERSHIP_OVERRIDES = {
+    "battleships-in-a-board": "include-water-nodes",
+    "is-graph-bipartite": "duplicate-adjacency-nodes",
+    "minesweeper": "region-as-node",
+    "nested-list-weight-sum": "omit-list-nodes",
+    "network-delay-time": "weight-as-node",
+    "time-needed-to-inform-all-employees": "omit-leaf-employees",
+    "who-keeps-their-job": "omit-leaves",
+    "coins-on-level-k": "depth-as-node",
+    "counting-constellations": "component-as-node",
+    "routes-past-the-coffee-cart": "street-as-node",
+    "flooded-campsite-trails": "model-obstacles-only",
+    "one-color-metro-ride": "duplicate-station-by-color",
+    "office-rumor-reach": "edge-as-node",
+    "runes-on-the-castle-door": "leaves-only",
+    "shut-the-garden-valve": "pipe-as-node",
+    "gold-and-silver-lights": "color-as-node",
+    "museum-vault-keyring": "key-instance-as-node",
+    "count-sub-islands": "uses-only-invalid-cells",
+    "structy-max-root-to-leaf-path-sum": "drops-negative-nodes",
+    "path-sum": "counts-only-leaf",
+    "reachable-nodes-with-restrictions": "hides-restriction-boundaries",
+    "properties-graph": "uses-pairs-as-nodes"
+  };
   const GENERAL_STRUCTURE_CONTRACTS = {
     "all-paths-from-source-to-target": { node: "One node for every adjacency-list index, including sinks.", edge: "For every value j listed in graph[i], add the direct arrow i→j." },
     "course-schedule": { node: "One node for every course ID from 0 through numCourses−1, including isolated courses.", edge: "For each [course, prerequisite] pair, add prerequisite→course." },
@@ -52,9 +76,13 @@
   let counterDrawingMode = "correct";
   let counterDuplicated = false;
   let counterGraphChangeHandler = null;
+  let structureRetryDrawing = null;
   let section = 1;
   let selectedId = null;
   let answered = false;
+  let pendingAdvance = null;
+  let draftKey = null;
+  let restoringDraft = false;
 
   function start() {
     if (/^\/visual\/?$/.test(location.pathname)) {
@@ -86,7 +114,7 @@
     const picker = $("#pair-picker");
     picker.hidden = false;
     picker.innerHTML = `<button class="theme-toggle" id="visual-theme-toggle" aria-label="Switch theme"><svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg></button>
-      <main class="home"><div class="problem-list-topbar"><strong>DFS Visual Proof Library</strong>${notice ? `<span class="picker-message" role="status">${esc(notice)}</span>` : ""}</div><div class="columns">${renderCategoryColumns()}</div></main>`;
+      <main class="home"><div class="problem-list-topbar"><strong>DFS Visual Proof Library</strong>${notice ? `<span class="picker-message" role="status">${esc(notice)}</span>` : ""}</div><nav class="category-jumps" aria-label="Problem categories"><a href="#category-original">Original</a><a href="#category-variant">Variants</a><a href="#category-new">New</a></nav><div class="columns">${renderCategoryColumns()}</div></main>`;
     $("#visual-theme-toggle").onclick = () => {
       const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
       document.documentElement.dataset.theme = theme;
@@ -106,8 +134,11 @@
 
   function isProblemComplete(item) {
     try {
-      const reasoning = JSON.parse(localStorage.getItem(`dfs-reasoning:${item.id}:v2`) || "{}");
-      return Number(reasoning.index) >= 1;
+      const current = localStorage.getItem(`dfs-reasoning:${item.id}:v3`);
+      const legacy = current ? null : localStorage.getItem(`dfs-reasoning:${item.id}:v2`);
+      const reasoning = JSON.parse(current || legacy || "{}");
+      if (legacy) reasoning.index = Math.min(Math.max(Number(reasoning.index) || 0, 0), 1);
+      return Number(reasoning.index) >= (item.codeReasoning?.cases?.length || 0) && !(reasoning.skipped || []).length;
     } catch {
       return false;
     }
@@ -125,8 +156,19 @@
     $(".topbar").hidden = false;
     $(".workspace").hidden = false;
     $("#mobile-switcher").hidden = false;
+    const nav = document.createElement("nav");
+    nav.className = "lesson-step-nav";
+    nav.setAttribute("aria-label", "Lesson steps");
+    nav.innerHTML = [1, 2, 3, 4].map(number => `<button type="button" data-section="${number}">Step ${number}</button>`).join("");
+    $("#section-nav-btn").before(nav);
+    nav.querySelectorAll("button").forEach(button => { button.onclick = () => switchSection(Number(button.dataset.section)); });
+    document.addEventListener("input", saveFormDraft);
+    document.addEventListener("click", () => queueMicrotask(saveFormDraft));
+    window.addEventListener("pagehide", () => { if (pendingAdvance) pendingAdvance(); });
     $("#section-nav-btn").onclick = () => switchSection(section === 1 ? 2 : section === 2 ? 3 : section === 3 ? 4 : 3);
     window.onpopstate = () => {
+      saveFormDraft();
+      pendingAdvance?.();
       section = [2, 3, 4].includes(Number(new URLSearchParams(location.search).get("section"))) ? Number(new URLSearchParams(location.search).get("section")) : 1;
       render();
     };
@@ -152,6 +194,15 @@
   }
 
   function configureSectionShell() {
+    window.DFS_GRAPH?.setNodeLabelRule(problem.counterexampleLesson?.nodeLabels?.rule || "free", problem.graphRules?.nodeLabelFormat);
+    draftKey = null;
+    pendingAdvance = null;
+    $$("[data-section]").forEach(button => {
+      if (Number(button.dataset.section) === section) button.setAttribute("aria-current", "step");
+      else button.removeAttribute("aria-current");
+    });
+    const optional = $(".optional-scratch");
+    if (optional) { optional.before($("#graph-lab")); optional.remove(); }
     if (counterGraphChangeHandler) window.removeEventListener("dfs-graph-change", counterGraphChangeHandler);
     counterGraphChangeHandler = null;
     const activityLayout = $(".activity-layout");
@@ -185,12 +236,14 @@
     $("#section-subtitle").textContent = isReasoning
       ? "Turn the code into one graph rule, then predict its exact return value."
       : isStructure
-      ? "Check three subtle claims, then build the graph."
+      ? "Answer one useful Yes/No question, then build the exact graph."
       : "Answer each question and build exact graphs from fresh inputs.";
     $("#section-nav-btn").innerHTML = isReasoning ? "Back to Step 3 <span>←</span>" : isStructure ? "Next: Step 4 <span>→</span>" : isCounterexample ? "Next: Step 3 <span>→</span>" : "Skip to Step 2 <span>→</span>";
   }
 
   function switchSection(nextSection) {
+    saveFormDraft();
+    if (pendingAdvance) pendingAdvance();
     section = nextSection;
     const url = new URL(location.href);
     if (section > 1) url.searchParams.set("section", String(section));
@@ -202,6 +255,7 @@
   }
 
   function skipCurrentQuestion() {
+    if (pendingAdvance) { pendingAdvance(); render(); return; }
     if (section === 1) {
       if (!progress.skipped.includes(progress.index)) progress.skipped.push(progress.index);
       progress.index = Math.min(progress.index + 1, mainTasks().length);
@@ -213,6 +267,7 @@
       counterProgress.skills = [false, false, false, false];
       saveCounterProgress();
     } else if (section === 3) {
+      if (answered) return;
       if (!structureProgress.skipped.includes(structureProgress.index)) structureProgress.skipped.push(structureProgress.index);
       structureProgress.index++;
       saveStructureProgress();
@@ -254,12 +309,12 @@
     answered = false;
     updateProgress();
     const examplesTab = $('.tab[data-tab="examples"]');
-    if (examplesTab) examplesTab.hidden = mainTasks().slice(0, progress.index).filter(task => task.kind === "build").length < 2;
+    if (examplesTab) examplesTab.hidden = true;
     if (!problem.lesson) return renderMissingLesson();
     if (progress.index >= mainTasks().length) return renderComplete();
     const task = currentTask();
     window.DFS_GRAPH?.setContext(`${problem.id}:${task.id}:${progress.remedialFor || "main"}`, 0);
-    window.DFS_GRAPH?.setNodeLabelRule(problem.counterexampleLesson?.nodeLabels?.rule || "free");
+    window.DFS_GRAPH?.setNodeLabelRule(problem.counterexampleLesson?.nodeLabels?.rule || "free", problem.graphRules?.nodeLabelFormat);
     unlockCounterexampleEditor();
     $("#graph-lab").hidden = false;
     $("#graph-lab-title").textContent = task.kind === "build" ? "Draw the graph from the raw input" : "Optional: draw this input before answering";
@@ -281,20 +336,27 @@
       ($(".node-label-guide") || $(".prompt-code")).after($("#graph-lab"));
       $$('[data-choice-id]').forEach(button => { button.disabled = true; });
       counterGraphChangeHandler = () => {
-        const started = Boolean(window.DFS_GRAPH?.getSnapshot()?.nodes?.length);
+        const started = task.canvas.nodes.length === 0 || Boolean(window.DFS_GRAPH?.getSnapshot()?.nodes?.length);
         $$('[data-choice-id]').forEach(button => { button.disabled = !started; });
       };
       window.addEventListener("dfs-graph-change", counterGraphChangeHandler);
+      counterGraphChangeHandler();
     }
     $$('[data-choice-id]').forEach(button => { button.onclick = () => selectChoice(button.dataset.choiceId, "#visual-check"); });
     $("#visual-check").onclick = () => checkBuild(task);
+    restoreFormDraft(task.id);
     focusPrompt();
   }
 
   function renderNodeLabelGuide(task) {
     const format = problem.graphRules?.nodeLabelFormat;
-    if (!format?.instruction) return "";
-    return `<div class="node-label-guide"><b>Required node-name format:</b> ${formatText(format.instruction)}</div>`;
+    const hasLabels = Boolean(task?.canvas?.edges?.some(edge => edge.label));
+    const hasEdgeColors = Boolean(task?.canvas?.edges?.some(edge => edge.color));
+    const hasNodeColors = Boolean(task?.canvas?.nodes?.some(node => node.color || node.blocked));
+    const nodeColors = [...new Set((task?.canvas?.nodes || []).map(node => node.color || (node.blocked ? "blue" : "")).filter(Boolean))];
+    const hasColors = hasEdgeColors || hasNodeColors;
+    if (!format?.instruction && !hasLabels && !hasColors) return "";
+    return `<div class="node-label-guide">${format?.instruction ? `<b>Required node-name format:</b> ${formatText(format.instruction)}` : ""}${hasLabels ? `<div><b>Edge weights:</b> ${problem.id === "save-the-date-phone-chain" || problem.id === "time-needed-to-inform-all-employees" ? "Label each arrow with the sending employee’s wait time." : "Label each edge with the matching number from the input."} Fractions and equal decimals both work. Select an edge, then use <b>Rename</b> or <kbd>F2</kbd>.</div>` : ""}${hasEdgeColors ? `<div><b>Edge colors:</b> Color every edge to match the input.</div>` : ""}${hasNodeColors ? `<div><b>Node colors:</b> Use ${nodeColors.map(color => `<b>${esc(color)}</b>`).join(" or ")} for the marked nodes in the input.</div>` : ""}</div>`;
   }
 
   function checkBuild(task) {
@@ -305,16 +367,18 @@
       ["Every exact node label, with no missing or extra node", result.nodes],
       [result.nodes ? "Every exact direct edge, with no missing or extra edge" : "Edge check waits until the node names are correct", result.nodes ? result.edges : null],
       [task.canvas.directed ? "Edges use the required arrow direction" : "Edges use the required two-way direction", result.direction],
-      [result.nodes ? "Edge colors match the input" : "Edge colors check waits until the node names are correct", result.nodes ? result.colors : null],
+      [result.nodes ? "Graph colors match the input" : "Graph color check waits until the node names are correct", result.nodes ? result.colors : null],
       [result.nodes ? "Edge labels or weights match the input" : "Edge labels or weights check waits until the node names are correct", result.nodes ? result.labels : null],
       ["The decision matches the finished picture", answerCorrect]
-    ].filter(([label]) => !label.startsWith("Edge colors") || task.canvas.edges.some(edge => edge.color)).filter(([label]) => !label.startsWith("Edge labels") || task.canvas.edges.some(edge => edge.label));
+    ].filter(([label]) => !label.startsWith("Graph color") || task.canvas.edges.some(edge => edge.color) || task.canvas.nodes.some(node => node.color || node.blocked)).filter(([label]) => !label.startsWith("Edge labels") || task.canvas.edges.some(edge => edge.label));
     const correct = checks.every(([, pass]) => pass);
     if (!correct) {
       progress.mistakes++;
       saveProgress();
       updateProgress();
-      $("#feedback-slot").innerHTML = `<div class="feedback"><b>Not exact yet.</b> Recheck the problem and input. The correct model stays hidden.<ul class="feedback-checklist">${checks.map(([label, pass]) => `<li class="${pass == null ? "waiting" : pass ? "passed" : "failed"}"><span>${pass == null ? "•" : pass ? "✓" : "×"}</span>${esc(label)}</li>`).join("")}</ul></div>`;
+      const chosen = task.decision.choices.find(choice => choice.id === selectedId);
+      const answerHelp = answerCorrect ? "" : `<div class="feedback-next"><b>About your answer:</b> ${formatText(chosen?.feedback || "Use the finished graph to decide again.")}</div>`;
+      $("#feedback-slot").innerHTML = `<div class="feedback"><b>${result.nodes && result.edges && result.direction && result.colors && result.labels ? "Your graph is right. Recheck the answer." : "Fix the marked graph details."}</b><ul class="feedback-checklist">${checks.map(([label, pass]) => `<li class="${pass == null ? "waiting" : pass ? "passed" : "failed"}"><span>${pass == null ? "•" : pass ? "✓" : "×"}</span>${esc(label)}</li>`).join("")}</ul>${answerHelp}${result.hint ? `<p class="feedback-next">${esc(result.hint)}</p>` : ""}</div>`;
       $("#visual-check").innerHTML = "Check revised proof <span>→</span>";
       return;
     }
@@ -336,13 +400,20 @@
     const choices = arrangeChoices(task.choices, task.correct, task.answerSlot);
     const shown = task.shownModel ? `<div class="shown-graph"><span class="visual-graph-label">Picture under review</span>${miniGraph(task.shownModel, task.input)}</div>` : "";
     const choiceHtml = task.kind === "visual-options"
-      ? `<div class="visual-option-grid">${choices.map(choice => `<button class="visual-option" data-choice-id="${esc(choice.id)}" aria-pressed="false"><span>${formatText(choice.label)}</span>${miniGraph(choice.model, task.input)}</button>`).join("")}</div>`
+      ? `<div class="visual-option-grid">${choices.map((choice, index) => `<button class="visual-option" data-choice-id="${esc(choice.id)}" aria-pressed="false"><span>Picture ${String.fromCharCode(65 + index)}</span>${miniGraph(choice.model, task.input)}</button>`).join("")}</div>`
       : `<div class="choices">${choices.map((choice, index) => `<button class="choice" data-choice-id="${esc(choice.id)}" aria-pressed="false"><span class="choice-key">${String.fromCharCode(65 + index)}</span><span>${formatText(choice.label)}</span></button>`).join("")}</div>`;
     const compact = true;
-    $("#challenge").innerHTML = `${compact ? "" : `<div class="challenge-top"><span class="probe-type">${esc(task.title)}</span><span class="probe-id">VISUAL CHECK ${task.conceptOrdinal} OF 5</span></div>`}<div class="challenge-body"><div class="prompt-code">${esc(task.input)}</div>${renderNodeLabelGuide(task)}<h3>${formatText(task.prompt)}</h3>${shown}${choiceHtml}<div id="feedback-slot" role="status" aria-live="polite"></div><div class="challenge-actions">${compact ? "" : '<span class="microcopy">Every choice represents a mistake a real student might make.</span>'}<button id="visual-check" class="primary-btn" disabled>Check answer <span>→</span></button></div></div>`;
+    const rawInput = task.input.trim() === task.prompt.trim() ? "Problem rule — use any small example in the optional drawing." : task.input;
+    $("#challenge").innerHTML = `${compact ? "" : `<div class="challenge-top"><span class="probe-type">${esc(task.title)}</span><span class="probe-id">VISUAL CHECK ${task.conceptOrdinal} OF 5</span></div>`}<div class="challenge-body"><div class="prompt-code">${esc(rawInput)}</div>${renderNodeLabelGuide(task)}<h3>${formatText(task.prompt)}</h3>${shown}${choiceHtml}<div id="feedback-slot" role="status" aria-live="polite"></div><div class="challenge-actions">${compact ? "" : '<span class="microcopy">Every choice represents a mistake a real student might make.</span>'}<button id="visual-check" class="primary-btn" disabled>Check answer <span>→</span></button></div></div>`;
     ($(".node-label-guide") || $(".prompt-code")).after($("#graph-lab"));
     $$('[data-choice-id]').forEach(button => { button.onclick = () => selectChoice(button.dataset.choiceId, "#visual-check"); });
     $("#visual-check").onclick = () => checkConcept(task);
+    const scratch = document.createElement("details");
+    scratch.className = "optional-scratch";
+    scratch.innerHTML = '<summary>Optional drawing · open scratch pad</summary>';
+    $("#graph-lab").before(scratch);
+    scratch.append($("#graph-lab"));
+    restoreFormDraft(task.id);
     focusPrompt();
   }
 
@@ -359,7 +430,7 @@
     saveProgress();
     updateProgress();
     const correct = task.choices.find(item => item.id === task.correct);
-    $("#feedback-slot").innerHTML = `<div class="feedback"><b>Contradiction found.</b><div class="feedback-answer correct"><span>Correct choice</span>${formatText(correct.label)}</div><div class="feedback-why"><b>Your choice:</b> ${formatText(choice.feedback)}</div><div class="feedback-next">This revealed answer does not count. Prove the idea on a fresh blank graph.</div></div>`;
+    $("#feedback-slot").innerHTML = `<div class="feedback"><b>Contradiction found.</b><div class="feedback-answer correct"><span>Correct choice</span>${task.kind === "visual-options" ? `Picture ${String.fromCharCode(65 + arrangeChoices(task.choices, task.correct, task.answerSlot).findIndex(choice => choice.id === task.correct))}` : formatText(correct.label)}</div><div class="feedback-why"><b>Your choice:</b> ${formatText(choice.feedback)}</div><div class="feedback-next">This revealed answer does not count. Prove the idea on a fresh blank graph.</div></div>`;
     const button = $("#visual-check");
     button.disabled = false;
     button.innerHTML = "Build a fresh proof <span>→</span>";
@@ -367,15 +438,20 @@
   }
 
   function makeContinueButton() {
+    updateProgress(progress.index + 1);
+    lockCounterexampleEditor();
+    $$('[data-choice-id]').forEach(button => { button.disabled = true; });
     const button = $("#visual-check");
     button.disabled = false;
     button.innerHTML = progress.index === 8 ? "Finish visual proof <span>→</span>" : "Next visual check <span>→</span>";
-    button.onclick = () => {
+    pendingAdvance = () => {
+      pendingAdvance = null;
       progress.index++;
       progress.remedialFor = null;
       saveProgress();
-      render();
     };
+    persistProgress(storageKey(), { ...progress, index: progress.index + 1, remedialFor: null });
+    button.onclick = () => { pendingAdvance?.(); render(); };
   }
 
   function selectChoice(id, buttonSelector) {
@@ -402,7 +478,7 @@
       hash ^= char.charCodeAt(0);
       hash = Math.imul(hash, 16777619);
     }
-    return Math.abs(hash) % Math.max(count, 1);
+    return (hash >>> 8) % Math.max(count, 1);
   }
 
   function counterexampleRounds() {
@@ -461,19 +537,23 @@
       "add-diagonals": ["adds diagonal moves that the real graph does not have", "treats corner-touching squares as direct neighbors", "allows diagonal steps even though only side moves are legal"],
       "remove-diagonals": ["removes legal diagonal connections", "keeps only side moves and loses corner neighbors", "forgets that diagonal neighbors are allowed"],
       "drop-last-edge": ["stops reading one relation too early and drops the final edge", "builds every listed connection except the last one", "accidentally leaves the final direct link out of the graph"],
-      "skip-leaf-edges": [`drops every connection touching a degree-one ${noun.slice(0, -1)}`, "erases the outer leaves before searching", "keeps the middle of the graph but disconnects every leaf"],
+      "skip-leaf-edges": ["drops each edge that touches a leaf; the leaf node stays", "keeps every leaf node but removes its edge", "disconnects each leaf without deleting the leaf itself"],
       "shallow-search": [`visits only the start and its direct neighboring ${noun}`, "stops after one hop instead of continuing", "never explores beyond the start's immediate neighbors"],
       "first-branch": ["follows only the first available branch and never comes back", "chooses the first route and forgets the other branches", "stops the whole search when its first branch ends"],
       "last-branch": ["follows only the last available branch and ignores earlier choices", "chooses the final listed route and never returns", "keeps only the last branch it sees"],
       "wrong-start": [`uses the wrong ${chosenThing}`, `ignores the chosen ${chosenThing} and uses a different one`, `runs the search from a different ${chosenThing}`],
       "ignore-colors": ["erases track colors, so the search can illegally transfer between red and blue"],
-      "red-only": ["checks red routes but completely forgets that an all-blue route is also allowed"]
+      "red-only": ["checks red routes but completely forgets that an all-blue route is also allowed"],
+      "strict-threshold": ["keeps a trust link only when its score is greater than k, losing scores equal to k"],
+      "first-start-only": ["uses only the first starting key and ignores the rest"]
     };
     const choices = variants[bug] || ["uses a different graph rule"];
     return choices[problemIndex % choices.length];
   }
 
   function renderCounterexampleRound() {
+    answered = false;
+    if (counterGraphChangeHandler) window.removeEventListener("dfs-graph-change", counterGraphChangeHandler);
     const rounds = counterexampleRounds();
     const total = rounds.length;
     const done = Math.min(counterProgress.index, total);
@@ -489,7 +569,7 @@
     counterDrawings = { correct: null, mistaken: null };
     counterDrawingMode = "correct";
     counterDuplicated = false;
-    window.DFS_GRAPH?.setNodeLabelRule(problem.counterexampleLesson?.nodeLabels?.rule || "free");
+    window.DFS_GRAPH?.setNodeLabelRule(problem.counterexampleLesson?.nodeLabels?.rule || "free", problem.graphRules?.nodeLabelFormat);
     window.DFS_GRAPH?.setContext(`${problem.id}:counterexample:${done}:${round.bugs[0]}:correct`, 0);
     unlockCounterexampleEditor();
     $("#graph-lab").hidden = false;
@@ -498,34 +578,84 @@
     $("#challenge").innerHTML = `<div class="challenge-body counterexample-case">
         <div class="case-person"><span class="case-avatar" aria-hidden="true">${esc(name[0])}</span><div><h3>${esc(name)}'s broken search</h3></div></div>
         <div class="case-mistake">${descriptions.map(description => `<p>${esc(name)} ${esc(description)}.</p>`).join("")}</div>
-        <p class="drawing-target-note counter-main-goal"><b>Your main goal:</b> Expose ${esc(name)}'s mistake. Draw two graphs: first the correct graph, then ${esc(name)}'s graph using the mistake.${coffeeProblem ? " Color the coffee-cart intersection <b>Amber</b> in both." : ""}${["first-branch", "last-branch", "drop-last-edge"].includes(round.bugs[0]) ? " Edge numbers show drawing order." : ""}</p>
+        <p class="drawing-target-note counter-main-goal"><b>Your main goal:</b> ${esc(round.goal || `Expose ${name}'s mistake.`)} Draw two graphs: first the correct graph, then ${esc(name)}'s graph using the mistake.${coffeeProblem ? " Color the coffee-cart intersection <b>Amber</b> in both." : ""}${problem.id === "flooded-campsite-trails" ? " Color flooded campsite nodes <b>Blue</b> in both drawings; searches cannot enter them." : ""}${["first-branch", "last-branch", "drop-last-edge"].includes(round.bugs[0]) ? " The first edge you draw is #1; the last edge has the largest number." : ""}${round.bugs.includes("wrong-start") ? ` ${esc(name)} starts at ${esc(displayCounterNodeName(round.mistakenStartLabel))} instead.` : ""}${round.bugs.includes("make-one-way") ? ` In ${esc(name)}'s graph, each arrow goes from the node you clicked first to the node you clicked second; turn <b>Directed edges</b> on.` : ""}${round.bugs.includes("make-two-way") ? ` In ${esc(name)}'s graph, turn <b>Directed edges</b> off.` : ""}${round.bugs.includes("ignore-colors") ? " In drawing 2, color every edge <b>Slate</b> to show that its track color was erased." : ""}</p>
+        <div class="node-label-guide"><b>Required node-name format:</b> ${formatText(problem.graphRules?.nodeLabelFormat?.instruction || problem.counterexampleLesson?.nodeLabels?.description || "Use the same names as Step 1.")}</div>
         <div class="counter-predictions">
-          <label class="counter-field counter-input-field"><span>${esc(inputSpec.prompt)} <small>${esc(inputSpec.name)}</small></span><input id="counter-start" autocomplete="off" placeholder="Example: ${esc(roundSuggestedStart(round))}"${problem.counterexampleLesson.fixedStart ? ` value="${esc(problem.counterexampleLesson.fixedStart)}" readonly` : ""}></label>
+          <label class="counter-field counter-input-field"><span>${esc(inputSpec.prompt)} <small>${esc(inputSpec.name)}${problem.counterexampleLesson.fixedStart ? `: ${esc(problem.counterexampleLesson.fixedStart)} (${problem.counterexampleLesson?.nodeLabels?.rule === "tree-path" ? "root index fixed; your value may differ" : "fixed"})` : ""}</small></span><input id="counter-start" autocomplete="off"${problem.counterexampleLesson.fixedStart ? ` value="${esc(problem.counterexampleLesson.fixedStart)}" readonly` : ` placeholder="Example: ${esc(roundSuggestedStart(round))}"`}></label>
+          ${["component-count", "border-component-count", "maximum-component-size", "minimum-component-size", "exact-size-component-count", "qualified-component-count", "components-without-source-count", "maximum-component-value-sum", "component-bounding-boxes", "minimum-component-bounding-perimeter"].includes(inputSpec.result) ? "<p class=\"counter-output-help\">This function scans all nodes in numeric name order, starting a new search at each still-unseen node. The chosen node is only for the reachability trace. Neighbors follow edge drawing order.</p>" : ""}
+          ${inputSpec.markers?.some(marker => marker.target === "edge") || inputSpec.resultConfig?.waitMarker || inputSpec.resultConfig?.delayMarker ? "<p class=\"counter-output-help\">Label every drawn edge with its value too. For waiting times, use the sending node’s wait. Both drawings must agree with these fields.</p>" : ""}
+          ${renderCounterSemanticInputs(inputSpec)}
           <section class="counter-output-section" aria-labelledby="counter-output-heading">
-            <h4 id="counter-output-heading">Output</h4>
+            <h4 id="counter-output-heading">${counterUsesRealOutput(inputSpec.result) ? "Returned output from each search" : "Nodes reached by each search"}</h4>
             <div class="counter-output-fields">
-              <label class="counter-field"><span>Correct output</span><input id="counter-real-output" autocomplete="off" disabled></label>
-              <label class="counter-field"><span>${esc(name)}’s output</span><input id="counter-bug-output" autocomplete="off" disabled></label>
+              <label class="counter-field"><span>${counterUsesRealOutput(inputSpec.result) ? `Correct output · ${esc(inputSpec.resultLabel)}` : "Nodes the correct search reaches"}</span><input id="counter-real-output" autocomplete="off" disabled></label>
+              <label class="counter-field"><span>${counterUsesRealOutput(inputSpec.result) ? `${esc(name)}’s output · ${esc(inputSpec.resultLabel)}` : `Nodes ${esc(name)}’s search reaches`}</span><input id="counter-bug-output" autocomplete="off" disabled></label>
             </div>
+            <p class="counter-output-help">${counterOutputHelp(inputSpec.result)}</p>
           </section>
         </div>
         <div id="feedback-slot" role="status" aria-live="polite"></div>
         <div class="challenge-actions"><button id="counter-check" class="primary-btn" disabled>Check my graph <span>→</span></button></div>
       </div>`;
-    $(".counter-predictions").after($("#graph-lab"));
+    $(".counter-predictions").before($("#graph-lab"));
     const predictionFields = [$("#counter-real-output"), $("#counter-bug-output")].filter(Boolean);
-    const requiredFields = [$("#counter-start"), ...predictionFields].filter(Boolean);
+    const requiredFields = [$("#counter-start"), ...$$('[data-counter-semantic][data-required="true"]'), ...predictionFields].filter(Boolean);
     const updateButton = () => { $("#counter-check").disabled = requiredFields.some(field => !field.value.trim()); };
-    predictionFields.forEach(field => field.addEventListener("input", updateButton));
+    requiredFields.forEach(field => field.addEventListener("input", updateButton));
     $("#counter-start").addEventListener("input", () => { syncCounterDrawingFlow(name); updateCounterDrawingTitle(name, round); updateButton(); });
     $("#counter-check").onclick = () => checkCounterexample(round);
     if (counterGraphChangeHandler) window.removeEventListener("dfs-graph-change", counterGraphChangeHandler);
-    counterGraphChangeHandler = () => syncCounterDrawingFlow(name);
-    window.addEventListener("dfs-graph-change", counterGraphChangeHandler);
+    counterGraphChangeHandler = () => { if (section !== 2) return; syncCounterDrawingFlow(name); saveCounterDraft(true); };
+    restoreCounterDraft();
+    counterDraftFields().forEach(field => {
+      field.addEventListener("input", () => saveCounterDraft(true));
+      field.addEventListener("change", () => { saveCounterDraft(true); updateButton(); });
+    });
     if (dualDrawings) renderCounterDrawingTabs(name, done);
     updateCounterDrawingTitle(name, round);
+    updateButton();
+    updateCounterProgress(done, total);
+    saveCounterDraft();
+    window.addEventListener("dfs-graph-change", counterGraphChangeHandler);
     focusPrompt();
     $(".test-pane").scrollTop = 0;
+  }
+
+  function counterDraftKey() {
+    return `dfs-step2-draft:${problem.id}:${counterProgress.index}:v2`;
+  }
+
+  function counterDraftFields() {
+    return $$("#counter-start, #counter-real-output, #counter-bug-output, [data-counter-semantic]");
+  }
+
+  function saveCounterDraft(invalidate = false) {
+    if (section !== 2 || !$("#counter-start") || answered) return;
+    counterDrawings[counterDrawingMode] = window.DFS_GRAPH?.getSnapshot() || null;
+    const fields = Object.fromEntries(counterDraftFields().map(field => [field.id, field.value]));
+    const draft = { drawings: counterDrawings, fields, mode: counterDrawingMode };
+    const serialized = JSON.stringify(draft);
+    if (invalidate && localStorage.getItem(counterDraftKey()) !== serialized) {
+      counterProgress.skills = [false, false, false, false];
+      saveCounterProgress();
+      updateCounterProgress(counterProgress.index, counterexampleRounds().length);
+      const feedback = $("#feedback-slot");
+      if (feedback) feedback.innerHTML = "";
+    }
+    localStorage.setItem(counterDraftKey(), serialized);
+  }
+
+  function restoreCounterDraft() {
+    try {
+      const draft = JSON.parse(localStorage.getItem(counterDraftKey()) || "null");
+      if (!draft) { counterProgress.skills = [false, false, false, false]; return; }
+      if (draft.drawings) counterDrawings = draft.drawings;
+      for (const field of counterDraftFields()) if (Object.hasOwn(draft.fields || {}, field.id)) field.value = draft.fields[field.id];
+      counterDrawingMode = draft.mode === "mistaken" ? "mistaken" : "correct";
+      const round = counterexampleRounds()[counterProgress.index];
+      window.DFS_GRAPH?.setContext(`${problem.id}:counterexample:${counterProgress.index}:${round.bugs[0]}:${counterDrawingMode}`, 0);
+      window.DFS_GRAPH?.setSnapshot(counterDrawings[counterDrawingMode]);
+    } catch { counterProgress.skills = [false, false, false, false]; }
   }
 
   function counterInputSpec() {
@@ -537,12 +667,126 @@
     };
   }
 
+  function renderCounterSemanticInputs(inputSpec) {
+    const control = item => item.kind === "choice"
+      ? `<select id="counter-field-${esc(item.id)}" data-counter-semantic data-required="${item.required !== false}"><option value="">Choose…</option>${item.choices.map(choice => `<option value="${esc(choice.value)}">${esc(choice.label)}</option>`).join("")}</select>`
+      : `<input id="counter-field-${esc(item.id)}" data-counter-semantic data-required="${item.required !== false}" autocomplete="off" inputmode="${["number", "integer"].includes(item.kind) ? "decimal" : "text"}">`;
+    const fields = (inputSpec.fields || []).map(field => `<label class="counter-field"><span>${esc(field.prompt)} <small>${esc(field.label)}</small></span>${control(field)}</label>`).join("");
+    const markers = (inputSpec.markers || []).map(marker => `<label class="counter-field"><span>${esc(marker.prompt)} <small>${esc(marker.label)}</small></span><textarea id="counter-marker-${esc(marker.id)}" data-counter-semantic data-required="${marker.required !== false}" rows="3" autocomplete="off" spellcheck="false" aria-describedby="counter-marker-help-${esc(marker.id)}"></textarea><small id="counter-marker-help-${esc(marker.id)}">${marker.target === "node" ? "One per line: node=value" : "One per line: from->to=value"}</small></label>`).join("");
+    return fields || markers ? `<div class="counter-semantic-inputs">${fields}${markers}</div>` : "";
+  }
+
+  function parseCounterSemanticValue(raw, spec, label) {
+    const value = String(raw).trim();
+    if (!value && spec.required !== false) throw new Error(`${label} is required.`);
+    if (!value) return null;
+    if (spec.kind === "json") {
+      try { return JSON.parse(value); } catch { throw new Error(`${label} must be valid JSON, such as ["a","b"].`); }
+    }
+    if (spec.kind === "integer" && !/^-?\d+$/.test(value)) throw new Error(`${label} must be a whole number.`);
+    if (["integer", "number"].includes(spec.kind)) {
+      const fraction = value.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/);
+      const number = fraction ? Number(fraction[1]) / Number(fraction[2]) : Number(value);
+      if (!Number.isFinite(number)) throw new Error(`${label} must be a number.`);
+      if (spec.min != null && number < spec.min) throw new Error(`${label} must be at least ${spec.min}.`);
+      if (spec.max != null && number > spec.max) throw new Error(`${label} must be at most ${spec.max}.`);
+      return number;
+    }
+    if (spec.kind === "choice" && spec.choices.some(choice => choice.value === "yes")) {
+      if (["true", "1", "yes"].includes(value.toLowerCase())) return "yes";
+      if (["false", "0", "no"].includes(value.toLowerCase())) return "no";
+    }
+    if (spec.kind === "choice" && !spec.choices.some(choice => String(choice.value) === value)) throw new Error(`Choose a valid ${label}.`);
+    return value;
+  }
+
+  function counterEdgeKey(graph, from, to) {
+    const ends = graph.directed ? [from, to] : [from, to].sort((one, two) => one.localeCompare(two, undefined, { numeric: true }));
+    return `${ends[0]}\u0000${ends[1]}`;
+  }
+
+  function parseCounterSemanticInputs(graph) {
+    const inputSpec = counterInputSpec();
+    graph.fields = {};
+    graph.nodeMarkers = {};
+    graph.edgeMarkers = {};
+    for (const field of inputSpec.fields || []) {
+      let value = parseCounterSemanticValue($(`#counter-field-${field.id}`)?.value, field, field.label);
+      if (field.kind === "node" && value != null) {
+        value = resolveCounterNode(graph.nodes, value);
+        if (!value) throw new Error(`${field.label} must name a node in your graph.`);
+      }
+      graph.fields[field.id] = value;
+    }
+    for (const marker of inputSpec.markers || []) {
+      const output = {};
+      const lines = String($(`#counter-marker-${marker.id}`)?.value || "").split(/\n+/).map(line => line.trim()).filter(Boolean);
+      for (const line of lines) {
+        const separator = line.lastIndexOf("=");
+        if (separator <= 0) throw new Error(`Use ${marker.target === "node" ? "node=value" : "from->to=value"} for ${marker.label}.`);
+        const rawKey = line.slice(0, separator).trim();
+        const value = parseCounterSemanticValue(line.slice(separator + 1), marker, marker.label);
+        if (marker.target === "node") {
+          const node = resolveCounterNode(graph.nodes, rawKey);
+          if (!node) throw new Error(`${rawKey} is not a node in your graph.`);
+          if (Object.hasOwn(output, node)) throw new Error(`Give ${marker.label} only once for ${node}.`);
+          output[node] = value;
+        } else {
+          const ends = rawKey.split(/\s*(?:->|→|—|-)\s*/);
+          if (ends.length !== 2) throw new Error(`Use from->to=value for ${marker.label}.`);
+          const from = resolveCounterNode(graph.nodes, ends[0]), to = resolveCounterNode(graph.nodes, ends[1]);
+          if (!from || !to) throw new Error(`${rawKey} must name two nodes in your graph.`);
+          const key = counterEdgeKey(graph, from, to);
+          if (!graph.edges.some(([edgeFrom, edgeTo]) => counterEdgeKey(graph, edgeFrom, edgeTo) === key)) throw new Error(`${rawKey} is not an edge in your graph.`);
+          if (Object.hasOwn(output, key)) throw new Error(`Give ${marker.label} only once for ${rawKey}.`);
+          output[key] = value;
+        }
+      }
+      const requiredKeys = marker.target === "node" ? graph.nodes : graph.edges.map(([from, to]) => counterEdgeKey(graph, from, to));
+      if (marker.required !== false && requiredKeys.some(key => output[key] == null)) throw new Error(`Give ${marker.label} for every ${marker.target}.`);
+      (marker.target === "node" ? graph.nodeMarkers : graph.edgeMarkers)[marker.id] = output;
+    }
+  }
+
+  function counterOutputHelp(resultKind) {
+    if (resultKind === "unreached-nodes" && problem.id === "who-keeps-their-job") return "Type the remaining employee IDs as a JSON list in ascending numeric order.";
+    if (["widest-level-index", "depth-weighted-value-sum", "inverse-depth-weighted-value-sum", "border-component-count", "selected-color-count", "minimum-component-bounding-perimeter", "maximum-root-leaf-value-sum"].includes(resultKind)) return `Type one number.${resultKind === "widest-level-index" ? " If the broken scan reaches no integers, it returns 0." : ""}`;
+    if (resultKind === "unreached-nodes") return "Type the JSON list the real function returns. Any allowed output order is accepted.";
+    if (["reached-count", "unreached-count", "reached-node-value-sum", "shortest-path-weight", "maximum-shortest-path-weight-or-minus-one", "maximum-path-weight", "deadline-reached-count", "component-count", "maximum-component-size", "minimum-component-size", "maximum-reached-count", "path-count", "path-count-modulo", "longest-path-length", "maximum-reached-node-value", "recursive-item-count", "minimum-universally-reachable-node-or-minus-one", "level-value-sum", "exact-size-component-count", "kth-visited-node-or-minus-one", "components-without-source-count", "qualified-component-count", "reached-selected-node-count", "maximum-component-value-sum"].includes(resultKind)) return "Type the number the real function returns. Example: <code>3</code>.";
+    if (["all-reached", "any-unreached", "target-reachable-boolean", "same-color-target-reachable-boolean", "target-state-reachable-boolean", "target-word-path-exists-boolean", "target-root-leaf-sum-exists-boolean", "valid-two-coloring-boolean", "acyclic-completion-boolean", "root-expression-value"].includes(resultKind)) return "Type <code>true</code> or <code>false</code>, just like the real function returns.";
+    if (["enumerated-paths", "reachability-matrix", "generated-terminal-strings", "component-bounding-boxes", "iterator-output-sequence", "transformed-grid", "ordered-query-values"].includes(resultKind)) return "Type the JSON list the real function returns.";
+    if (counterUsesRealOutput(resultKind)) return 'Type the list the real function returns. Examples: <code>[0,1,2]</code> or <code>["(0,0)","(0,1)"]</code>.';
+    return 'Type the reached-node list used to trace the search. Examples: <code>[0,1,2]</code> or <code>["(0,0)","(0,1)"]</code>. Any order is accepted.';
+  }
+
+  function counterUsesRealOutput(resultKind) {
+    return resultKind !== "reached-nodes" || counterInputSpec().realOutput === true;
+  }
+
   function chosenCounterStart(round) {
     return String($("#counter-start")?.value || problem.counterexampleLesson.fixedStart || "").trim();
   }
 
   function roundSuggestedStart(round) {
-    return String(problem.counterexampleLesson.fixedStart || roundStart(round));
+    const requested = String(problem.counterexampleLesson.fixedStart || roundStart(round));
+    const pattern = String(problem.graphRules?.nodeLabelFormat?.pattern || "");
+    const number = Number((requested.match(/\d+/) || [0])[0]);
+    if (pattern === "^[A-Z]$") return String.fromCharCode(65 + number);
+    if (pattern === "^\\d+:[A-Za-z]$") return `${number}:a`;
+    if (pattern === "^\\d+:\\d+g$") return `${number}:0g`;
+    if (pattern === "^\\d+:\\d+$") return `${Math.max(1, number)}:0`;
+    if (pattern === "^\\d+:-?\\d+$") return `${Math.max(1, number)}:0`;
+    if (pattern === "^\\d+:(?:true|false|AND|OR)$") return `${number}:false`;
+    if (pattern === "^node \\d+: -?\\d+$") return `node ${number}: 0`;
+    if (pattern === "^row \\d+: \\{[^{}]*\\}$") return `row ${number}: {}`;
+    if (pattern === "^\\d+:\\(-?\\d+,-?\\d+\\)$") return `${number}:(0,0)`;
+    if (pattern === "^\\d+: \\(-?\\d+,-?\\d+\\) p=\\d+$") return `${number}: (0,0) p=0`;
+    return requested;
+  }
+
+  function displayCounterNodeName(label) {
+    const value = String(label || "");
+    return /^root(?:\[\d+\])+$/.test(value) ? `${value}=value` : value;
   }
 
   function updateCounterDrawingTitle(name, round) {
@@ -558,7 +802,7 @@
 
   function counterStartTitle(round, mistaken) {
     const subject = counterStartSubject();
-    if (mistaken && round.bugs.includes("wrong-start")) return `Wrong ${subject.toLowerCase()}: ${round.mistakenStartLabel}`;
+    if (mistaken && round.bugs.includes("wrong-start")) return `Wrong ${subject.toLowerCase()}: ${displayCounterNodeName(round.mistakenStartLabel)}`;
     const start = chosenCounterStart(round);
     return start ? `${subject}: ${start}` : `Choose ${subject.toLowerCase()}`;
   }
@@ -568,11 +812,12 @@
   }
 
   function personDrawingChanges(bugs) {
-    return bugs.some(bug => ["make-one-way", "make-two-way", "reverse-arrows", "add-diagonals", "remove-diagonals", "drop-last-edge", "skip-leaf-edges", "ignore-colors", "red-only"].includes(bug));
+    return bugs.some(bug => ["make-one-way", "make-two-way", "reverse-arrows", "add-diagonals", "remove-diagonals", "drop-last-edge", "skip-leaf-edges", "ignore-colors", "red-only", "strict-threshold"].includes(bug));
   }
 
   function renderCounterDrawingTabs(name, roundIndex) {
     const actions = $("#graph-lab-actions");
+    $("#graph-board").before(actions);
     actions.hidden = false;
     actions.innerHTML = `<button class="graph-tool ${counterDrawingMode === "correct" ? "active" : ""}" data-counter-drawing="correct" aria-pressed="${counterDrawingMode === "correct"}">1 · Correct graph</button><button class="graph-tool ${counterDrawingMode === "mistaken" ? "active" : ""}" data-counter-drawing="mistaken" aria-pressed="${counterDrawingMode === "mistaken"}">2 · ${esc(name)}'s graph</button>${counterDrawingMode === "mistaken" ? `<button id="counter-duplicate-graph" class="graph-tool counter-duplicate-graph" type="button">${counterDuplicated ? "Graph #1 duplicated" : "Duplicate graph from #1"}</button>` : ""}`;
     $$('[data-counter-drawing]', actions).forEach(button => {
@@ -580,6 +825,7 @@
         const nextMode = button.dataset.counterDrawing;
         if (nextMode === counterDrawingMode) return;
         counterDrawings[counterDrawingMode] = window.DFS_GRAPH?.getSnapshot() || null;
+        window.removeEventListener("dfs-graph-change", counterGraphChangeHandler);
         counterDrawingMode = nextMode;
         const round = counterexampleRounds()[roundIndex];
         window.DFS_GRAPH?.setContext(`${problem.id}:counterexample:${roundIndex}:${round.bugs[0]}:${nextMode}`, 0);
@@ -587,13 +833,15 @@
         const mistakenLabel = round.bugs.includes("wrong-start") ? "same graph · different start" : personDrawingChanges(round.bugs) ? "mistaken graph" : "graph (same structure)";
         $("#graph-lab-title").textContent = nextMode === "correct" ? `Drawing 1 of 2: Correct graph · ${counterStartTitle(round, false)}` : `Drawing 2 of 2: ${name}'s ${mistakenLabel} · ${counterStartTitle(round, true)}`;
         renderCounterDrawingTabs(name, roundIndex);
+        saveCounterDraft();
+        window.addEventListener("dfs-graph-change", counterGraphChangeHandler);
         queueMicrotask(() => $(`[data-counter-drawing="${nextMode}"]`)?.focus());
       };
     });
     const duplicateButton = $("#counter-duplicate-graph");
     if (duplicateButton) {
       const mistakenHasWork = counterDrawingHasWork(counterDrawings.mistaken);
-      duplicateButton.disabled = counterDuplicated || !counterDrawings.correct?.nodes?.length || mistakenHasWork;
+      duplicateButton.disabled = !counterDrawings.correct?.nodes?.length || mistakenHasWork;
       if (mistakenHasWork && !counterDuplicated) duplicateButton.title = "Clear graph #2 to duplicate graph #1.";
       duplicateButton.onclick = () => {
         const graphTwoHasWork = counterDrawingHasWork(counterDrawings.mistaken);
@@ -618,17 +866,18 @@
     const hasCorrect = Boolean(counterDrawings.correct?.nodes?.length);
     const hasMistaken = Boolean(counterDrawings.mistaken?.nodes?.length);
     const unlocked = hasCorrect && hasMistaken && Boolean($("#counter-start")?.value.trim());
-    [$("#counter-real-output"), $("#counter-bug-output")].filter(Boolean).forEach(input => { input.disabled = !unlocked; });
+    [$("#counter-real-output"), $("#counter-bug-output")].filter(Boolean).forEach(input => { input.disabled = answered || !unlocked; });
     const duplicateButton = $("#counter-duplicate-graph");
-    if (duplicateButton && !counterDuplicated) {
+    if (duplicateButton) {
+      if (!counterDrawingHasWork(counterDrawings.mistaken)) { counterDuplicated = false; duplicateButton.textContent = "Duplicate graph from #1"; }
       const mistakenHasWork = counterDrawingHasWork(counterDrawings.mistaken);
-      duplicateButton.disabled = !hasCorrect || mistakenHasWork;
+      duplicateButton.disabled = answered || !hasCorrect || mistakenHasWork;
       duplicateButton.title = mistakenHasWork ? "Clear graph #2 to duplicate graph #1." : "";
     }
   }
 
   function counterDrawingHasWork(drawing) {
-    return Boolean(drawing?.nodes?.length || drawing?.edges?.length || drawing?.directed);
+    return Boolean(drawing?.nodes?.length || drawing?.edges?.length);
   }
 
   function roundStart(round) {
@@ -637,7 +886,8 @@
 
   function parseCounterDrawing(drawing, round, chosenStart) {
     try {
-      if (!drawing || drawing.nodes.length < (problem.counterexampleLesson.minNodes || 1) || drawing.nodes.length > 8) throw new Error(problem.counterexampleLesson.minNodes ? `Draw at least ${problem.counterexampleLesson.minNodes} nodes.` : "Draw 1–8 nodes.");
+      const maxCounterNodes = problem.id === "water-and-jug-problem" ? 40 : 24;
+      if (!drawing || drawing.nodes.length < (problem.counterexampleLesson.minNodes || 1) || drawing.nodes.length > maxCounterNodes) throw new Error(problem.counterexampleLesson.minNodes ? `Draw at least ${problem.counterexampleLesson.minNodes} nodes.` : `Draw 1–${maxCounterNodes} nodes.`);
       const requiredDirection = counterexampleDirected();
       if (drawing.directed !== requiredDirection) throw new Error(requiredDirection ? "Turn on directed arrows." : "Use two-way edges.");
       const labelRule = problem.counterexampleLesson?.nodeLabels?.rule || "free";
@@ -650,13 +900,22 @@
       const rawLabels = drawing.nodes.map(node => normalizeLabel(node.label));
       if (rawLabels.some(label => !label) || new Set(rawLabels).size !== rawLabels.length) throw new Error("Every node needs a unique label.");
       const nodes = [...rawLabels].sort((one, two) => one.localeCompare(two, undefined, { numeric: true }));
-      const start = normalizeLabel(chosenStart || "");
-      if (!start) throw new Error(`Choose the ${counterInputSpec().name}.`);
-      if (!nodes.includes(start)) throw new Error(`Draw the chosen ${counterInputSpec().name}: ${start}.`);
+      const requestedStart = normalizeLabel(chosenStart || "");
+      let starts = null;
+      if (problem.id === "museum-vault-keyring") {
+        let keys;
+        try { keys = JSON.parse(requestedStart); } catch { throw new Error("Enter starting keys as a JSON list, for example [0,2] or []."); }
+        if (!Array.isArray(keys) || keys.some(key => !["number", "string"].includes(typeof key))) throw new Error("Starting keys must be a list of vault IDs.");
+        starts = keys.map(key => resolveCounterNode(nodes, String(key)));
+        if (starts.some(key => !key)) throw new Error("Every starting key must name a drawn vault.");
+      }
+      const start = starts ? starts[0] || nodes[0] : resolveCounterNode(nodes, requestedStart);
+      if (!requestedStart) throw new Error(`Choose the ${counterInputSpec().name}.`);
+      if (!start) throw new Error(`Draw the chosen ${counterInputSpec().name}: ${requestedStart}.`);
       if (round.bugs.includes("wrong-start")) {
-        const mistakenStart = normalizeLabel(round.mistakenStartLabel);
-        if (start === mistakenStart) throw new Error(`Choose a ${counterInputSpec().name} different from the broken search's ${mistakenStart}.`);
-        if (!nodes.includes(mistakenStart)) throw new Error(`Also draw ${mistakenStart}, the wrong ${counterInputSpec().name} used by the broken search.`);
+        const mistakenStart = resolveCounterNode(nodes, normalizeLabel(round.mistakenStartLabel));
+        if (start === mistakenStart) throw new Error(`Choose a ${counterInputSpec().name} different from the broken search's ${displayCounterNodeName(round.mistakenStartLabel)}.`);
+        if (!nodes.includes(mistakenStart)) throw new Error(`Also draw ${displayCounterNodeName(round.mistakenStartLabel)}, the wrong ${counterInputSpec().name} used by the broken search.`);
       }
       validateCounterNodeLabels(nodes);
       if (problem.id === "routes-past-the-coffee-cart" && (nodes.some(label => !/^\d+$/.test(label)) || nodes.some((label, index) => label !== String(index)))) throw new Error("Coffee intersection IDs must start at 0 with no gaps.");
@@ -667,12 +926,15 @@
         if (coloredMetro && !["red", "blue"].includes(color)) throw new Error("Color every metro edge Red or Blue.");
         return [byId[String(edge.from)], byId[String(edge.to)], color];
       });
-      const graph = { directed: requiredDirection, nodes, edges, start, firstNode: rawLabels[0] };
+      const graph = { directed: requiredDirection, nodes, edges, start, ...(starts ? { starts } : {}), firstNode: rawLabels[0] };
+      if (problem.id === "flooded-campsite-trails") graph.blocked = drawing.nodes.filter(node => semanticColor(node.color) === "blue").map(node => normalizeLabel(node.label));
       if (problem.id === "routes-past-the-coffee-cart") {
         const coffeeNodes = drawing.nodes.filter(node => semanticColor(node.color) === "amber");
         if (coffeeNodes.length !== 1) throw new Error("Color exactly one node Amber to mark the coffee cart.");
         graph.checkpoint = normalizeLabel(coffeeNodes[0].label);
       }
+      parseCounterSemanticInputs(graph);
+      validateCounterValues(graph);
       validateProblemGraphShape(graph);
       return { graph };
     } catch (error) {
@@ -680,28 +942,202 @@
     }
   }
 
+  function resolveCounterNode(nodes, requested) {
+    if (nodes.includes(requested)) return requested;
+    const plain = nodes.find(node => node.replace(/ \(restricted\)$/, "") === requested);
+    if (plain) return plain;
+    const richIndex = requested.match(/^(?:node\s+|row\s+)?(\d+):/i);
+    if (richIndex) {
+      const index = richIndex[1];
+      const rich = nodes.find(node => node.startsWith(`${index}:`) || node.startsWith(`node ${index}:`) || node.startsWith(`row ${index}:`));
+      if (rich) return rich;
+    }
+    if (/^\d+$/.test(requested)) {
+      const numbered = nodes.find(node => node.startsWith(`${requested}:`) || node.startsWith(`node ${requested}:`) || node.startsWith(`row ${requested}:`));
+      if (numbered) return numbered;
+      return nodes[Number(requested)] || null;
+    }
+    const nested = nodes.find(node => node.split("=")[0] === requested || node.replace(/ array$/, "") === requested);
+    if (nested) return nested;
+    if (/^(?:root|start|empty|empty prefix|outer array|ε)$/i.test(requested)) {
+      return nodes.find(node => /^(?:root(?:=\[\])?|start|empty prefix|outer array|node 0:|0:)/i.test(node)) || null;
+    }
+    return null;
+  }
+
   function validateCounterNodeLabels(nodes) {
+    const shownFormat = problem.graphRules?.nodeLabelFormat;
+    if (shownFormat?.pattern) {
+      const matcher = new RegExp(shownFormat.pattern);
+      if (nodes.some(node => !matcher.test(node))) throw new Error(`Use the Step 1 node-name format: ${shownFormat.instruction}`);
+    }
     const rule = problem.counterexampleLesson?.nodeLabels?.rule || "free";
-    const numeric = nodes.map(Number);
-    if (rule === "contiguous-zero" && nodes.some((node, index) => node !== String(index))) throw new Error("Use numeric IDs 0, 1, 2, ... with no gaps.");
-    if (rule === "contiguous-one" && nodes.some((node, index) => node !== String(index + 1))) throw new Error("Use numeric IDs 1, 2, 3, ... with no gaps.");
-    if (rule === "positive-integer" && nodes.some(node => !/^[1-9]\d*$/.test(node))) throw new Error("Use positive integer IDs, like 1, 3, or 10.");
+    const identity = node => {
+      const text = String(node);
+      if (/^[A-Z]$/.test(text)) return String(text.charCodeAt(0) - 65);
+      if (text === "outer array") return "root";
+      if (/^(?:\[\d+\])+(?: array|=.+)$/.test(text)) return `root${text.replace(/ array$|=.+$/, "")}`;
+      if (/^root(?:\[\d+\])*=/.test(text)) return text.split("=")[0];
+      const namedNumber = text.match(/^(?:node|row|index)\s*(\d+)(?::|\s)/i);
+      if (namedNumber) return namedNumber[1];
+      const leadingNumber = text.match(/^(\d+)(?::|\s|$)/);
+      return leadingNumber ? leadingNumber[1] : text;
+    };
+    const identities = nodes.map(identity);
+    const numeric = identities.map(Number);
+    if (problem.id === "reachable-nodes-with-restrictions") {
+      if (nodes.some(node => !/^\d+(?: \(restricted\))?$/.test(node))) throw new Error("Use node numbers, adding (restricted) only to blocked nodes.");
+      const ids = nodes.map(node => Number(node.match(/^\d+/)[0])).sort((a, b) => a - b);
+      if (ids.some((id, index) => id !== index)) throw new Error("Use numeric IDs 0, 1, 2, ... with no gaps.");
+      return;
+    }
+    if (rule === "contiguous-zero" && [...numeric].sort((a, b) => a - b).some((node, index) => node !== index)) throw new Error("Use numeric IDs 0, 1, 2, ... with no gaps.");
+    if (rule === "contiguous-one" && [...numeric].sort((a, b) => a - b).some((node, index) => node !== index + 1)) throw new Error("Use numeric IDs 1, 2, 3, ... with no gaps.");
+    if (rule === "positive-integer" && identities.some(node => !/^[1-9]\d*$/.test(node))) throw new Error("Use positive integer IDs, like 1, 3, or 10.");
     if (["coordinate", "state-pair", "interior-coordinate"].includes(rule) && nodes.some(node => !/^\(\d+,\d+\)$/.test(node))) throw new Error(rule === "state-pair" ? "Use nonnegative jug states like (0,0)." : "Use grid coordinates like (0,0) or 0,0.");
     if (rule === "interior-coordinate" && nodes.some(node => coordinate(node).some(value => value < 1))) throw new Error("This board has a wall border. Use interior coordinates starting at (1,1).");
     if (rule === "identifier" && nodes.some(node => !/^[a-z0-9]{1,5}$/.test(node))) throw new Error("Use lowercase variables with 1 to 5 letters or digits, like a, 1a, or rate1.");
-    if (rule === "nested-path" && (!nodes.includes("root") || nodes.some(node => !/^root(?:\[(?:0|[1-9]\d*)\])*$/.test(node)))) throw new Error("Use root, root[0], root[1], ... to name nested input items.");
-    if (rule === "tree-path" && (!nodes.includes("root") || nodes.some(node => node !== "root" && !/^[LR]+$/.test(node)))) throw new Error("Use root, L, R, LL, LR, ... to name tree positions.");
-    if (rule === "partial-string" && (!nodes.includes("ε") || nodes.some(node => node !== "ε" && !/^[a-z]+$/.test(node)))) throw new Error("Use ε for the empty root, then lowercase partial strings like a or ab.");
+    if (rule === "nested-path" && (!identities.includes("root") || identities.some(node => !/^root(?:\[(?:0|[1-9]\d*)\])*$/.test(node)))) throw new Error("Use root, root[0], root[1], ... to name nested input items.");
+    if (rule === "tree-path" && (numeric.some(node => !Number.isInteger(node) || node < 0) || !numeric.includes(0))) throw new Error("Use nonnegative Step 1 tree-node numbers and include root index 0.");
+    if (rule === "partial-string") {
+      const rootName = problem.id === "runes-on-the-castle-door" ? "start" : "empty prefix";
+      if (!nodes.includes(rootName) || nodes.some(node => node !== rootName && !/^[a-z]+$/.test(node))) throw new Error(`Use ${rootName} for the empty root, then lowercase partial strings like a or ab.`);
+    }
     const max = problem.counterexampleLesson?.nodeLabels?.max;
     if (max !== undefined && nodes.some(node => {
       if (["coordinate", "interior-coordinate", "state-pair"].includes(rule)) return coordinate(node).some(value => value > max);
-      return Number(node) > max;
+      return Number(identity(node)) > max;
     })) throw new Error(`Node labels in this problem cannot be larger than ${max}.`);
   }
 
   function coffeeNodeLabel(drawing) {
     const nodes = drawing?.nodes?.filter(node => semanticColor(node.color) === "amber") || [];
     return nodes.length === 1 ? String(nodes[0].label).trim() : null;
+  }
+
+  function validateCounterValues(graph) {
+    const paired = { "coins-on-level-k": "coinValue", "kth-song-in-playlist": "songId", "dungeon-gold-run": "gold", "shut-the-garden-valve": "flow", "employee-importance": "importance", "path-sum": "nodeValue", "structy-tree-sum": "nodeValue" };
+    const marker = paired[problem.id];
+    if (marker) {
+      const values = graph.nodeMarkers[marker] || {};
+      for (const node of graph.nodes) {
+        const match = node.match(/(?:=|:\s*)(-?\d+)(?:g)?$/);
+        if (match && (values[node] == null || Number(values[node]) !== Number(match[1]))) throw new Error(`${node} shows ${match[1]}. Give that same value in the ${marker} field.`);
+        if (["coinValue", "songId"].includes(marker) && !match && values[node] != null) throw new Error(`${node} is a container, so leave it out of the ${marker} field.`);
+      }
+    }
+    const exactEdges = (pairs, reason) => {
+      const expected = new Set(pairs.map(([from, to]) => counterEdgeKey(graph, from, to)));
+      const actual = new Set(graph.edges.map(([from, to]) => counterEdgeKey(graph, from, to)));
+      if (actual.size !== graph.edges.length) throw new Error("Draw each direct connection only once.");
+      const missing = pairs.find(([from, to]) => !actual.has(counterEdgeKey(graph, from, to)));
+      const extra = graph.edges.find(([from, to]) => !expected.has(counterEdgeKey(graph, from, to)));
+      if (extra) throw new Error(`${extra[0]} ${graph.directed ? "→" : "—"} ${extra[1]} is not allowed. ${reason}`);
+      if (missing) throw new Error(`Missing connection: ${missing[0]} ${graph.directed ? "→" : "—"} ${missing[1]}. ${reason}`);
+    };
+    if (["moocast", "detonate-the-maximum-bombs"].includes(problem.id)) {
+      const geometry = Object.fromEntries(graph.nodes.map(node => {
+        const values = problem.id === "moocast" ? (node.match(/:\s*\((-?\d+),(-?\d+)\) p=(\d+)$/) || []).slice(1).map(Number) : graph.nodeMarkers.geometry[node];
+        if (!Array.isArray(values) || values.length !== 3 || values.some(value => !Number.isInteger(value)) || values[2] <= 0 || (problem.id === "detonate-the-maximum-bombs" && values.some(value => value < 1 || value > 100000))) throw new Error(`Give valid whole-number coordinates and positive range for ${node}.`);
+        return [node, values];
+      }));
+      const pairs = [];
+      for (const from of graph.nodes) for (const to of graph.nodes) if (from !== to) {
+        const [x, y, radius] = geometry[from], [otherX, otherY] = geometry[to];
+        if ((x - otherX) ** 2 + (y - otherY) ** 2 <= radius ** 2) pairs.push([from, to]);
+      }
+      exactEdges(pairs, "Use the sending node's radius and the distance between the two positions.");
+    }
+    if (problem.id === "properties-graph") {
+      const rows = graph.nodes.map(node => (node.match(/\{([^{}]*)\}/)?.[1] || "").split(",").map(value => value.trim()).filter(Boolean).map(Number));
+      if (!rows[0]?.length || rows.some(row => row.length !== rows[0].length || row.some(value => !Number.isInteger(value) || value < 1 || value > 100))) throw new Error("Each row needs the same number of values, all whole numbers from 1 to 100. Repeated values are allowed.");
+      if (graph.fields.k > rows[0].length) throw new Error("k cannot exceed the number of values in one row.");
+      const pairs = [];
+      rows.forEach((row, first) => rows.forEach((other, second) => {
+        if (first < second && [...new Set(row)].filter(value => other.includes(value)).length >= graph.fields.k) pairs.push([graph.nodes[first], graph.nodes[second]]);
+      }));
+      exactEdges(pairs, "Count distinct shared values, then compare with k.");
+    }
+    if (problem.id === "trusted-courier-networks") {
+      const scores = graph.fields.scores, size = graph.nodes.length;
+      if (!Array.isArray(scores) || scores.length !== size || scores.some(row => !Array.isArray(row) || row.length !== size || row.some(value => !Number.isInteger(value) || value < 0))) throw new Error("Give one square matrix of nonnegative whole-number scores, with one row per office.");
+      const pairs = [];
+      for (let first = 0; first < size; first++) for (let second = 0; second < size; second++) {
+        if (scores[first][second] !== scores[second][first]) throw new Error("Trust scores must be symmetric.");
+        if (first === second && scores[first][second] < graph.fields.k) throw new Error("Each office's self-score must meet k; self-scores do not need loop edges.");
+        if (first < second && scores[first][second] >= graph.fields.k) pairs.push([graph.nodes[first], graph.nodes[second]]);
+      }
+      exactEdges(pairs, "Connect different offices when their score is at least k.");
+    }
+    if (problem.id === "runes-on-the-castle-door") {
+      const dials = graph.fields.dials;
+      if (!Array.isArray(dials) || dials.length < 1 || dials.length > 6 || dials.some(dial => typeof dial !== "string" || !/^[a-z]+$/.test(dial) || new Set(dial).size !== dial.length)) throw new Error("Give 1–6 dial strings. Each dial needs lowercase letters with no duplicates.");
+      const nodes = ["start"], pairs = [];
+      const visit = (prefix, depth) => {
+        if (depth === dials.length) return;
+        for (const rune of dials[depth]) if (rune !== prefix.at(-1)) {
+          const next = prefix + rune;
+          nodes.push(next); pairs.push([prefix || "start", next]);
+          if (nodes.length > 24) throw new Error("This dial set makes more than 24 nodes. Choose fewer rune choices for a small counterexample.");
+          visit(next, depth + 1);
+        }
+      };
+      visit("", 0);
+      const missing = nodes.find(node => !graph.nodes.includes(node)), extra = graph.nodes.find(node => !nodes.includes(node));
+      if (missing) throw new Error(`The dial choices also allow prefix ${missing}. Include every legal prefix, even incomplete dead ends.`);
+      if (extra) throw new Error(`${extra} is not a legal prefix for these dials.`);
+      exactEdges(pairs, "Extend by one rune from the next dial, without equal neighboring runes.");
+    }
+    const increasing = ["longest-increasing-path-in-a-matrix", "number-of-increasing-paths-in-a-grid"].includes(problem.id);
+    if (increasing || problem.id === "counting-docked-boats") {
+      const { rows, columns } = graph.fields;
+      if (graph.nodes.some(node => { const [row, column] = coordinate(node); return row >= rows || column >= columns; })) throw new Error("A drawn cell is outside your grid dimensions.");
+      if (increasing) {
+        if (graph.nodes.length !== rows * columns) throw new Error(`Draw every cell of your ${rows} by ${columns} matrix.`);
+        validateExactGridAdjacency(graph, false);
+      }
+    }
+    if (["battleships-in-a-board", "counting-docked-boats", "longest-freight-train", "find-all-groups-of-farmland"].includes(problem.id)) {
+      // Compute physical groups from coordinates, independently of the student's edges.
+      const physical = { ...graph, directed: false, edges: [] };
+      for (const from of graph.nodes) for (const to of graph.nodes) if (from < to) {
+        const [r, c] = coordinate(from), [s, d] = coordinate(to);
+        if (Math.abs(r - s) + Math.abs(c - d) === 1) physical.edges.push([from, to]);
+      }
+      const groups = counterComponents(physical), groupOf = {};
+      groups.forEach((group, index) => group.forEach(node => { groupOf[node] = index; }));
+      for (const group of groups) {
+        const points = group.map(coordinate), rows = points.map(([row]) => row), cols = points.map(([, col]) => col);
+        const height = Math.max(...rows) - Math.min(...rows) + 1, width = Math.max(...cols) - Math.min(...cols) + 1;
+        if (problem.id === "find-all-groups-of-farmland") {
+          if (height * width !== group.length) throw new Error("Every farmland group must fill a complete rectangle. Check for a missing corner.");
+        } else if (height !== 1 && width !== 1) throw new Error("Each boat, ship, or train must be straight and one cell wide.");
+      }
+      if (problem.id !== "find-all-groups-of-farmland") for (const from of graph.nodes) for (const to of graph.nodes) {
+        const [r, c] = coordinate(from), [s, d] = coordinate(to);
+        if (groupOf[from] !== groupOf[to] && Math.max(Math.abs(r - s), Math.abs(c - d)) <= 1) throw new Error("Different vehicles cannot touch, even at a corner.");
+      }
+    }
+    if (problem.id === "kattis-getting-gold") {
+      const safety = graph.nodeMarkers.cellSafety, gold = graph.nodeMarkers.containsGold;
+      for (const node of graph.nodes) {
+        if (safety[node] === "trap") {
+          if (gold[node] === "yes") throw new Error(`${node} cannot contain both a trap and gold.`);
+          continue;
+        }
+        const [r, c] = coordinate(node);
+        const draft = graph.nodes.some(other => { const [s, d] = coordinate(other); return safety[other] === "trap" && Math.abs(r - s) + Math.abs(c - d) === 1; });
+        if (safety[node] !== (draft ? "draft" : "clear")) throw new Error(`${node} must be marked ${draft ? "draft: it has a side-neighbor trap" : "clear: no trap touches its side"}.`);
+      }
+      if (safety[graph.start] === "trap") throw new Error("The player cannot start on a trap.");
+      validateExactGridAdjacency(graph, false);
+    }
+    if (problem.id === "reachable-nodes-with-restrictions" && graph.nodes.includes("0 (restricted)")) throw new Error("Node 0 is the source and cannot be restricted.");
+    if (problem.id === "usaco-fence-planning") {
+      const positions = graph.nodes.map(node => node.slice(node.indexOf(":")));
+      if (new Set(positions).size !== positions.length) throw new Error("Every cow needs a distinct position.");
+      if (graph.nodes.some(node => !graph.edges.some(([from, to]) => from === node || to === node))) throw new Error("Each cow must have at least one moo connection.");
+    }
   }
 
   function validateProblemGraphShape(graph) {
@@ -714,19 +1150,62 @@
         const legalNeighbor = allowsDiagonals ? Math.max(rowGap, columnGap) === 1 : rowGap + columnGap === 1;
         if (!legalNeighbor) throw new Error(`${from} and ${to} are not direct neighbors under this problem's movement rule.`);
       }
+      const fullTypedGrid = ["minesweeper", "gas-pocket-survey", "flood-fill", "ten-kinds-of-people", "word-search"].includes(problem.id);
+      if (fullTypedGrid) {
+        const config = counterInputSpec().resultConfig || {}, rows = Number(graph.fields?.[config.rowsField]), columns = Number(graph.fields?.[config.columnsField]);
+        const expectedNodes = Array.from({ length: rows }, (_, row) => Array.from({ length: columns }, (_, column) => `(${row},${column})`)).flat();
+        if (graph.nodes.length !== expectedNodes.length || expectedNodes.some(node => !graph.nodes.includes(node))) throw new Error(`Draw every cell in the ${rows} by ${columns} grid, from (0,0) through (${rows - 1},${columns - 1}).`);
+        const values = graph.nodeMarkers?.[config.valueMarker || config.letterMarker] || {}, expectedEdges = new Set();
+        if (problem.id === "word-search" && Object.values(values).some(value => !/^[A-Za-z]$/.test(String(value)))) throw new Error("Give each board cell exactly one letter.");
+        for (const node of expectedNodes) for (const other of expectedNodes) {
+          const one = coordinate(node), two = coordinate(other), rowGap = Math.abs(one[0] - two[0]), columnGap = Math.abs(one[1] - two[1]);
+          const adjacent = ["minesweeper"].includes(problem.id) ? Math.max(rowGap, columnGap) === 1 : rowGap + columnGap === 1;
+          const sameKind = !["flood-fill", "ten-kinds-of-people"].includes(problem.id) || values[node] === values[other];
+          if (adjacent && sameKind) expectedEdges.add(counterEdgeKey(graph, node, other));
+        }
+        const actualEdges = new Set(graph.edges.map(([from, to]) => counterEdgeKey(graph, from, to)));
+        if (expectedEdges.size !== actualEdges.size || [...expectedEdges].some(edge => !actualEdges.has(edge))) throw new Error("Connect exactly the neighboring cells allowed by their original values.");
+      }
+      const completeSparseGrid = new Set(["battleships-in-a-board", "number-of-islands", "counting-constellations", "counting-docked-boats", "longest-freight-train", "perfect-size-campsites", "gfg-grid-path-exists", "hackerrank-connected-cells", "count-sub-islands", "find-all-groups-of-farmland", "max-area-of-island", "maximum-number-of-fish-in-a-grid", "structy-minimum-island"]);
+      if (!fullTypedGrid && !graph.directed && completeSparseGrid.has(problem.id)) validateExactGridAdjacency(graph, allowsDiagonals);
     }
+    if (problem.id === "water-and-jug-problem") {
+      const config = counterInputSpec().resultConfig || {}, capOne = Number(graph.fields?.[config.jug1CapacityField]), capTwo = Number(graph.fields?.[config.jug2CapacityField]);
+      const expected = jugStateGraph(capOne, capTwo), actualEdges = new Set(graph.edges.map(([from, to]) => `${from}\u0000${to}`)), expectedEdges = new Set(expected.edges.map(([from, to]) => `${from}\u0000${to}`));
+      if (graph.nodes.length !== expected.nodes.length || expected.nodes.some(node => !graph.nodes.includes(node))) throw new Error("Draw every jug state reachable from (0,0) for these capacities.");
+      if (actualEdges.size !== expectedEdges.size || [...expectedEdges].some(edge => !actualEdges.has(edge))) throw new Error("Draw every legal fill, empty, and pour arrow between the reachable states.");
+    }
+    if (problem.id === "evaluate-division") {
+      const config = counterInputSpec().resultConfig || {}, ratios = graph.edgeMarkers?.[config.ratioMarker] || {}, edges = new Set(graph.edges.map(([from, to]) => `${from}\u0000${to}`));
+      for (const [from, to] of graph.edges) {
+        const reverse = `${to}\u0000${from}`, forwardRatio = Number(ratios[`${from}\u0000${to}`]), reverseRatio = Number(ratios[reverse]);
+        if (!edges.has(reverse)) throw new Error(`Also draw ${to}→${from}, because every division fact works in both directions.`);
+        if (!Number.isFinite(forwardRatio) || !Number.isFinite(reverseRatio) || Math.abs(forwardRatio * reverseRatio - 1) > 1e-9) throw new Error(`The ratios on ${from}→${to} and ${to}→${from} must be reciprocals.`);
+      }
+    }
+    // Step 2 uses the same visible names as Step 1. General graph/tree checks below
+    // enforce the shape without a second, conflicting hidden naming system.
     const labelRule = problem.counterexampleLesson?.nodeLabels?.rule;
     if (labelRule === "nested-path") {
-      const parent = label => label.replace(/\[\d+\]$/, "") || "root";
+      const pathOf = label => {
+        const text = String(label);
+        if (text === "outer array") return "root";
+        if (/^(?:\[\d+\])+(?: array|=.+)$/.test(text)) return `root${text.replace(/ array$|=.+$/, "")}`;
+        return text.split("=")[0];
+      };
+      const byPath = Object.fromEntries(graph.nodes.map(node => [pathOf(node), node]));
+      const parent = path => path.replace(/\[\d+\]$/, "") || "root";
       const edgeKeys = new Set(graph.edges.map(([from, to]) => `${from}\u0000${to}`));
-      for (const node of graph.nodes) if (node !== "root") {
-        const directParent = parent(node);
-        if (!graph.nodes.includes(directParent)) throw new Error(`${node} needs its parent ${directParent}.`);
+      for (const node of graph.nodes) if (pathOf(node) !== "root") {
+        const directParentPath = parent(pathOf(node));
+        const directParent = byPath[directParentPath];
+        if (!directParent) throw new Error(`${node} needs its parent ${directParentPath}.`);
+        if (!/(?:=\[\]| array)$/.test(directParent) && directParent !== "outer array" && directParent !== "root") throw new Error(`${directParent} is a value, so it cannot contain ${node}. Use an array parent.`);
         if (!edgeKeys.has(`${directParent}\u0000${node}`)) throw new Error(`Connect ${directParent} directly to ${node}.`);
       }
       const childIndexes = new Map();
-      for (const node of graph.nodes) if (node !== "root") {
-        const match = node.match(/^(.*)\[(\d+)\]$/), indexes = childIndexes.get(match[1]) || [];
+      for (const node of graph.nodes) if (pathOf(node) !== "root") {
+        const match = pathOf(node).match(/^(.*)\[(\d+)\]$/), indexes = childIndexes.get(match[1]) || [];
         indexes.push(Number(match[2])); childIndexes.set(match[1], indexes);
       }
       for (const indexes of childIndexes.values()) {
@@ -734,7 +1213,7 @@
         if (indexes.some((value, index) => value !== index)) throw new Error("Nested child indexes must start at 0 with no gaps.");
       }
     }
-    if (labelRule === "tree-path") {
+    if (labelRule === "tree-path" && graph.nodes.includes("root")) {
       const parent = label => label.length === 1 ? "root" : label.slice(0, -1);
       const edgeKeys = new Set(graph.edges.map(([from, to]) => `${from}\u0000${to}`));
       for (const node of graph.nodes) if (node !== "root") {
@@ -747,15 +1226,40 @@
         if (children === 1) throw new Error("A Boolean operator node needs both a left and a right child.");
       }
     }
-    if (labelRule === "partial-string") {
+    if (labelRule === "tree-path" && !graph.nodes.includes("root")) {
+      const indexOf = label => {
+        const match = String(label).match(/^(?:node\s+)?(\d+):/i);
+        return match ? Number(match[1]) : null;
+      };
+      const byIndex = new Map(graph.nodes.map(node => [indexOf(node), node]));
       const edgeKeys = new Set(graph.edges.map(([from, to]) => `${from}\u0000${to}`));
-      for (const node of graph.nodes) if (node !== "ε") {
-        const directParent = node.length === 1 ? "ε" : node.slice(0, -1);
+      for (const node of graph.nodes) {
+        const index = indexOf(node);
+        if (index === 0 || problem.id === "evaluate-boolean-binary-tree") continue;
+        const parentIndex = Math.floor((index - 1) / 2);
+        const parent = byIndex.get(parentIndex);
+        if (!parent) throw new Error(`${node} needs its level-order parent at index ${parentIndex}.`);
+        if (!edgeKeys.has(`${parent}\u0000${node}`)) throw new Error(`Connect ${parent} directly to ${node}.`);
+      }
+      const childCount = Object.fromEntries(graph.nodes.map(node => [node, 0]));
+      for (const [from] of graph.edges) childCount[from]++;
+      if (Object.values(childCount).some(count => count > 2)) throw new Error("A binary-tree node can have at most two children.");
+      if (problem.id === "evaluate-boolean-binary-tree") for (const node of graph.nodes) {
+        const operator = /:(?:AND|OR)$/.test(node);
+        if (operator && childCount[node] !== 2) throw new Error("A Boolean operator node needs both a left and a right child.");
+        if (!operator && childCount[node] !== 0) throw new Error("A Boolean true/false leaf cannot have children.");
+      }
+    }
+    if (labelRule === "partial-string") {
+      const rootName = problem.id === "runes-on-the-castle-door" ? "start" : "empty prefix";
+      const edgeKeys = new Set(graph.edges.map(([from, to]) => `${from}\u0000${to}`));
+      for (const node of graph.nodes) if (node !== rootName) {
+        const directParent = node.length === 1 ? rootName : node.slice(0, -1);
         if (!graph.nodes.includes(directParent)) throw new Error(`${node} needs its prefix ${directParent}.`);
         if (!edgeKeys.has(`${directParent}\u0000${node}`)) throw new Error(`Connect ${directParent} directly to ${node}.`);
       }
       const limit = problem.id === "runes-on-the-castle-door" ? 6 : 4;
-      if (graph.nodes.some(node => node !== "ε" && (node.length > limit || (problem.id === "runes-on-the-castle-door" && /(.)\1/.test(node))))) throw new Error(problem.id === "runes-on-the-castle-door" ? "Rune strings use at most 6 letters and cannot repeat a neighboring rune." : "Phone-number prefixes use at most 4 letters.");
+      if (graph.nodes.some(node => node !== rootName && (node.length > limit || (problem.id === "runes-on-the-castle-door" && /(.)\1/.test(node))))) throw new Error(problem.id === "runes-on-the-castle-door" ? "Rune strings use at most 6 letters and cannot repeat a neighboring rune." : "Phone-number prefixes use at most 4 letters.");
     }
     if (problem.counterexampleLesson?.startRule === "graph-root") {
       const incoming = Object.fromEntries(graph.nodes.map(node => [node, 0]));
@@ -778,26 +1282,71 @@
     const seen = new Set([graph.nodes[0]]), stack = [graph.nodes[0]];
     while (stack.length) for (const next of neighbors[stack.pop()]) if (!seen.has(next)) { seen.add(next); stack.push(next); }
     if (seen.size !== graph.nodes.length) throw new Error("This problem's input must form one connected tree.");
-    if (graph.directed && Object.values(incoming).filter(count => count === 0).length !== 1) throw new Error("A directed tree needs exactly one root with no incoming edge.");
-    if (graph.directed && Object.values(incoming).some(count => count > 1)) throw new Error("Each child in this tree can have only one parent.");
+    if (problem.id !== "usaco-milk-factory" && graph.directed && Object.values(incoming).filter(count => count === 0).length !== 1) throw new Error("A directed tree needs exactly one root with no incoming edge.");
+    if (problem.id !== "usaco-milk-factory" && graph.directed && Object.values(incoming).some(count => count > 1)) throw new Error("Each child in this tree can have only one parent.");
+  }
+
+  function validateExactGridAdjacency(graph, allowsDiagonals) {
+    const config = counterInputSpec().resultConfig?.adjacency || { mode: "all" }, marker = config.marker ? graph.nodeMarkers?.[config.marker] || {} : {};
+    if (graph.directed && config.mode === "all") return;
+    const key = (from, to) => graph.directed ? `${from}\u0000${to}` : counterEdgeKey(graph, from, to);
+    const expected = new Set(), actual = new Set(graph.edges.map(([from, to]) => key(from, to)));
+    const connects = (from, to) => {
+      if (config.mode === "equal-marker") return String(marker[from]) === String(marker[to]);
+      if (config.mode === "increasing-marker") return Number(marker[from]) < Number(marker[to]);
+      if (config.mode === "from-marker") return (config.fromValues || []).map(String).includes(String(marker[from])) && !(config.toExcludedValues || []).map(String).includes(String(marker[to]));
+      return true;
+    };
+    for (let first = 0; first < graph.nodes.length; first++) for (let second = first + 1; second < graph.nodes.length; second++) {
+      const one = graph.nodes[first], two = graph.nodes[second], a = coordinate(one), b = coordinate(two);
+      const rowGap = Math.abs(a[0] - b[0]), columnGap = Math.abs(a[1] - b[1]);
+      const adjacent = allowsDiagonals ? Math.max(rowGap, columnGap) === 1 : rowGap + columnGap === 1;
+      if (!adjacent) continue;
+      if (graph.directed) {
+        if (connects(one, two)) expected.add(key(one, two));
+        if (connects(two, one)) expected.add(key(two, one));
+      } else if (connects(one, two) || connects(two, one)) expected.add(key(one, two));
+    }
+    if ([...expected].some(edge => !actual.has(edge))) throw new Error("Connect every adjacent pair allowed by this problem's input rules.");
+    if ([...actual].some(edge => !expected.has(edge))) throw new Error("Remove edges between cells the input rules do not connect.");
+    if (actual.size !== graph.edges.length) throw new Error("Draw each required grid edge exactly once.");
   }
 
   function counterexampleRequiresTree() {
-    return new Set(["kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain", "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "path-sum", "structy-tree-sum", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "gold-and-silver-lights", "flatten-nested-list-iterator", "nested-list-weight-sum", "nested-list-weight-sum-ii", "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count", "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree", "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree", "binary-tree-level-order-traversal", "invert-binary-tree", "same-tree", "subtree-of-another-tree", "balanced-binary-tree", "maximum-depth-of-binary-tree", "merge-two-binary-trees", "binary-tree-right-side-view", "validate-binary-search-tree", "kth-smallest-element-in-a-bst", "construct-binary-tree-from-preorder-and-inorder-traversal", "serialize-and-deserialize-binary-tree", "all-paths-from-source-lead-to-destination", "employee-importance", "usaco-milk-factory"]).has(problem.id);
+    return new Set(["package-to-the-outpost", "reachable-nodes-with-restrictions", "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain", "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "path-sum", "structy-tree-sum", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "gold-and-silver-lights", "flatten-nested-list-iterator", "nested-list-weight-sum", "nested-list-weight-sum-ii", "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count", "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree", "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree", "binary-tree-level-order-traversal", "invert-binary-tree", "same-tree", "subtree-of-another-tree", "balanced-binary-tree", "maximum-depth-of-binary-tree", "merge-two-binary-trees", "binary-tree-right-side-view", "validate-binary-search-tree", "kth-smallest-element-in-a-bst", "construct-binary-tree-from-preorder-and-inorder-traversal", "serialize-and-deserialize-binary-tree", "all-paths-from-source-lead-to-destination", "employee-importance", "usaco-milk-factory"]).has(problem.id);
   }
 
   function expectedCanvas(graph) {
     return {
       directed: graph.directed,
-      nodes: graph.nodes.map(label => ({ id: label, label })),
-      edges: graph.edges.map(([from, to, color]) => ({ from, to, ...(color ? { color } : {}) }))
+      nodes: graph.nodes.map(label => ({ id: label, label, ...(graph.blocked?.includes(label) ? { color: "blue" } : {}) })),
+      edges: graph.edges.map(([from, to, color]) => {
+        const config = counterInputSpec().resultConfig || {};
+        const marker = config.weightMarker || config.ratioMarker;
+        const values = graph.edgeMarkers?.[marker] || {};
+        const directKey = `${from}\u0000${to}`, reverseKey = `${to}\u0000${from}`;
+        const delayMarker = config.waitMarker || config.delayMarker;
+        const label = delayMarker ? graph.nodeMarkers?.[delayMarker]?.[from] : values[directKey] ?? values[reverseKey] ?? values[counterEdgeKey(graph, from, to)];
+        return { from, to, ...(color ? { color } : {}), ...(label != null ? { label: String(label) } : {}) };
+      })
     };
   }
 
   function runSearch(graph, bugs = [], startOverride = null) {
+    if (Array.isArray(graph.starts)) {
+      const starts = bugs.includes("first-start-only") ? graph.starts.slice(0, 1) : graph.starts;
+      const reached = new Set(starts.flatMap(start => runSearch({ ...graph, starts: undefined, start }, bugs, start)));
+      return graph.nodes.filter(node => reached.has(node));
+    }
     const searchGraph = mistakenGraph(graph, bugs, startOverride);
     const directed = searchGraph.directed;
     let edges = searchGraph.edges;
+    if (problem.id === "reachable-nodes-with-restrictions") edges = edges.filter(([from, to]) => !/ \(restricted\)$/.test(from) && !/ \(restricted\)$/.test(to));
+    if (problem.id === "flooded-campsite-trails") {
+      const blocked = new Set(searchGraph.blocked || []);
+      edges = edges.filter(([from, to]) => !blocked.has(from) && !blocked.has(to));
+      if (blocked.has(searchGraph.start)) return [];
+    }
     if (problem.id === "one-color-metro-ride") {
       if (bugs.includes("ignore-colors") || bugs.includes("red-only")) {
         const visited = traverseGraph(searchGraph, directed, edges, bugs.includes("first-branch"), false, bugs.includes("last-branch"));
@@ -813,13 +1362,513 @@
     return graph.nodes.filter(node => visited.has(node));
   }
 
-  function counterResult(graph, bugs = [], startOverride = null) {
+  function counterReachability(graph, bugs = [], startOverride = null) {
     const reached = runSearch(graph, bugs, startOverride);
-    if (counterInputSpec().result === "unreached-nodes") {
-      const reachedSet = new Set(reached);
-      return graph.nodes.filter(node => !reachedSet.has(node));
+    const reachedSet = new Set(reached);
+    return { reached, unreached: graph.nodes.filter(node => !reachedSet.has(node)) };
+  }
+
+  function counterBoundaryExplanation(graph, bugs = [], startOverride = null) {
+    const result = counterInputSpec().result;
+    if (["component-count", "border-component-count", "maximum-component-size", "minimum-component-size", "exact-size-component-count", "qualified-component-count", "components-without-source-count", "maximum-component-value-sum", "component-bounding-boxes", "minimum-component-bounding-perimeter", "component-sorted-string"].includes(result)) {
+      const groups = counterComponents(graph, bugs);
+      const rule = result === "border-component-count" ? "Count each scanned group that touches the grid border." : result === "maximum-component-size" ? "Return the largest group size." : result === "exact-size-component-count" ? "Count only groups whose size equals k." : `Apply the ${counterInputSpec().resultLabel || "output"} rule to these groups.`;
+      return `The scan restarts at every still-unseen node. It finds these groups: ${formatCounterOutput(groups)}. ${rule}`;
     }
-    return reached;
+    return `From the chosen start, the search reaches ${formatCounterOutput(counterReachability(graph, bugs, startOverride).reached)}. Apply the ${counterInputSpec().resultLabel || "output"} rule to the input and search.`;
+  }
+
+  function counterResult(graph, bugs = [], startOverride = null) {
+    const sets = counterReachability(graph, bugs, startOverride);
+    switch (counterInputSpec().result) {
+      case "unreached-nodes": return problem.id === "who-keeps-their-job" ? sets.unreached.sort((a, b) => Number(a) - Number(b)) : sets.unreached;
+      case "reached-count": return sets.reached.length;
+      case "unreached-count": return sets.unreached.length;
+      case "all-reached": return sets.unreached.length === 0;
+      case "any-unreached": return sets.unreached.length > 0;
+      case "target-reachable-boolean":
+      case "same-color-target-reachable-boolean": return sets.reached.includes(graph.fields?.[counterInputSpec().resultConfig?.targetField]);
+      case "reached-node-value-sum": {
+        const marker = counterInputSpec().resultConfig?.valueMarker;
+        return sets.reached.reduce((sum, node) => sum + Number(graph.nodeMarkers?.[marker]?.[node] || 0), 0);
+      }
+      case "shortest-path-weight": return shortestCounterPath(graph, bugs, startOverride);
+      case "maximum-shortest-path-weight-or-minus-one": {
+        const distances = counterArrivalTimes(graph, bugs, startOverride, { edgeMarker: counterInputSpec().resultConfig?.weightMarker });
+        return Object.values(distances).every(Number.isFinite) ? Math.max(...Object.values(distances)) : -1;
+      }
+      case "maximum-path-weight": {
+        const distances = counterArrivalTimes(graph, bugs, startOverride, { nodeDelayMarker: counterInputSpec().resultConfig?.delayMarker });
+        return Math.max(0, ...Object.values(distances).filter(Number.isFinite));
+      }
+      case "deadline-reached-count": {
+        const config = counterInputSpec().resultConfig || {};
+        const distances = counterArrivalTimes(graph, bugs, startOverride, { nodeDelayMarker: config.waitMarker });
+        const deadline = Number(graph.fields?.[config.deadlineField]);
+        return Object.values(distances).filter(time => Number.isFinite(time) && time <= deadline).length;
+      }
+      case "border-component-count": {
+        const rows = Number(graph.fields.rows), columns = Number(graph.fields.columns);
+        return counterComponents(graph, bugs).filter(group => group.some(node => {
+          const [row, column] = coordinate(node);
+          return row === 0 || column === 0 || row === rows - 1 || column === columns - 1;
+        })).length;
+      }
+      case "component-count": return counterComponents(graph, bugs).length;
+      case "maximum-component-size": return Math.max(0, ...counterComponents(graph, bugs).map(group => group.length));
+      case "minimum-component-size": return Math.min(Infinity, ...counterComponents(graph, bugs).map(group => group.length));
+      case "maximum-reached-count": return Math.max(0, ...graph.nodes.map(node => counterReachability({ ...graph, start: node }, bugs, node).reached.length));
+      case "path-count": return counterPaths(graph, bugs).length;
+      case "path-count-modulo": return counterAllIncreasingPathCount(graph, bugs) % 1000000007;
+      case "enumerated-paths": return counterPaths(graph, bugs);
+      case "longest-path-length": return counterLongestPath(graph, bugs);
+      case "valid-two-coloring-boolean": return counterIsBipartite(graph, bugs);
+      case "acyclic-completion-boolean": return counterIsAcyclic(graph, bugs);
+      case "maximum-reached-node-value": return Math.max(...sets.reached.map(counterNodeNumber));
+      case "reachability-matrix": {
+        const orderedNodes = [...graph.nodes].sort((one, two) => String(one).localeCompare(String(two), undefined, { numeric: true }));
+        return orderedNodes.map(node => {
+        const reachable = new Set(counterReachability({ ...graph, start: node }, bugs, node).reached);
+          return orderedNodes.map(target => reachable.has(target) ? 1 : 0);
+        });
+      }
+      case "generated-terminal-strings": return counterTerminalStrings(graph, bugs, startOverride);
+      case "recursive-item-count": return Math.max(0, sets.reached.length - 1);
+      case "root-expression-value": return counterBooleanTree(graph, bugs, startOverride);
+      case "component-bounding-boxes": return counterBoundingBoxes(graph, bugs);
+      case "minimum-universally-reachable-node-or-minus-one": return counterUniversalNode(graph, bugs);
+      case "iterator-output-sequence": return counterNestedIntegers(graph, bugs, startOverride).sort((one, two) => one.path.localeCompare(two.path, undefined, { numeric: true })).map(item => item.value);
+      case "depth-weighted-value-sum": return counterNestedIntegers(graph, bugs, startOverride).reduce((sum, item) => sum + item.depth * item.value, 0);
+      case "inverse-depth-weighted-value-sum": {
+        const items = counterNestedIntegers(graph, bugs, startOverride), maxDepth = Math.max(0, ...items.map(item => item.depth));
+        return items.reduce((sum, item) => sum + (maxDepth - item.depth + 1) * item.value, 0);
+      }
+      case "widest-level-index": {
+        const counts = {}; counterNestedIntegers(graph, bugs, startOverride).forEach(item => { counts[item.depth] = (counts[item.depth] || 0) + 1; });
+        return Number(Object.keys(counts).sort((one, two) => counts[two] - counts[one] || one - two)[0] ?? 0);
+      }
+      case "level-value-sum": {
+        const config = counterInputSpec().resultConfig || {};
+        const items = config.valueMarker ? counterMarkedTreeItems(graph, bugs, startOverride, config.valueMarker) : counterNestedIntegers(graph, bugs, startOverride);
+        const depth = config.mode === "shallowest" ? Math.min(...items.map(item => item.depth)) : Number(graph.fields?.[config.depthField]);
+        return items.filter(item => item.depth === depth).reduce((sum, item) => sum + item.value, 0);
+      }
+      case "exact-size-component-count": {
+        const size = Number(graph.fields?.[counterInputSpec().resultConfig?.sizeField]);
+        return counterComponents(graph, bugs).filter(group => group.length === size).length;
+      }
+      case "kth-visited-node-or-minus-one": {
+        const config = counterInputSpec().resultConfig || {};
+        const items = counterMarkedTreeItems(graph, bugs, startOverride, config.valueMarker);
+        return items[Number(graph.fields?.[config.positionField]) - 1]?.value ?? -1;
+      }
+      case "target-root-leaf-sum-exists-boolean": return counterHasTargetPathSum(graph, bugs, startOverride);
+      case "components-without-source-count": {
+        const config = counterInputSpec().resultConfig || {}, sources = graph.nodeMarkers?.[config.sourceMarker] || {};
+        return counterComponents(graph, bugs).filter(group => !group.some(node => String(sources[node]) === String(config.sourceValue))).length;
+      }
+      case "qualified-component-count": {
+        const config = counterInputSpec().resultConfig || {}, qualifiers = graph.nodeMarkers?.[config.qualifierMarker] || {};
+        return counterComponents(graph, bugs).filter(group => group.every(node => String(qualifiers[node]) === String(config.qualifyingValue))).length;
+      }
+      case "reached-selected-node-count": {
+        const config = counterInputSpec().resultConfig || {}, selected = graph.nodeMarkers?.[config.selectorMarker] || {};
+        return sets.reached.filter(node => String(selected[node]) === String(config.selectedValue)).length;
+      }
+      case "maximum-component-value-sum": {
+        const values = graph.nodeMarkers?.[counterInputSpec().resultConfig?.valueMarker] || {};
+        return Math.max(0, ...counterComponents(graph, bugs).map(group => group.reduce((sum, node) => sum + Number(values[node] || 0), 0)));
+      }
+      case "component-sorted-string": return counterSmallestSwapString(graph, bugs);
+      case "selected-color-count": return counterGoldCount(graph, bugs, startOverride);
+      case "minimum-component-bounding-perimeter": return counterMinimumPerimeter(graph, bugs);
+      case "maximum-root-leaf-value-sum": return counterMaximumRootLeafSum(graph, bugs, startOverride);
+      case "transformed-grid": return counterTransformedGrid(graph, bugs, startOverride);
+      case "ordered-query-values": return counterInputSpec().resultConfig?.mode === "ratio" ? counterDivisionQueryValues(graph, bugs, startOverride) : counterGridQueryValues(graph, bugs, startOverride);
+      case "target-state-reachable-boolean": return counterJugTarget(graph, bugs, startOverride);
+      case "target-word-path-exists-boolean": return counterWordExists(graph, bugs);
+      case "reached-nodes": return sets.reached;
+      default: throw new Error(`Unsupported Step 2 result kind: ${counterInputSpec().result}`);
+    }
+  }
+
+  function counterDivisionQueryValues(graph, bugs = [], startOverride = null) {
+    const config = counterInputSpec().resultConfig || {}, changed = mistakenGraph(graph, bugs, startOverride), target = graph.fields?.[config.targetField], ratios = graph.edgeMarkers?.[config.ratioMarker] || {}, adjacency = Object.fromEntries(changed.nodes.map(node => [node, []]));
+    changed.edges.forEach(([from, to]) => adjacency[from].push(to));
+    const solve = (node, product, used, depth) => {
+      if (node === target) return product;
+      let next = adjacency[node].filter(item => !used.has(item));
+      if (bugs.includes("shallow-search") && depth >= 1) next = [];
+      if (bugs.includes("first-branch")) next = next.slice(0, 1);
+      if (bugs.includes("last-branch")) next = next.slice(-1);
+      for (const item of next) {
+        const ratio = ratios[counterEdgeKey(graph, node, item)];
+        const found = solve(item, product * Number(ratio), new Set([...used, item]), depth + 1);
+        if (found != null) return found;
+      }
+      return null;
+    };
+    const value = solve(changed.start, 1, new Set([changed.start]), 0);
+    return [value == null ? -1 : value];
+  }
+
+  function counterJugTarget(graph, bugs = [], startOverride = null) {
+    const target = Number(graph.fields?.[counterInputSpec().resultConfig?.targetField]);
+    return runSearch(graph, bugs, startOverride).some(node => { const [one, two] = coordinate(node); return one === target || two === target || one + two === target; });
+  }
+
+  function jugStateGraph(capOne, capTwo) {
+    const label = (one, two) => `(${one},${two})`, start = label(0, 0), seen = new Set([start]), pending = [start], edges = [];
+    while (pending.length) {
+      const from = pending.shift(), [one, two] = coordinate(from), pourOne = Math.min(one, capTwo - two), pourTwo = Math.min(two, capOne - one);
+      const next = [[capOne, two], [one, capTwo], [0, two], [one, 0], [one - pourOne, two + pourOne], [one + pourTwo, two - pourTwo]];
+      for (const pair of next) {
+        const to = label(pair[0], pair[1]);
+        if (to === from || edges.some(edge => edge[0] === from && edge[1] === to)) continue;
+        edges.push([from, to]);
+        if (!seen.has(to)) { seen.add(to); pending.push(to); }
+      }
+    }
+    return { nodes: [...seen], edges };
+  }
+
+  function counterWordExists(graph, bugs = []) {
+    const config = counterInputSpec().resultConfig || {}, word = String(graph.fields?.[config.wordField] || ""), letters = graph.nodeMarkers?.[config.letterMarker] || {}, { changed, adjacency } = counterAdjacency(graph, bugs);
+    const walk = (node, index, used) => {
+      if (letters[node] !== word[index]) return false;
+      if (index === word.length - 1) return true;
+      let next = adjacency[node].filter(item => !used.has(item) && letters[item] === word[index + 1]);
+      if (bugs.includes("shallow-search") && index >= 1) next = [];
+      if (bugs.includes("first-branch")) next = next.slice(0, 1);
+      if (bugs.includes("last-branch")) next = next.slice(-1);
+      return next.some(item => walk(item, index + 1, new Set([...used, item])));
+    };
+    return Boolean(word) && changed.nodes.some(node => walk(node, 0, new Set([node])));
+  }
+
+  function counterGridLayout(graph, values) {
+    const points = graph.nodes.map(node => coordinate(node)), rows = Math.max(...points.map(point => point[0])) + 1, columns = Math.max(...points.map(point => point[1])) + 1;
+    return Array.from({ length: rows }, (_, row) => Array.from({ length: columns }, (_, column) => values[`(${row},${column})`]));
+  }
+
+  function counterRevealCells(graph, bugs = [], startOverride = null, hazardMarker) {
+    const changed = mistakenGraph(graph, bugs, startOverride), values = graph.nodeMarkers?.[hazardMarker] || {}, adjacency = Object.fromEntries(changed.nodes.map(node => [node, []]));
+    changed.edges.forEach(([from, to]) => { adjacency[from].push(to); if (!changed.directed) adjacency[to].push(from); });
+    const hazard = problem.id === "minesweeper" ? "M" : "G", reached = new Set(), pending = [[changed.start, 0]];
+    while (pending.length) {
+      const [node, depth] = pending.pop(); if (reached.has(node)) continue; reached.add(node);
+      if (values[node] === hazard) continue;
+      const hazardCount = adjacency[node].filter(next => values[next] === hazard).length;
+      if (hazardCount) continue;
+      let next = adjacency[node].filter(item => !reached.has(item) && values[item] !== hazard);
+      if (bugs.includes("shallow-search") && depth >= 1) next = [];
+      if (bugs.includes("first-branch")) next = next.slice(0, 1);
+      if (bugs.includes("last-branch")) next = next.slice(-1);
+      next.forEach(item => pending.push([item, depth + 1]));
+    }
+    return { changed, adjacency, reached, values, hazard };
+  }
+
+  function counterTransformedGrid(graph, bugs = [], startOverride = null) {
+    const config = counterInputSpec().resultConfig || {};
+    if (problem.id === "flood-fill") {
+      const values = graph.nodeMarkers?.[config.valueMarker] || {}, reached = new Set(runSearch(graph, bugs, startOverride)), nextColor = graph.fields?.[config.newColorField];
+      return counterGridLayout(graph, Object.fromEntries(graph.nodes.map(node => [node, reached.has(node) ? nextColor : values[node]])));
+    }
+    const reveal = counterRevealCells(graph, bugs, startOverride, config.valueMarker), output = { ...reveal.values };
+    for (const node of reveal.reached) {
+      if (reveal.values[node] === reveal.hazard) output[node] = "X";
+      else {
+        const count = reveal.adjacency[node].filter(next => reveal.values[next] === reveal.hazard).length;
+        output[node] = count ? String(count) : problem.id === "minesweeper" ? "B" : "S";
+      }
+    }
+    return counterGridLayout(graph, output);
+  }
+
+  function counterGridQueryValues(graph, bugs = [], startOverride = null) {
+    const config = counterInputSpec().resultConfig || {}, changed = mistakenGraph(graph, bugs, startOverride), target = graph.fields?.[config.targetField], values = graph.nodeMarkers?.[config.valueMarker] || {}, reached = new Set(runSearch(graph, bugs, startOverride));
+    return [reached.has(target) && values[changed.start] === values[target] ? values[changed.start] === "1" ? "decimal" : "binary" : "neither"];
+  }
+
+  function counterNestedIntegers(graph, bugs = [], startOverride = null) {
+    const reached = new Set(runSearch(graph, bugs, startOverride));
+    return graph.nodes.map(node => {
+      const match = String(node).match(/^(root(?:\[\d+\])*)=(-?\d+)$/);
+      return match && reached.has(node) ? { path: match[1], depth: (match[1].match(/\[/g) || []).length, value: Number(match[2]) } : null;
+    }).filter(Boolean);
+  }
+
+  function counterMarkedTreeItems(graph, bugs = [], startOverride = null, markerId) {
+    const changed = mistakenGraph(graph, bugs, startOverride), children = Object.fromEntries(changed.nodes.map(node => [node, []]));
+    changed.edges.forEach(([from, to]) => children[from].push(to));
+    const values = graph.nodeMarkers?.[markerId] || {}, items = [], seen = new Set();
+    const walk = (node, depth) => {
+      if (seen.has(node)) return;
+      seen.add(node);
+      if (values[node] != null) items.push({ path: node, depth, value: Number(values[node]) });
+      let next = children[node] || [];
+      if (bugs.includes("shallow-search") && depth > 0) next = [];
+      if (bugs.includes("first-branch")) next = next.slice(0, 1);
+      if (bugs.includes("last-branch")) next = next.slice(-1);
+      next = [...next].sort((one, two) => one.localeCompare(two, undefined, { numeric: true }));
+      next.forEach(child => walk(child, depth + 1));
+    };
+    walk(changed.start, 0);
+    return items;
+  }
+
+  function counterHasTargetPathSum(graph, bugs = [], startOverride = null) {
+    const changed = mistakenGraph(graph, bugs, startOverride), children = Object.fromEntries(changed.nodes.map(node => [node, []]));
+    changed.edges.forEach(([from, to]) => children[from].push(to));
+    const config = counterInputSpec().resultConfig || {}, values = graph.nodeMarkers?.[config.valueMarker] || {};
+    const target = Number(graph.fields?.[config.targetField]);
+    const matches = (node, sum) => {
+      let next = children[node] || [];
+      if (bugs.includes("first-branch")) next = next.slice(0, 1);
+      if (bugs.includes("last-branch")) next = next.slice(-1);
+      const total = sum + Number(values[node] || 0);
+      return next.length ? next.some(child => matches(child, total)) : total === target;
+    };
+    return Boolean(changed.start && matches(changed.start, 0));
+  }
+
+  function counterSmallestSwapString(graph, bugs = []) {
+    const answer = [...graph.nodes].sort((one, two) => counterNodeNumber(one) - counterNodeNumber(two)).map(node => String(node).split(":").at(-1));
+    for (const group of counterComponents(graph, bugs)) {
+      const positions = group.map(counterNodeNumber).sort((a, b) => a - b), letters = group.map(node => String(node).split(":").at(-1)).sort();
+      positions.forEach((position, index) => { answer[position] = letters[index]; });
+    }
+    return answer.join("");
+  }
+
+  function counterGoldCount(graph, bugs = [], startOverride = null) {
+    const changed = mistakenGraph(graph, bugs, startOverride), adjacency = Object.fromEntries(changed.nodes.map(node => [node, []]));
+    changed.edges.forEach(([from, to]) => { adjacency[from].push(to); if (!changed.directed) adjacency[to].push(from); });
+    const depth = { [changed.start]: 0 }, pending = [changed.start];
+    while (pending.length) { const node = pending.shift(); let next = adjacency[node].filter(item => depth[item] == null); if (bugs.includes("shallow-search") && depth[node] > 0) next = []; if (bugs.includes("first-branch")) next = next.slice(0, 1); if (bugs.includes("last-branch")) next = next.slice(-1); next.forEach(item => { depth[item] = depth[node] + 1; pending.push(item); }); }
+    return Object.values(depth).filter(value => value % 2 === 0).length;
+  }
+
+  function counterMinimumPerimeter(graph, bugs = []) {
+    return Math.min(...counterComponents(graph, bugs).map(group => { const points = group.map(node => (String(node).match(/:\((-?\d+),(-?\d+)\)$/) || []).slice(1).map(Number)); const xs = points.map(point => point[0]), ys = points.map(point => point[1]); return 2 * (Math.max(...xs) - Math.min(...xs) + Math.max(...ys) - Math.min(...ys)); }));
+  }
+
+  function counterMaximumRootLeafSum(graph, bugs = [], startOverride = null) {
+    const changed = mistakenGraph(graph, bugs, startOverride), adjacency = Object.fromEntries(changed.nodes.map(node => [node, []])); changed.edges.forEach(([from, to]) => adjacency[from].push(to));
+    const value = node => Number((String(node).match(/:\s*(-?\d+)$/) || [0, 0])[1]);
+    const best = (node, depth = 0) => { let next = adjacency[node]; if (bugs.includes("shallow-search") && depth > 0) next = []; if (bugs.includes("first-branch")) next = next.slice(0, 1); if (bugs.includes("last-branch")) next = next.slice(-1); return value(node) + (next.length ? Math.max(...next.map(item => best(item, depth + 1))) : 0); };
+    return best(changed.start);
+  }
+
+  function counterTerminalStrings(graph, bugs = [], startOverride = null) {
+    const changed = mistakenGraph(graph, bugs, startOverride);
+    const reached = new Set(runSearch(graph, bugs, startOverride));
+    const outgoing = Object.fromEntries(changed.nodes.map(node => [node, 0]));
+    changed.edges.forEach(([from]) => outgoing[from]++);
+    return changed.nodes.filter(node => reached.has(node) && (problem.id === "runes-on-the-castle-door" ? node.length === graph.fields.dials.length : outgoing[node] === 0) && node !== "start" && node !== "empty prefix").map(node => node === "ε" ? "" : node);
+  }
+
+  function counterBooleanTree(graph, bugs = [], startOverride = null) {
+    const changed = mistakenGraph(graph, bugs, startOverride), children = Object.fromEntries(changed.nodes.map(node => [node, []]));
+    changed.edges.forEach(([from, to]) => children[from].push(to));
+    const evaluate = node => {
+      const text = String(node);
+      if (/:true$/i.test(text)) return true;
+      if (/:false$/i.test(text)) return false;
+      let values = children[node].map(evaluate);
+      if (bugs.includes("first-branch")) values = values.slice(0, 1);
+      if (bugs.includes("last-branch")) values = values.slice(-1);
+      if (/:OR$/i.test(text)) return values.some(Boolean);
+      return values.length > 0 && values.every(Boolean);
+    };
+    return evaluate(changed.start);
+  }
+
+  function counterBoundingBoxes(graph, bugs = []) {
+    return counterComponents(graph, bugs).map(group => {
+      const points = group.map(coordinate), rows = points.map(point => point[0]), columns = points.map(point => point[1]);
+      return [Math.min(...rows), Math.min(...columns), Math.max(...rows), Math.max(...columns)];
+    }).sort((one, two) => one[0] - two[0] || one[1] - two[1]);
+  }
+
+  function counterUniversalNode(graph, bugs = []) {
+    const ordered = [...graph.nodes].sort((one, two) => String(one).localeCompare(String(two), undefined, { numeric: true }));
+    return ordered.find(candidate => ordered.every(start => counterReachability({ ...graph, start }, bugs, start).reached.includes(candidate))) || -1;
+  }
+
+  function counterNodeNumber(label) {
+    const match = String(label).match(/-?\d+(?:\.\d+)?/);
+    return match ? Number(match[0]) : 0;
+  }
+
+  function counterAdjacency(graph, bugs = []) {
+    const changed = mistakenGraph(graph, bugs, bugs.includes("wrong-start") ? graph.nodes[0] : graph.start);
+    const adjacency = Object.fromEntries(changed.nodes.map(node => [node, []]));
+    for (const [from, to] of changed.edges) {
+      if (!adjacency[from].includes(to)) adjacency[from].push(to);
+      if (!changed.directed && !adjacency[to].includes(from)) adjacency[to].push(from);
+    }
+    return { changed, adjacency };
+  }
+
+  function counterComponents(graph, bugs = []) {
+    const { changed, adjacency } = counterAdjacency(graph, bugs);
+    const globallySeen = new Set(), groups = [];
+    for (const seed of changed.nodes) {
+      if (globallySeen.has(seed)) continue;
+      const local = new Set([seed]), pending = [seed];
+      while (pending.length) {
+        const current = pending.pop();
+        let next = adjacency[current].filter(node => !local.has(node) && !globallySeen.has(node));
+        if (bugs.includes("shallow-search") && current !== seed) next = [];
+        if (bugs.includes("first-branch")) next = next.slice(0, 1);
+        if (bugs.includes("last-branch")) next = next.slice(-1);
+        for (const node of next) { local.add(node); pending.push(node); }
+      }
+      local.forEach(node => globallySeen.add(node));
+      groups.push(changed.nodes.filter(node => local.has(node)));
+    }
+    return groups;
+  }
+
+  function counterTerminal(graph) {
+    return [...graph.nodes].sort((one, two) => String(one).localeCompare(String(two), undefined, { numeric: true })).at(-1);
+  }
+
+  function counterPaths(graph, bugs = []) {
+    const { changed, adjacency } = counterAdjacency(graph, bugs);
+    const target = counterTerminal(graph), paths = [];
+    const walk = (node, path) => {
+      if (node === target) { if (!graph.checkpoint || path.includes(graph.checkpoint)) paths.push(path); return; }
+      let next = adjacency[node].filter(item => !path.includes(item));
+      if (bugs.includes("shallow-search") && path.length > 1) next = [];
+      if (bugs.includes("first-branch")) next = next.slice(0, 1);
+      if (bugs.includes("last-branch")) next = next.slice(-1);
+      next.forEach(item => walk(item, [...path, item]));
+    };
+    walk(changed.start, [changed.start]);
+    return paths;
+  }
+
+  function counterAllIncreasingPathCount(graph, bugs = []) {
+    const { changed, adjacency } = counterAdjacency(graph, bugs);
+    const memo = new Map();
+    const count = node => {
+      if (memo.has(node)) return memo.get(node);
+      let next = adjacency[node];
+      if (bugs.includes("shallow-search")) next = [];
+      if (bugs.includes("first-branch")) next = next.slice(0, 1);
+      if (bugs.includes("last-branch")) next = next.slice(-1);
+      const value = 1 + next.reduce((sum, item) => sum + count(item), 0);
+      memo.set(node, value); return value;
+    };
+    return changed.nodes.reduce((sum, node) => sum + count(node), 0);
+  }
+
+  function counterLongestPath(graph, bugs = []) {
+    const { changed, adjacency } = counterAdjacency(graph, bugs);
+    let longest = changed.nodes.length ? 1 : 0;
+    const walk = (node, seen) => {
+      longest = Math.max(longest, seen.size);
+      let next = adjacency[node].filter(item => !seen.has(item));
+      if (bugs.includes("shallow-search") && seen.size > 1) next = [];
+      if (bugs.includes("first-branch")) next = next.slice(0, 1);
+      if (bugs.includes("last-branch")) next = next.slice(-1);
+      for (const item of next) walk(item, new Set([...seen, item]));
+    };
+    changed.nodes.forEach(node => walk(node, new Set([node])));
+    return longest;
+  }
+
+  function counterIsBipartite(graph, bugs = []) {
+    const { changed, adjacency } = counterAdjacency(graph, bugs);
+    const colors = {};
+    for (const seed of changed.nodes) {
+      if (colors[seed] != null) continue;
+      colors[seed] = 0; const pending = [seed];
+      while (pending.length) {
+        const node = pending.pop();
+        let next = adjacency[node];
+        if (bugs.includes("shallow-search") && node !== seed) next = [];
+        if (bugs.includes("first-branch")) next = next.slice(0, 1);
+        if (bugs.includes("last-branch")) next = next.slice(-1);
+        for (const item of next) {
+          if (colors[item] === colors[node]) return false;
+          if (colors[item] == null) { colors[item] = 1 - colors[node]; pending.push(item); }
+        }
+      }
+    }
+    return true;
+  }
+
+  function counterIsAcyclic(graph, bugs = []) {
+    const { changed, adjacency } = counterAdjacency(graph, bugs);
+    const done = new Set(), active = new Set();
+    const visit = (node, depth = 0) => {
+      if (active.has(node)) return false;
+      if (done.has(node)) return true;
+      active.add(node);
+      let next = adjacency[node];
+      if (bugs.includes("shallow-search") && depth > 0) next = [];
+      if (bugs.includes("first-branch")) next = next.slice(0, 1);
+      if (bugs.includes("last-branch")) next = next.slice(-1);
+      for (const item of next) if (!visit(item, depth + 1)) return false;
+      active.delete(node); done.add(node); return true;
+    };
+    if (bugs.includes("first-branch") || bugs.includes("last-branch")) return visit(changed.start);
+    return changed.nodes.every(node => visit(node));
+  }
+
+  function shortestCounterPath(graph, bugs = [], startOverride = null) {
+    const searchGraph = mistakenGraph(graph, bugs, startOverride);
+    const config = counterInputSpec().resultConfig || {};
+    const target = graph.fields?.[config.targetField];
+    const distance = Object.fromEntries(searchGraph.nodes.map(node => [node, Infinity]));
+    distance[searchGraph.start] = 0;
+    const pending = new Set(searchGraph.nodes);
+    const weight = (from, to) => {
+      const direct = graph.edgeMarkers?.[config.weightMarker]?.[counterEdgeKey(graph, from, to)];
+      if (direct != null) return Number(direct);
+      const reversed = graph.edgeMarkers?.[config.weightMarker]?.[counterEdgeKey(graph, to, from)];
+      return reversed == null ? Infinity : Number(reversed);
+    };
+    while (pending.size) {
+      const current = [...pending].sort((one, two) => distance[one] - distance[two])[0];
+      pending.delete(current);
+      if (!Number.isFinite(distance[current]) || current === target) break;
+      for (const [from, to] of searchGraph.edges) {
+        const neighbors = from === current ? [to] : !searchGraph.directed && to === current ? [from] : [];
+        for (const next of neighbors) distance[next] = Math.min(distance[next], distance[current] + weight(from, to));
+      }
+    }
+    return Number.isFinite(distance[target]) ? distance[target] : -1;
+  }
+
+  function counterArrivalTimes(graph, bugs = [], startOverride = null, config = {}) {
+    const changed = mistakenGraph(graph, bugs, startOverride);
+    const distance = Object.fromEntries(changed.nodes.map(node => [node, Infinity]));
+    distance[changed.start] = 0;
+    const pending = new Set(changed.nodes);
+    const weight = (from, to) => {
+      if (config.nodeDelayMarker) return Number(graph.nodeMarkers?.[config.nodeDelayMarker]?.[from] ?? Infinity);
+      const markers = graph.edgeMarkers?.[config.edgeMarker] || {};
+      const direct = markers[counterEdgeKey(graph, from, to)];
+      if (direct != null) return Number(direct);
+      const reversed = markers[counterEdgeKey(graph, to, from)];
+      return reversed == null ? Infinity : Number(reversed);
+    };
+    while (pending.size) {
+      const current = [...pending].sort((one, two) => distance[one] - distance[two])[0];
+      pending.delete(current);
+      if (!Number.isFinite(distance[current])) break;
+      if (bugs.includes("shallow-search") && current !== changed.start) continue;
+      let outgoing = changed.edges.flatMap(([from, to]) => from === current ? [[from, to]] : !changed.directed && to === current ? [[to, from]] : []);
+      if (bugs.includes("first-branch")) outgoing = outgoing.slice(0, 1);
+      if (bugs.includes("last-branch")) outgoing = outgoing.slice(-1);
+      for (const [from, to] of outgoing) distance[to] = Math.min(distance[to], distance[current] + weight(from, to));
+    }
+    return distance;
   }
 
   function traverseGraph(graph, directed, edges, firstBranch = false, shallowSearch = false, lastBranch = false) {
@@ -854,13 +1903,23 @@
     if (bugs.includes("add-diagonals")) {
       for (let a = 0; a < graph.nodes.length; a++) for (let b = a + 1; b < graph.nodes.length; b++) {
         const one = coordinate(graph.nodes[a]), two = coordinate(graph.nodes[b]);
-        if (one && two && Math.abs(one[0] - two[0]) === 1 && Math.abs(one[1] - two[1]) === 1) edges.push([graph.nodes[a], graph.nodes[b], ""]);
+        const marker = counterInputSpec().resultConfig?.valueMarker, values = graph.nodeMarkers?.[marker];
+        const sameValue = !["flood-fill", "ten-kinds-of-people"].includes(problem.id) || values?.[graph.nodes[a]] === values?.[graph.nodes[b]];
+        if (one && two && sameValue && Math.abs(one[0] - two[0]) === 1 && Math.abs(one[1] - two[1]) === 1) {
+          const increasingMarker = counterInputSpec().resultConfig?.adjacency?.mode === "increasing-marker" ? counterInputSpec().resultConfig.adjacency.marker : null;
+          if (increasingMarker) {
+            const values = graph.nodeMarkers[increasingMarker], first = graph.nodes[a], second = graph.nodes[b];
+            if (values[first] < values[second]) edges.push([first, second, ""]);
+            if (values[second] < values[first]) edges.push([second, first, ""]);
+          } else edges.push([graph.nodes[a], graph.nodes[b], ""]);
+        }
       }
     }
     if (bugs.includes("remove-diagonals")) edges = edges.filter(([from, to]) => {
       const one = coordinate(from), two = coordinate(to);
       return !one || !two || !(Math.abs(one[0] - two[0]) === 1 && Math.abs(one[1] - two[1]) === 1);
     });
+    if (bugs.includes("strict-threshold")) edges = edges.filter(([from, to]) => Number(graph.fields.scores[Number(from)][Number(to)]) > Number(graph.fields.k));
     if (bugs.includes("drop-last-edge")) edges = edges.slice(0, -1);
     if (bugs.includes("skip-leaf-edges")) {
       const degree = Object.fromEntries(graph.nodes.map(node => [node, 0]));
@@ -894,24 +1953,33 @@
     const correctDrawing = dualDrawings ? (counterDrawings.correct || blank) : drawing;
     const mistakenDrawing = dualDrawings ? (counterDrawings.mistaken || blank) : null;
     const parsed = parseCounterDrawing(correctDrawing, round, $("#counter-start")?.value);
-    const mistakenStart = round.bugs.includes("wrong-start") ? String(round.mistakenStartLabel) : parsed.graph?.start;
+    const mistakenStartLabel = String(round.mistakenStartLabel || "");
+    const mistakenStart = round.bugs.includes("wrong-start")
+      ? resolveCounterNode(parsed.graph?.nodes || [], mistakenStartLabel)
+      : parsed.graph?.start;
     const graphCheck = parsed.graph ? gradeCanvas(expectedCanvas(parsed.graph), correctDrawing) : { nodes: false, edges: false, direction: false, colors: false, labels: false };
     const mistakenGraphCheck = parsed.graph && dualDrawings ? gradeCanvas(expectedCanvas(mistakenGraph(parsed.graph, round.bugs, mistakenStart)), mistakenDrawing) : null;
     const coffeeDrawingMatches = problem.id !== "routes-past-the-coffee-cart" || coffeeNodeLabel(mistakenDrawing) === parsed.graph?.checkpoint;
+    const correctReachability = parsed.graph ? counterReachability(parsed.graph) : null;
+    const buggyReachability = parsed.graph ? counterReachability(parsed.graph, round.bugs, mistakenStart) : null;
     const correctOutput = parsed.graph ? counterResult(parsed.graph) : [];
     const buggyOutput = parsed.graph ? counterResult(parsed.graph, round.bugs, mistakenStart) : [];
+    const singletonReachability = parsed.graph ? round.bugs.map(bug => counterReachability(parsed.graph, [bug], mistakenStart)) : [];
     const singletonOutputs = parsed.graph ? round.bugs.map(bug => counterResult(parsed.graph, [bug], mistakenStart)) : [];
+    const realReturn = counterUsesRealOutput(counterInputSpec().result);
     const exposes = parsed.graph
+      && (realReturn || JSON.stringify(correctReachability.reached) !== JSON.stringify(buggyReachability.reached))
       && JSON.stringify(correctOutput) !== JSON.stringify(buggyOutput)
+      && singletonReachability.every(result => realReturn || JSON.stringify(correctReachability.reached) !== JSON.stringify(result.reached))
       && singletonOutputs.every(output => JSON.stringify(correctOutput) !== JSON.stringify(output))
-      && (problem.id !== "routes-past-the-coffee-cart" || correctOutput.includes(parsed.graph.checkpoint) !== buggyOutput.includes(parsed.graph.checkpoint));
+      && (problem.id !== "routes-past-the-coffee-cart" || correctReachability.reached.includes(parsed.graph.checkpoint) !== buggyReachability.reached.includes(parsed.graph.checkpoint));
     const checks = parsed.graph ? [
-      ["The correct graph is internally consistent", graphCheck.nodes && graphCheck.edges && graphCheck.direction && graphCheck.colors],
+      [graphCheck.hint || "The correct graph and visible values match the input", graphCheck.nodes && graphCheck.edges && graphCheck.direction && graphCheck.colors && graphCheck.labels],
       [problem.id === "routes-past-the-coffee-cart" ? "The mistake changes whether the coffee cart is reached" : "The graph exposes the mistake", Boolean(exposes)],
       ["The correct graph follows the problem's graph rules", true],
-      ...(dualDrawings ? [[personDrawingChanges(round.bugs) ? `${characterName(counterProgress.index * 7)}'s drawing exactly shows the mistake` : "The second drawing matches because the mistake changes only the search", mistakenGraphCheck.nodes && mistakenGraphCheck.edges && mistakenGraphCheck.direction && mistakenGraphCheck.colors && coffeeDrawingMatches]] : []),
-      ["The correct output is predicted correctly", friendlyListMatches($("#counter-real-output").value, correctOutput)],
-      [`${characterName(counterProgress.index * 7)}’s output is predicted correctly`, friendlyListMatches($("#counter-bug-output").value, buggyOutput)]
+      ...(dualDrawings ? [[personDrawingChanges(round.bugs) ? (mistakenGraphCheck.hint || `${characterName(counterProgress.index * 7)}'s drawing exactly shows the mistake`) : "The second drawing matches because the mistake changes only the search", mistakenGraphCheck.nodes && mistakenGraphCheck.edges && mistakenGraphCheck.direction && mistakenGraphCheck.colors && mistakenGraphCheck.labels && coffeeDrawingMatches]] : []),
+      ["Your prediction for the correct solution", counterOutputMatches($("#counter-real-output").value, correctOutput)],
+      [`Your prediction for ${characterName(counterProgress.index * 7)}’s solution`, counterOutputMatches($("#counter-bug-output").value, buggyOutput)]
     ] : [
       [parsed.error, false],
       ["Fix the correct graph before its search can run", null],
@@ -926,27 +1994,41 @@
       counterProgress.mistakes++;
       saveCounterProgress();
       updateCounterProgress(counterProgress.index, counterexampleRounds().length);
-      $("#feedback-slot").innerHTML = `<div class="feedback case-feedback"><b>The contradiction is not complete yet.</b><ul class="feedback-checklist">${checks.map(([label, pass]) => `<li class="${pass === null ? "blocked" : pass ? "passed" : "failed"}"><span>${pass === null ? "—" : pass ? "✓" : "×"}</span>${esc(label)}</li>`).join("")}</ul></div>`;
+      const outputHints = [];
+      if (parsed.graph && graphCheck.nodes && graphCheck.edges && graphCheck.direction) {
+        if (!checks[predictionOffset][1]) outputHints.push(`Correct solution: ${counterBoundaryExplanation(parsed.graph)}`);
+        if (!checks[predictionOffset + 1][1]) outputHints.push(`${characterName(counterProgress.index * 7)} ${bugDescription(round.bugs[0])}. ${counterBoundaryExplanation(parsed.graph, round.bugs, mistakenStart)}`);
+        if (!exposes) outputHints.push("Both searches return the same result here. Add or change a part of the input that this mistake would miss or wrongly include.");
+      }
+      $("#feedback-slot").innerHTML = `<div class="feedback case-feedback"><b>The contradiction is not complete yet.</b><ul class="feedback-checklist">${checks.map(([label, pass]) => `<li class="${pass === null ? "blocked" : pass ? "passed" : "failed"}"><span>${pass === null ? "—" : pass ? "✓" : "×"}</span>${esc(label)}</li>`).join("")}</ul>${outputHints.map(hint => `<p class="feedback-next">${esc(hint)}</p>`).join("")}</div>`;
       $("#feedback-slot").scrollIntoView({ behavior: "smooth", block: "center" });
       $("#counter-check").innerHTML = "Run revised searches <span>→</span>";
       return;
     }
     saveCounterProgress();
+    saveCounterDraft();
+    answered = true;
+    updateCounterProgress(counterProgress.index + 1, counterexampleRounds().length);
+    counterDraftFields().forEach(field => { field.disabled = true; });
     lockCounterexampleEditor();
     const name = characterName(counterProgress.index * 7);
-    $("#feedback-slot").innerHTML = `<div class="feedback good case-feedback"><b>Counterexample confirmed.</b><div class="case-result-grid"><div><span>Correct output</span><strong>${esc(formatReachedOutput(correctOutput))}</strong></div><div><span>${esc(name)}'s output</span><strong>${esc(formatReachedOutput(buggyOutput))}</strong></div></div><div class="feedback-why"><b>Why it works:</b> the same input produces different reachable sets under the broken and correct rules.</div></div>`;
+    const realOutput = counterUsesRealOutput(counterInputSpec().result);
+    $("#feedback-slot").innerHTML = `<div class="feedback good case-feedback"><b>Counterexample confirmed.</b><div class="case-result-grid"><div><span>${realOutput ? "Correct function returns" : "Correct search reaches"}</span><strong>${esc(formatCounterOutput(correctOutput))}</strong></div><div><span>${esc(name)}'s ${realOutput ? "function returns" : "search reaches"}</span><strong>${esc(formatCounterOutput(buggyOutput))}</strong></div></div><div class="feedback-why"><b>Why it works:</b> ${esc(name)} ${esc(bugDescription(round.bugs[0]))}. Correct solution: ${esc(counterBoundaryExplanation(parsed.graph))} With the mistake: ${esc(counterBoundaryExplanation(parsed.graph, round.bugs, mistakenStart))} ${realOutput ? `Applying the problem’s output rule gives ${esc(formatCounterOutput(correctOutput))} instead of ${esc(formatCounterOutput(buggyOutput))}.` : "Those different reached sets expose the mistake."}</div></div>`;
     const button = $("#counter-check");
     button.disabled = false;
     button.innerHTML = counterProgress.index === counterexampleRounds().length - 1 ? "Finish Step 2 <span>→</span>" : "Open next question <span>→</span>";
-    button.onclick = () => {
+    pendingAdvance = () => {
+      pendingAdvance = null;
       if (counterProgress.index < counterexampleRounds().length - 1) counterProgress.skills = [false, false, false, false];
       counterProgress.index++;
       saveCounterProgress();
-      render();
     };
+    persistProgress(counterStorageKey(), { ...counterProgress, index: counterProgress.index + 1 });
+    button.onclick = () => { pendingAdvance?.(); render(); };
   }
 
   function lockCounterexampleEditor() {
+    counterDraftFields().forEach(field => { field.disabled = true; });
     ["#counter-start", "#counter-bug-output", "#counter-real-output", "#graph-add-node", "#graph-label", "#graph-color", "#graph-clear", "#graph-directed", "#graph-edge-width", "[data-counter-drawing]"].forEach(selector => {
       const element = $(selector);
       if (element) element.disabled = true;
@@ -969,22 +2051,79 @@
 
   function friendlyListMatches(value, expected) {
     try {
-      const actual = JSON.parse(String(value).trim());
+      const source = String(value).trim();
+      let actual;
+      try { actual = JSON.parse(source); }
+      catch {
+        const body = source.replace(/^\s*[\[{]\s*|\s*[\]}]\s*$/g, "");
+        actual = body ? body.split(/\s*[,;]\s*/).map(item => item.replace(/^['"]|['"]$/g, "")) : [];
+      }
       if (!Array.isArray(actual) || actual.some(item => typeof item !== "string" && typeof item !== "number")) return false;
-      const typedExpected = expected.map(item => /^-?\d+(?:\.\d+)?$/.test(String(item)) ? Number(item) : String(item));
-      return JSON.stringify(actual) === JSON.stringify(typedExpected);
+      const normalize = item => /^-?\d+(?:\.\d+)?$/.test(String(item).trim()) ? Number(item) : String(item).trim();
+      const typedExpected = expected.map(normalize).sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
+      return JSON.stringify(actual.map(normalize).sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }))) === JSON.stringify(typedExpected);
     } catch {
       return false;
     }
   }
 
-  function formatReachedOutput(output) {
-    const typed = output.map(item => /^-?\d+(?:\.\d+)?$/.test(String(item)) ? Number(item) : String(item));
-    return JSON.stringify(typed);
+  function counterOutputMatches(value, expected) {
+    if (Array.isArray(expected) && problem.id === "who-keeps-their-job") {
+      try { return JSON.stringify(JSON.parse(String(value)).map(Number)) === JSON.stringify(expected.map(Number)); } catch { return false; }
+    }
+    if (Array.isArray(expected) && ["iterator-output-sequence", "ordered-query-values"].includes(counterInputSpec().result)) {
+      try {
+        const actual = JSON.parse(String(value).trim());
+        if (counterInputSpec().resultConfig?.mode === "ratio") return Array.isArray(actual) && actual.length === expected.length && actual.every((item, index) => typeof item === "number" && Math.abs(item - expected[index]) <= 1e-9 * Math.max(1, Math.abs(expected[index])));
+        return JSON.stringify(actual) === JSON.stringify(expected);
+      }
+      catch { return false; }
+    }
+    if (Array.isArray(expected) && expected.some(Array.isArray)) {
+      try {
+        const actual = JSON.parse(String(value).trim());
+        if (["enumerated-paths", "component-bounding-boxes"].includes(counterInputSpec().result)) {
+          const sortPaths = paths => [...paths].sort((one, two) => JSON.stringify(one).localeCompare(JSON.stringify(two), undefined, { numeric: true }));
+          const normalize = item => Array.isArray(item) ? item.map(normalize) : /^-?\d+$/.test(String(item)) ? Number(item) : item;
+          return JSON.stringify(sortPaths(normalize(actual))) === JSON.stringify(sortPaths(normalize(expected)));
+        }
+        return JSON.stringify(actual) === JSON.stringify(expected);
+      } catch { return false; }
+    }
+    if (Array.isArray(expected)) return friendlyListMatches(value, expected);
+    const source = String(value).trim();
+    if (typeof expected === "number") return source !== "" && Number(source) === expected;
+    if (typeof expected === "boolean") return source.toLowerCase() === String(expected);
+    return source === String(expected);
+  }
+
+  function formatCounterOutput(output) {
+    if (!Array.isArray(output)) return String(output);
+    if (counterInputSpec().result === "transformed-grid") return JSON.stringify(output);
+    const typed = item => Array.isArray(item) ? item.map(typed) : /^-?\d+(?:\.\d+)?$/.test(String(item)) ? Number(item) : String(item);
+    return JSON.stringify(typed(output));
   }
 
   function jsonAnswerMatches(value, expectedJson) {
-    try { return JSON.stringify(canonicalJson(JSON.parse(String(value).trim()))) === JSON.stringify(canonicalJson(JSON.parse(String(expectedJson).trim()))); }
+    try {
+      const raw = String(value).trim();
+      const expected = JSON.parse(String(expectedJson).trim());
+      let parsed;
+      if (/^(true|false)$/i.test(raw)) parsed = raw.toLowerCase() === "true";
+      else {
+        try { parsed = JSON.parse(raw); }
+        catch { parsed = typeof expected === "string" ? raw : null; }
+      }
+      const unordered = new Set(["all-paths-from-source-to-target", "kill-process", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "find-all-groups-of-farmland"]);
+      const normalizePathIds = item => Array.isArray(item) ? item.map(normalizePathIds) : typeof item === "string" && /^\d+$/.test(item) ? Number(item) : item;
+      const normalize = value => {
+        const item = problem.id === "all-paths-from-source-to-target" ? normalizePathIds(value) : value;
+        return unordered.has(problem.id) && Array.isArray(item)
+          ? item.map(canonicalJson).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+          : canonicalJson(item);
+      };
+      return JSON.stringify(normalize(parsed)) === JSON.stringify(normalize(expected));
+    }
     catch { return false; }
   }
   function canonicalJson(value) {
@@ -1027,6 +2166,15 @@
       .map(task => [JSON.stringify([task.input, task.canvas]), task])).values()];
     const start = problemIndex % uniqueCandidates.length;
     const transfers = [...uniqueCandidates.slice(start), ...uniqueCandidates.slice(0, start)];
+    if (node.remedial?.canvas) {
+      const nodeTransferKey = JSON.stringify([node.remedial.input, node.remedial.canvas]);
+      const nodeTransferIndex = transfers.findIndex(task => JSON.stringify([task.input, task.canvas]) === nodeTransferKey);
+      if (nodeTransferIndex > 0) transfers.unshift(transfers.splice(nodeTransferIndex, 1)[0]);
+    }
+    const metadataIndex = transfers.findIndex((task, index) => index > 0 && task.canvas.edges.some(edge => edge.color || edge.label));
+    if (metadataIndex >= 0 && metadataIndex !== transfers.length - 1) {
+      [transfers[metadataIndex], transfers[transfers.length - 1]] = [transfers[transfers.length - 1], transfers[metadataIndex]];
+    }
     return { node, edge, transfers };
   }
 
@@ -1036,6 +2184,7 @@
 
   function structureTasks() {
     const source = structureSourceTasks();
+    if (Array.isArray(problem.lesson.structureTasks) && problem.lesson.structureTasks.length === 5) source.transfers = problem.lesson.structureTasks;
     return source.transfers.map((transfer, roundIndex) => ({
       kind: "claims-build",
       label: "GRAPH CHECK + BUILD",
@@ -1047,94 +2196,208 @@
   }
 
   function makeStructureClaims({ node, edge, transfer }, roundIndex) {
-    const seed = problemIndex + roundIndex * 17 + (structureProgress?.claimVariant || 0) * 79;
+    const seed = problemIndex + roundIndex * 17;
     const nodeRule = node.choices.find(choice => choice.id === node.correct);
     const edgeRule = edge.choices.find(choice => choice.id === edge.correct);
     const canvas = transfer.canvas;
-    const nodeCheck = nodeMembershipClaim(canvas, nodeRule, node, seed);
-    const relationCheck = directVsReachabilityClaim(canvas, edgeRule, edge, seed);
-    const localCheck = degreeClaim(canvas, seed);
-    const claims = [
-      {
+    const answerMasks = [3,5,6,9,10,12,17,18,20,24,7,11,13,14,19,21,22,25,26,28];
+    const answerMask = answerMasks[stableChoiceSlot(`${problem.id}:claims`, answerMasks.length)];
+    const expectedAnswer = Boolean(answerMask & (1 << roundIndex));
+    const claimFactories = [
+      () => {
+        const check = nodeMembershipClaim(canvas, nodeRule, node, seed);
+        if (expectedAnswer) {
+          check.statement = check.positiveStatement || `In this input, the rule “${check.statement.replace(/^In this input, /, "").replace(/\.$/, "")}” would choose the wrong nodes.`;
+          check.correct = true;
+        }
+        return {
         kind: "membership",
         label: "NODE CHECK",
         facet: "which nodes count",
         input: transfer.input,
-        statement: nodeCheck.statement,
-        correct: nodeCheck.correct,
-        feedback: nodeCheck.feedback,
-        misconception: nodeCheck.misconception
+          ...check
+        };
       },
-      {
+      () => ({
         kind: "direct-vs-reach",
         label: "DIRECT-EDGE CHECK",
         facet: "direct edges",
         input: transfer.input,
-        statement: relationCheck.statement,
-        correct: relationCheck.correct,
-        feedback: relationCheck.feedback
-      },
-      {
+        ...directVsReachabilityClaim(canvas, edgeRule, edge, seed, expectedAnswer)
+      }),
+      () => ({
         kind: "local-degree",
         label: "LOCAL-STRUCTURE CHECK",
         facet: "local degree",
         input: transfer.input,
-        statement: localCheck.statement,
-        correct: localCheck.correct,
-        feedback: localCheck.feedback
+        ...degreeClaim(canvas, seed, expectedAnswer)
+      }),
+      () => ({
+        kind: "direction",
+        label: "DIRECTION CHECK",
+        facet: "edge direction",
+        input: transfer.input,
+        ...directionClaim(canvas, seed, expectedAnswer)
+      }),
+      () => {
+        const metadata = edgeMetadataClaim(canvas, seed);
+        return {
+          kind: metadata ? "edge-metadata" : "reachable-count",
+          label: metadata ? "EDGE-DETAIL CHECK" : "SEARCH-BOUNDARY CHECK",
+          facet: metadata ? "edge details" : "reachable nodes",
+          input: transfer.input,
+          ...(metadata ? edgeMetadataClaim(canvas, seed, expectedAnswer) : structureBoundaryClaim(transfer, seed, expectedAnswer))
+        };
       }
     ];
-    const shift = stableChoiceSlot(`${problem.id}:${seed}`, claims.length);
-    return [...claims.slice(shift), ...claims.slice(0, shift)];
+    const claim = claimFactories[roundIndex % claimFactories.length]();
+    if (problem.id === "gas-pocket-survey" || problem.id === "minesweeper") {
+      claim.statement = `In the position-adjacency graph: ${claim.statement}`;
+      claim.feedback += " These edges show neighboring cells. A reveal search still stops at gas or a numbered cell.";
+    }
+    if (["flooded-campsite-trails", "reachable-nodes-with-restrictions"].includes(problem.id) && roundIndex === 3) {
+      claim.statement = claim.statement.replace(/connection works/g, "physical trail is drawn");
+      claim.feedback = problem.id === "flooded-campsite-trails" ? "Physical trails are two-way. The hiker still cannot enter a flooded campsite." : "The input connection is two-way. A legal search still cannot enter a restricted node.";
+    }
+    return [claim];
   }
 
   function nodeMembershipClaim(canvas, nodeRule, nodeTask, seed) {
+    const authored = problem.graphRules.membershipClaim;
+    if (authored) return {
+      statement: `In this input, ${authored.no[0].toLowerCase() + authored.no.slice(1)}`,
+      positiveStatement: `In this input, ${authored.yes[0].toLowerCase() + authored.yes.slice(1)}`,
+      correct: false, feedback: nodeRule.feedback || nodeRule.label,
+      misconception: authored.misconception
+    };
     const misconceptions = nodeTask.choices.filter(choice => choice.id !== nodeTask.correct && choice.misconception);
-    const mistakenRule = misconceptions[seed % misconceptions.length];
-    const exposeAsWarning = stableChoiceSlot(`${problem.id}:membership:${seed}`, 2) === 0;
-    const correction = `${stripVerdictCue(mistakenRule.feedback)} Correct node rule: ${nodeRule.label}`;
-    return exposeAsWarning ? {
-      statement: `It would be a mistake to use this node rule: “${mistakenRule.label}”`,
-      correct: true,
-      feedback: correction,
-      misconception: mistakenRule.misconception
-    } : {
-      statement: `Use this node rule for the graph: “${mistakenRule.label}”`,
+    const preferred = STEP3_MEMBERSHIP_OVERRIDES[problem.id];
+    const mistakenRule = misconceptions.find(choice => choice.misconception === preferred) || misconceptions[seed % misconceptions.length];
+    const misconception = mistakenRule.misconception;
+    const candidate = canvas.nodes[seed % Math.max(canvas.nodes.length, 1)];
+    const nextCandidate = canvas.nodes[(seed + 1) % Math.max(canvas.nodes.length, 1)];
+    const words = value => value.replace(/-/g, " ").replace(/\bnodes?\b/g, "nodes");
+    let statement;
+    if (/museum-vault-keyring/.test(problem.id) && misconception === "key-instance-as-node") {
+      statement = "In this input, each key should become a node instead of each vault.";
+    } else if (misconception === "model-obstacles-only") {
+      statement = "In this input, only flooded campsites should become nodes.";
+    } else if (problem.id === "runes-on-the-castle-door" && misconception === "leaves-only") {
+      statement = "In this input, only complete-code leaves should become nodes.";
+    } else if (problem.id === "path-sum" && misconception === "counts-only-leaf") {
+      statement = "In this input, only leaf nodes should belong to the graph.";
+    } else if (problem.id === "battleships-in-a-board" && misconception === "include-water-nodes") {
+      statement = "In this input, each water cell should also become a node.";
+    } else if (problem.id === "kill-process" && misconception === "include-fake-root") {
+      statement = "In this input, a made-up root process should be added as a node.";
+    } else if (problem.id === "who-keeps-their-job" && misconception === "omit-leaves") {
+      statement = "In this input, employees with no direct reports should be left out.";
+    } else if (misconception === "uses-only-invalid-cells") {
+      statement = "In this input, only cells that fail the sub-island test should become nodes.";
+    } else if (misconception === "hides-restriction-boundaries") {
+      statement = "In this input, restricted nodes should be hidden instead of drawn.";
+    } else if (misconception === "duplicate-station-by-color") {
+      statement = "In this input, each station should get a separate node for each track color.";
+    } else if (misconception === "duplicate-adjacency-nodes") {
+      statement = "In this input, each repeated adjacency reference should create another copy of that node.";
+    } else if (misconception === "product-as-node") {
+      statement = "In this input, the final weighted sum should become its own node.";
+    } else if (misconception === "reports-as-weights") {
+      statement = "In this input, direct reports should become edge weights instead of employee nodes.";
+    } else if (misconception === "omit-linear-camps") {
+      statement = "A camp with one incoming and one outgoing trail can be left out of the graph.";
+    } else if (/^(?:omit|drop|drops|exclude|remove|removes)-/.test(misconception)) {
+      let object = words(misconception.replace(/^(?:omit|drop|drops|exclude|remove|removes)-/, ""));
+      if (object === "isolated") object = "isolated nodes";
+      statement = `In this input, ${object} should be left out.`;
+    } else if (/^only-/.test(misconception)) {
+      statement = `In this input, only ${words(misconception.replace(/^only-/, ""))} should become nodes.`;
+    } else if (/^(?:include|includes)-/.test(misconception)) {
+      statement = `In this input, ${words(misconception.replace(/^(?:include|includes)-/, ""))} should be added as nodes.`;
+    } else if (/does-not-count-arrays/.test(misconception)) {
+      statement = "In this input, array containers should be left out.";
+    } else if (/does-not-count-values/.test(misconception)) {
+      statement = "In this input, plain values should be left out.";
+    } else if (/counts-duplicates/.test(misconception)) {
+      statement = "In this input, equal-looking values should be merged into one node.";
+    } else if (/counts-only-leaves/.test(misconception)) {
+      statement = "In this input, only leaf nodes should belong to the graph.";
+    } else if (/forget-prefix/.test(misconception)) {
+      statement = "In this input, partial prefixes should be left out of the state graph.";
+    } else if (/filter|pre-filter/.test(misconception)) {
+      statement = "In this input, only objects that pass the final test should become nodes.";
+    } else if (/focuses-only-on-blockers/.test(misconception)) {
+      statement = "In this input, only blocked objects should become nodes.";
+    } else if (/split-bomb-coordinates/.test(misconception)) {
+      statement = "In this input, each number inside a bomb coordinate should become its own node.";
+    } else if (/fake-root|fake-parent/.test(misconception)) {
+      statement = "In this input, a made-up root node should be added.";
+    } else if (/wall|water|zero-passable|empty-passable/.test(misconception)) {
+      const object = /wall/.test(misconception) ? "wall square" : /water/.test(misconception) ? "water square" : "blocked square";
+      statement = `In this input, each ${object} should become a graph node.`;
+    } else if (/bounding-box/.test(misconception)) {
+      statement = "In this input, every position inside a group's bounding box should become a node.";
+    } else if (/matrix-entr|adjacency-(?:array|list)|rows-as-nodes|range-as-node|scan-starts-as-nodes|traversal-event-as-node/.test(misconception)) {
+      const object = /matrix/.test(misconception) ? "matrix entry" : /row/.test(misconception) ? "input row" : /range/.test(misconception) ? "number in the allowed range" : /scan/.test(misconception) ? "search starting point" : /traversal/.test(misconception) ? "search event" : "adjacency-list container";
+      statement = `In this input, each ${object} should become a separate node.`;
+    } else if (/letter-as-node|key-as-node|key-instance-as-node|digit-only-node|gas-only|capacity-as-state|dial-as-state|time-as-node|weight-as-node|score-as-node|depth-as-node|color-as-node/.test(misconception)) {
+      const object = /letter/.test(misconception) ? "letter" : /key/.test(misconception) ? "key" : /digit/.test(misconception) ? "digit" : /gas/.test(misconception) ? "gas amount" : /capacity/.test(misconception) ? "jug capacity" : /dial/.test(misconception) ? "single dial value" : /time/.test(misconception) ? "time value" : /weight/.test(misconception) ? "weight" : /score/.test(misconception) ? "score" : /depth/.test(misconception) ? "depth" : "color";
+      statement = `In this input, each ${object} should become a separate node.`;
+    } else if (/swap-node-edge|swaps-nodes-and-edges|edge-as-node|pair-as-node|pairs-as-nodes|road-as-node|street-as-node|pipe-as-node|equation-as-node|dislike-pair-as-node|swap-pair-as-node/.test(misconception)) {
+      statement = "In this input, each listed relationship should become a node instead of an edge.";
+    } else if (/collapse-component|collapses-pair|collapses-components/.test(misconception) && canvas.edges.length) {
+      const pair = canvas.edges[0];
+      const labels = Object.fromEntries(canvas.nodes.map(node => [String(node.id), String(node.label)]));
+      statement = `In this input, nodes ${labels[String(pair.from)]} and ${labels[String(pair.to)]} should be merged.`;
+    } else if (/merge|collapse|deduplic|one-per|groups-as-nodes|components-as-nodes/.test(misconception) && candidate && nextCandidate && candidate !== nextCandidate) {
+      statement = `In this input, nodes ${candidate.label} and ${nextCandidate.label} should be merged.`;
+    } else if (/duplicate|copies|color-groups/.test(misconception) && candidate) {
+      statement = `In this input, node ${candidate.label} should appear more than once.`;
+    } else if (/path|route|answer|result|output|preselect|precompute|component|region|cluster|province|island|boat|collection|department|edge-as-node|pair-as-node|road-as-node|street-as-node|pipe-as-node|equation-as-node|product-as-node/.test(misconception)) {
+      const object = /path|route/.test(misconception) ? "each possible path" : /component|region|cluster|province|island|boat/.test(misconception) ? "each connected group" : /edge|pair|road|street|pipe|equation/.test(misconception) ? "each listed relationship" : "the final answer";
+      statement = `In this input, ${object} should become a separate node.`;
+    } else if (/value|depth|level|status|color|time|weight|capacity|score/.test(misconception)) {
+      statement = "In this input, each distinct property value should become a separate node.";
+    } else {
+      statement = `In this input, the ${words(misconception)} rule should decide what becomes a node.`;
+    }
+    return {
+      statement,
       correct: false,
-      feedback: correction,
-      misconception: mistakenRule.misconception
+      feedback: `The exact node rule is: ${nodeRule.label}`,
+      misconception
     };
   }
 
-  function directVsReachabilityClaim(canvas, edgeRule, edgeTask, seed) {
+  function directVsReachabilityClaim(canvas, edgeRule, edgeTask, seed, forcedCorrect = null) {
     const shortcut = findMissingShortcut(canvas, seed);
-    const truthful = stableChoiceSlot(`${problem.id}:relation:${seed}`, 2) === 0;
+    const truthful = forcedCorrect ?? stableChoiceSlot(`${problem.id}:relation:${seed}:direct`, 2) === 0;
     if (shortcut) return truthful ? {
-      statement: `${shortcut.from} can reach ${shortcut.to} through ${shortcut.middle}, but the graph still has no direct ${shortcut.from}${shortcut.arrow}${shortcut.to} edge.`,
+      statement: `${shortcut.from} reaches ${shortcut.to} through ${shortcut.middle}, without a direct ${shortcut.from}${shortcut.arrow}${shortcut.to} edge.`,
       correct: true,
-      feedback: `Right. A multi-step route through ${shortcut.middle} creates reachability, not a new direct edge.`
+      feedback: `A multi-step route through ${shortcut.middle} creates reachability, not a new direct edge.`
     } : { ...shortcut, correct: false };
     const edge = canvas.edges[seed % Math.max(canvas.edges.length, 1)];
     if (!edge) {
       const [one, two] = canvas.nodes;
       const selfRelation = `${one?.label || "node"}${canvas.directed ? "→" : "—"}${one?.label || "node"}`;
       if (one && !two) return truthful ? {
-        statement: `${one.label} can reach itself without using an edge, but the graph still has no direct ${selfRelation} edge.`,
+        statement: `A search starting at ${one.label} includes ${one.label} immediately, but the graph has no direct ${selfRelation} edge.`,
         correct: true,
-        feedback: `Correct. A zero-step path makes ${one.label} reachable from itself; it does not invent a self-edge.`
+        feedback: `The starting node is reached before any edge is used. That does not create a self-edge.`
       } : {
-        statement: `Because ${one.label} can reach itself, the graph should contain a direct ${selfRelation} edge.`,
+        statement: `Because a search starts with ${one.label} already reached, the graph should contain a direct ${selfRelation} edge.`,
         correct: false,
-        feedback: `Self-reachability can use zero edges. The input does not define a direct ${selfRelation} self-edge.`
+        feedback: `A start node needs no edge to be reached. The input does not define a direct ${selfRelation} self-edge.`
       };
       if (one && two) return truthful ? {
         statement: `There is no direct edge between ${one.label} and ${two.label}; merely naming both nodes does not make them reachable.`,
         correct: true,
-        feedback: `Correct. Node membership alone creates neither a direct edge nor a route.`
+        feedback: `Node membership alone creates neither a direct edge nor a route.`
       } : {
-        statement: `${one.label} can reach ${two.label}, so the graph should contain a direct edge between them.`,
+        statement: `${one.label} and ${two.label} are separate nodes with no route between them, so the graph should still contain a direct edge between them.`,
         correct: false,
-        feedback: `Reachability never creates a direct edge. This input lists no direct relation between ${one.label} and ${two.label}.`
+        feedback: `There is no direct relation between ${one.label} and ${two.label}, so no edge belongs between them.`
       };
       return { statement: edgeRule.label, correct: true, feedback: stripVerdictCue(edgeTask.why || edgeRule.feedback) };
     }
@@ -1143,7 +2406,7 @@
     return truthful ? {
       statement: `${labels[String(edge.from)]} and ${labels[String(edge.to)]} are directly connected, not merely reachable through a longer route.`,
       correct: true,
-      feedback: `Correct. The mini-example lists ${labels[String(edge.from)]}${arrow}${labels[String(edge.to)]} as one direct edge.`
+      feedback: `The mini-example has ${labels[String(edge.from)]}${arrow}${labels[String(edge.to)]} as one direct edge.`
     } : {
       statement: `${labels[String(edge.from)]} can reach ${labels[String(edge.to)]}, but there is no direct ${labels[String(edge.from)]}${arrow}${labels[String(edge.to)]} edge.`,
       correct: false,
@@ -1151,11 +2414,16 @@
     };
   }
 
+  function structureNodeBlocked(node) {
+    return Boolean(node?.blocked || (["reachable-nodes-with-restrictions", "flooded-campsite-trails"].includes(problem.id) && ["red", "blue"].includes(node?.color)));
+  }
+
   function findMissingShortcut(canvas, seed = 0) {
     const labels = Object.fromEntries(canvas.nodes.map(node => [String(node.id), String(node.label)]));
     const adjacency = Object.fromEntries(canvas.nodes.map(node => [String(node.id), new Set()]));
     for (const edge of canvas.edges) {
       const from = String(edge.from), to = String(edge.to);
+      if (structureNodeBlocked(canvas.nodes.find(node => String(node.id) === from)) || structureNodeBlocked(canvas.nodes.find(node => String(node.id) === to))) continue;
       adjacency[from]?.add(to);
       if (!canvas.directed) adjacency[to]?.add(from);
     }
@@ -1165,7 +2433,7 @@
       const arrow = canvas.directed ? "→" : "—";
       shortcuts.push({
         from: labels[from], middle: labels[middle], to: labels[to], arrow,
-        statement: `The correct graph has ${labels[from]}${arrow}${labels[middle]} and ${labels[middle]}${arrow}${labels[to]}, so it should also contain a direct ${labels[from]}${arrow}${labels[to]} edge.`,
+        statement: `${labels[from]} reaches ${labels[to]} through ${labels[middle]}, so add a direct ${labels[from]}${arrow}${labels[to]} edge.`,
         feedback: `Two direct edges through ${labels[middle]} do not create a new shortcut. Only one-step relations defined by the problem become edges.`
       });
     }
@@ -1184,7 +2452,7 @@
     };
   }
 
-  function degreeClaim(canvas, seed) {
+  function degreeClaim(canvas, seed, forcedCorrect = null) {
     const labels = Object.fromEntries(canvas.nodes.map(node => [String(node.id), String(node.label)]));
     const adjacency = Object.fromEntries(canvas.nodes.map(node => [String(node.id), new Set()]));
     for (const edge of canvas.edges) {
@@ -1195,25 +2463,27 @@
     const counts = Object.entries(adjacency).map(([id, neighbors]) => ({ label: labels[id], count: neighbors.size }));
     if (!counts.length) return { statement: "This mini-example has no nodes.", correct: true, feedback: "The input produces an empty graph." };
     const chosen = counts[seed % counts.length];
-    const correct = stableChoiceSlot(`${problem.id}:degree:${seed}`, 2) === 0;
+    const correct = forcedCorrect ?? stableChoiceSlot(`${problem.id}:degree:${seed}:degree-fact`, 2) === 0;
     const target = correct ? chosen.count : chosen.count > 0 && seed % 2 ? chosen.count - 1 : chosen.count + 1;
-    const noun = canvas.directed
+    const noun = problem.id === "flooded-campsite-trails"
+      ? `physical trail neighbor${target === 1 ? "" : "s"}`
+      : canvas.directed
       ? `outgoing direct edge${target === 1 ? "" : "s"}`
       : `direct neighbor${target === 1 ? "" : "s"}`;
     return {
       statement: `${chosen.label} has exactly ${target} ${noun}.`,
       correct,
-      feedback: `${chosen.label} has ${chosen.count} ${canvas.directed ? `outgoing direct edge${chosen.count === 1 ? "" : "s"}` : `direct neighbor${chosen.count === 1 ? "" : "s"}`}.`
+      feedback: `${chosen.label} has ${chosen.count} ${problem.id === "flooded-campsite-trails" ? `physical trail neighbor${chosen.count === 1 ? "" : "s"}; flooding blocks travel but does not erase the drawn trail` : canvas.directed ? `outgoing direct edge${chosen.count === 1 ? "" : "s"}` : `direct neighbor${chosen.count === 1 ? "" : "s"}`}.`
     };
   }
 
-  function edgeMetadataClaim(canvas, seed) {
+  function edgeMetadataClaim(canvas, seed, forcedCorrect = null) {
     const candidates = canvas.edges.filter(edge => edge.color || edge.label);
     if (!candidates.length) return null;
     const labels = Object.fromEntries(canvas.nodes.map(node => [String(node.id), String(node.label)]));
     const edge = candidates[seed % candidates.length];
     const arrow = canvas.directed ? "→" : "—";
-    const correct = seed % 2 === 0;
+    const correct = forcedCorrect ?? seed % 2 === 0;
     if (edge.color) {
       const actual = String(edge.color);
       const claimed = correct ? actual : actual.toLowerCase() === "red" ? "blue" : "red";
@@ -1233,6 +2503,102 @@
         : `The direct edge ${labels[String(edge.from)]}${arrow}${labels[String(edge.to)]} has no label or weight.`,
       correct,
       feedback: `That edge's input label or weight is ${actual}.`
+    };
+  }
+
+  function directionClaim(canvas, seed, forcedCorrect = null) {
+    const correct = forcedCorrect ?? seed % 2 === 0;
+    const edge = canvas.edges[seed % Math.max(canvas.edges.length, 1)];
+    if (!edge) return {
+      statement: `This input creates a ${correct === canvas.directed ? "directed" : "two-way"} graph.`,
+      correct,
+      feedback: `The graph is ${canvas.directed ? "directed" : "two-way"}, even though this example has no edges.`
+    };
+    const labels = Object.fromEntries(canvas.nodes.map(node => [String(node.id), String(node.label)]));
+    const from = labels[String(edge.from)], to = labels[String(edge.to)];
+    if (!canvas.directed) return {
+      statement: correct
+        ? `The direct ${from}—${to} connection works both ways.`
+        : `The direct ${from}—${to} connection works only from ${from} to ${to}.`,
+      correct,
+      feedback: `This graph is undirected, so ${from}—${to} works both ways.`
+    };
+    const reverseExists = canvas.edges.some(candidate => String(candidate.from) === String(edge.to) && String(candidate.to) === String(edge.from));
+    return {
+      statement: correct
+        ? `The input creates the arrow ${from}→${to}.`
+        : reverseExists
+          ? `The arrows ${from}→${to} and ${to}→${from} can be replaced by one undirected edge without changing the exact graph.`
+          : `The input creates the reverse arrow ${to}→${from}.`,
+      correct,
+      feedback: `The input creates ${from}→${to}. Direction matters.`
+    };
+  }
+
+  function structureBoundaryClaim(task, seed, correct) {
+    const canvas = task.canvas;
+    if (problem.id === "runes-on-the-castle-door") {
+      const match = task.input.match(/dials\s*=\s*(\[[^\]]*\])/);
+      const dials = match ? JSON.parse(match[1]) : [];
+      const outgoing = new Set(canvas.edges.map(edge => String(edge.from)));
+      const prefix = canvas.nodes.find(node => !outgoing.has(String(node.id)) && !["start", "empty prefix", "ε"].includes(node.label) && node.label.length < dials.length);
+      if (prefix) return {
+        statement: `The dead-end prefix ${prefix.label} ${correct ? "is still incomplete" : "is a complete code"}.`, correct,
+        feedback: `${prefix.label} has ${prefix.label.length} letters, but there are ${dials.length} dials. Reaching a dead end does not fill the remaining dials.`
+      };
+    }
+    if (problem.id === "counting-docked-boats") {
+      const match = task.input.match(/marina\s*=\s*(\[[^\]]*\])/);
+      const rows = match ? JSON.parse(match[1]) : [];
+      if (rows.length) {
+        const onBorder = node => { const [r, c] = String(node.label).match(/\d+/g).map(Number); return r === 0 || c === 0 || r === rows.length - 1 || c === rows[0].length - 1; };
+        const neighbors = new Map(canvas.nodes.map(node => [String(node.id), []]));
+        for (const edge of canvas.edges) { neighbors.get(String(edge.from)).push(String(edge.to)); neighbors.get(String(edge.to)).push(String(edge.from)); }
+        const groups = [], seen = new Set();
+        for (const node of canvas.nodes) if (!seen.has(String(node.id))) {
+          const queue = [String(node.id)]; seen.add(String(node.id));
+          for (const id of queue) for (const next of neighbors.get(id)) if (!seen.has(next)) { seen.add(next); queue.push(next); }
+          groups.push(queue.map(id => canvas.nodes.find(node => String(node.id) === id)));
+        }
+        const group = groups.find(group => !group.some(onBorder)) || groups[0];
+        if (group) {
+          const docked = group.some(onBorder), claimDocked = correct ? docked : !docked;
+          return { statement: `The boat containing ${group[0].label} ${claimDocked ? "can" : "cannot"} reach a border cell through its own boat cells.`, correct,
+            feedback: docked ? "This connected boat touches the marina border, so it is docked." : "Every cell in this boat stays inside the marina border. It is one boat, but it is not docked." };
+        }
+      }
+    }
+    return reachableCountClaim(canvas, seed, correct);
+  }
+
+  function reachableCountClaim(canvas, seed, correct) {
+    if (!canvas.nodes.length) return {
+      statement: `A search in this graph reaches exactly ${correct ? 0 : 1} nodes.`,
+      correct,
+      feedback: "The input creates an empty graph, so a search reaches 0 nodes."
+    };
+    const adjacency = Object.fromEntries(canvas.nodes.map(node => [String(node.id), new Set()]));
+    const blocked = new Set(canvas.nodes.filter(structureNodeBlocked).map(node => String(node.id)));
+    for (const edge of canvas.edges) {
+      const from = String(edge.from), to = String(edge.to);
+      if (blocked.has(from) || blocked.has(to)) continue;
+      adjacency[from]?.add(to);
+      if (!canvas.directed) adjacency[to]?.add(from);
+    }
+    const reachable = start => {
+      if (blocked.has(start)) return 0;
+      const seen = new Set([start]), queue = [start];
+      while (queue.length) for (const next of adjacency[queue.shift()] || []) if (!seen.has(next)) { seen.add(next); queue.push(next); }
+      return seen.size;
+    };
+    const choices = canvas.nodes.map(node => ({ label: String(node.label), count: reachable(String(node.id)) }));
+    choices.sort((one, two) => two.count - one.count || one.label.localeCompare(two.label, undefined, { numeric: true }));
+    const chosen = choices[seed % Math.min(choices.length, 3)];
+    const claimed = correct ? chosen.count : chosen.count === canvas.nodes.length ? Math.max(0, chosen.count - 1) : chosen.count + 1;
+    return {
+      statement: `Starting at ${chosen.label}, ${blocked.size ? "a search that cannot enter blocked nodes" : "a graph search"} reaches exactly ${claimed} node${claimed === 1 ? "" : "s"}.`,
+      correct,
+      feedback: `${blocked.size ? "Skip blocked nodes, including a blocked start." : "Include the start."} Follow the direct edges in their allowed direction. The search reaches ${chosen.count} node${chosen.count === 1 ? "" : "s"}.`
     };
   }
 
@@ -1319,7 +2685,11 @@
 
   function renderStructureClaims(round, roundIndex, total) {
     document.body.classList.add("structure-transfer");
-    window.DFS_GRAPH?.setContext(`${problem.id}:structure-transfer:${roundIndex}`, structureProgress.claimVariant || 0);
+    window.DFS_GRAPH?.setContext(`${problem.id}:structure-transfer:${roundIndex}`, 0);
+    if (structureRetryDrawing) {
+      window.DFS_GRAPH?.setSnapshot(structureRetryDrawing);
+      structureRetryDrawing = null;
+    }
     unlockCounterexampleEditor();
     $("#graph-lab").hidden = false;
     $("#graph-lab-title").textContent = "Build the correct graph for this mini-example";
@@ -1339,11 +2709,11 @@
         ${renderNodeLabelGuide(task)}
         <div class="structure-claim-list">${claimCards}</div>
         <div id="feedback-slot" role="status" aria-live="polite"></div>
-        ${compact ? '<div class="challenge-actions"><button id="structure-check" class="primary-btn" disabled>Check graph + answers <span>→</span></button></div>' : '<div class="challenge-actions"><span class="microcopy">Answer all three claims, then build the graph below.</span><a class="ghost-btn link-button" href="#graph-lab">Go to graph ↓</a></div>'}
+        ${compact ? '<div class="challenge-actions"><button id="structure-check" class="primary-btn" disabled>Check graph + answer <span>→</span></button></div>' : '<div class="challenge-actions"><span class="microcopy">Answer the claim, then build the graph below.</span><a class="ghost-btn link-button" href="#graph-lab">Go to graph ↓</a></div>'}
       </div>`;
     const graphActions = $("#graph-lab-actions");
     graphActions.hidden = compact;
-    graphActions.innerHTML = compact ? "" : `<span class="microcopy">When the claims and graph are ready:</span><button id="structure-check" class="primary-btn" disabled>Check claims + graph <span>→</span></button>`;
+    graphActions.innerHTML = compact ? "" : `<span class="microcopy">When the answer and graph are ready:</span><button id="structure-check" class="primary-btn" disabled>Check answer + graph <span>→</span></button>`;
     if (compact) {
       $("#graph-lab-title").textContent = "1 · Draw the graph";
       const workspace = document.createElement("div");
@@ -1351,10 +2721,11 @@
       ($(".node-label-guide") || $(".structure-mini-example")).after(workspace);
       workspace.append($("#graph-lab"), $(".structure-claim-list"));
       counterGraphChangeHandler = () => {
-        const started = Boolean(window.DFS_GRAPH?.getSnapshot()?.nodes?.length);
+        const started = task.canvas.nodes.length === 0 || Boolean(window.DFS_GRAPH?.getSnapshot()?.nodes?.length);
         $$('[data-claim-index]').forEach(button => { if (answers[Number(button.dataset.claimIndex)] === null) button.disabled = !started; });
       };
       window.addEventListener("dfs-graph-change", counterGraphChangeHandler);
+      counterGraphChangeHandler();
     }
     const update = () => { $("#structure-check").disabled = answers.some(answer => answer === null); };
     $$('[data-claim-index]').forEach(button => { button.onclick = () => {
@@ -1364,16 +2735,17 @@
       update();
     }; });
     $("#structure-check").onclick = () => checkStructureClaims(namedClaims, answers, task, roundIndex, total);
+    restoreFormDraft(`structure:${roundIndex}`);
     focusPrompt();
     $(".test-pane").scrollTop = 0;
   }
 
   function structureFrame() {
     return [
-      { label: "MODEL COURT", heading: "Judge these three graph claims together.", role: "CLAIM" },
-      { label: "PEER REVIEW", heading: "Check three classmates' notes against one exact graph.", role: "REVIEW" },
+      { label: "MODEL COURT", heading: "Judge this graph claim.", role: "CLAIM" },
+      { label: "PEER REVIEW", heading: "Check this note against the exact graph.", role: "REVIEW" },
       { label: "GRAPH FACT-CHECK", heading: "Decide which statements survive the picture.", role: "NOTE" },
-      { label: "WHITEBOARD CHECK", heading: "Test membership, direct edges, and local degree.", role: "IDEA" }
+      { label: "WHITEBOARD CHECK", heading: "Test one important graph idea.", role: "IDEA" }
     ][problemIndex % 4];
   }
 
@@ -1383,24 +2755,24 @@
     const graph = gradeCanvas(task.canvas, window.DFS_GRAPH?.getSnapshot() || { nodes: [], edges: [], directed: false });
     const graphChecks = [
       ["Every exact node is drawn", graph.nodes],
-      ["Every exact direct edge is drawn", graph.edges],
+      [graph.nodes ? "Every exact direct edge is drawn" : "Check node names before the direct edges", graph.nodes ? graph.edges : null],
       ["Edge direction matches", graph.direction],
-      ["Edge colors match the input", graph.colors],
+      ["Graph colors match the input", graph.colors],
       ["Edge labels or weights match the input", graph.labels]
-    ].filter(([label]) => !label.startsWith("Edge colors") || task.canvas.edges.some(edge => edge.color))
+    ].filter(([label]) => !label.startsWith("Graph colors") || task.canvas.edges.some(edge => edge.color) || task.canvas.nodes.some(node => node.color || node.blocked))
       .filter(([label]) => !label.startsWith("Edge labels") || task.canvas.edges.some(edge => edge.label));
     const graphPassed = graphChecks.every(([, pass]) => pass);
     if (missed.length) {
       structureProgress.mistakes++;
       saveStructureProgress();
       updateStructureProgress(structureProgress.index, structureTasks());
-      $("#feedback-slot").innerHTML = `<div class="feedback"><b>Review ${missed.length === 1 ? "this claim" : "these claims"}, then try another check.</b><ul class="feedback-checklist">${missed.map(claim => `<li class="failed"><span>×</span>${formatText(claim.feedback)}</li>`).join("")}</ul></div>`;
+      $("#feedback-slot").innerHTML = `<div class="feedback"><b>Review ${missed.length === 1 ? "this claim" : "these claims"}, then try again.</b><ul class="feedback-checklist">${missed.map(claim => `<li class="failed"><span>×</span>${formatText(stripVerdictCue(claim.feedback))}</li>`).join("")}</ul></div>`;
       $$('[data-claim-index]').forEach(item => { item.disabled = true; });
       const button = $("#structure-check");
       button.disabled = false;
-      button.innerHTML = "Try another check <span>→</span>";
+      button.innerHTML = "Try this check again <span>→</span>";
       button.onclick = () => {
-        structureProgress.claimVariant++;
+        structureRetryDrawing = window.DFS_GRAPH?.getSnapshot() || null;
         saveStructureProgress();
         render();
       };
@@ -1414,18 +2786,22 @@
       structureProgress.mistakes++;
       saveStructureProgress();
       updateStructureProgress(structureProgress.index, structureTasks());
-      $("#feedback-slot").innerHTML = `<div class="feedback"><b>Your three answers are right. Fix the graph below.</b><ul class="feedback-checklist">${graphChecks.map(([label, pass]) => `<li class="${pass ? "passed" : "failed"}"><span>${pass ? "✓" : "×"}</span>${esc(label)}</li>`).join("")}</ul>${gridGraphScheme()}</div>`;
+      $("#feedback-slot").innerHTML = `<div class="feedback"><b>Your answer is right. Fix the graph below.</b><ul class="feedback-checklist">${graphChecks.map(([label, pass]) => `<li class="${pass == null ? "waiting" : pass ? "passed" : "failed"}"><span>${pass == null ? "•" : pass ? "✓" : "×"}</span>${esc(label)}</li>`).join("")}</ul>${graph.hint ? `<p class="feedback-next">${esc(graph.hint)}</p>` : ""}</div>`;
       $("#feedback-slot").scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     answered = true;
+    $("#next-question-btn").hidden = true;
     lockCounterexampleEditor();
     $$('[data-claim-index]').forEach(item => { item.disabled = true; });
-    $("#feedback-slot").innerHTML = `<div class="feedback good court-ruling"><b>Claims and graph are correct.</b><div class="feedback-why">Your nodes, direct edges, direction, and edge details all match the mini-example.</div></div>`;
+    $("#feedback-slot").innerHTML = `<div class="feedback good court-ruling"><b>Answer and graph are correct.</b><div class="feedback-why">Your nodes, direct edges, direction, and edge details all match the mini-example.</div></div>`;
     const button = $("#structure-check");
     button.disabled = false;
     button.innerHTML = roundIndex + 1 === total ? "Finish Step 3 <span>→</span>" : "Next question <span>→</span>";
-    button.onclick = advanceStructure;
+    updateStructureProgress(structureProgress.index + 1, structureTasks());
+    persistProgress(structureStorageKey(), { ...structureProgress, index: structureProgress.index + 1 });
+    pendingAdvance = () => { pendingAdvance = null; structureProgress.index++; saveStructureProgress(); };
+    button.onclick = () => { pendingAdvance?.(); render(); };
   }
 
   function stripVerdictCue(value) { return String(value || "").replace(/^(correct|right)\.\s*/i, ""); }
@@ -1453,7 +2829,7 @@
     const skipped = structureProgress.skipped.length;
     const total = structureTasks().length;
     const passed = total - skipped;
-    $("#challenge").innerHTML = `<div class="challenge-body victory structure-victory${skipped ? " has-skips" : ""}"><div class="stamp">${skipped ? "Finished" : "Defined"}</div><h3>${skipped ? "Step 3 finished." : "Step 3 complete."}</h3><p>${skipped ? `${passed} passed · ${skipped} skipped.` : `You built ${total} different graphs and checked ${total * 3} useful claims.`}</p><div class="completion-actions"><button id="start-reasoning" class="primary-btn">Start Step 4 <span>→</span></button><a class="ghost-btn link-button" href="/">Choose another problem</a><button id="restart-structure" class="ghost-btn">Practice Step 3 again</button></div></div>`;
+    $("#challenge").innerHTML = `<div class="challenge-body victory structure-victory${skipped ? " has-skips" : ""}"><div class="stamp">${skipped ? "Finished" : "Defined"}</div><h3>${skipped ? "Step 3 finished." : "Step 3 complete."}</h3><p>${skipped ? `${passed} passed · ${skipped} skipped.` : `You built ${total} different graphs and answered ${total} useful questions.`}</p><div class="completion-actions"><button id="start-reasoning" class="primary-btn">Start Step 4 <span>→</span></button><a class="ghost-btn link-button" href="/">Choose another problem</a><button id="restart-structure" class="ghost-btn">Practice Step 3 again</button></div></div>`;
     $("#start-reasoning").onclick = () => switchSection(4);
     $("#restart-structure").onclick = resetStructure;
   }
@@ -1475,14 +2851,15 @@
     }
     if (done >= rounds.length) return renderReasoningComplete();
     const round = rounds[done];
-    const name = characterName(50);
+    const name = characterName(50 + done);
     const diagnoses = arrangeChoices(round.diagnoses, round.correctDiagnosis, round.answerSlot);
     const displayInput = formatReasoningInput(round.input);
     const frame = reasoningFrame();
     const compact = true;
-    const outputField = `<label class="counter-field reasoning-output"><span>2 · Predict the exact returned value</span><textarea id="reasoning-output" rows="3" autocomplete="off" spellcheck="false" placeholder="Example: false, 3, or [1, 2]" ${compact ? "disabled" : ""}></textarea></label>${compact ? "" : `<p id="reasoning-output-help" class="counter-output-help">Type the value the function returns. ${esc(friendlyOutputFormat(round.outputFormat))}</p>`}`;
+    const outputField = `<label class="counter-field reasoning-output"><span>2 · What does the incorrect code return?</span><textarea id="reasoning-output" rows="3" autocomplete="off" spellcheck="false" placeholder='Examples: false, 3, "text", or [1, 2]' ${compact ? "disabled" : ""}></textarea></label><p id="reasoning-output-help" class="counter-output-help">Type the value the function returns. ${esc(friendlyOutputFormat(round.outputFormat))}</p>`;
     const diagnosisField = `<fieldset class="reasoning-rule"><legend>3 · What graph-level behavior does this code create?</legend><div class="choices">${diagnoses.map((choice, index) => `<button class="choice" data-choice-id="${esc(choice.id)}" aria-pressed="false" ${compact ? "disabled" : ""}><span class="choice-key">${String.fromCharCode(65 + index)}</span><span>${esc(choice.label)}</span></button>`).join("")}</div></fieldset>`;
-    const reasoningQuestions = outputField + diagnosisField;
+    const correctOutputField = `<label class="counter-field reasoning-output"><span>What should the correct solution return?</span><textarea id="reasoning-correct-output" rows="2" autocomplete="off" spellcheck="false" disabled></textarea></label>`;
+    const reasoningQuestions = outputField + correctOutputField + diagnosisField;
     window.DFS_GRAPH?.setContext(`${problem.id}:reasoning:${round.caseId || done}`, 0);
     unlockCounterexampleEditor();
     $("#graph-lab").hidden = false;
@@ -1492,6 +2869,7 @@
       <div class="challenge-body reasoning-case">
         ${compact ? "" : `<div class="coder-id"><span class="coder-avatar" aria-hidden="true">${esc(name[0])}</span><div><small>CODE UNDER REVIEW</small><h3>${esc(name)}'s incorrect ${esc(problem.title)} solution</h3></div></div><p class="reasoning-intro">${esc(frame.intro(name))}</p>`}
         <div class="trace-input"><span>REAL PROBLEM INPUT</span><pre>${esc(displayInput)}</pre></div>
+        ${renderNodeLabelGuide(round)}
         <section class="code-window" aria-label="Incorrect JavaScript solution"><div class="code-window-label">Incorrect solution</div><pre tabindex="0"><code>${renderCodeLines(String(round.code).split("\n"))}</code></pre></section>
         ${reasoningQuestions}
         <div id="feedback-slot" role="status" aria-live="polite"></div>
@@ -1501,16 +2879,20 @@
       $("#graph-lab-title").textContent = "1 · Draw the graph";
       $(".trace-input").after($("#graph-lab"));
       counterGraphChangeHandler = () => {
-        const started = Boolean(window.DFS_GRAPH?.getSnapshot()?.nodes?.length);
+        const started = round.canvas.nodes.length === 0 || Boolean(window.DFS_GRAPH?.getSnapshot()?.nodes?.length);
         $$('[data-choice-id]').forEach(button => { button.disabled = !started; });
         $("#reasoning-output").disabled = !started;
+        $("#reasoning-correct-output").disabled = !started;
       };
       window.addEventListener("dfs-graph-change", counterGraphChangeHandler);
+      counterGraphChangeHandler();
     }
-    const update = () => { $("#reasoning-check").disabled = !selectedId || !$("#reasoning-output").value.trim(); };
+    const update = () => { $("#reasoning-check").disabled = !selectedId || !$("#reasoning-output").value.trim() || !$("#reasoning-correct-output").value.trim(); };
     $$('[data-choice-id]').forEach(button => { button.onclick = () => { selectChoice(button.dataset.choiceId, "#reasoning-check"); update(); }; });
     $("#reasoning-output").addEventListener("input", update);
+    $("#reasoning-correct-output").addEventListener("input", update);
     $("#reasoning-check").onclick = () => checkReasoning(round);
+    restoreFormDraft(`reasoning:${round.caseId || done}`);
     focusPrompt();
     $(".test-pane").scrollTop = 0;
   }
@@ -1577,7 +2959,7 @@
 
   function reasoningWalkthrough(round, includeOutcome = false) {
     const proof = round.graphProof;
-    return `<div class="reasoning-coach"><b>Code rule:</b> ${esc(proof.codeRule)} <span>→</span> <b>Changed graph:</b> ${esc(proof.realGraph)} <span>→</span> <b>Reachable boundary:</b> ${esc(proof.separatingFeature)}${includeOutcome ? ` <span>→</span> <b>Returned value:</b> ${esc(proof.outputConsequence)}` : ""}</div>`;
+    return `<div class="reasoning-coach"><b>Code rule:</b> ${esc(proof.codeRule)} <span>→</span> <b>Graph effect:</b> ${esc(proof.changedGraph || round.diagnoses.find(choice => choice.id === round.correctDiagnosis)?.label?.replace(/^Claim about the code:\s*/i, "") || proof.codeRule)} <span>→</span> <b>Reachable boundary:</b> ${esc(proof.separatingFeature)}${includeOutcome ? ` <span>→</span> <b>Returned value:</b> ${esc(proof.outputConsequence)}` : ""}</div>`;
   }
 
   function lessonStep(number, title, copy, visual) {
@@ -1658,13 +3040,14 @@
     const graph = gradeCanvas(round.canvas, drawing);
     const checks = [
       ["The drawing has every exact node", graph.nodes],
-      ["The drawing has every exact edge", graph.edges],
+      [graph.nodes ? "The drawing has every exact edge" : "Check node names before the direct edges", graph.nodes ? graph.edges : null],
       ["The drawing uses the problem's direction", graph.direction],
-      ["Edge colors match the input", graph.colors],
+      ["Graph colors match the input", graph.colors],
       ["Edge labels or weights match the input", graph.labels],
       ["The graph-level diagnosis is correct", selectedId === round.correctDiagnosis],
-      ["The incorrect solution's exact output is correct", jsonAnswerMatches($("#reasoning-output").value, round.buggyOutput)]
-    ].filter(([label]) => !label.startsWith("Edge colors") || round.canvas.edges.some(edge => edge.color)).filter(([label]) => !label.startsWith("Edge labels") || round.canvas.edges.some(edge => edge.label));
+      ["Your prediction for the incorrect code's exact output", jsonAnswerMatches($("#reasoning-output").value, round.buggyOutput)],
+      ["Your prediction for the correct solution's exact output", jsonAnswerMatches($("#reasoning-correct-output").value, round.correctOutput)]
+    ].filter(([label]) => !label.startsWith("Graph colors") || round.canvas.edges.some(edge => edge.color) || round.canvas.nodes.some(node => node.color || node.blocked)).filter(([label]) => !label.startsWith("Edge labels") || round.canvas.edges.some(edge => edge.label));
     if (!checks.every(([, pass]) => pass)) {
       reasoningProgress.mistakes++;
       reasoningProgress.attempts++;
@@ -1672,10 +3055,8 @@
       updateReasoningProgress(reasoningProgress.index, reasoningRounds());
       const selected = round.diagnoses.find(choice => choice.id === selectedId);
       const diagnosisHelp = selectedId && selectedId !== round.correctDiagnosis ? `<div class="feedback-next"><b>About your diagnosis:</b> ${esc(selected?.feedback || "Compare the code's graph behavior with the locked problem rule.")}</div>` : "";
-      $("#feedback-slot").innerHTML = `<div class="feedback trace-feedback"><b>Check the graph and try again.</b><ul class="feedback-checklist">${checks.map(([label, pass]) => `<li class="${pass ? "passed" : "failed"}"><span>${pass ? "✓" : "×"}</span>${esc(label)}</li>`).join("")}</ul>${diagnosisHelp}${reasoningWalkthrough(round)}</div>`;
-      selectedId = null;
-      $$('[data-choice-id]').forEach(item => { item.classList.remove("selected"); item.setAttribute("aria-pressed", "false"); });
-      $("#reasoning-check").disabled = true;
+      $("#feedback-slot").innerHTML = `<div class="feedback trace-feedback"><b>${!graph.nodes || !graph.edges || !graph.direction || !graph.colors || !graph.labels ? "Fix the marked graph details." : selectedId !== round.correctDiagnosis ? "Recheck what the code changes." : "Recheck the returned values."}</b><ul class="feedback-checklist">${checks.map(([label, pass]) => `<li class="${pass == null ? "waiting" : pass ? "passed" : "failed"}"><span>${pass == null ? "•" : pass ? "✓" : "×"}</span>${esc(label)}</li>`).join("")}</ul>${graph.hint ? `<p class="feedback-next">${esc(graph.hint)}</p>` : ""}${diagnosisHelp}${reasoningWalkthrough(round)}</div>`;
+      $("#reasoning-check").disabled = false;
       $("#feedback-slot").scrollIntoView({ behavior: "smooth", block: "center" });
       $("#feedback-slot").tabIndex = -1;
       $("#feedback-slot").focus({ preventScroll: true });
@@ -1684,6 +3065,7 @@
     answered = true;
     lockCounterexampleEditor();
     $("#reasoning-output").disabled = true;
+    $("#reasoning-correct-output").disabled = true;
     $$('[data-choice-id]').forEach(button => { button.disabled = true; });
     $("#feedback-slot").innerHTML = `<div class="feedback good trace-success"><b>Trace confirmed.</b><div class="trace-summary"><div><span>Misconception</span><strong>${esc(round.bugTitle)}</strong></div><div><span>Incorrect output</span><strong>${esc(round.buggyOutput)}</strong></div><div><span>Correct output</span><strong>${esc(round.correctOutput)}</strong></div></div>${reasoningWalkthrough(round, true)}</div>`;
     $("#feedback-slot").scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1692,18 +3074,21 @@
     const button = $("#reasoning-check");
     button.disabled = false;
     button.innerHTML = reasoningProgress.index + 1 < reasoningRounds().length ? "Next code case <span>→</span>" : "Finish Step 4 <span>→</span>";
-    button.onclick = () => { reasoningProgress.index++; reasoningProgress.attempts = 0; reasoningProgress.remedial = false; saveReasoningProgress(); render(); };
+    updateReasoningProgress(reasoningProgress.index + 1, reasoningRounds());
+    persistProgress(reasoningStorageKey(), { ...reasoningProgress, index: reasoningProgress.index + 1, attempts: 0, remedial: false });
+    pendingAdvance = () => { pendingAdvance = null; reasoningProgress.index++; reasoningProgress.attempts = 0; reasoningProgress.remedial = false; saveReasoningProgress(); };
+    button.onclick = () => { pendingAdvance?.(); render(); };
   }
 
   function updateReasoningProgress(done, rounds) {
     const total = Math.max(rounds.length, 1);
     const passed = done - reasoningProgress.skipped.filter(index => index < done).length;
-    $("#evidence-label").textContent = "";
-    $("#attempt-label").textContent = "";
+    $("#evidence-label").textContent = `${passed} of ${total} code cases passed`;
+    $("#attempt-label").textContent = reasoningProgress.mistakes ? `${reasoningProgress.mistakes} correction${reasoningProgress.mistakes === 1 ? "" : "s"}` : "";
     $("#evidence-fill").style.width = `${passed / total * 100}%`;
     $(".evidence-track").setAttribute("aria-valuemax", String(total));
     $(".evidence-track").setAttribute("aria-valuenow", String(passed));
-    $("#facet-list").innerHTML = ["exact graph", "exact output", "code behavior", "why it fails"].map(label => `<span class="facet ${passed === total ? "proven" : ""}">${label}</span>`).join("");
+    $("#facet-list").innerHTML = ["exact graph", "exact output", "code behavior", "why it fails"].map(label => `<span class="facet ${passed > 0 ? "proven" : ""}">${label}</span>`).join("");
     $("#evidence-chip").innerHTML = passed === total ? "<span>✓ Code understood</span>" : "<span class=\"pulse-dot\"></span><span>Debug session active</span>";
   }
 
@@ -1725,11 +3110,43 @@
     const key = (from, to, directed) => directed ? `${from}→${to}` : [from, to].sort().join("—");
     const expectedEdges = expected.edges.map(edge => ({ key: key(expectedById[String(edge.from)], expectedById[String(edge.to)], expected.directed), color: edge.color || "", label: String(edge.label || "").trim() })).sort((a, b) => a.key.localeCompare(b.key));
     const actualEdges = drawing.edges.map(edge => ({ key: key(actualById[String(edge.from)], actualById[String(edge.to)], expected.directed), color: semanticColor(edge.color), label: String(edge.label || "").trim() })).sort((a, b) => a.key.localeCompare(b.key));
-    const edges = nodes && JSON.stringify(expectedEdges.map(edge => edge.key)) === JSON.stringify(actualEdges.map(edge => edge.key));
+    const edges = JSON.stringify(expectedEdges.map(edge => edge.key)) === JSON.stringify(actualEdges.map(edge => edge.key));
     const direction = drawing.directed === expected.directed;
-    const colors = edges && expectedEdges.every((edge, index) => !edge.color || edge.color === actualEdges[index].color);
-    const labels = edges && expectedEdges.every((edge, index) => edge.label === actualEdges[index].label);
-    return { nodes, edges, direction, colors, labels };
+    const edgeColors = edges && expectedEdges.every((edge, index) => !edge.color || edge.color === actualEdges[index].color);
+    const expectedNodeColors = Object.fromEntries(expected.nodes.map(node => [normalizeNodeLabel(node.label), node.color || (node.blocked ? "blue" : "")]));
+    const actualNodeColors = Object.fromEntries(drawing.nodes.map(node => [normalizeNodeLabel(node.label), semanticColor(node.color)]));
+    const nodeColors = nodes && Object.entries(expectedNodeColors).every(([label, color]) => !color || actualNodeColors[label] === color);
+    const colors = edgeColors && nodeColors;
+    const labels = edges && expectedEdges.every((edge, index) => equivalentEdgeLabel(edge.label, actualEdges[index].label));
+    let hint = "";
+    const duplicate = actualLabels.find((label, index) => actualLabels.indexOf(label) !== index);
+    const extra = actualLabels.find(label => !expectedLabels.includes(label));
+    if (duplicate) hint = `Two nodes share the name ${duplicate}. Give each input item its own name.`;
+    else if (extra) hint = `Check the node named ${extra}. Does its name and role match the input?`;
+    else if (!nodes) hint = `Your drawing has ${actualLabels.length} node${actualLabels.length === 1 ? "" : "s"}. Check whether an input item is missing.`;
+    else if (!direction) hint = `Set the drawing to ${expected.directed ? "directed arrows" : "two-way edges"}.`;
+    else if (!edges) {
+      const unexpected = actualEdges.find(edge => !expectedEdges.some(item => item.key === edge.key));
+      const missing = expectedEdges.find(edge => !actualEdges.some(item => item.key === edge.key));
+      hint = unexpected ? `Recheck ${unexpected.key}: is it a direct connection in the input?` : `Recheck the direct connection ${missing?.key}.`;
+    } else if (!labels) {
+      const edge = expectedEdges.find((edge, index) => !equivalentEdgeLabel(edge.label, actualEdges[index].label));
+      hint = `Check the weight or label on ${edge.key} against the input.`;
+    } else if (!colors) hint = "Check the marked node and edge colors against the input.";
+    return { nodes, edges, direction, colors, labels, hint };
+  }
+
+  function equivalentEdgeLabel(expected, actual) {
+    const clean = value => String(value || "").trim().replace(/^×\s*/, "");
+    const number = value => {
+      const text = clean(value);
+      const fraction = text.match(/^([-+]?\d+(?:\.\d+)?)\s*\/\s*([-+]?\d+(?:\.\d+)?)$/);
+      if (fraction && Number(fraction[2]) !== 0) return Number(fraction[1]) / Number(fraction[2]);
+      return text !== "" && Number.isFinite(Number(text)) ? Number(text) : null;
+    };
+    const one = number(expected), two = number(actual);
+    if (one !== null && two !== null) return Math.abs(one - two) <= 1e-9 * Math.max(1, Math.abs(one), Math.abs(two));
+    return clean(expected).toLowerCase() === clean(actual).toLowerCase();
   }
 
   function normalizeNodeLabel(value) {
@@ -2009,9 +3426,9 @@
     return Math.hypot(point.x - (from.x + amount * dx), point.y - (from.y + amount * dy));
   }
 
-  function updateProgress() {
+  function updateProgress(completed = progress.index) {
     const total = 9;
-    const done = Math.min(progress.index, total);
+    const done = Math.min(completed, total);
     const passed = done - progress.skipped.filter(index => index < done).length;
     $("#evidence-label").textContent = `${passed} of ${total} visual checks passed`;
     $("#attempt-label").textContent = progress.mistakes ? `${progress.mistakes} correction${progress.mistakes === 1 ? "" : "s"}` : "Clean run";
@@ -2038,6 +3455,46 @@
     $("#challenge").innerHTML = `<div class="challenge-body"><h3>This lesson is still being authored.</h3><p>Its nine problem-specific visual checks are required before it can ship.</p><a class="primary-btn link-button" href="/">Choose another problem <span>→</span></a></div>`;
   }
 
+  function persistProgress(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+  }
+
+  function clearSectionDrafts(number) {
+    draftKey = null;
+    pendingAdvance = null;
+    const graphPrefix = `dfs-drawing:v1:${problem.id}:`;
+    const sectionSuffix = { 2: "counterexample:", 3: "structure-transfer:", 4: "reasoning:" };
+    try {
+      for (const key of Object.keys(localStorage)) {
+        const suffix = key.startsWith(graphPrefix) ? key.slice(graphPrefix.length) : null;
+        const graphMatch = suffix !== null && (number === 1 ? !Object.values(sectionSuffix).some(prefix => suffix.startsWith(prefix)) : suffix.startsWith(sectionSuffix[number]));
+        if (graphMatch || key.startsWith(`dfs-form:v1:${problem.id}:${number}:`)) localStorage.removeItem(key);
+      }
+    } catch {}
+  }
+
+  function restoreFormDraft(taskId) {
+    draftKey = `dfs-form:v1:${problem.id}:${section}:${taskId}:${section === 1 ? progress.remedialFor || "main" : ""}`;
+    restoringDraft = true;
+    try {
+      const draft = JSON.parse(localStorage.getItem(draftKey) || "{}");
+      for (const [id, value] of Object.entries(draft.fields || {})) {
+        const field = document.getElementById(id);
+        if (field) { field.value = value; field.dispatchEvent(new Event("input", { bubbles: true })); }
+      }
+      for (const selector of draft.choices || []) $(selector)?.click();
+    } catch {}
+    restoringDraft = false;
+  }
+
+  function saveFormDraft() {
+    if (!draftKey || restoringDraft || section === 2) return;
+    const fields = Object.fromEntries($$("#challenge textarea[id], #challenge input[id]").map(field => [field.id, field.value]));
+    const choices = $$('[data-choice-id][aria-pressed="true"]').map(button => `[data-choice-id="${button.dataset.choiceId}"]`);
+    choices.push(...$$('[data-claim-index][aria-pressed="true"]').map(button => `[data-claim-index="${button.dataset.claimIndex}"][data-claim-value="${button.dataset.claimValue}"]`));
+    try { localStorage.setItem(draftKey, JSON.stringify({ fields, choices })); } catch {}
+  }
+
   function loadProgress() {
     try {
       const value = JSON.parse(localStorage.getItem(storageKey()) || "{}");
@@ -2061,40 +3518,53 @@
   function loadStructureProgress() {
     try {
       const value = JSON.parse(localStorage.getItem(structureStorageKey()) || "{}");
-      return { index: Math.min(Math.max(Number(value.index) || 0, 0), 5), mistakes: Math.max(Number(value.mistakes) || 0, 0), claimVariant: Math.max(Number(value.claimVariant) || 0, 0), skipped: Array.isArray(value.skipped) ? value.skipped.map(Number) : [] };
+      const skipped = [...new Set(Array.isArray(value.skipped) ? value.skipped.map(Number).filter(index => Number.isInteger(index) && index >= 0 && index < 5) : [])];
+      return { index: Math.min(Math.max(Number(value.index) || 0, 0), 5), mistakes: Math.max(Number(value.mistakes) || 0, 0), claimVariant: 0, skipped };
     } catch { return { index: 0, mistakes: 0, claimVariant: 0, skipped: [] }; }
   }
   function saveStructureProgress() { localStorage.setItem(structureStorageKey(), JSON.stringify(structureProgress)); }
-  function structureStorageKey() { return `dfs-structure:${problem.id}:v7`; }
+  function structureStorageKey() { return `dfs-structure:${problem.id}:v8`; }
   function loadReasoningProgress() {
     try {
-      const value = JSON.parse(localStorage.getItem(reasoningStorageKey()) || "{}");
-      return { index: Math.min(Math.max(Number(value.index) || 0, 0), reasoningRounds().length), mistakes: Math.max(Number(value.mistakes) || 0, 0), attempts: Math.max(Number(value.attempts) || 0, 0), remedial: false, skipped: Array.isArray(value.skipped) ? value.skipped.map(Number) : [] };
+      const saved = localStorage.getItem(reasoningStorageKey());
+      const legacy = !saved ? localStorage.getItem(`dfs-reasoning:${problem.id}:v2`) : null;
+      const value = JSON.parse(saved || legacy || "{}");
+      const maxIndex = legacy ? Math.min(reasoningRounds().length, 1) : reasoningRounds().length;
+      const index = Math.min(Math.max(Number(value.index) || 0, 0), maxIndex);
+      const skipped = [...new Set((Array.isArray(value.skipped) ? value.skipped : []).map(Number))]
+        .filter(item => Number.isInteger(item) && item >= 0 && item < index && (!legacy || item === 0));
+      return { index, mistakes: Math.max(Number(value.mistakes) || 0, 0), attempts: Math.max(Number(value.attempts) || 0, 0), remedial: false, skipped };
     } catch { return { index: 0, mistakes: 0, attempts: 0, remedial: false, skipped: [] }; }
   }
   function saveReasoningProgress() { localStorage.setItem(reasoningStorageKey(), JSON.stringify(reasoningProgress)); }
-  function reasoningStorageKey() { return `dfs-reasoning:${problem.id}:v2`; }
+  function reasoningStorageKey() { return `dfs-reasoning:${problem.id}:v3`; }
   function resetCurrentSection() { if (section === 4) resetReasoning(); else if (section === 3) resetStructure(); else if (section === 2) resetCounterexamples(); else reset(); }
   function reset() {
     if (progress.index > 0 && !confirm("Restart the entire visual proof from the first blank graph?")) return;
+    clearSectionDrafts(1);
     progress = { index: 0, mistakes: 0, remedialFor: null, skipped: [] };
     saveProgress();
     render();
   }
   function resetCounterexamples() {
     if (counterProgress.index > 0 && !confirm("Restart Step 2 from the first counterexample?")) return;
+    clearSectionDrafts(2);
+    for (const key of Object.keys(localStorage)) if (key.startsWith(`dfs-step2-draft:${problem.id}:`)) localStorage.removeItem(key);
     counterProgress = { index: 0, mistakes: 0, hints: 0, skills: [false, false, false, false], skipped: [] };
     saveCounterProgress();
     render();
   }
   function resetStructure() {
     if (structureProgress.index > 0 && !confirm("Restart Step 3 from the first graph check?")) return;
+    clearSectionDrafts(3);
     structureProgress = { index: 0, mistakes: 0, claimVariant: 0, skipped: [] };
+    structureRetryDrawing = null;
     saveStructureProgress();
     render();
   }
   function resetReasoning() {
     if (reasoningProgress.index > 0 && !confirm("Restart the Step 4 code cases?")) return;
+    clearSectionDrafts(4);
     reasoningProgress = { index: 0, mistakes: 0, attempts: 0, remedial: false, skipped: [] };
     saveReasoningProgress();
     render();
@@ -2104,7 +3574,7 @@
     $$("#mobile-switcher button").forEach(button => { const active = button.dataset.pane === pane; button.classList.toggle("active", active); button.setAttribute("aria-pressed", String(active)); });
   }
   function formatText(value) { return esc(value).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>"); }
-  function focusPrompt() { queueMicrotask(() => { const heading = $("#challenge h3"); if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); } }); }
+  function focusPrompt() { queueMicrotask(() => { const heading = $$("#challenge h3").find(item => item.getClientRects().length); if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); } }); }
 
   window.DFS_VISUAL_LIBRARY = { start, gradeCanvas, layout };
   start();

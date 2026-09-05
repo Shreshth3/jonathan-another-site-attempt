@@ -46,8 +46,8 @@
     "input": {
       "name": "source node",
       "prompt": "Choose the source node",
-      "result": "reached-nodes",
-      "resultLabel": "nodes the full path search visits"
+      "result": "enumerated-paths",
+      "resultLabel": "all complete source-to-target paths"
     }
   },
   {
@@ -62,13 +62,12 @@
     "rounds": [
       {
         "bugs": [
-          "wrong-start"
+          "make-one-way"
         ],
-        "level": "Wrong ship selected",
+        "level": "One-way connection",
         "presentation": "exact-difference",
-        "goal": "Use two valid separated ships, and choose a start cell that is not listed first.",
-        "startLabel": "(0,0)",
-        "mistakenStartLabel": "(0,1)"
+        "goal": "Use one straight vehicle with a connection drawn from the later cell toward the earlier cell. A one-way reading must split the scan into separate pieces.",
+        "startLabel": "(0,0)"
       },
       {
         "bugs": [
@@ -97,8 +96,8 @@
     "input": {
       "name": "first ship cell",
       "prompt": "Choose the first ship cell",
-      "result": "reached-nodes",
-      "resultLabel": "ship cells actually connected"
+      "result": "component-count",
+      "resultLabel": "number of battleships"
     }
   },
   {
@@ -117,18 +116,17 @@
         ],
         "level": "Prerequisite runs backward",
         "presentation": "repair-case",
-        "goal": "Choose an arrow where walking backward falsely unlocks a prerequisite.",
+        "goal": "Use an acyclic prerequisite arrow. Making it two-way creates a directed two-cycle, changing completion from true to false.",
         "startLabel": "0"
       },
       {
         "bugs": [
-          "wrong-start"
+          "shallow-search"
         ],
-        "level": "Wrong course opened",
+        "level": "Deep prerequisite cycle missed",
         "presentation": "exact-difference",
-        "goal": "Use course 0 as the chosen course, but make the mistaken search begin at course 1; give them different futures.",
-        "startLabel": "0",
-        "mistakenStartLabel": "1"
+        "goal": "Build a cycle whose return edge appears after the first prerequisite step.",
+        "startLabel": "0"
       },
       {
         "bugs": [
@@ -136,7 +134,7 @@
         ],
         "level": "One elective only",
         "presentation": "smallest-witness",
-        "goal": "Let one course unlock two branches so both must be explored.",
+        "goal": "Hide a directed cycle on the skipped branch. The first-branch search must incorrectly report that all courses can be completed.",
         "startLabel": "0"
       }
     ],
@@ -147,8 +145,8 @@
     "input": {
       "name": "course to inspect",
       "prompt": "Choose the course to inspect",
-      "result": "reached-nodes",
-      "resultLabel": "courses truly unlocked"
+      "result": "acyclic-completion-boolean",
+      "resultLabel": "whether every course can be finished"
     }
   },
   {
@@ -167,7 +165,7 @@
         ],
         "level": "One-sided blast",
         "presentation": "predict-first",
-        "goal": "Use a small bomb inside a large bomb's range but not the reverse.",
+        "goal": "Arrange at least three transmitters so no single start reaches them all, but treating arrows as two-way lets one start reach more. Check the maximum over every possible start.",
         "startLabel": "0"
       },
       {
@@ -196,8 +194,18 @@
     "input": {
       "name": "first detonated bomb",
       "prompt": "Choose the first detonated bomb",
-      "result": "reached-nodes",
-      "resultLabel": "bombs truly detonated"
+      "result": "maximum-reached-count",
+      "resultLabel": "maximum number of bombs detonated",
+      "markers": [
+        {
+          "id": "geometry",
+          "target": "node",
+          "kind": "json",
+          "label": "[x,y,radius]",
+          "prompt": "Give each bomb its [x,y,radius], using positive whole numbers",
+          "required": true
+        }
+      ]
     }
   },
   {
@@ -246,8 +254,33 @@
     "input": {
       "name": "query numerator",
       "prompt": "Choose the query numerator",
-      "result": "reached-nodes",
-      "resultLabel": "variables connected by valid ratios"
+      "result": "ordered-query-values",
+      "resultLabel": "ordered answer for this division query",
+      "resultConfig": {
+        "targetField": "queryDenominator",
+        "ratioMarker": "edgeRatio",
+        "mode": "ratio"
+      },
+      "fields": [
+        {
+          "id": "queryDenominator",
+          "kind": "node",
+          "label": "query denominator",
+          "prompt": "Choose the denominator for this query",
+          "required": true
+        }
+      ],
+      "markers": [
+        {
+          "id": "edgeRatio",
+          "target": "edge",
+          "kind": "number",
+          "label": "direct ratio",
+          "prompt": "Give the ratio for every arrow",
+          "required": true,
+          "min": 0.000001
+        }
+      ]
     }
   },
   {
@@ -256,8 +289,8 @@
       "nodeNames": "vertex numbers",
       "startNode": "source vertex",
       "edges": "two-way edges",
-      "correctSearch": "vertices reachable from source",
-      "mistakenSearch": "vertices the buggy DFS visits"
+      "correctSearch": "whether the destination is reachable",
+      "mistakenSearch": "whether the buggy DFS reaches the destination"
     },
     "rounds": [
       {
@@ -275,7 +308,7 @@
         ],
         "level": "DFS never returns",
         "presentation": "repair-case",
-        "goal": "Give the source a short branch and a separate branch containing more vertices.",
+        "goal": "Put the destination on a second branch that DFS must return to explore.",
         "startLabel": "0"
       },
       {
@@ -284,7 +317,7 @@
         ],
         "level": "Source field ignored",
         "presentation": "smallest-witness",
-        "goal": "Use a nonfirst source whose component differs from the first vertex's component.",
+        "goal": "Put the destination with source 0 while mistaken start 1 is in a different component.",
         "startLabel": "0",
         "mistakenStartLabel": "1"
       }
@@ -296,8 +329,20 @@
     "input": {
       "name": "source vertex",
       "prompt": "Choose the source vertex",
-      "result": "reached-nodes",
-      "resultLabel": "vertices reachable from source"
+      "result": "target-reachable-boolean",
+      "resultLabel": "whether the destination is reachable from the source",
+      "resultConfig": {
+        "targetField": "target"
+      },
+      "fields": [
+        {
+          "id": "target",
+          "kind": "node",
+          "label": "destination vertex",
+          "prompt": "Choose the destination vertex",
+          "required": true
+        }
+      ]
     }
   },
   {
@@ -316,8 +361,8 @@
         ],
         "level": "Containment arrows reversed",
         "presentation": "repair-case",
-        "goal": "Start at root so reversing every containment arrow blocks all nested items.",
-        "startLabel": "root"
+        "goal": "Start at root=[] so reversing every containment arrow blocks all nested items.",
+        "startLabel": "root=[]"
       },
       {
         "bugs": [
@@ -326,7 +371,7 @@
         "level": "Only final item kept",
         "presentation": "predict-first",
         "goal": "Put useful integers in multiple child lists, not only the last one.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       },
       {
         "bugs": [
@@ -335,19 +380,19 @@
         "level": "Nested list left closed",
         "presentation": "exact-difference",
         "goal": "Hide an integer at least two contains-arrows below the outer list.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       }
     ],
     "nodeLabels": {
       "rule": "nested-path",
       "description": "Use root, root[0], root[1], ... to name nested input items."
     },
-    "fixedStart": "root",
+    "fixedStart": "root=[]",
     "input": {
       "name": "outer list",
       "prompt": "Choose the outer list",
-      "result": "reached-nodes",
-      "resultLabel": "nested items fully visited"
+      "result": "iterator-output-sequence",
+      "resultLabel": "flattened integer sequence"
     }
   },
   {
@@ -362,20 +407,20 @@
     "rounds": [
       {
         "bugs": [
-          "make-one-way"
+          "drop-last-edge"
         ],
-        "level": "Neighbor relation halved",
+        "level": "Odd-cycle edge omitted",
         "presentation": "predict-first",
-        "goal": "Orient the written pair away from the traversal the coloring check needs.",
+        "goal": "Make the last edge close an odd cycle. Removing it must change the answer from false to true.",
         "startLabel": "0"
       },
       {
         "bugs": [
-          "skip-leaf-edges"
+          "shallow-search"
         ],
-        "level": "Leaf colors forgotten",
+        "level": "Deep color conflict missed",
         "presentation": "smallest-witness",
-        "goal": "Attach degree-one neighbors whose opposite colors still matter.",
+        "goal": "Put an odd-cycle conflict beyond the first coloring step.",
         "startLabel": "0"
       },
       {
@@ -384,7 +429,7 @@
         ],
         "level": "Final color branch only",
         "presentation": "repair-case",
-        "goal": "Branch from one node so an earlier neighbor is lost when only the last route is followed.",
+        "goal": "Hide an odd-cycle conflict on a branch skipped by the last-branch search. The answer must change from false to true.",
         "startLabel": "0"
       }
     ],
@@ -395,8 +440,8 @@
     "input": {
       "name": "coloring start",
       "prompt": "Choose the coloring start",
-      "result": "reached-nodes",
-      "resultLabel": "nodes the color check reaches"
+      "result": "valid-two-coloring-boolean",
+      "resultLabel": "whether the graph is bipartite"
     }
   },
   {
@@ -446,8 +491,8 @@
     "input": {
       "name": "unlocked room",
       "prompt": "Choose the unlocked room",
-      "result": "reached-nodes",
-      "resultLabel": "rooms truly enterable"
+      "result": "all-reached",
+      "resultLabel": "whether every room can be entered"
     }
   },
   {
@@ -498,7 +543,8 @@
       "name": "process to kill",
       "prompt": "Choose the process to kill",
       "result": "reached-nodes",
-      "resultLabel": "processes truly terminated"
+      "resultLabel": "processes truly terminated",
+      "realOutput": true
     }
   },
   {
@@ -517,8 +563,8 @@
         ],
         "level": "Choice arrows reversed",
         "presentation": "repair-case",
-        "goal": "Start at ε so reversing every choice arrow blocks all longer strings.",
-        "startLabel": "ε"
+        "goal": "Start at empty prefix so reversing every choice arrow blocks all longer strings.",
+        "startLabel": "empty prefix"
       },
       {
         "bugs": [
@@ -527,7 +573,7 @@
         "level": "One keypad choice",
         "presentation": "smallest-witness",
         "goal": "Give a prefix at least two next-letter choices so one combination is not enough.",
-        "startLabel": "ε"
+        "startLabel": "empty prefix"
       },
       {
         "bugs": [
@@ -536,19 +582,19 @@
         "level": "Final letter option dropped",
         "presentation": "predict-first",
         "goal": "Make the last append arrow lead to a unique complete combination.",
-        "startLabel": "ε"
+        "startLabel": "empty prefix"
       }
     ],
     "nodeLabels": {
       "rule": "partial-string",
       "description": "Use ε for the empty root, then lowercase partial strings like a or ab."
     },
-    "fixedStart": "ε",
+    "fixedStart": "empty prefix",
     "input": {
       "name": "empty prefix",
       "prompt": "Choose the empty prefix",
-      "result": "reached-nodes",
-      "resultLabel": "prefixes the full generator explores"
+      "result": "generated-terminal-strings",
+      "resultLabel": "all complete letter combinations"
     }
   },
   {
@@ -567,7 +613,7 @@
         ],
         "level": "Diagonal climb",
         "presentation": "smallest-witness",
-        "goal": "Place a larger value only at a diagonal, where no legal move exists.",
+        "goal": "Draw every cell of a small rectangular matrix. Choose values so a diagonal increase creates a path that side moves cannot make. Equal neighboring values do not allow an arrow.",
         "startLabel": "(0,0)"
       },
       {
@@ -581,11 +627,11 @@
       },
       {
         "bugs": [
-          "last-branch"
+          "drop-last-edge"
         ],
-        "level": "One ascent kept",
+        "level": "Final climb omitted",
         "presentation": "exact-difference",
-        "goal": "Give a low cell two increasing side-neighbors and make the earlier branch distinct.",
+        "goal": "Make the last increasing side edge extend the longest path.",
         "startLabel": "(0,0)"
       }
     ],
@@ -597,8 +643,44 @@
     "input": {
       "name": "starting cell",
       "prompt": "Choose the starting cell",
-      "result": "reached-nodes",
-      "resultLabel": "cells reachable by increases"
+      "result": "longest-path-length",
+      "resultLabel": "longest increasing path length",
+      "resultConfig": {
+        "adjacency": {
+          "mode": "increasing-marker",
+          "marker": "cellValue"
+        }
+      },
+      "markers": [
+        {
+          "id": "cellValue",
+          "target": "node",
+          "kind": "number",
+          "label": "matrix value",
+          "prompt": "Give every matrix cell its value",
+          "required": true
+        }
+      ],
+      "fields": [
+        {
+          "id": "rows",
+          "kind": "integer",
+          "label": "matrix rows",
+          "prompt": "Enter matrix rows",
+          "required": true,
+          "min": 1,
+          "max": 8
+        },
+        {
+          "id": "columns",
+          "kind": "integer",
+          "label": "matrix columns",
+          "prompt": "Enter matrix columns",
+          "required": true,
+          "min": 1,
+          "max": 8
+        }
+      ]
     }
   },
   {
@@ -632,11 +714,11 @@
       },
       {
         "bugs": [
-          "first-branch"
+          "drop-last-edge"
         ],
-        "level": "Reveal stops on one ray",
+        "level": "Final reveal link omitted",
         "presentation": "repair-case",
-        "goal": "Give the clicked square multiple surrounding routes that lead to different squares.",
+        "goal": "Make the final neighboring link reach one more blank square.",
         "startLabel": "(0,0)"
       }
     ],
@@ -648,8 +730,53 @@
     "input": {
       "name": "clicked square",
       "prompt": "Choose the clicked square",
-      "result": "reached-nodes",
-      "resultLabel": "squares truly examined"
+      "result": "transformed-grid",
+      "resultLabel": "board after the click",
+      "resultConfig": {
+        "rowsField": "rows",
+        "columnsField": "columns",
+        "valueMarker": "cellType"
+      },
+      "fields": [
+        {
+          "id": "rows",
+          "kind": "integer",
+          "label": "row count",
+          "prompt": "How many rows are in the grid?",
+          "required": true,
+          "min": 1,
+          "max": 8
+        },
+        {
+          "id": "columns",
+          "kind": "integer",
+          "label": "column count",
+          "prompt": "How many columns are in the grid?",
+          "required": true,
+          "min": 1,
+          "max": 8
+        }
+      ],
+      "markers": [
+        {
+          "id": "cellType",
+          "target": "node",
+          "kind": "choice",
+          "label": "original square",
+          "prompt": "Mark every square E or M",
+          "required": true,
+          "choices": [
+            {
+              "value": "E",
+              "label": "E"
+            },
+            {
+              "value": "M",
+              "label": "M"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -668,8 +795,8 @@
         ],
         "level": "Depth arrows reversed",
         "presentation": "exact-difference",
-        "goal": "Start at root so reversing every depth arrow blocks all nested values.",
-        "startLabel": "root"
+        "goal": "Start at root=[] so reversing every depth arrow blocks all nested values.",
+        "startLabel": "root=[]"
       },
       {
         "bugs": [
@@ -678,7 +805,7 @@
         "level": "Deep value omitted",
         "presentation": "smallest-witness",
         "goal": "Place an integer two or more bracket levels under the outer list.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       },
       {
         "bugs": [
@@ -687,19 +814,19 @@
         "level": "Only last bracket counted",
         "presentation": "predict-first",
         "goal": "Give the outer list multiple nested children containing different integers.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       }
     ],
     "nodeLabels": {
       "rule": "nested-path",
       "description": "Use root, root[0], root[1], ... to name nested input items."
     },
-    "fixedStart": "root",
+    "fixedStart": "root=[]",
     "input": {
       "name": "outer list",
       "prompt": "Choose the outer list",
-      "result": "reached-nodes",
-      "resultLabel": "items included in the depth sum"
+      "result": "depth-weighted-value-sum",
+      "resultLabel": "depth-weighted sum"
     }
   },
   {
@@ -718,8 +845,8 @@
         ],
         "level": "Containment arrows reversed",
         "presentation": "repair-case",
-        "goal": "Start at root so reversing every containment arrow blocks all deeper items.",
-        "startLabel": "root"
+        "goal": "Start at root=[] so reversing every containment arrow blocks all deeper items.",
+        "startLabel": "root=[]"
       },
       {
         "bugs": [
@@ -728,7 +855,7 @@
         "level": "Deepest item detached",
         "presentation": "exact-difference",
         "goal": "Make the final containment arrow attach the deepest integer.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       },
       {
         "bugs": [
@@ -736,8 +863,8 @@
         ],
         "level": "Wrong container measured",
         "presentation": "smallest-witness",
-        "goal": "Select a nonfirst container whose descendants differ from the first label's descendants.",
-        "startLabel": "root",
+        "goal": "Keep the real start at root=[]. Put an item outside root[0] so beginning at root[0] instead changes the returned value.",
+        "startLabel": "root=[]",
         "mistakenStartLabel": "root[0]"
       }
     ],
@@ -745,12 +872,12 @@
       "rule": "nested-path",
       "description": "Use root, root[0], root[1], ... to name nested input items."
     },
-    "fixedStart": "root",
+    "fixedStart": "root=[]",
     "input": {
       "name": "root container",
       "prompt": "Choose the root container",
-      "result": "reached-nodes",
-      "resultLabel": "items assigned inverse depths"
+      "result": "inverse-depth-weighted-value-sum",
+      "resultLabel": "inverse-depth-weighted sum"
     }
   },
   {
@@ -759,8 +886,8 @@
       "nodeNames": "network nodes",
       "startNode": "signal source",
       "edges": "one-way timed wires",
-      "correctSearch": "nodes that truly receive the signal",
-      "mistakenSearch": "nodes the faulty network walk reaches"
+      "correctSearch": "time until every node receives the signal",
+      "mistakenSearch": "time the faulty network code returns"
     },
     "rounds": [
       {
@@ -774,11 +901,11 @@
       },
       {
         "bugs": [
-          "last-branch"
+          "drop-last-edge"
         ],
-        "level": "Only final wire followed",
+        "level": "Final wire omitted",
         "presentation": "repair-case",
-        "goal": "Give the signal source two outgoing routes and put a receiver on the earlier one.",
+        "goal": "Make the last drawn wire necessary for every node to receive the signal.",
         "startLabel": "1"
       },
       {
@@ -798,8 +925,22 @@
     "input": {
       "name": "signal source",
       "prompt": "Choose the signal source",
-      "result": "reached-nodes",
-      "resultLabel": "nodes that truly receive the signal"
+      "result": "maximum-shortest-path-weight-or-minus-one",
+      "resultLabel": "time until all network nodes receive the signal, or -1",
+      "resultConfig": {
+        "weightMarker": "travelTime"
+      },
+      "markers": [
+        {
+          "id": "travelTime",
+          "target": "edge",
+          "kind": "number",
+          "label": "wire travel time",
+          "prompt": "Give every wire its travel time",
+          "required": true,
+          "min": 0
+        }
+      ]
     }
   },
   {
@@ -847,8 +988,8 @@
     "input": {
       "name": "component seed",
       "prompt": "Choose the component seed",
-      "result": "reached-nodes",
-      "resultLabel": "nodes in the real component"
+      "result": "component-count",
+      "resultLabel": "number of connected components"
     }
   },
   {
@@ -867,7 +1008,7 @@
         ],
         "level": "Corner path invented",
         "presentation": "repair-case",
-        "goal": "Put a larger cell diagonally adjacent but give it no side connection.",
+        "goal": "Draw a complete small rectangular matrix. Choose values so adding diagonal increasing arrows creates extra increasing paths. Equal values still create no arrow.",
         "startLabel": "(0,0)"
       },
       {
@@ -897,8 +1038,44 @@
     "input": {
       "name": "path's first cell",
       "prompt": "Choose the path's first cell",
-      "result": "reached-nodes",
-      "resultLabel": "cells on valid increasing continuations"
+      "result": "path-count-modulo",
+      "resultLabel": "number of increasing paths",
+      "resultConfig": {
+        "adjacency": {
+          "mode": "increasing-marker",
+          "marker": "cellValue"
+        }
+      },
+      "markers": [
+        {
+          "id": "cellValue",
+          "target": "node",
+          "kind": "number",
+          "label": "grid value",
+          "prompt": "Give every grid cell its value",
+          "required": true
+        }
+      ],
+      "fields": [
+        {
+          "id": "rows",
+          "kind": "integer",
+          "label": "matrix rows",
+          "prompt": "Enter matrix rows",
+          "required": true,
+          "min": 1,
+          "max": 8
+        },
+        {
+          "id": "columns",
+          "kind": "integer",
+          "label": "matrix columns",
+          "prompt": "Enter matrix columns",
+          "required": true,
+          "min": 1,
+          "max": 8
+        }
+      ]
     }
   },
   {
@@ -931,13 +1108,12 @@
       },
       {
         "bugs": [
-          "wrong-start"
+          "drop-last-edge"
         ],
-        "level": "Different island chosen",
+        "level": "Island split by a missing side",
         "presentation": "predict-first",
-        "goal": "Choose a nonfirst land cell in a component different from the first coordinate.",
-        "startLabel": "(0,0)",
-        "mistakenStartLabel": "(0,1)"
+        "goal": "Make the last side connection join land that belongs to one island.",
+        "startLabel": "(0,0)"
       }
     ],
     "nodeLabels": {
@@ -948,8 +1124,8 @@
     "input": {
       "name": "first land cell",
       "prompt": "Choose the first land cell",
-      "result": "reached-nodes",
-      "resultLabel": "land cells in the island"
+      "result": "component-count",
+      "resultLabel": "number of islands"
     }
   },
   {
@@ -973,13 +1149,12 @@
       },
       {
         "bugs": [
-          "wrong-start"
+          "drop-last-edge"
         ],
-        "level": "Wrong city surveyed",
+        "level": "Province road omitted",
         "presentation": "predict-first",
-        "goal": "Select a city other than the first label and place it in another province.",
-        "startLabel": "0",
-        "mistakenStartLabel": "1"
+        "goal": "Make the final friendship link join two cities in the same province.",
+        "startLabel": "0"
       },
       {
         "bugs": [
@@ -998,8 +1173,8 @@
     "input": {
       "name": "province seed city",
       "prompt": "Choose the province seed city",
-      "result": "reached-nodes",
-      "resultLabel": "cities in the true province"
+      "result": "component-count",
+      "resultLabel": "number of provinces"
     }
   },
   {
@@ -1014,11 +1189,11 @@
     "rounds": [
       {
         "bugs": [
-          "make-one-way"
+          "shallow-search"
         ],
-        "level": "Dislike made one-sided",
+        "level": "Deep dislike conflict missed",
         "presentation": "repair-case",
-        "goal": "Order a dislike pair so the chosen person's conflict disappears under arrows.",
+        "goal": "Put an odd dislike cycle beyond the first coloring step.",
         "startLabel": "1"
       },
       {
@@ -1027,7 +1202,7 @@
         ],
         "level": "Last conflict only",
         "presentation": "exact-difference",
-        "goal": "Give one person several dislike neighbors and make an earlier neighbor matter.",
+        "goal": "Put a triangle of dislikes on a branch that a last-branch-only search misses. The real split must be impossible, while that incomplete search reports true.",
         "startLabel": "1"
       },
       {
@@ -1036,7 +1211,7 @@
         ],
         "level": "Final conflict omitted",
         "presentation": "smallest-witness",
-        "goal": "Make the last dislike edge connect a person not otherwise reached.",
+        "goal": "Make the last dislike pair close a triangle of three people. Losing that pair must make the impossible split look possible.",
         "startLabel": "1"
       }
     ],
@@ -1047,8 +1222,8 @@
     "input": {
       "name": "first person colored",
       "prompt": "Choose the first person colored",
-      "result": "reached-nodes",
-      "resultLabel": "people reached by the real coloring"
+      "result": "valid-two-coloring-boolean",
+      "resultLabel": "whether a valid bipartition exists"
     }
   },
   {
@@ -1081,13 +1256,12 @@
       },
       {
         "bugs": [
-          "wrong-start"
+          "drop-last-edge"
         ],
-        "level": "Wrong position grouped",
+        "level": "Final swap link omitted",
         "presentation": "exact-difference",
-        "goal": "Choose a nonfirst position in a different swap component from the first label.",
-        "startLabel": "0",
-        "mistakenStartLabel": "1"
+        "goal": "Make the final swap link join letters that change the smallest possible string.",
+        "startLabel": "0"
       }
     ],
     "nodeLabels": {
@@ -1097,8 +1271,8 @@
     "input": {
       "name": "position to group",
       "prompt": "Choose the position to group",
-      "result": "reached-nodes",
-      "resultLabel": "positions in the real swap group"
+      "result": "component-sorted-string",
+      "resultLabel": "smallest string after allowed swaps"
     }
   },
   {
@@ -1107,8 +1281,8 @@
       "nodeNames": "employee IDs",
       "startNode": "company head",
       "edges": "manager-to-report arrows",
-      "correctSearch": "employees truly informed",
-      "mistakenSearch": "employees the flawed message reaches"
+      "correctSearch": "minutes until everyone is informed",
+      "mistakenSearch": "minutes the flawed informer returns"
     },
     "rounds": [
       {
@@ -1147,8 +1321,22 @@
     "input": {
       "name": "company head",
       "prompt": "Choose the company head",
-      "result": "reached-nodes",
-      "resultLabel": "employees truly informed"
+      "result": "maximum-path-weight",
+      "resultLabel": "minutes until every employee is informed",
+      "resultConfig": {
+        "delayMarker": "informTime"
+      },
+      "markers": [
+        {
+          "id": "informTime",
+          "target": "node",
+          "kind": "number",
+          "label": "informing time",
+          "prompt": "Give every employee their informing time",
+          "required": true,
+          "min": 0
+        }
+      ]
     }
   },
   {
@@ -1163,30 +1351,29 @@
     "rounds": [
       {
         "bugs": [
-          "make-two-way"
+          "shallow-search"
         ],
-        "level": "Operation undone for free",
+        "level": "Only one operation tried",
         "presentation": "smallest-witness",
-        "goal": "Use a legal operation whose reverse is not one legal operation from the chosen state.",
+        "goal": "Choose a target that needs at least two legal jug operations.",
         "startLabel": "(0,0)"
       },
       {
         "bugs": [
-          "wrong-start"
+          "first-branch"
         ],
-        "level": "Wrong jug state loaded",
+        "level": "Only first operation path tried",
         "presentation": "repair-case",
-        "goal": "Choose a start state other than the first label and give the two states different legal futures.",
-        "startLabel": "(0,0)",
-        "mistakenStartLabel": "(0,1)"
+        "goal": "Choose a target reached by a different legal operation branch.",
+        "startLabel": "(0,0)"
       },
       {
         "bugs": [
           "last-branch"
         ],
-        "level": "Only one pour tried",
+        "level": "Only last operation path tried",
         "presentation": "predict-first",
-        "goal": "Offer several legal operations from one state and extend an earlier option.",
+        "goal": "Choose a target reached by an earlier legal operation branch.",
         "startLabel": "(0,0)"
       }
     ],
@@ -1199,8 +1386,42 @@
     "input": {
       "name": "starting state",
       "prompt": "Choose the starting state",
-      "result": "reached-nodes",
-      "resultLabel": "states truly reachable"
+      "result": "target-state-reachable-boolean",
+      "resultLabel": "whether the target amount is measurable",
+      "resultConfig": {
+        "jug1CapacityField": "jug1Capacity",
+        "jug2CapacityField": "jug2Capacity",
+        "targetField": "targetAmount"
+      },
+      "fields": [
+        {
+          "id": "jug1Capacity",
+          "kind": "integer",
+          "label": "jug 1 capacity",
+          "prompt": "Give jug 1 capacity",
+          "required": true,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "id": "jug2Capacity",
+          "kind": "integer",
+          "label": "jug 2 capacity",
+          "prompt": "Give jug 2 capacity",
+          "required": true,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "id": "targetAmount",
+          "kind": "integer",
+          "label": "target amount",
+          "prompt": "Give the target amount",
+          "required": true,
+          "min": 0,
+          "max": 20
+        }
+      ]
     }
   },
   {
@@ -1249,8 +1470,51 @@
     "input": {
       "name": "word's first cell",
       "prompt": "Choose the word's first cell",
-      "result": "reached-nodes",
-      "resultLabel": "cells reachable by valid steps"
+      "result": "target-word-path-exists-boolean",
+      "resultLabel": "whether the word exists in the board",
+      "resultConfig": {
+        "rowsField": "rows",
+        "columnsField": "columns",
+        "wordField": "targetWord",
+        "letterMarker": "cellLetter"
+      },
+      "fields": [
+        {
+          "id": "rows",
+          "kind": "integer",
+          "label": "row count",
+          "prompt": "How many rows are on the board?",
+          "required": true,
+          "min": 1,
+          "max": 8
+        },
+        {
+          "id": "columns",
+          "kind": "integer",
+          "label": "column count",
+          "prompt": "How many columns are on the board?",
+          "required": true,
+          "min": 1,
+          "max": 8
+        },
+        {
+          "id": "targetWord",
+          "kind": "text",
+          "label": "target word",
+          "prompt": "Type the word to find",
+          "required": true
+        }
+      ],
+      "markers": [
+        {
+          "id": "cellLetter",
+          "target": "node",
+          "kind": "text",
+          "label": "cell letter",
+          "prompt": "Give every cell its one letter",
+          "required": true
+        }
+      ]
     }
   }
 ]

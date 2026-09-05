@@ -67,7 +67,7 @@
         "level": "Buried shelf",
         "presentation": "smallest-witness",
         "goal": "Nest an item deeply enough that a one-level scan misses it.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       },
       {
         "bugs": [
@@ -76,7 +76,7 @@
         "level": "Inside-out shelves",
         "presentation": "repair-case",
         "goal": "Build nesting where reversing container arrows strands the contents.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       },
       {
         "bugs": [
@@ -85,19 +85,19 @@
         "level": "Last cubby only",
         "presentation": "predict-first",
         "goal": "Give the outer shelf multiple branches so keeping only the last one changes the scan.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       }
     ],
     "nodeLabels": {
       "rule": "nested-path",
       "description": "Use root, root[0], root[1], ... to name nested input items."
     },
-    "fixedStart": "root",
+    "fixedStart": "root=[]",
     "input": {
       "name": "outer shelf",
       "prompt": "Choose the outer shelf",
-      "result": "reached-nodes",
-      "resultLabel": "items reached at every depth"
+      "result": "widest-level-index",
+      "resultLabel": "smallest depth with the most items"
     }
   },
   {
@@ -106,8 +106,8 @@
       "nodeNames": "boxes and coins",
       "startNode": "outer box",
       "edges": "box-to-content links",
-      "correctSearch": "coins found by depth",
-      "mistakenSearch": "coins the flawed search finds"
+      "correctSearch": "sum of coins exactly at level k",
+      "mistakenSearch": "sum the flawed level search returns"
     },
     "rounds": [
       {
@@ -117,7 +117,7 @@
         "level": "Lost last coin",
         "presentation": "exact-difference",
         "goal": "Place a needed coin behind the final containment link.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       },
       {
         "bugs": [
@@ -126,7 +126,7 @@
         "level": "Wrong box first",
         "presentation": "predict-first",
         "goal": "Make starting inside the first small box change which coin levels are seen.",
-        "startLabel": "root",
+        "startLabel": "root=[]",
         "mistakenStartLabel": "root[0]"
       },
       {
@@ -136,19 +136,43 @@
         "level": "Deep coin",
         "presentation": "smallest-witness",
         "goal": "Create a coin below the first nesting level so a shallow search fails.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       }
     ],
     "nodeLabels": {
       "rule": "nested-path",
       "description": "Use root, root[0], root[1], ... to name nested input items."
     },
-    "fixedStart": "root",
+    "fixedStart": "root=[]",
     "input": {
       "name": "outer box",
       "prompt": "Choose the outer box",
-      "result": "reached-nodes",
-      "resultLabel": "coins found by depth"
+      "result": "level-value-sum",
+      "resultLabel": "sum of coin values exactly at level k",
+      "resultConfig": {
+        "depthField": "k",
+        "valueMarker": "coinValue"
+      },
+      "fields": [
+        {
+          "id": "k",
+          "kind": "integer",
+          "label": "packing level",
+          "prompt": "Choose the level k to total",
+          "required": true,
+          "min": 1
+        }
+      ],
+      "markers": [
+        {
+          "id": "coinValue",
+          "target": "node",
+          "kind": "integer",
+          "label": "coin value",
+          "prompt": "Give each coin node its value; leave box nodes out",
+          "required": false
+        }
+      ]
     }
   },
   {
@@ -176,18 +200,17 @@
         ],
         "level": "Forked constellation",
         "presentation": "exact-difference",
-        "goal": "Make one star touch two branches so stopping after the first loses stars.",
+        "goal": "Build a constellation whose first-branch scan leaves stars for a later scan to count again. Try three arms: with only two arms the scan may still visit everything.",
         "startLabel": "(0,0)"
       },
       {
         "bugs": [
-          "wrong-start"
+          "drop-last-edge"
         ],
-        "level": "Wrong star chosen",
+        "level": "Missing star connection",
         "presentation": "repair-case",
-        "goal": "Separate two star groups so the selected starting star matters.",
-        "startLabel": "(0,0)",
-        "mistakenStartLabel": "(0,1)"
+        "goal": "Make the final side-or-corner connection the only link joining two star groups.",
+        "startLabel": "(0,0)"
       }
     ],
     "nodeLabels": {
@@ -198,8 +221,8 @@
     "input": {
       "name": "first star",
       "prompt": "Choose the first star",
-      "result": "reached-nodes",
-      "resultLabel": "stars in the constellation"
+      "result": "component-count",
+      "resultLabel": "number of constellations"
     }
   },
   {
@@ -214,13 +237,12 @@
     "rounds": [
       {
         "bugs": [
-          "wrong-start"
+          "make-one-way"
         ],
-        "level": "Wrong docked boat",
+        "level": "One-way connection",
         "presentation": "predict-first",
-        "goal": "Use two valid separated boats, and choose a start cell that is not listed first.",
-        "startLabel": "(0,0)",
-        "mistakenStartLabel": "(0,1)"
+        "goal": "Draw a straight border-touching boat. Click its later cell before its earlier cell when adding the edge. Treating that edge as one-way must split one docked boat into separate scanned pieces.",
+        "startLabel": "(0,0)"
       },
       {
         "bugs": [
@@ -237,7 +259,7 @@
         ],
         "level": "Loose dock line",
         "presentation": "exact-difference",
-        "goal": "Make the final side connection decide whether the boat reaches the border.",
+        "goal": "Use a straight boat along a border. Make removing the final side link split it into two pieces that each touch the border, so the buggy count is too large.",
         "startLabel": "(0,0)"
       }
     ],
@@ -249,8 +271,28 @@
     "input": {
       "name": "first boat cell",
       "prompt": "Choose the first boat cell",
-      "result": "reached-nodes",
-      "resultLabel": "cells in the boat"
+      "result": "border-component-count",
+      "resultLabel": "number of docked boats",
+      "fields": [
+        {
+          "id": "rows",
+          "kind": "integer",
+          "label": "grid rows",
+          "prompt": "Enter grid rows",
+          "required": true,
+          "min": 1,
+          "max": 50
+        },
+        {
+          "id": "columns",
+          "kind": "integer",
+          "label": "grid columns",
+          "prompt": "Enter grid columns",
+          "required": true,
+          "min": 1,
+          "max": 50
+        }
+      ]
     }
   },
   {
@@ -299,8 +341,8 @@
     "input": {
       "name": "start intersection",
       "prompt": "Choose the start intersection",
-      "result": "reached-nodes",
-      "resultLabel": "intersections on valid routes"
+      "result": "enumerated-paths",
+      "resultLabel": "complete routes that pass the coffee cart"
     },
     "fixedStart": "0"
   },
@@ -310,8 +352,8 @@
       "nodeNames": "village IDs",
       "startNode": "village with a well",
       "edges": "two-way footpaths",
-      "correctSearch": "villages served by that well",
-      "mistakenSearch": "villages the flawed survey marks served"
+      "correctSearch": "number of village clusters needing a well",
+      "mistakenSearch": "number the flawed survey returns"
     },
     "rounds": [
       {
@@ -325,13 +367,12 @@
       },
       {
         "bugs": [
-          "wrong-start"
+          "make-one-way"
         ],
-        "level": "Well in the other village",
+        "level": "Footpath made one-way",
         "presentation": "smallest-witness",
-        "goal": "List a non-well village first so ignoring the chosen well changes the served group.",
-        "startLabel": "0",
-        "mistakenStartLabel": "1"
+        "goal": "Draw a footpath toward a well so one-way treatment falsely splits its cluster.",
+        "startLabel": "0"
       },
       {
         "bugs": [
@@ -348,10 +389,34 @@
       "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
     },
     "input": {
-      "name": "village with a well",
-      "prompt": "Choose the village with a well",
-      "result": "reached-nodes",
-      "resultLabel": "villages served by that well"
+      "name": "first village to inspect",
+      "prompt": "Choose the first village to inspect",
+      "result": "components-without-source-count",
+      "resultLabel": "number of new wells that must be dug",
+      "resultConfig": {
+        "sourceMarker": "hasWell",
+        "sourceValue": "yes"
+      },
+      "markers": [
+        {
+          "id": "hasWell",
+          "target": "node",
+          "kind": "choice",
+          "label": "existing well",
+          "prompt": "Mark whether every village already has a well",
+          "required": true,
+          "choices": [
+            {
+              "value": "yes",
+              "label": "Has a well"
+            },
+            {
+              "value": "no",
+              "label": "No well"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -384,11 +449,11 @@
       },
       {
         "bugs": [
-          "first-branch"
+          "drop-last-edge"
         ],
-        "level": "Fork in the cave",
+        "level": "Final tunnel link omitted",
         "presentation": "predict-first",
-        "goal": "Create two safe branches so the survey must return after exploring the first.",
+        "goal": "Make the final side passage reach one more safe cave square.",
         "startLabel": "(0,0)"
       }
     ],
@@ -400,8 +465,53 @@
     "input": {
       "name": "drill square",
       "prompt": "Choose the drill square",
-      "result": "reached-nodes",
-      "resultLabel": "cave squares safely revealed"
+      "result": "transformed-grid",
+      "resultLabel": "cave grid after drilling",
+      "resultConfig": {
+        "rowsField": "rows",
+        "columnsField": "columns",
+        "valueMarker": "caveCell"
+      },
+      "fields": [
+        {
+          "id": "rows",
+          "kind": "integer",
+          "label": "row count",
+          "prompt": "How many rows are in the grid?",
+          "required": true,
+          "min": 1,
+          "max": 8
+        },
+        {
+          "id": "columns",
+          "kind": "integer",
+          "label": "column count",
+          "prompt": "How many columns are in the grid?",
+          "required": true,
+          "min": 1,
+          "max": 8
+        }
+      ],
+      "markers": [
+        {
+          "id": "caveCell",
+          "target": "node",
+          "kind": "choice",
+          "label": "original cave square",
+          "prompt": "Mark every square U or G",
+          "required": true,
+          "choices": [
+            {
+              "value": "U",
+              "label": "U"
+            },
+            {
+              "value": "G",
+              "label": "G"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -438,7 +548,7 @@
         ],
         "level": "Two lighting branches",
         "presentation": "exact-difference",
-        "goal": "Branch the wiring so following only the last branch leaves bulbs uncolored.",
+        "goal": "Put a gold bulb two wires down an earlier branch. Keeping only the last branch must miss at least one gold bulb, changing the returned count.",
         "startLabel": "0"
       }
     ],
@@ -449,8 +559,8 @@
     "input": {
       "name": "first gold bulb",
       "prompt": "Choose the first gold bulb",
-      "result": "reached-nodes",
-      "resultLabel": "bulbs reached for coloring"
+      "result": "selected-color-count",
+      "resultLabel": "number of gold bulbs"
     },
     "fixedStart": "0"
   },
@@ -500,8 +610,22 @@
     "input": {
       "name": "starting room",
       "prompt": "Choose the starting room",
-      "result": "reached-nodes",
-      "resultLabel": "rooms that can be opened"
+      "result": "reached-node-value-sum",
+      "resultLabel": "total gold in reachable rooms",
+      "resultConfig": {
+        "valueMarker": "gold"
+      },
+      "markers": [
+        {
+          "id": "gold",
+          "target": "node",
+          "kind": "number",
+          "label": "gold amount",
+          "prompt": "Give every room its gold amount",
+          "required": true,
+          "min": 0
+        }
+      ]
     },
     "fixedStart": "0"
   },
@@ -511,8 +635,8 @@
       "nodeNames": "campsite IDs",
       "startNode": "starting campsite",
       "edges": "two-way dry trails",
-      "correctSearch": "dry campsites reachable from start",
-      "mistakenSearch": "campsites the flawed hike reaches"
+      "correctSearch": "whether the dry finish is reachable",
+      "mistakenSearch": "whether the flawed hike reaches the finish"
     },
     "rounds": [
       {
@@ -521,7 +645,7 @@
         ],
         "level": "Wrong trailhead",
         "presentation": "predict-first",
-        "goal": "Separate the listed first campsite from the chosen dry trailhead.",
+        "goal": "Put the dry finish with start 0 while mistaken start 1 cannot reach it.",
         "startLabel": "0",
         "mistakenStartLabel": "1"
       },
@@ -531,7 +655,7 @@
         ],
         "level": "One-way hiking trail",
         "presentation": "exact-difference",
-        "goal": "Write a trail in reverse order so treating it as an arrow blocks the dry route.",
+        "goal": "Write the trail to the dry finish in reverse order so treating it as an arrow blocks the route.",
         "startLabel": "0"
       },
       {
@@ -540,7 +664,7 @@
         ],
         "level": "Flooded dead end",
         "presentation": "repair-case",
-        "goal": "Put a flooded or dead branch before a second branch that reaches the finish.",
+        "goal": "Put a dry dead end first and the dry finish on a second allowed branch. Flooded neighbors are skipped before choosing a branch.",
         "startLabel": "0"
       }
     ],
@@ -551,8 +675,20 @@
     "input": {
       "name": "starting campsite",
       "prompt": "Choose the starting campsite",
-      "result": "reached-nodes",
-      "resultLabel": "dry campsites reachable from start"
+      "result": "target-reachable-boolean",
+      "resultLabel": "whether the dry finish is reachable",
+      "resultConfig": {
+        "targetField": "target"
+      },
+      "fields": [
+        {
+          "id": "target",
+          "kind": "node",
+          "label": "finish campsite",
+          "prompt": "Choose the dry finish campsite",
+          "required": true
+        }
+      ]
     }
   },
   {
@@ -567,13 +703,12 @@
     "rounds": [
       {
         "bugs": [
-          "wrong-start"
+          "make-one-way"
         ],
-        "level": "Wrong train selected",
+        "level": "One-way connection",
         "presentation": "repair-case",
-        "goal": "Use two valid separated trains, and choose a start car that is not listed first.",
-        "startLabel": "(0,0)",
-        "mistakenStartLabel": "(0,1)"
+        "goal": "Draw one straight train with at least two cars. Draw its connection from the later grid cell toward the earlier one. A one-way search must measure a shorter train.",
+        "startLabel": "(0,0)"
       },
       {
         "bugs": [
@@ -602,8 +737,8 @@
     "input": {
       "name": "first train car",
       "prompt": "Choose the first train car",
-      "result": "reached-nodes",
-      "resultLabel": "cars in the train"
+      "result": "maximum-component-size",
+      "resultLabel": "longest freight-train length"
     }
   },
   {
@@ -612,8 +747,8 @@
       "nodeNames": "station IDs",
       "startNode": "source station",
       "edges": "colored two-way tracks",
-      "correctSearch": "stations reachable without transferring",
-      "mistakenSearch": "stations the flawed metro search reaches"
+      "correctSearch": "whether one color reaches the destination",
+      "mistakenSearch": "whether the flawed metro search reaches the destination"
     },
     "rounds": [
       {
@@ -651,8 +786,20 @@
     "input": {
       "name": "source station",
       "prompt": "Choose the source station",
-      "result": "reached-nodes",
-      "resultLabel": "stations reachable without transferring"
+      "result": "same-color-target-reachable-boolean",
+      "resultLabel": "whether the destination is reachable without changing colors",
+      "resultConfig": {
+        "targetField": "target"
+      },
+      "fields": [
+        {
+          "id": "target",
+          "kind": "node",
+          "label": "destination station",
+          "prompt": "Choose the destination station",
+          "required": true
+        }
+      ]
     }
   },
   {
@@ -701,8 +848,8 @@
     "input": {
       "name": "rumor starter",
       "prompt": "Choose the rumor starter",
-      "result": "reached-nodes",
-      "resultLabel": "employees who hear the rumor"
+      "result": "reached-count",
+      "resultLabel": "number of employees who hear the rumor, including the starter"
     }
   },
   {
@@ -711,8 +858,8 @@
       "nodeNames": "warehouse IDs",
       "startNode": "headquarters",
       "edges": "two-way timed roads",
-      "correctSearch": "warehouses reachable from HQ",
-      "mistakenSearch": "warehouses the flawed delivery search reaches"
+      "correctSearch": "total hours on the real route",
+      "mistakenSearch": "total hours the flawed delivery search returns"
     },
     "rounds": [
       {
@@ -735,12 +882,13 @@
       },
       {
         "bugs": [
-          "last-branch"
+          "wrong-start"
         ],
-        "level": "Wrong delivery fork",
+        "level": "Wrong depot",
         "presentation": "smallest-witness",
-        "goal": "Branch from HQ so only keeping the last road changes the reached warehouses.",
-        "startLabel": "0"
+        "goal": "Use warehouse 1 as the outpost so starting there returns 0 instead of the real trip time from HQ.",
+        "startLabel": "0",
+        "mistakenStartLabel": "1"
       }
     ],
     "nodeLabels": {
@@ -750,8 +898,32 @@
     "input": {
       "name": "headquarters",
       "prompt": "Choose the headquarters",
-      "result": "reached-nodes",
-      "resultLabel": "warehouses reachable from HQ"
+      "result": "shortest-path-weight",
+      "resultLabel": "total travel hours from HQ to the outpost",
+      "resultConfig": {
+        "targetField": "target",
+        "weightMarker": "roadTime"
+      },
+      "fields": [
+        {
+          "id": "target",
+          "kind": "node",
+          "label": "delivery target",
+          "prompt": "Choose the outpost that must receive the package",
+          "required": true
+        }
+      ],
+      "markers": [
+        {
+          "id": "roadTime",
+          "target": "edge",
+          "kind": "number",
+          "label": "road time",
+          "prompt": "Give every road its travel time",
+          "required": true,
+          "min": 1
+        }
+      ]
     }
   },
   {
@@ -760,8 +932,8 @@
       "nodeNames": "grass-cell coordinates",
       "startNode": "first grass square",
       "edges": "shared-side grass links",
-      "correctSearch": "squares in the campsite",
-      "mistakenSearch": "squares the flawed park scan joins"
+      "correctSearch": "number of campsites with exactly k squares",
+      "mistakenSearch": "number the flawed park scan returns"
     },
     "rounds": [
       {
@@ -775,13 +947,12 @@
       },
       {
         "bugs": [
-          "wrong-start"
+          "drop-last-edge"
         ],
-        "level": "Other campsite first",
+        "level": "Final grass link missing",
         "presentation": "repair-case",
-        "goal": "Include differently sized campsites so the chosen starting square matters.",
-        "startLabel": "(0,0)",
-        "mistakenStartLabel": "(0,1)"
+        "goal": "Make the final side link join pieces into one campsite whose size equals k.",
+        "startLabel": "(0,0)"
       },
       {
         "bugs": [
@@ -801,8 +972,21 @@
     "input": {
       "name": "first grass square",
       "prompt": "Choose the first grass square",
-      "result": "reached-nodes",
-      "resultLabel": "squares in the campsite"
+      "result": "exact-size-component-count",
+      "resultLabel": "number of campsites containing exactly k grass squares",
+      "resultConfig": {
+        "sizeField": "k"
+      },
+      "fields": [
+        {
+          "id": "k",
+          "kind": "integer",
+          "label": "required campsite size",
+          "prompt": "Choose the exact campsite size k",
+          "required": true,
+          "min": 1
+        }
+      ]
     }
   },
   {
@@ -851,8 +1035,8 @@
     "input": {
       "name": "base camp",
       "prompt": "Choose the base camp",
-      "result": "reached-nodes",
-      "resultLabel": "camps reached on summit routes"
+      "result": "path-count",
+      "resultLabel": "number of complete routes to the summit"
     },
     "fixedStart": "0"
   },
@@ -872,8 +1056,8 @@
         ],
         "level": "Code starts halfway",
         "presentation": "repair-case",
-        "goal": "Make beginning from a nonempty prefix skip legal first-dial choices.",
-        "startLabel": "ε",
+        "goal": "Offer complete legal codes beginning with different first runes. Starting at prefix a must miss another complete code.",
+        "startLabel": "start",
         "mistakenStartLabel": "a"
       },
       {
@@ -883,7 +1067,7 @@
         "level": "Last rune only",
         "presentation": "predict-first",
         "goal": "Offer several legal next runes so keeping only the last loses valid codes.",
-        "startLabel": "ε"
+        "startLabel": "start"
       },
       {
         "bugs": [
@@ -892,19 +1076,28 @@
         "level": "Three-dial door",
         "presentation": "exact-difference",
         "goal": "Require a legal code longer than one rune beyond the empty prefix.",
-        "startLabel": "ε"
+        "startLabel": "start"
       }
     ],
     "nodeLabels": {
       "rule": "partial-string",
       "description": "Use ε for the empty root, then lowercase partial strings like a or ab."
     },
-    "fixedStart": "ε",
+    "fixedStart": "start",
     "input": {
       "name": "empty code",
       "prompt": "Choose the empty code",
-      "result": "reached-nodes",
-      "resultLabel": "legal code prefixes reached"
+      "result": "generated-terminal-strings",
+      "resultLabel": "all complete legal rune codes",
+      "fields": [
+        {
+          "id": "dials",
+          "kind": "json",
+          "label": "dial choices as a JSON list of strings",
+          "prompt": "Enter dial choices as a JSON list of strings",
+          "required": true
+        }
+      ]
     }
   },
   {
@@ -913,8 +1106,8 @@
       "nodeNames": "person IDs",
       "startNode": "head caller",
       "edges": "caller-to-listener links",
-      "correctSearch": "people reached by the call chain",
-      "mistakenSearch": "people the flawed call chain reaches"
+      "correctSearch": "people informed by the deadline",
+      "mistakenSearch": "people the flawed call chain informs by the deadline"
     },
     "rounds": [
       {
@@ -952,8 +1145,33 @@
     "input": {
       "name": "head caller",
       "prompt": "Choose the head caller",
-      "result": "reached-nodes",
-      "resultLabel": "people reached by the call chain"
+      "result": "deadline-reached-count",
+      "resultLabel": "number of people informed on or before the deadline",
+      "resultConfig": {
+        "waitMarker": "waitDays",
+        "deadlineField": "deadline"
+      },
+      "fields": [
+        {
+          "id": "deadline",
+          "kind": "integer",
+          "label": "reunion deadline",
+          "prompt": "Choose the reunion deadline day",
+          "required": true,
+          "min": 0
+        }
+      ],
+      "markers": [
+        {
+          "id": "waitDays",
+          "target": "node",
+          "kind": "number",
+          "label": "waiting days",
+          "prompt": "Give every person their waiting days",
+          "required": true,
+          "min": 0
+        }
+      ]
     }
   },
   {
@@ -1003,8 +1221,22 @@
     "input": {
       "name": "shut sprinkler",
       "prompt": "Which sprinkler is shut?",
-      "result": "reached-nodes",
-      "resultLabel": "sprinklers that lose flow"
+      "result": "reached-node-value-sum",
+      "resultLabel": "total water flow lost",
+      "resultConfig": {
+        "valueMarker": "flow"
+      },
+      "markers": [
+        {
+          "id": "flow",
+          "target": "node",
+          "kind": "number",
+          "label": "liters per hour",
+          "prompt": "Give every sprinkler its water flow",
+          "required": true,
+          "min": 0
+        }
+      ]
     }
   },
   {
@@ -1052,8 +1284,8 @@
     "input": {
       "name": "first student in the group",
       "prompt": "Choose the first student in the group",
-      "result": "reached-nodes",
-      "resultLabel": "students in the study group"
+      "result": "maximum-component-size",
+      "resultLabel": "size of the biggest study group"
     }
   },
   {
@@ -1062,8 +1294,8 @@
       "nodeNames": "folders and song IDs",
       "startNode": "playlist root",
       "edges": "folder-to-content links",
-      "correctSearch": "songs reached in play order",
-      "mistakenSearch": "songs the flawed player reaches"
+      "correctSearch": "ID of the kth song played",
+      "mistakenSearch": "song ID the flawed player returns"
     },
     "rounds": [
       {
@@ -1073,7 +1305,7 @@
         "level": "Last album only",
         "presentation": "smallest-witness",
         "goal": "Place songs in multiple folders so keeping the last folder changes play order.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       },
       {
         "bugs": [
@@ -1082,7 +1314,7 @@
         "level": "Song in a subfolder",
         "presentation": "predict-first",
         "goal": "Bury a song more than one folder deep so a shallow player misses it.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       },
       {
         "bugs": [
@@ -1091,19 +1323,43 @@
         "level": "Final track missing",
         "presentation": "repair-case",
         "goal": "Make the last containment link point to a song needed in the playlist.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       }
     ],
     "nodeLabels": {
       "rule": "nested-path",
       "description": "Use root, root[0], root[1], ... to name nested input items."
     },
-    "fixedStart": "root",
+    "fixedStart": "root=[]",
     "input": {
       "name": "playlist root",
       "prompt": "Choose the playlist root",
-      "result": "reached-nodes",
-      "resultLabel": "songs reached in play order"
+      "result": "kth-visited-node-or-minus-one",
+      "resultLabel": "ID of the kth song played, or -1",
+      "resultConfig": {
+        "positionField": "k",
+        "valueMarker": "songId"
+      },
+      "fields": [
+        {
+          "id": "k",
+          "kind": "integer",
+          "label": "song position",
+          "prompt": "Choose the 1-based song position k",
+          "required": true,
+          "min": 1
+        }
+      ],
+      "markers": [
+        {
+          "id": "songId",
+          "target": "node",
+          "kind": "integer",
+          "label": "song ID",
+          "prompt": "Give each song node its ID; leave folder nodes out",
+          "required": false
+        }
+      ]
     }
   },
   {
@@ -1136,13 +1392,12 @@
       },
       {
         "bugs": [
-          "wrong-start"
+          "first-start-only"
         ],
-        "level": "Different starting key",
+        "level": "Only the first key",
         "presentation": "smallest-witness",
-        "goal": "Give an initial key that is not the first vault listed.",
-        "startLabel": "0",
-        "mistakenStartLabel": "1"
+        "goal": "Give at least two starting keys whose reachable vaults differ. The mistake uses only the first starting key.",
+        "startLabel": "0"
       }
     ],
     "nodeLabels": {
@@ -1150,10 +1405,10 @@
       "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
     },
     "input": {
-      "name": "initial key",
-      "prompt": "Choose the initial key",
-      "result": "reached-nodes",
-      "resultLabel": "vaults that can be opened"
+      "name": "starting keys",
+      "prompt": "Enter all starting keys as a JSON list; [] means no keys",
+      "result": "reached-count",
+      "resultLabel": "total number of different vaults opened"
     }
   },
   {
@@ -1173,7 +1428,7 @@
         "level": "Pile turned inside out",
         "presentation": "repair-case",
         "goal": "Use nested boxes where reversing containment prevents reaching their items.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       },
       {
         "bugs": [
@@ -1181,8 +1436,8 @@
         ],
         "level": "Start inside the pile",
         "presentation": "exact-difference",
-        "goal": "Make starting in the first inner box hide a shallower item elsewhere.",
-        "startLabel": "root",
+        "goal": "Start at root=[]. Put a nonzero integer outside the first inner array, so starting at root[0] changes the occupied layer sums.",
+        "startLabel": "root=[]",
         "mistakenStartLabel": "root[0]"
       },
       {
@@ -1192,19 +1447,22 @@
         "level": "Two top-level branches",
         "presentation": "predict-first",
         "goal": "Place items in separate branches so the search must return after the first.",
-        "startLabel": "root"
+        "startLabel": "root=[]"
       }
     ],
     "nodeLabels": {
       "rule": "nested-path",
       "description": "Use root, root[0], root[1], ... to name nested input items."
     },
-    "fixedStart": "root",
+    "fixedStart": "root=[]",
     "input": {
       "name": "outer box",
       "prompt": "Choose the outer box",
-      "result": "reached-nodes",
-      "resultLabel": "items found by depth"
+      "result": "level-value-sum",
+      "resultLabel": "sum of items at the shallowest occupied depth",
+      "resultConfig": {
+        "mode": "shallowest"
+      }
     }
   },
   {
@@ -1219,13 +1477,12 @@
     "rounds": [
       {
         "bugs": [
-          "wrong-start"
+          "strict-threshold"
         ],
-        "level": "Different trusted network",
+        "level": "Threshold equality",
         "presentation": "exact-difference",
-        "goal": "Create separate office networks so the selected starting office matters.",
-        "startLabel": "0",
-        "mistakenStartLabel": "1"
+        "goal": "Use a score exactly equal to k that connects two offices. The mistake keeps only scores greater than k.",
+        "startLabel": "0"
       },
       {
         "bugs": [
@@ -1253,8 +1510,25 @@
     "input": {
       "name": "first office in the network",
       "prompt": "Choose the first office in the network",
-      "result": "reached-nodes",
-      "resultLabel": "offices in the trusted network"
+      "result": "component-count",
+      "resultLabel": "number of trusted courier networks",
+      "fields": [
+        {
+          "id": "k",
+          "kind": "integer",
+          "label": "minimum trust score k",
+          "prompt": "Enter minimum trust score k",
+          "required": true,
+          "min": 1
+        },
+        {
+          "id": "scores",
+          "kind": "json",
+          "label": "symmetric trust matrix as JSON",
+          "prompt": "Enter symmetric trust matrix as JSON",
+          "required": true
+        }
+      ]
     }
   }
 ]

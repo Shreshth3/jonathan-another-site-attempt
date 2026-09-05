@@ -1,0 +1,1276 @@
+[
+  {
+    "problem": "all-paths-from-source-to-target",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "graph=[[3,4],[3],[4],[4],[]]",
+    "correct": [
+      [
+        0,
+        3,
+        4
+      ],
+      [
+        0,
+        4
+      ]
+    ],
+    "incorrect": [
+      [
+        0,
+        3,
+        4
+      ]
+    ]
+  },
+  {
+    "problem": "all-paths-from-source-to-target",
+    "task": "bug-trap",
+    "bug": "first-branch-only",
+    "input": "graph=[[1,2,4],[4],[3],[],[]]",
+    "correct": [
+      [
+        0,
+        1,
+        4
+      ],
+      [
+        0,
+        4
+      ]
+    ],
+    "incorrect": [
+      [
+        0,
+        1,
+        4
+      ]
+    ]
+  },
+  {
+    "problem": "battleships-in-a-board",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "board=[[\".\",\".\",\".\",\"X\",\".\",\".\",\".\"],[\".\",\".\",\".\",\"X\",\".\",\".\",\".\"],[\".\",\".\",\".\",\"X\",\".\",\".\",\".\"],[\"X\",\".\",\".\",\".\",\".\",\".\",\"X\"]]",
+    "correct": 3,
+    "incorrect": 0
+  },
+  {
+    "problem": "battleships-in-a-board",
+    "task": "bug-trap",
+    "bug": "counts-ship-cells",
+    "input": "board=[[\"X\",\"X\",\"X\",\".\",\".\",\".\",\".\"],[\".\",\".\",\".\",\".\",\".\",\".\",\".\"],[\".\",\".\",\".\",\".\",\".\",\".\",\".\"],[\".\",\".\",\".\",\".\",\"X\",\".\",\"X\"]]",
+    "correct": 3,
+    "incorrect": 5
+  },
+  {
+    "problem": "course-schedule",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "numCourses=5, prerequisites=[[3,0],[1,3],[4,1],[4,0]]",
+    "correct": true,
+    "incorrect": false
+  },
+  {
+    "problem": "course-schedule",
+    "task": "bug-trap",
+    "bug": "edge-means-cycle",
+    "input": "numCourses=5, prerequisites=[[1,0],[2,0],[3,1],[3,2],[4,0]]",
+    "correct": true,
+    "incorrect": false
+  },
+  {
+    "problem": "detonate-the-maximum-bombs",
+    "task": "predict-output",
+    "bug": "direct-hits-only",
+    "input": "bombs=[[2,2,6],[5,2,1],[8,2,4],[8,6,1],[14,6,2]]",
+    "correct": 4,
+    "incorrect": 3
+  },
+  {
+    "problem": "detonate-the-maximum-bombs",
+    "task": "bug-trap",
+    "bug": "authored-deep-case",
+    "input": "bombs=[[2,2,3],[5,2,1],[8,2,4],[8,6,1],[14,6,2]]",
+    "correct": 3,
+    "incorrect": 4
+  },
+  {
+    "problem": "evaluate-division",
+    "task": "predict-output",
+    "bug": "adds-ratios",
+    "input": "equations=[[\"m\",\"n\"],[\"n\",\"p\"],[\"q\",\"r\"]], values=[8,6,7], queries=[[\"m\",\"p\"]]",
+    "correct": [
+      48
+    ],
+    "incorrect": [
+      14
+    ]
+  },
+  {
+    "problem": "evaluate-division",
+    "task": "bug-trap",
+    "bug": "authored-deep-case",
+    "input": "equations=[[\"m\",\"n\"],[\"n\",\"p\"],[\"p\",\"q\"]], values=[6,3,4], queries=[[\"p\",\"m\"]]",
+    "correct": [
+      0.05555555555555555
+    ],
+    "incorrect": [
+      18
+    ]
+  },
+  {
+    "problem": "find-if-path-exists-in-graph",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "n=5, edges=[[0,1],[1,2],[0,3],[0,4]], source=1, destination=4",
+    "correct": true,
+    "incorrect": false
+  },
+  {
+    "problem": "find-if-path-exists-in-graph",
+    "task": "bug-trap",
+    "bug": "starts-at-zero",
+    "input": "n=5, edges=[[0,2],[2,4],[1,3],[0,4]], source=1, destination=4",
+    "correct": false,
+    "incorrect": true
+  },
+  {
+    "problem": "flatten-nested-list-iterator",
+    "task": "predict-output",
+    "bug": "reverses-folder-contents",
+    "input": "nestedList=[[],[7,8],9,[10]]",
+    "correct": [
+      7,
+      8,
+      9,
+      10
+    ],
+    "incorrect": [
+      8,
+      7,
+      9,
+      10
+    ]
+  },
+  {
+    "problem": "flatten-nested-list-iterator",
+    "task": "bug-trap",
+    "bug": "authored-deep-case",
+    "input": "nestedList=[7,[[],8],9,[12]]",
+    "correct": [
+      7,
+      8,
+      9,
+      12
+    ],
+    "incorrect": [
+      7,
+      [],
+      8,
+      9,
+      12
+    ]
+  },
+  {
+    "problem": "is-graph-bipartite",
+    "task": "predict-output",
+    "bug": "rejects-any-cycle",
+    "input": "graph=[[3,4],[3,4],[],[0,1],[1,0]]",
+    "correct": true,
+    "incorrect": false
+  },
+  {
+    "problem": "is-graph-bipartite",
+    "task": "bug-trap",
+    "bug": "ignores-color-conflicts",
+    "input": "graph=[[2,4],[3],[0,4],[1],[2,0]]",
+    "correct": false,
+    "incorrect": true
+  },
+  {
+    "problem": "keys-and-rooms",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "rooms=[[3,4],[3],[4],[4],[]]",
+    "correct": false,
+    "incorrect": true
+  },
+  {
+    "problem": "keys-and-rooms",
+    "task": "bug-trap",
+    "bug": "direct-keys-only",
+    "input": "rooms=[[1,2,4],[4],[3],[],[]]",
+    "correct": true,
+    "incorrect": false
+  },
+  {
+    "problem": "kill-process",
+    "task": "predict-output",
+    "bug": "children-without-kill",
+    "input": "pid=[11,23,35,47,59], ppid=[0,47,47,11,11], kill=47",
+    "correct": [
+      47,
+      23,
+      35
+    ],
+    "incorrect": [
+      23,
+      35
+    ]
+  },
+  {
+    "problem": "kill-process",
+    "task": "bug-trap",
+    "bug": "authored-deep-case",
+    "input": "pid=[11,23,35,47,59], ppid=[0,59,59,35,11], kill=59",
+    "correct": [
+      59,
+      23,
+      35,
+      47
+    ],
+    "incorrect": [
+      59,
+      23,
+      35
+    ]
+  },
+  {
+    "problem": "letter-combinations-of-a-phone-number",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "digits=\"82\"",
+    "correct": [
+      "ta",
+      "tb",
+      "tc",
+      "ua",
+      "ub",
+      "uc",
+      "va",
+      "vb",
+      "vc"
+    ],
+    "incorrect": [
+      "t",
+      "u",
+      "v"
+    ]
+  },
+  {
+    "problem": "letter-combinations-of-a-phone-number",
+    "task": "bug-trap",
+    "bug": "one-letter-per-digit",
+    "input": "digits=\"32\"",
+    "correct": [
+      "da",
+      "db",
+      "dc",
+      "ea",
+      "eb",
+      "ec",
+      "fa",
+      "fb",
+      "fc"
+    ],
+    "incorrect": [
+      "da"
+    ]
+  },
+  {
+    "problem": "longest-increasing-path-in-a-matrix",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "matrix=[[8,6,7],[6,10,8],[7,11,9]]",
+    "correct": 5,
+    "incorrect": 4
+  },
+  {
+    "problem": "longest-increasing-path-in-a-matrix",
+    "task": "bug-trap",
+    "bug": "starts-at-top-left",
+    "input": "matrix=[[9,10,8],[7,11,9],[11,9,13]]",
+    "correct": 4,
+    "incorrect": 3
+  },
+  {
+    "problem": "minesweeper",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "board=[[\"M\",\"E\",\"E\"],[\"E\",\"E\",\"E\"],[\"E\",\"E\",\"E\"]], click=[2,1]",
+    "correct": [
+      [
+        "M",
+        "1",
+        "B"
+      ],
+      [
+        "1",
+        "1",
+        "B"
+      ],
+      [
+        "B",
+        "B",
+        "B"
+      ]
+    ],
+    "incorrect": [
+      [
+        "M",
+        "1",
+        "B"
+      ],
+      [
+        "1",
+        "B",
+        "B"
+      ],
+      [
+        "B",
+        "B",
+        "B"
+      ]
+    ]
+  },
+  {
+    "problem": "minesweeper",
+    "task": "bug-trap",
+    "bug": "counts-all-mines",
+    "input": "board=[[\"M\",\"E\",\"M\"],[\"E\",\"E\",\"E\"],[\"E\",\"E\",\"E\"]], click=[2,1]",
+    "correct": [
+      [
+        "M",
+        "E",
+        "M"
+      ],
+      [
+        "1",
+        "2",
+        "1"
+      ],
+      [
+        "B",
+        "B",
+        "B"
+      ]
+    ],
+    "incorrect": [
+      [
+        "M",
+        "E",
+        "M"
+      ],
+      [
+        "E",
+        "E",
+        "E"
+      ],
+      [
+        "E",
+        "2",
+        "E"
+      ]
+    ]
+  },
+  {
+    "problem": "nested-list-weight-sum",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "nestedList=[[7,7],[8],[],[13]]",
+    "correct": 70,
+    "incorrect": 35
+  },
+  {
+    "problem": "nested-list-weight-sum",
+    "task": "bug-trap",
+    "bug": "same-weight-every-depth",
+    "input": "nestedList=[[],7,[[8],9],[14]]",
+    "correct": 77,
+    "incorrect": 38
+  },
+  {
+    "problem": "nested-list-weight-sum-ii",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "nestedList=[[7,7],[8],[],[13]]",
+    "correct": 35,
+    "incorrect": 70
+  },
+  {
+    "problem": "nested-list-weight-sum-ii",
+    "task": "bug-trap",
+    "bug": "all-weight-one",
+    "input": "nestedList=[[],7,[[8],9],[14]]",
+    "correct": 75,
+    "incorrect": 38
+  },
+  {
+    "problem": "network-delay-time",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "times=[[1,4,11],[2,4,12],[3,5,13],[4,5,14],[1,5,15]], n=5, k=1",
+    "correct": -1,
+    "incorrect": 28
+  },
+  {
+    "problem": "network-delay-time",
+    "task": "bug-trap",
+    "bug": "fewest-hops",
+    "input": "times=[[1,2,12],[1,3,13],[2,5,14],[3,4,15],[1,5,16]], n=5, k=1",
+    "correct": 28,
+    "incorrect": 2
+  },
+  {
+    "problem": "number-of-connected-components-in-an-undirected-graph",
+    "task": "predict-output",
+    "bug": "counts-nodes-minus-edges",
+    "input": "n=5, edges=[[0,3],[3,1],[1,4],[0,4]]",
+    "correct": 2,
+    "incorrect": 1
+  },
+  {
+    "problem": "number-of-connected-components-in-an-undirected-graph",
+    "task": "bug-trap",
+    "bug": "authored-deep-case",
+    "input": "n=5, edges=[[0,1],[1,2],[2,0],[3,4],[0,4]]",
+    "correct": 1,
+    "incorrect": 2
+  },
+  {
+    "problem": "number-of-increasing-paths-in-a-grid",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "grid=[[8,6,7],[6,10,8],[7,11,9]]",
+    "correct": 35,
+    "incorrect": 23
+  },
+  {
+    "problem": "number-of-increasing-paths-in-a-grid",
+    "task": "bug-trap",
+    "bug": "starts-at-minimum",
+    "input": "grid=[[9,10,8],[7,11,9],[11,9,13]]",
+    "correct": 27,
+    "incorrect": 6
+  },
+  {
+    "problem": "number-of-islands",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "grid=[[\"1\",\"0\",\"0\"],[\"0\",\"1\",\"0\"],[\"0\",\"1\",\"0\"]]",
+    "correct": 2,
+    "incorrect": 1
+  },
+  {
+    "problem": "number-of-islands",
+    "task": "bug-trap",
+    "bug": "counts-land-cells",
+    "input": "grid=[[\"1\",\"1\",\"0\"],[\"0\",\"1\",\"0\"],[\"0\",\"0\",\"0\"]]",
+    "correct": 1,
+    "incorrect": 3
+  },
+  {
+    "problem": "number-of-provinces",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "isConnected=[[1,0,0,1,1],[0,1,0,1,1],[0,0,1,0,0],[1,1,0,1,0],[1,1,0,0,1]]",
+    "correct": 2,
+    "incorrect": 1
+  },
+  {
+    "problem": "number-of-provinces",
+    "task": "bug-trap",
+    "bug": "direct-from-zero",
+    "input": "isConnected=[[1,1,1,0,1],[1,1,0,1,0],[1,0,1,1,0],[0,1,1,1,0],[1,0,0,0,1]]",
+    "correct": 1,
+    "incorrect": 4
+  },
+  {
+    "problem": "possible-bipartition",
+    "task": "predict-output",
+    "bug": "rejects-any-dislike-chain",
+    "input": "n=6, dislikes=[[1,4],[2,4],[2,5],[1,5]]",
+    "correct": true,
+    "incorrect": false
+  },
+  {
+    "problem": "possible-bipartition",
+    "task": "bug-trap",
+    "bug": "ignores-group-conflicts",
+    "input": "n=6, dislikes=[[1,3],[3,5],[2,4],[1,5]]",
+    "correct": false,
+    "incorrect": true
+  },
+  {
+    "problem": "smallest-string-with-swaps",
+    "task": "predict-output",
+    "bug": "one-pass-swaps",
+    "input": "s=\"ebabe\", pairs=[[0,3],[3,1],[1,4],[0,4]]",
+    "correct": "bbaee",
+    "incorrect": "beabe"
+  },
+  {
+    "problem": "smallest-string-with-swaps",
+    "task": "bug-trap",
+    "bug": "sorts-whole-string",
+    "input": "s=\"bbaca\", pairs=[[0,1],[1,2]]",
+    "correct": "abbca",
+    "incorrect": "aabbc"
+  },
+  {
+    "problem": "time-needed-to-inform-all-employees",
+    "task": "predict-output",
+    "bug": "shortest-branch",
+    "input": "n=5, headID=0, manager=[-1,3,3,0,0], informTime=[12,0,0,15,0]",
+    "correct": 27,
+    "incorrect": 12
+  },
+  {
+    "problem": "time-needed-to-inform-all-employees",
+    "task": "bug-trap",
+    "bug": "omits-head-delay",
+    "input": "n=5, headID=0, manager=[-1,4,4,2,0], informTime=[13,0,15,0,17]",
+    "correct": 45,
+    "incorrect": 32
+  },
+  {
+    "problem": "water-and-jug-problem",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "jug1Capacity=3, jug2Capacity=1, targetCapacity=4",
+    "correct": true,
+    "incorrect": false
+  },
+  {
+    "problem": "water-and-jug-problem",
+    "task": "bug-trap",
+    "bug": "must-fill-exact-jug",
+    "input": "jug1Capacity=3, jug2Capacity=1, targetCapacity=2",
+    "correct": true,
+    "incorrect": false
+  },
+  {
+    "problem": "word-search",
+    "task": "predict-output",
+    "bug": "starts-top-left-only",
+    "input": "board=[[\"D\",\"D\",\"E\",\"Q\"],[\"E\",\"F\",\"D\",\"Q\"]], word=\"DED\"",
+    "correct": true,
+    "incorrect": false
+  },
+  {
+    "problem": "word-search",
+    "task": "bug-trap",
+    "bug": "reuse-same-cell",
+    "input": "board=[[\"A\",\"B\",\"X\"],[\"X\",\"X\",\"X\"]], word=\"ABA\"",
+    "correct": false,
+    "incorrect": true
+  },
+  {
+    "problem": "ten-kinds-of-people",
+    "task": "predict-output",
+    "bug": "crosses-terrain",
+    "input": "grid=[\"100\",\"010\",\"010\"], queries=[[0,0,2,2],[0,1,1,1]]",
+    "correct": [
+      "neither",
+      "neither"
+    ],
+    "incorrect": [
+      "decimal",
+      "binary"
+    ]
+  },
+  {
+    "problem": "ten-kinds-of-people",
+    "task": "bug-trap",
+    "bug": "authored-deep-case",
+    "input": "grid=[\"110\",\"010\",\"101\"], queries=[[0,0,2,2],[0,1,1,1]]",
+    "correct": [
+      "neither",
+      "decimal"
+    ],
+    "incorrect": [
+      "decimal",
+      "decimal"
+    ]
+  },
+  {
+    "problem": "codewars-array-deep-count",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "deepCount([[7,7],[8],[],[13]])",
+    "correct": 8,
+    "incorrect": 4
+  },
+  {
+    "problem": "codewars-array-deep-count",
+    "task": "bug-trap",
+    "bug": "counts-outer-array",
+    "input": "deepCount([[],7,[[8],9],[14]])",
+    "correct": 8,
+    "incorrect": 9
+  },
+  {
+    "problem": "gfg-grid-path-exists",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "grid=[[1,0,3],[0,3,0],[0,3,2]]",
+    "correct": false,
+    "incorrect": true
+  },
+  {
+    "problem": "gfg-grid-path-exists",
+    "task": "bug-trap",
+    "bug": "walks-through-walls",
+    "input": "grid=[[1,3,3],[0,3,0],[3,0,2]]",
+    "correct": false,
+    "incorrect": true
+  },
+  {
+    "problem": "hackerrank-connected-cells",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "grid=[[1,0,0],[0,1,0],[0,1,0]]",
+    "correct": 3,
+    "incorrect": 2
+  },
+  {
+    "problem": "hackerrank-connected-cells",
+    "task": "bug-trap",
+    "bug": "forgets-current-cell",
+    "input": "grid=[[1,1,0],[0,1,0],[0,0,0]]",
+    "correct": 3,
+    "incorrect": 0
+  },
+  {
+    "problem": "count-sub-islands",
+    "task": "predict-output",
+    "bug": "ignores-grid1",
+    "input": "grid1=[[0,0,0],[0,1,0],[0,1,0]], grid2=[[1,0,0],[0,1,0],[0,1,0]]",
+    "correct": 1,
+    "incorrect": 2
+  },
+  {
+    "problem": "count-sub-islands",
+    "task": "bug-trap",
+    "bug": "diagonal-islands",
+    "input": "grid1=[[1,1,0],[0,1,0],[1,0,0]], grid2=[[1,1,0],[0,1,0],[1,0,1]]",
+    "correct": 2,
+    "incorrect": 0
+  },
+  {
+    "problem": "employee-importance",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "employees=[{\"id\":0,\"importance\":14,\"subordinates\":[3,4]},{\"id\":1,\"importance\":5,\"subordinates\":[]},{\"id\":2,\"importance\":11,\"subordinates\":[]},{\"id\":3,\"importance\":10,\"subordinates\":[1,2]},{\"id\":4,\"importance\":12,\"subordinates\":[]}], id=0",
+    "correct": 52,
+    "incorrect": 36
+  },
+  {
+    "problem": "employee-importance",
+    "task": "bug-trap",
+    "bug": "omits-manager",
+    "input": "employees=[{\"id\":0,\"importance\":15,\"subordinates\":[4]},{\"id\":1,\"importance\":6,\"subordinates\":[]},{\"id\":2,\"importance\":12,\"subordinates\":[3]},{\"id\":3,\"importance\":11,\"subordinates\":[]},{\"id\":4,\"importance\":13,\"subordinates\":[1,2]}], id=0",
+    "correct": 57,
+    "incorrect": 42
+  },
+  {
+    "problem": "evaluate-boolean-binary-tree",
+    "task": "predict-output",
+    "bug": "or-as-and",
+    "input": "values=[3,3,2,1,0,1,1], edges=[[0,1],[0,2],[2,3],[2,4],[1,5],[1,6]] (node IDs index values; edges name the children; 0=false, 1=true, 2=OR, 3=AND)",
+    "correct": true,
+    "incorrect": false
+  },
+  {
+    "problem": "evaluate-boolean-binary-tree",
+    "task": "bug-trap",
+    "bug": "authored-deep-case",
+    "input": "values=[2,3,3,1,0,0,1], edges=[[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]] (node IDs index values; edges name the children; 0=false, 1=true, 2=OR, 3=AND)",
+    "correct": false,
+    "incorrect": true
+  },
+  {
+    "problem": "usaco-fence-planning",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "cows=[[4,1],[6,2],[8,4],[12,2],[14,6],[16,8]], friendships=[[0,3],[3,1],[3,2],[0,4],[4,5]]",
+    "correct": 38,
+    "incorrect": 19
+  },
+  {
+    "problem": "usaco-fence-planning",
+    "task": "bug-trap",
+    "bug": "uses-area",
+    "input": "cows=[[5,1],[7,2],[9,4],[13,2],[15,6],[17,8]], friendships=[[0,1],[1,2],[3,4],[4,5]]",
+    "correct": 14,
+    "incorrect": 12
+  },
+  {
+    "problem": "find-all-groups-of-farmland",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "land=[[0,0,1,1,1,0,0],[0,0,1,1,1,0,0],[0,0,0,0,0,0,0],[1,1,0,0,0,0,1]]",
+    "correct": [
+      [
+        0,
+        2,
+        1,
+        4
+      ],
+      [
+        3,
+        0,
+        3,
+        1
+      ],
+      [
+        3,
+        6,
+        3,
+        6
+      ]
+    ],
+    "incorrect": [
+      [
+        0,
+        2,
+        2,
+        5
+      ],
+      [
+        3,
+        0,
+        4,
+        2
+      ],
+      [
+        3,
+        6,
+        4,
+        7
+      ]
+    ]
+  },
+  {
+    "problem": "find-all-groups-of-farmland",
+    "task": "bug-trap",
+    "bug": "reports-size",
+    "input": "land=[[1,1,1,0,0,0,0],[1,1,1,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,1,0,1]]",
+    "correct": [
+      [
+        0,
+        0,
+        1,
+        2
+      ],
+      [
+        3,
+        4,
+        3,
+        4
+      ],
+      [
+        3,
+        6,
+        3,
+        6
+      ]
+    ],
+    "incorrect": [
+      [
+        0,
+        0,
+        2,
+        3
+      ],
+      [
+        3,
+        4,
+        1,
+        1
+      ],
+      [
+        3,
+        6,
+        1,
+        1
+      ]
+    ]
+  },
+  {
+    "problem": "flood-fill",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "image=[[5,0,0],[0,5,0],[0,5,0]], sr=0, sc=0, color=10",
+    "correct": [
+      [
+        10,
+        0,
+        0
+      ],
+      [
+        0,
+        5,
+        0
+      ],
+      [
+        0,
+        5,
+        0
+      ]
+    ],
+    "incorrect": [
+      [
+        10,
+        0,
+        0
+      ],
+      [
+        0,
+        10,
+        0
+      ],
+      [
+        0,
+        10,
+        0
+      ]
+    ]
+  },
+  {
+    "problem": "flood-fill",
+    "task": "bug-trap",
+    "bug": "crosses-colors",
+    "input": "image=[[2,2,0],[0,2,0],[0,0,0]], sr=0, sc=0, color=7",
+    "correct": [
+      [
+        7,
+        7,
+        0
+      ],
+      [
+        0,
+        7,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "incorrect": [
+      [
+        7,
+        7,
+        7
+      ],
+      [
+        7,
+        7,
+        7
+      ],
+      [
+        7,
+        7,
+        7
+      ]
+    ]
+  },
+  {
+    "problem": "kattis-getting-gold",
+    "task": "predict-output",
+    "bug": "drops-gold-on-draft",
+    "input": "dungeon=[\"#####\",\"#P.G#\",\"#..T#\",\"#...#\",\"#####\"]",
+    "correct": 1,
+    "incorrect": 0
+  },
+  {
+    "problem": "kattis-getting-gold",
+    "task": "bug-trap",
+    "bug": "authored-deep-case",
+    "input": "dungeon=[\"#####\",\"#P.G#\",\"#.T.#\",\"#...#\",\"#####\"]",
+    "correct": 0,
+    "incorrect": 1
+  },
+  {
+    "problem": "ladder-takahashi",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "ladders=[[18,1],[7,18],[25,7],[25,1]]",
+    "correct": 25,
+    "incorrect": 1
+  },
+  {
+    "problem": "ladder-takahashi",
+    "task": "bug-trap",
+    "bug": "direct-only",
+    "input": "ladders=[[7,1],[12,7]]",
+    "correct": 12,
+    "incorrect": 7
+  },
+  {
+    "problem": "structy-largest-component",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "graph={\"0\":[\"3\",\"4\"],\"1\":[\"3\",\"4\"],\"2\":[],\"3\":[\"0\",\"1\"],\"4\":[\"1\",\"0\"]}",
+    "correct": 4,
+    "incorrect": 2
+  },
+  {
+    "problem": "structy-largest-component",
+    "task": "bug-trap",
+    "bug": "omits-start-node",
+    "input": "graph={\"0\":[\"1\",\"2\",\"4\"],\"1\":[\"0\",\"3\"],\"2\":[\"0\",\"3\"],\"3\":[\"1\",\"2\"],\"4\":[\"0\"]}",
+    "correct": 5,
+    "incorrect": 4
+  },
+  {
+    "problem": "max-area-of-island",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "grid=[[1,0,0],[0,1,0],[0,1,0]]",
+    "correct": 2,
+    "incorrect": 3
+  },
+  {
+    "problem": "max-area-of-island",
+    "task": "bug-trap",
+    "bug": "forgets-current-cell",
+    "input": "grid=[[1,1,0],[0,1,0],[0,0,0]]",
+    "correct": 3,
+    "incorrect": 0
+  },
+  {
+    "problem": "structy-max-root-to-leaf-path-sum",
+    "task": "predict-output",
+    "bug": "adds-both-branches",
+    "input": "root level-order=[-3,7,7,null,2,11] (fixed slots: children of index i are 2i+1 and 2i+2; null is empty)",
+    "correct": 15,
+    "incorrect": 24
+  },
+  {
+    "problem": "structy-max-root-to-leaf-path-sum",
+    "task": "bug-trap",
+    "bug": "chooses-smaller-path",
+    "input": "root level-order=[5,1,9,3,3,12] (fixed slots: children of index i are 2i+1 and 2i+2; null is empty)",
+    "correct": 26,
+    "incorrect": 9
+  },
+  {
+    "problem": "maximum-number-of-fish-in-a-grid",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "grid=[[4,0,0],[0,6,0],[0,7,0]]",
+    "correct": 13,
+    "incorrect": 2
+  },
+  {
+    "problem": "maximum-number-of-fish-in-a-grid",
+    "task": "bug-trap",
+    "bug": "adds-pools",
+    "input": "grid=[[5,6,0],[0,7,0],[7,0,1]]",
+    "correct": 18,
+    "incorrect": 26
+  },
+  {
+    "problem": "usaco-milk-factory",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "n=5, edges=[[1,4],[4,2],[4,3],[1,5]]",
+    "correct": -1,
+    "incorrect": 1
+  },
+  {
+    "problem": "usaco-milk-factory",
+    "task": "bug-trap",
+    "bug": "direct-senders-only",
+    "input": "n=5, edges=[[2,1],[3,2],[4,1],[5,1]]",
+    "correct": 1,
+    "incorrect": -1
+  },
+  {
+    "problem": "structy-minimum-island",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "grid=[[\"L\",\"W\",\"W\"],[\"W\",\"L\",\"W\"],[\"W\",\"L\",\"W\"]]",
+    "correct": 1,
+    "incorrect": 2
+  },
+  {
+    "problem": "structy-minimum-island",
+    "task": "bug-trap",
+    "bug": "zero-minimum-sentinel",
+    "input": "grid=[[\"L\",\"L\",\"W\"],[\"W\",\"L\",\"W\"],[\"L\",\"W\",\"L\"]]",
+    "correct": 1,
+    "incorrect": 0
+  },
+  {
+    "problem": "moocast",
+    "task": "predict-output",
+    "bug": "strict-radius",
+    "input": "cows=[[2,2,6],[5,2,1],[8,2,4],[8,6,1],[14,6,2]]",
+    "correct": 4,
+    "incorrect": 2
+  },
+  {
+    "problem": "moocast",
+    "task": "bug-trap",
+    "bug": "authored-deep-case",
+    "input": "cows=[[2,2,4],[5,2,1],[8,2,4],[8,6,1],[14,6,2]]",
+    "correct": 3,
+    "incorrect": 4
+  },
+  {
+    "problem": "path-sum",
+    "task": "predict-output",
+    "bug": "requires-both-branches",
+    "input": "root level-order=[-3,7,7,null,2,11], targetSum=6 (fixed slots: children of index i are 2i+1 and 2i+2; null is empty)",
+    "correct": true,
+    "incorrect": false
+  },
+  {
+    "problem": "path-sum",
+    "task": "bug-trap",
+    "bug": "prunes-negative-sums",
+    "input": "root level-order=[2,-4,8,null,3,9], targetSum=1 (fixed slots: children of index i are 2i+1 and 2i+2; null is empty)",
+    "correct": true,
+    "incorrect": false
+  },
+  {
+    "problem": "properties-graph",
+    "task": "predict-output",
+    "bug": "strict-threshold",
+    "input": "properties=[[2,3],[3,4],[4,2],[9,9],[2,3]], k=2",
+    "correct": 4,
+    "incorrect": 5
+  },
+  {
+    "problem": "properties-graph",
+    "task": "bug-trap",
+    "bug": "counts-links",
+    "input": "properties=[[6,7],[6,7],[6,8],[8,8],[6,7]], k=1",
+    "correct": 1,
+    "incorrect": 7
+  },
+  {
+    "problem": "reachable-nodes-with-restrictions",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "n=5, edges=[[0,3],[3,1],[3,2],[0,4]], restricted=[3]",
+    "correct": 2,
+    "incorrect": 4
+  },
+  {
+    "problem": "reachable-nodes-with-restrictions",
+    "task": "bug-trap",
+    "bug": "counts-all-unrestricted",
+    "input": "n=5, edges=[[0,4],[4,1],[4,2],[2,3]], restricted=[4]",
+    "correct": 1,
+    "incorrect": 4
+  },
+  {
+    "problem": "transitive-closure",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "graph=[[0,0,0,1,1],[0,0,0,1,0],[0,0,0,0,1],[0,0,0,0,1],[0,0,0,0,0]]",
+    "correct": [
+      [
+        1,
+        0,
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    ],
+    "incorrect": [
+      [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "problem": "transitive-closure",
+    "task": "bug-trap",
+    "bug": "direct-only",
+    "input": "graph=[[0,1,1,0,1],[0,0,0,0,1],[0,0,0,1,0],[0,0,0,0,0],[0,0,0,0,0]]",
+    "correct": [
+      [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    ],
+    "incorrect": [
+      [
+        1,
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "problem": "structy-tree-sum",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "root level-order=[-3,7,7,null,2,11] (fixed slots: children of index i are 2i+1 and 2i+2; null is empty)",
+    "correct": 24,
+    "incorrect": 27
+  },
+  {
+    "problem": "structy-tree-sum",
+    "task": "bug-trap",
+    "bug": "takes-largest-branch",
+    "input": "root level-order=[5,1,9,3,3,12] (fixed slots: children of index i are 2i+1 and 2i+2; null is empty)",
+    "correct": 33,
+    "incorrect": 26
+  },
+  {
+    "problem": "wheres-my-internet",
+    "task": "predict-output",
+    "bug": "authored-deep-case",
+    "input": "n=5, connections=[[1,4],[4,2],[2,5],[1,5]]",
+    "correct": [
+      3
+    ],
+    "incorrect": [
+      2,
+      3
+    ]
+  },
+  {
+    "problem": "wheres-my-internet",
+    "task": "bug-trap",
+    "bug": "starts-at-house-zero",
+    "input": "n=5, connections=[[1,2],[1,3],[2,4],[3,4],[1,5]]",
+    "correct": [],
+    "incorrect": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  }
+]

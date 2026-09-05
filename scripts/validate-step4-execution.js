@@ -33,6 +33,24 @@ function levelOrderTree(values) {
   return nodes[0];
 }
 
+function explicitBooleanTree(input) {
+  if (!input.values || !input.edges) return levelOrderTree(input.values || []);
+  const nodes = input.values.map(val => ({ val, left: null, right: null }));
+  const parents = new Set();
+  for (const [from, to] of input.edges) {
+    if (!nodes[from] || !nodes[to] || from === to || parents.has(to)) throw new Error("Invalid explicit Boolean tree");
+    parents.add(to);
+    if (!nodes[from].left) nodes[from].left = nodes[to];
+    else if (!nodes[from].right) nodes[from].right = nodes[to];
+    else throw new Error("Boolean operator has more than two children");
+  }
+  for (const node of nodes) {
+    const leaf = node.val === 0 || node.val === 1;
+    if (leaf ? node.left || node.right : !node.left || !node.right) throw new Error("Boolean leaf/operator shape disagrees with values");
+  }
+  return nodes[0];
+}
+
 function parseInput(problemId, source) {
   if (typeof source !== "string") return JSON.parse(JSON.stringify(source));
   if (problemId === "codewars-array-deep-count") return { arr: vm.runInNewContext(`(${source.match(/^deepCount\((.*)\)$/)?.[1]})`) };
@@ -46,7 +64,7 @@ function parseInput(problemId, source) {
   if (problemId === "routes-past-the-coffee-cart") Object.assign(input, { graph: input.roads, checkpoint: input.coffeeCart });
   if (problemId === "villages-without-wells") input.paths = input.roads;
   if (problemId === "gas-pocket-survey") { input.cave = input.cave.map(row => [...row]); const drill = source.match(/drill=\((\d+),(\d+)\)/); input.row = Number(drill[1]); input.col = Number(drill[2]); }
-  if (problemId === "evaluate-boolean-binary-tree") input.root = levelOrderTree(input.values);
+  if (problemId === "evaluate-boolean-binary-tree") input.root = explicitBooleanTree(input);
   if (problemId === "usaco-fence-planning") Object.assign(input, { positions: input.cows, pairs: input.friendships });
   if (problemId === "kattis-getting-gold") input.grid = input.dungeon;
   return input;
@@ -67,7 +85,7 @@ for (const problem of dataSandbox.window.DFS_VISUAL_DATA.problems) {
     vm.runInNewContext(`__result = ${functionName}(...__args);`, sandbox, { timeout: 1000 });
     actual = sandbox.__result;
     const expected = JSON.parse(spec.buggyOutput);
-    if (JSON.stringify(actual) !== JSON.stringify(expected)) failures.push(`${problem.id}: code returned ${JSON.stringify(actual)}, declared ${spec.buggyOutput}`);
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) failures.push(`${problem.id}/${spec.caseId}: code returned ${JSON.stringify(actual)}, declared ${spec.buggyOutput}`);
   } catch (error) {
     failures.push(`${problem.id}/${spec.caseId}: Step 4 execution failed (${error.message})`);
   }

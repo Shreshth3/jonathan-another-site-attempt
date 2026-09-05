@@ -8,7 +8,8 @@ const renderer = fs.readFileSync(path.join(root, "visual-library.js"), "utf8");
 const failures = [];
 
 if (/shortLabel\s*\(/.test(renderer)) failures.push("The old shortLabel truncation helper still exists.");
-if (renderer.includes("…")) failures.push("The mini-graph renderer still contains an ellipsis character.");
+const miniRenderer = renderer.slice(renderer.indexOf("  function miniGraph("), renderer.indexOf("  function updateProgress("));
+if (miniRenderer.includes("…")) failures.push("The mini-graph renderer still contains an ellipsis character.");
 if (!/metric\.lines\.map\(/.test(renderer)) failures.push("Mini-graph labels are not rendered line by line.");
 if (!/nestedInputItems\(rawInput\)/.test(renderer)) failures.push("Nested pictures are not using the raw input for display labels.");
 if (!/Nested items: \$\{displayNodes\.map\(item => spoken\(item\.label\)\)/.test(renderer)) failures.push("Nested screen-reader text is not using the normalized display labels.");

@@ -31,39 +31,17 @@ const rawStep4Specs = step4Files.flatMap(name => {
   return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : [];
 });
 if (new Set(rawStep4Specs.map(item => item.id)).size !== rawStep4Specs.length) throw new Error("Step 4 specs contain duplicate problem IDs.");
-const STEP4_DIAGNOSIS_LABEL_OVERRIDES = {
-  "two-digits-four-way:wrong-three": "Digit 7 should have only p, q, and r, changing this input's returned value.",
-  "two-digits-second-three-way:wrong-three": "Digit 4 should have only g and h, changing this input's returned value.",
-  "failed-start-blocks-aac:diagonal-word": "The search needs diagonal moves to reach C, which changes the returned value here."
-};
 const step4Specs = new Map(rawStep4Specs.map(item => [item.id, resolveAuthoredStep4Cases(item)]));
 
 function resolveAuthoredStep4Cases(spec) {
   if (!Array.isArray(spec.cases) || !spec.cases.length) return spec;
-  const base = spec.cases[0];
   return {
     ...spec,
-    cases: spec.cases.map((entry, index) => {
-      if (index === 0) return entry;
-      const resolved = { ...base, ...entry };
-      resolved.canvas = expandCompactCanvas(entry.canvas || base.canvas);
-      if (!entry.diagnoses) resolved.diagnoses = base.diagnoses.map(choice => {
-        const label = entry.diagnosisLabels?.[choice.id] || STEP4_DIAGNOSIS_LABEL_OVERRIDES[`${entry.caseId}:${choice.id}`] || choice.label;
-        return {
-          ...choice,
-          label,
-          feedback: choice.id === base.correctDiagnosis
-            ? `Correct. ${entry.rationale} The shown code returns ${entry.buggyOutput}; the real problem returns ${entry.correctOutput}.`
-            : `No. ${label} The exact separating fact here is: ${entry.rationale}`
-        };
-      });
-      if (!entry.graphProof) resolved.graphProof = {
-        realGraph: `The exact drawing has ${resolved.canvas.nodes.length} nodes and ${resolved.canvas.edges.length} direct ${resolved.canvas.directed ? "arrows" : "edges"}.`,
-        codeRule: base.graphProof.codeRule,
-        separatingFeature: entry.rationale,
-        outputConsequence: `The changed graph boundary makes the code return ${entry.buggyOutput}; the real graph returns ${entry.correctOutput}.`
-      };
-      return resolved;
+    cases: spec.cases.map(entry => {
+      const required = ["caseId", "bugTitle", "misconception", "input", "code", "canvas", "outputFormat", "buggyOutput", "correctOutput", "correctDiagnosis", "diagnoses", "graphProof"];
+      const missing = required.filter(field => entry[field] == null || entry[field] === "");
+      if (missing.length) throw new Error(`${spec.id}/${entry.caseId || "unknown-case"}: Step 4 case must be standalone; missing ${missing.join(", ")}`);
+      return { ...entry, canvas: expandCompactCanvas(entry.canvas) };
     })
   };
 }
@@ -182,16 +160,7 @@ function expandStep4Cases(problemId, spec, lesson) {
 }
 
 if (process.argv.includes("--author-step4-cases")) {
-  for (const fileName of step4Files) {
-    const file = path.resolve(__dirname, "..", fileName);
-    const authored = JSON.parse(fs.readFileSync(file, "utf8")).map(spec => ({
-      id: spec.id,
-      ...expandStep4Cases(spec.id, spec.cases?.[0] || spec, visualLessons.get(spec.id))
-    }));
-    fs.writeFileSync(file, `${JSON.stringify(authored, null, 2)}\n`);
-  }
-  console.log("Authored verified Step 4 cases from lesson inputs.");
-  process.exit(0);
+  throw new Error("--author-step4-cases was removed because it repeated one bug across several inputs. Author distinct standalone cases in step4-specs-*.json instead.");
 }
 
 const step2Files = ["step2-specs-original.json", "step2-specs-variant.json", "step2-specs-new.json"];
@@ -217,14 +186,15 @@ const catalog = problems.map(problem => {
     difficulty: publishedProblem?.difficulty || problem.difficulty,
     curriculumOrder: publishedProblem?.curriculumOrder ?? problem.curriculumOrder ?? null,
     sourceLink: problem.sourceLink || null,
-    statement: problem.statement,
+    statement: problem.statement + (problem.id === "nested-list-weight-sum-ii" ? "\n\nEmpty arrays do not increase `maxDepth`: only integer depth counts. For example, `[1,[[]]]` has `maxDepth = 1`." : ""),
     examples: problem.examples,
     constraints: problem.constraints,
     visualKind: visualSpec.visualKind,
     graphRules: {
       nodes: correctChoiceLabel(visualSpec.nodeQuestion),
       edges: correctChoiceLabel(visualSpec.edgeQuestion),
-      nodeLabelFormat: visualSpec.nodeLabelFormat
+      nodeLabelFormat: visualSpec.nodeLabelFormat,
+      membershipClaim: visualSpec.membershipClaim
     },
     counterexampleLesson: step2Specs.get(problem.id) || null,
     lesson: visualLessons.get(problem.id) || null,
@@ -271,7 +241,8 @@ lessonQuestionRefs.forEach(ref => {
 });
 for (const group of lessonGroups.values()) group.forEach(({ question }, index) => { question.answerSlot = index % question.choices.length; });
 
-const output = `window.DFS_VISUAL_DATA = ${JSON.stringify({ version: 3, problems: catalog })};\n`;
+const characterData = fs.readFileSync(path.resolve(__dirname, "../character-names.js"), "utf8");
+const output = `${characterData}\nwindow.DFS_VISUAL_DATA = ${JSON.stringify({ version: 3, problems: catalog })};\n`;
 const outputPath = path.resolve(__dirname, "../visual-data.js");
 if (process.argv.includes("--check")) {
   const existing = fs.existsSync(outputPath) ? fs.readFileSync(outputPath, "utf8") : "";
@@ -282,5 +253,14 @@ if (process.argv.includes("--check")) {
   console.log(`Generated visual data is current for ${catalog.length} problems.`);
 } else {
   fs.writeFileSync(outputPath, output);
+  const hash = require("crypto").createHash("sha256");
+  hash.update(output);
+  for (const name of ["visual-library.js", "graph.js", "styles.css"]) hash.update(fs.readFileSync(path.resolve(__dirname, "..", name)));
+  const revision = hash.digest("hex").slice(0, 12);
+  const indexPath = path.resolve(__dirname, "../index.html");
+  const html = fs.readFileSync(indexPath, "utf8")
+    .replace(/^.*<script src="\/character-names\.js[^\n]*\n/gm, "")
+    .replace(/(\/(?:visual-data\.js|visual-library\.js|graph\.js|styles\.css))\?v=[^"\s]+/g, `$1?v=${revision}`);
+  fs.writeFileSync(indexPath, html);
   console.log(`Built visual data for ${catalog.length} problems.`);
 }

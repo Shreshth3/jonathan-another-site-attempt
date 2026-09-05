@@ -44,8 +44,66 @@
     "input": {
       "name": "question start",
       "prompt": "Choose the question start",
-      "result": "reached-nodes",
-      "resultLabel": "cells the real search reaches"
+      "result": "ordered-query-values",
+      "resultLabel": "one ordered answer for this query",
+      "resultConfig": {
+        "rowsField": "rows",
+        "columnsField": "columns",
+        "valueMarker": "cellKind",
+        "targetField": "queryTarget",
+        "mode": "grid-kind",
+        "adjacency": {
+          "mode": "equal-marker",
+          "marker": "cellKind"
+        }
+      },
+      "fields": [
+        {
+          "id": "rows",
+          "kind": "integer",
+          "label": "row count",
+          "prompt": "How many rows are in the grid?",
+          "required": true,
+          "min": 1,
+          "max": 8
+        },
+        {
+          "id": "columns",
+          "kind": "integer",
+          "label": "column count",
+          "prompt": "How many columns are in the grid?",
+          "required": true,
+          "min": 1,
+          "max": 8
+        },
+        {
+          "id": "queryTarget",
+          "kind": "node",
+          "label": "query target",
+          "prompt": "Choose the target cell for this query",
+          "required": true
+        }
+      ],
+      "markers": [
+        {
+          "id": "cellKind",
+          "target": "node",
+          "kind": "choice",
+          "label": "map digit",
+          "prompt": "Mark every cell 0 or 1",
+          "required": true,
+          "choices": [
+            {
+              "value": "0",
+              "label": "0"
+            },
+            {
+              "value": "1",
+              "label": "1"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -65,7 +123,7 @@
         "level": "Nested layer",
         "presentation": "repair-case",
         "goal": "Nest a value deeply enough that one-level counting misses it.",
-        "startLabel": "root"
+        "startLabel": "outer array"
       },
       {
         "bugs": [
@@ -74,7 +132,7 @@
         "level": "Containment reversal",
         "presentation": "exact-difference",
         "goal": "Make reversed containment arrows strand the outer array.",
-        "startLabel": "root"
+        "startLabel": "outer array"
       },
       {
         "bugs": [
@@ -83,19 +141,19 @@
         "level": "Final item",
         "presentation": "smallest-witness",
         "goal": "Put a countable item behind the final contains arrow.",
-        "startLabel": "root"
+        "startLabel": "outer array"
       }
     ],
     "nodeLabels": {
       "rule": "nested-path",
       "description": "Use root, root[0], root[1], ... to name nested input items."
     },
-    "fixedStart": "root",
+    "fixedStart": "outer array",
     "input": {
       "name": "outer array",
       "prompt": "Choose the outer array",
-      "result": "reached-nodes",
-      "resultLabel": "items the deep walk reaches"
+      "result": "recursive-item-count",
+      "resultLabel": "total nested item count"
     }
   },
   {
@@ -104,8 +162,8 @@
       "nodeNames": "open grid cells",
       "startNode": "source cell",
       "edges": "open side passages",
-      "correctSearch": "open cells reachable from source",
-      "mistakenSearch": "open cells the faulty search reaches"
+      "correctSearch": "whether the destination cell is reachable",
+      "mistakenSearch": "whether the faulty search reaches the destination"
     },
     "rounds": [
       {
@@ -114,9 +172,9 @@
         ],
         "level": "Source mix-up",
         "presentation": "predict-first",
-        "goal": "Use (0,0) as the real source, but make the mistaken search begin at (0,1).",
+        "goal": "Put the destination with real source (0,0), while mistaken start (0,2) is separated by blocked cells.",
         "startLabel": "(0,0)",
-        "mistakenStartLabel": "(0,1)"
+        "mistakenStartLabel": "(0,2)"
       },
       {
         "bugs": [
@@ -124,7 +182,7 @@
         ],
         "level": "Blocked corner",
         "presentation": "smallest-witness",
-        "goal": "Use a corner touch that must not become a path.",
+        "goal": "Make the destination touch the source's region only at a blocked corner.",
         "startLabel": "(0,0)"
       },
       {
@@ -133,7 +191,7 @@
         ],
         "level": "Dead-end detour",
         "presentation": "repair-case",
-        "goal": "Give the source a dead end before the route to the destination.",
+        "goal": "Put a dead end first and the destination on the second branch.",
         "startLabel": "(0,0)"
       }
     ],
@@ -144,8 +202,20 @@
     "input": {
       "name": "source cell",
       "prompt": "Choose the source cell",
-      "result": "reached-nodes",
-      "resultLabel": "open cells reachable from source"
+      "result": "target-reachable-boolean",
+      "resultLabel": "whether the destination cell is reachable",
+      "resultConfig": {
+        "targetField": "target"
+      },
+      "fields": [
+        {
+          "id": "target",
+          "kind": "node",
+          "label": "destination cell",
+          "prompt": "Choose the destination cell",
+          "required": true
+        }
+      ]
     }
   },
   {
@@ -193,8 +263,8 @@
     "input": {
       "name": "region seed",
       "prompt": "Choose the region seed",
-      "result": "reached-nodes",
-      "resultLabel": "filled cells in the region"
+      "result": "maximum-component-size",
+      "resultLabel": "largest connected region size"
     }
   },
   {
@@ -203,8 +273,8 @@
       "nodeNames": "grid2 land cells",
       "startNode": "island seed",
       "edges": "grid2 side links",
-      "correctSearch": "land cells in the real island",
-      "mistakenSearch": "land cells in the claimed island"
+      "correctSearch": "number of grid2 islands fully inside grid1 land",
+      "mistakenSearch": "number the flawed sub-island scan returns"
     },
     "rounds": [
       {
@@ -227,13 +297,12 @@
       },
       {
         "bugs": [
-          "wrong-start"
+          "shallow-search"
         ],
-        "level": "Wrong island seed",
+        "level": "Island checked one step deep",
         "presentation": "exact-difference",
-        "goal": "Make the declared seed differ from the first land cell.",
-        "startLabel": "(0,0)",
-        "mistakenStartLabel": "(0,1)"
+        "goal": "Put a grid1-water cell more than one step inside a grid2 island.",
+        "startLabel": "(0,0)"
       }
     ],
     "nodeLabels": {
@@ -243,8 +312,32 @@
     "input": {
       "name": "island seed",
       "prompt": "Choose the island seed",
-      "result": "reached-nodes",
-      "resultLabel": "land cells in the real island"
+      "result": "qualified-component-count",
+      "resultLabel": "number of grid2 islands that are sub-islands",
+      "resultConfig": {
+        "qualifierMarker": "grid1Land",
+        "qualifyingValue": "yes"
+      },
+      "markers": [
+        {
+          "id": "grid1Land",
+          "target": "node",
+          "kind": "choice",
+          "label": "matching grid1 cell",
+          "prompt": "Mark whether grid1 has land at every grid2 cell",
+          "required": true,
+          "choices": [
+            {
+              "value": "yes",
+              "label": "Land in grid1"
+            },
+            {
+              "value": "no",
+              "label": "Water in grid1"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -253,8 +346,8 @@
       "nodeNames": "employee ids",
       "startNode": "requested employee",
       "edges": "manager-to-report arrows",
-      "correctSearch": "team members included",
-      "mistakenSearch": "team members the buggy total includes"
+      "correctSearch": "total importance of the real team",
+      "mistakenSearch": "total importance the buggy search returns"
     },
     "rounds": [
       {
@@ -293,8 +386,21 @@
     "input": {
       "name": "requested employee",
       "prompt": "Choose the requested employee",
-      "result": "reached-nodes",
-      "resultLabel": "team members included"
+      "result": "reached-node-value-sum",
+      "resultLabel": "total importance of the requested employee and their team",
+      "resultConfig": {
+        "valueMarker": "importance"
+      },
+      "markers": [
+        {
+          "id": "importance",
+          "target": "node",
+          "kind": "number",
+          "label": "importance value",
+          "prompt": "Give every employee their importance value",
+          "required": true
+        }
+      ]
     }
   },
   {
@@ -313,8 +419,8 @@
         ],
         "level": "Lost truth leaves",
         "presentation": "repair-case",
-        "goal": "Make leaf values essential to the root result.",
-        "startLabel": "root"
+        "goal": "Make a true root result depend on its leaf values. Disconnecting the leaves must change the result to false; an operator with no children evaluates to false here.",
+        "startLabel": "0:AND"
       },
       {
         "bugs": [
@@ -323,7 +429,7 @@
         "level": "One-child gate",
         "presentation": "predict-first",
         "goal": "Give a gate two children whose values cannot be reduced to the last.",
-        "startLabel": "root"
+        "startLabel": "0:AND"
       },
       {
         "bugs": [
@@ -332,19 +438,19 @@
         "level": "Missing operand",
         "presentation": "exact-difference",
         "goal": "Put a required child on the final parent arrow.",
-        "startLabel": "root"
+        "startLabel": "0:AND"
       }
     ],
     "nodeLabels": {
       "rule": "tree-path",
       "description": "Use root, L, R, LL, LR, ... to name tree positions."
     },
-    "fixedStart": "root",
+    "fixedStart": "0:AND",
     "input": {
       "name": "root gate",
       "prompt": "Choose the root gate",
-      "result": "reached-nodes",
-      "resultLabel": "tree nodes evaluation must use"
+      "result": "root-expression-value",
+      "resultLabel": "Boolean value of the root expression"
     }
   },
   {
@@ -368,13 +474,12 @@
       },
       {
         "bugs": [
-          "wrong-start"
+          "drop-last-edge"
         ],
-        "level": "Herd seed",
+        "level": "Final herd link omitted",
         "presentation": "smallest-witness",
-        "goal": "Make two herds so starting at the wrong cow changes the fence.",
-        "startLabel": "0",
-        "mistakenStartLabel": "1"
+        "goal": "Make the final moo link join an extreme-position cow whose coordinates change the fence.",
+        "startLabel": "0"
       },
       {
         "bugs": [
@@ -393,8 +498,8 @@
     "input": {
       "name": "chosen cow",
       "prompt": "Choose the chosen cow",
-      "result": "reached-nodes",
-      "resultLabel": "cows in the herd"
+      "result": "minimum-component-bounding-perimeter",
+      "resultLabel": "smallest herd fence perimeter"
     }
   },
   {
@@ -442,8 +547,8 @@
     "input": {
       "name": "plot seed",
       "prompt": "Choose the plot seed",
-      "result": "reached-nodes",
-      "resultLabel": "cells in the plot"
+      "result": "component-bounding-boxes",
+      "resultLabel": "bounding box for every farmland group"
     }
   },
   {
@@ -492,8 +597,55 @@
     "input": {
       "name": "starting pixel",
       "prompt": "Choose the starting pixel",
-      "result": "reached-nodes",
-      "resultLabel": "pixels recolored"
+      "result": "transformed-grid",
+      "resultLabel": "image after the fill",
+      "resultConfig": {
+        "rowsField": "rows",
+        "columnsField": "columns",
+        "valueMarker": "pixelColor",
+        "newColorField": "newColor",
+        "adjacency": {
+          "mode": "equal-marker",
+          "marker": "pixelColor"
+        }
+      },
+      "fields": [
+        {
+          "id": "rows",
+          "kind": "integer",
+          "label": "row count",
+          "prompt": "How many rows are in the grid?",
+          "required": true,
+          "min": 1,
+          "max": 8
+        },
+        {
+          "id": "columns",
+          "kind": "integer",
+          "label": "column count",
+          "prompt": "How many columns are in the grid?",
+          "required": true,
+          "min": 1,
+          "max": 8
+        },
+        {
+          "id": "newColor",
+          "kind": "integer",
+          "label": "new color",
+          "prompt": "Choose the new paint color",
+          "required": true
+        }
+      ],
+      "markers": [
+        {
+          "id": "pixelColor",
+          "target": "node",
+          "kind": "number",
+          "label": "original pixel color",
+          "prompt": "Give every pixel its original color",
+          "required": true
+        }
+      ]
     }
   },
   {
@@ -502,8 +654,8 @@
       "nodeNames": "dungeon squares",
       "startNode": "player square",
       "edges": "safe one-way moves",
-      "correctSearch": "safe squares the player reaches",
-      "mistakenSearch": "squares the risky search reaches"
+      "correctSearch": "number of reachable gold pieces",
+      "mistakenSearch": "gold count the risky search returns"
     },
     "rounds": [
       {
@@ -543,8 +695,64 @@
     "input": {
       "name": "player square",
       "prompt": "Choose the player square",
-      "result": "reached-nodes",
-      "resultLabel": "safe squares the player reaches"
+      "result": "reached-selected-node-count",
+      "resultLabel": "number of gold pieces safely collected",
+      "resultConfig": {
+        "selectorMarker": "containsGold",
+        "selectedValue": "yes",
+        "adjacency": {
+          "mode": "from-marker",
+          "marker": "cellSafety",
+          "fromValues": [
+            "clear"
+          ],
+          "toExcludedValues": [
+            "trap"
+          ]
+        }
+      },
+      "markers": [
+        {
+          "id": "containsGold",
+          "target": "node",
+          "kind": "choice",
+          "label": "gold square",
+          "prompt": "Mark whether every dungeon square contains gold",
+          "required": true,
+          "choices": [
+            {
+              "value": "yes",
+              "label": "Contains gold"
+            },
+            {
+              "value": "no",
+              "label": "No gold"
+            }
+          ]
+        },
+        {
+          "id": "cellSafety",
+          "target": "node",
+          "kind": "choice",
+          "label": "square safety",
+          "prompt": "Mark every square as clear, draft, or trap",
+          "required": true,
+          "choices": [
+            {
+              "value": "clear",
+              "label": "Clear floor"
+            },
+            {
+              "value": "draft",
+              "label": "Draft square"
+            },
+            {
+              "value": "trap",
+              "label": "Trap"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -594,8 +802,8 @@
     "input": {
       "name": "floor 1",
       "prompt": "Choose the floor 1",
-      "result": "reached-nodes",
-      "resultLabel": "floors Takahashi can visit"
+      "result": "maximum-reached-node-value",
+      "resultLabel": "highest reachable floor"
     }
   },
   {
@@ -643,8 +851,8 @@
     "input": {
       "name": "component seed",
       "prompt": "Choose the component seed",
-      "result": "reached-nodes",
-      "resultLabel": "nodes in the component"
+      "result": "maximum-component-size",
+      "resultLabel": "size of the largest component"
     }
   },
   {
@@ -692,8 +900,8 @@
     "input": {
       "name": "island seed",
       "prompt": "Choose the island seed",
-      "result": "reached-nodes",
-      "resultLabel": "land cells in the island"
+      "result": "maximum-component-size",
+      "resultLabel": "maximum island area"
     }
   },
   {
@@ -713,7 +921,7 @@
         "level": "Wrong leaf choice",
         "presentation": "exact-difference",
         "goal": "Make the left path sum larger than the last-listed right path.",
-        "startLabel": "root"
+        "startLabel": "node 0: 0"
       },
       {
         "bugs": [
@@ -722,7 +930,7 @@
         "level": "Leaf value loss",
         "presentation": "predict-first",
         "goal": "Put the deciding positive or negative value on a leaf.",
-        "startLabel": "root"
+        "startLabel": "node 0: 0"
       },
       {
         "bugs": [
@@ -730,20 +938,20 @@
         ],
         "level": "Hidden final path",
         "presentation": "repair-case",
-        "goal": "Make the best root-to-leaf route use the final child arrow.",
-        "startLabel": "root"
+        "goal": "Make the best 0-to-leaf route use the final child arrow.",
+        "startLabel": "node 0: 0"
       }
     ],
     "nodeLabels": {
       "rule": "tree-path",
       "description": "Use root, L, R, LL, LR, ... to name tree positions."
     },
-    "fixedStart": "root",
+    "fixedStart": "node 0: 0",
     "input": {
       "name": "root",
       "prompt": "Choose the root",
-      "result": "reached-nodes",
-      "resultLabel": "nodes on candidate root-to-leaf paths"
+      "result": "maximum-root-leaf-value-sum",
+      "resultLabel": "maximum root-to-leaf path sum"
     }
   },
   {
@@ -752,19 +960,18 @@
       "nodeNames": "fish cells",
       "startNode": "fishing start",
       "edges": "positive side contacts",
-      "correctSearch": "fish cells in the water region",
-      "mistakenSearch": "fish cells the buggy trip reaches"
+      "correctSearch": "largest fish total in one water region",
+      "mistakenSearch": "largest total the buggy fishing scan returns"
     },
     "rounds": [
       {
         "bugs": [
-          "wrong-start"
+          "drop-last-edge"
         ],
-        "level": "Boat launch",
+        "level": "Final water link missing",
         "presentation": "smallest-witness",
-        "goal": "Create two water regions so the chosen start matters.",
-        "startLabel": "(0,0)",
-        "mistakenStartLabel": "(0,1)"
+        "goal": "Make the last side link join valuable fish into the largest region.",
+        "startLabel": "(0,0)"
       },
       {
         "bugs": [
@@ -792,8 +999,22 @@
     "input": {
       "name": "fishing start",
       "prompt": "Choose the fishing start",
-      "result": "reached-nodes",
-      "resultLabel": "fish cells in the water region"
+      "result": "maximum-component-value-sum",
+      "resultLabel": "maximum fish collectable from one water region",
+      "resultConfig": {
+        "valueMarker": "fishCount"
+      },
+      "markers": [
+        {
+          "id": "fishCount",
+          "target": "node",
+          "kind": "integer",
+          "label": "fish count",
+          "prompt": "Give every water cell its fish count",
+          "required": true,
+          "min": 1
+        }
+      ]
     }
   },
   {
@@ -826,13 +1047,12 @@
       },
       {
         "bugs": [
-          "wrong-start"
+          "drop-last-edge"
         ],
-        "level": "Candidate mix-up",
+        "level": "Final milk route omitted",
         "presentation": "exact-difference",
-        "goal": "Make the declared test station differ from station 1.",
-        "startLabel": "1",
-        "mistakenStartLabel": "2"
+        "goal": "Make the final directed route determine the one station every station can reach.",
+        "startLabel": "1"
       }
     ],
     "nodeLabels": {
@@ -842,8 +1062,8 @@
     "input": {
       "name": "test station",
       "prompt": "Choose the test station",
-      "result": "reached-nodes",
-      "resultLabel": "stations reachable by following arrows"
+      "result": "minimum-universally-reachable-node-or-minus-one",
+      "resultLabel": "smallest station every other station can reach, or -1"
     }
   },
   {
@@ -891,8 +1111,8 @@
     "input": {
       "name": "island seed",
       "prompt": "Choose the island seed",
-      "result": "reached-nodes",
-      "resultLabel": "cells in the island"
+      "result": "minimum-component-size",
+      "resultLabel": "minimum island size"
     }
   },
   {
@@ -911,7 +1131,7 @@
         ],
         "level": "Unequal radio power",
         "presentation": "smallest-witness",
-        "goal": "Let a strong cow reach a weak cow that cannot transmit back.",
+        "goal": "Place at least three cows and choose their radio powers so no cow can broadcast to all others. Reading the range arrows as two-way must exaggerate the maximum broadcast group.",
         "startLabel": "0"
       },
       {
@@ -940,8 +1160,8 @@
     "input": {
       "name": "broadcasting cow",
       "prompt": "Choose the broadcasting cow",
-      "result": "reached-nodes",
-      "resultLabel": "cows that receive the broadcast"
+      "result": "maximum-reached-count",
+      "resultLabel": "maximum cows reached from one broadcaster"
     }
   },
   {
@@ -950,8 +1170,8 @@
       "nodeNames": "numbered tree nodes",
       "startNode": "root",
       "edges": "parent-to-child arrows",
-      "correctSearch": "nodes on root-to-leaf paths",
-      "mistakenSearch": "nodes the broken check visits"
+      "correctSearch": "whether a root-to-leaf path totals targetSum",
+      "mistakenSearch": "boolean the broken path check returns"
     },
     "rounds": [
       {
@@ -961,7 +1181,7 @@
         "level": "Missing target leaf",
         "presentation": "predict-first",
         "goal": "Put the only target-sum path behind the final child arrow.",
-        "startLabel": "root"
+        "startLabel": "node 0: 0"
       },
       {
         "bugs": [
@@ -969,8 +1189,8 @@
         ],
         "level": "First path matters",
         "presentation": "smallest-witness",
-        "goal": "Make only the earlier root-to-leaf branch hit the target.",
-        "startLabel": "root"
+        "goal": "Make only the earlier 0-to-leaf branch hit the target.",
+        "startLabel": "node 0: 0"
       },
       {
         "bugs": [
@@ -978,20 +1198,43 @@
         ],
         "level": "Leaf completes the sum",
         "presentation": "exact-difference",
-        "goal": "Require a leaf value to finish the exact target total.",
-        "startLabel": "root"
+        "goal": "Make removing leaf edges falsely turn the root into a target-sum leaf.",
+        "startLabel": "node 0: 0"
       }
     ],
     "nodeLabels": {
       "rule": "tree-path",
       "description": "Use root, L, R, LL, LR, ... to name tree positions."
     },
-    "fixedStart": "root",
+    "fixedStart": "node 0: 0",
     "input": {
       "name": "root",
       "prompt": "Choose the root",
-      "result": "reached-nodes",
-      "resultLabel": "nodes on root-to-leaf paths"
+      "result": "target-root-leaf-sum-exists-boolean",
+      "resultLabel": "whether a root-to-leaf path sums to targetSum",
+      "resultConfig": {
+        "targetField": "targetSum",
+        "valueMarker": "nodeValue"
+      },
+      "fields": [
+        {
+          "id": "targetSum",
+          "kind": "integer",
+          "label": "target sum",
+          "prompt": "Choose the targetSum value",
+          "required": true
+        }
+      ],
+      "markers": [
+        {
+          "id": "nodeValue",
+          "target": "node",
+          "kind": "integer",
+          "label": "tree node value",
+          "prompt": "Give every tree node its value",
+          "required": true
+        }
+      ]
     }
   },
   {
@@ -1024,13 +1267,12 @@
       },
       {
         "bugs": [
-          "wrong-start"
+          "drop-last-edge"
         ],
-        "level": "Row-index check",
+        "level": "Qualifying overlap omitted",
         "presentation": "predict-first",
-        "goal": "Make the chosen row different from the first row listed.",
-        "startLabel": "0",
-        "mistakenStartLabel": "1"
+        "goal": "Make the final qualifying overlap join two rows in one component.",
+        "startLabel": "0"
       }
     ],
     "nodeLabels": {
@@ -1040,8 +1282,18 @@
     "input": {
       "name": "chosen row",
       "prompt": "Choose the chosen row",
-      "result": "reached-nodes",
-      "resultLabel": "rows in the component"
+      "result": "component-count",
+      "resultLabel": "number of connected row groups",
+      "fields": [
+        {
+          "id": "k",
+          "kind": "integer",
+          "label": "minimum distinct shared values k",
+          "prompt": "Enter minimum distinct shared values k",
+          "required": true,
+          "min": 1
+        }
+      ]
     }
   },
   {
@@ -1079,20 +1331,20 @@
         ],
         "level": "Restricted dead end",
         "presentation": "smallest-witness",
-        "goal": "Put a blocked branch before a separate allowed route.",
+        "goal": "Give node 0 two allowed branches. Following only the first allowed branch must miss an unrestricted node; blocked neighbors are skipped first.",
         "startLabel": "0"
       }
     ],
     "nodeLabels": {
       "rule": "contiguous-zero",
-      "description": "Use numeric IDs 0, 1, 2, ... with no gaps."
+      "description": "Use 0, 1, 2, ... with no gaps. Add ` (restricted)` to any blocked node, like `1 (restricted)`."
     },
     "fixedStart": "0",
     "input": {
-      "name": "node 0",
-      "prompt": "Choose the node 0",
-      "result": "reached-nodes",
-      "resultLabel": "unrestricted nodes reachable from 0"
+      "name": "node 0 (fixed)",
+      "prompt": "Start the search at",
+      "result": "reached-count",
+      "resultLabel": "number of unrestricted nodes reachable from 0"
     }
   },
   {
@@ -1140,8 +1392,8 @@
     "input": {
       "name": "source index",
       "prompt": "Choose the source index",
-      "result": "reached-nodes",
-      "resultLabel": "indices reachable from the source"
+      "result": "reachability-matrix",
+      "resultLabel": "full reachability matrix"
     }
   },
   {
@@ -1161,7 +1413,7 @@
         "level": "Leaf weights",
         "presentation": "predict-first",
         "goal": "Put important positive and negative values on leaves.",
-        "startLabel": "root"
+        "startLabel": "node 0: 0"
       },
       {
         "bugs": [
@@ -1170,7 +1422,7 @@
         "level": "Grandchild value",
         "presentation": "repair-case",
         "goal": "Make a grandchild change the whole-tree total.",
-        "startLabel": "root"
+        "startLabel": "node 0: 0"
       },
       {
         "bugs": [
@@ -1178,20 +1430,33 @@
         ],
         "level": "Both subtrees count",
         "presentation": "smallest-witness",
-        "goal": "Give both root branches nonzero values that must be added.",
-        "startLabel": "root"
+        "goal": "Give both 0 branches nonzero values that must be added.",
+        "startLabel": "node 0: 0"
       }
     ],
     "nodeLabels": {
       "rule": "tree-path",
       "description": "Use root, L, R, LL, LR, ... to name tree positions."
     },
-    "fixedStart": "root",
+    "fixedStart": "node 0: 0",
     "input": {
       "name": "root",
       "prompt": "Choose the root",
-      "result": "reached-nodes",
-      "resultLabel": "nodes included in the sum"
+      "result": "reached-node-value-sum",
+      "resultLabel": "sum of all tree node values",
+      "markers": [
+        {
+          "id": "nodeValue",
+          "target": "node",
+          "kind": "number",
+          "label": "node value",
+          "prompt": "Give every tree node its value",
+          "required": true
+        }
+      ],
+      "resultConfig": {
+        "valueMarker": "nodeValue"
+      }
     }
   },
   {
@@ -1240,8 +1505,8 @@
     "input": {
       "name": "house 1",
       "prompt": "Choose the house 1",
-      "result": "reached-nodes",
-      "resultLabel": "houses online from house 1"
+      "result": "unreached-nodes",
+      "resultLabel": "offline house numbers returned by the function"
     }
   }
 ]

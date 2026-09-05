@@ -132,6 +132,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "treat-output-paths-as-nodes",
+      "no": "each possible path should become a separate node.",
+      "yes": "A path should use existing nodes; it should not become an extra node."
     }
   },
   {
@@ -220,12 +225,6 @@
             "label": "1 ship",
             "feedback": "Water separates the left X from the right column.",
             "misconception": "merge-separated-ships"
-          },
-          {
-            "id": "three",
-            "label": "3 ships",
-            "feedback": "The three side-touching X cells in the last column form one ship, not three.",
-            "misconception": "split-vertical-ship"
           }
         ],
         "correct": "two"
@@ -267,6 +266,11 @@
       "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
       "pattern": "^\\(\\d+,\\d+\\)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "include-water-nodes",
+      "no": "each water cell should also become a node.",
+      "yes": "Water cells should stay outside the ship-cell graph."
     }
   },
   {
@@ -402,6 +406,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "only-cycle-nodes",
+      "no": "only cycle nodes should become nodes.",
+      "yes": "A course should still have a node when it belongs to no cycle."
     }
   },
   {
@@ -430,9 +439,9 @@
         },
         {
           "id": "starting-bombs",
-          "label": "Only bombs that could be chosen as the first detonation should be nodes.",
-          "feedback": "Every bomb can be a start and can also be reached later in a chain, so every bomb needs a node.",
-          "misconception": "omit-chain-bombs"
+          "label": "Only bombs that can directly trigger at least one other bomb.",
+          "feedback": "A bomb with no outgoing blast still exists and counts when it starts or is triggered.",
+          "misconception": "drops-sink-bombs"
         }
       ],
       "correct": "bomb-index"
@@ -537,6 +546,11 @@
       "instruction": "Name bombs `A`, `B`, `C`, ... in their input-array order.",
       "pattern": "^[A-Z]$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "split-bomb-coordinates",
+      "no": "each number inside a bomb coordinate should become its own node.",
+      "yes": "A bomb’s center and radius should describe one bomb node."
     }
   },
   {
@@ -672,6 +686,11 @@
       "instruction": "Use the exact variable name from the input only. Example: `rate1`.",
       "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "weight-as-node",
+      "no": "each weight should become a separate node.",
+      "yes": "A weight should label a connection rather than become another node."
     }
   },
   {
@@ -807,6 +826,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "collapse-component",
+      "no": "nodes 0 and 1 should be merged.",
+      "yes": "Items in one connected group should keep their separate nodes."
     }
   },
   {
@@ -942,6 +966,11 @@
       "instruction": "Use `root=[]` for the outer list. Then use each index path and value, such as `root[1]=[]` or `root[1][0]=7`.",
       "pattern": "^root(?:\\[\\d+\\])*(?:=\\[\\]|=-?\\d+)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "omit-list-containers",
+      "no": "list containers should be left out.",
+      "yes": "An array container should have its own node, even when it is empty."
     }
   },
   {
@@ -1077,6 +1106,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "duplicate-adjacency-nodes",
+      "no": "each repeated adjacency reference should create another copy of that node.",
+      "yes": "Repeated neighbor references should point to the same node."
     }
   },
   {
@@ -1212,6 +1246,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "exclude-start-room",
+      "no": "start room should be left out.",
+      "yes": "Holding the starting room’s key should not remove that room from the graph."
     }
   },
   {
@@ -1347,6 +1386,11 @@
       "instruction": "Use the exact ID from the input only. Example: `15`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "include-fake-root",
+      "no": "a made-up root process should be added as a node.",
+      "yes": "The parent marker 0 should not create an extra process node."
     }
   },
   {
@@ -1438,9 +1482,9 @@
           },
           {
             "id": "eight",
-            "label": "8",
-            "feedback": "Digits 2 and 3 each map to three letters, not four.",
-            "misconception": "wrong-keypad-count"
+            "label": "12",
+            "feedback": "This wrongly gives digit 3 four choices: 3×4=12. Digit 3 has only d, e, f.",
+            "misconception": "four-letters-for-digit-three"
           }
         ],
         "correct": "nine"
@@ -1482,6 +1526,11 @@
       "instruction": "Use `empty prefix` for the root. After that, use the partial letter string itself. Example: `ab`.",
       "pattern": "^(?:empty prefix|[a-z]+)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "omit-partial-states",
+      "no": "partial states should be left out.",
+      "yes": "The empty prefix should have a node before any letter is chosen."
     }
   },
   {
@@ -1617,6 +1666,11 @@
       "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
       "pattern": "^\\(\\d+,\\d+\\)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "only-peak-nodes",
+      "no": "only peak nodes should become nodes.",
+      "yes": "Cells below a local peak should still have their own nodes."
     }
   },
   {
@@ -1752,6 +1806,11 @@
       "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
       "pattern": "^\\(\\d+,\\d+\\)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "region-as-node",
+      "no": "each connected group should become a separate node.",
+      "yes": "Items in one connected group should keep their separate nodes."
     }
   },
   {
@@ -1838,14 +1897,14 @@
           {
             "id": "eight",
             "label": "8",
-            "feedback": "This gives the top-level 2 the same depth-2 weight as inner values.",
-            "misconception": "all-depth-two"
+            "feedback": "This counts the four inner ones as 4×2=8 but leaves out the top-level 2.",
+            "misconception": "omit-top-level-integer"
           },
           {
             "id": "twelve",
             "label": "12",
-            "feedback": "This wrongly starts the outer list's integers at depth 2.",
-            "misconception": "off-by-one-depth"
+            "feedback": "This gives every integer depth 2: (1+1+2+1+1)×2=12. The outer 2 has depth 1.",
+            "misconception": "flatten-to-depth-two"
           }
         ],
         "correct": "ten"
@@ -1887,6 +1946,11 @@
       "instruction": "Use `root=[]` for the outer list. Then use each index path and value, such as `root[1]=[]` or `root[1][0]=7`.",
       "pattern": "^root(?:\\[\\d+\\])*(?:=\\[\\]|=-?\\d+)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "omit-list-nodes",
+      "no": "list nodes should be left out.",
+      "yes": "An array container should have its own node, even when it is empty."
     }
   },
   {
@@ -1979,8 +2043,8 @@
           {
             "id": "twelve",
             "label": "12",
-            "feedback": "This gives the deeper integers the larger weight.",
-            "misconception": "reverse-inverse-rule"
+            "feedback": "This gives every integer weight 2: (1+1+2+1+1)×2=12. The inner ones need weight 1.",
+            "misconception": "same-maximum-weight-for-all"
           }
         ],
         "correct": "eight"
@@ -2022,6 +2086,11 @@
       "instruction": "Use `root=[]` for the outer list. Then use each index path and value, such as `root[1]=[]` or `root[1][0]=7`.",
       "pattern": "^root(?:\\[\\d+\\])*(?:=\\[\\]|=-?\\d+)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "omit-integer-nodes",
+      "no": "integer nodes should be left out.",
+      "yes": "Each integer occurrence should have a node inside its containing array."
     }
   },
   {
@@ -2157,6 +2226,11 @@
       "instruction": "Use each node's 1-based number only. Example: `2`.",
       "pattern": "^[1-9]\\d*$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "weight-as-node",
+      "no": "each weight should become a separate node.",
+      "yes": "A weight should label a connection rather than become another node."
     }
   },
   {
@@ -2292,6 +2366,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "edge-as-node",
+      "no": "each listed relationship should become a node instead of an edge.",
+      "yes": "A listed relationship should connect two nodes rather than become a node itself."
     }
   },
   {
@@ -2427,6 +2506,11 @@
       "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
       "pattern": "^\\(\\d+,\\d+\\)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "path-as-node",
+      "no": "each possible path should become a separate node.",
+      "yes": "A path should use existing nodes; it should not become an extra node."
     }
   },
   {
@@ -2496,7 +2580,7 @@
       {
         "id": "islands-one",
         "input": "grid = [[\"1\",\"1\",\"1\",\"1\",\"0\"],[\"1\",\"1\",\"0\",\"1\",\"0\"],[\"1\",\"1\",\"0\",\"0\",\"0\"],[\"0\",\"0\",\"0\",\"0\",\"0\"]]",
-        "prompt": "A bent patch of land stays side-connected throughout. How many islands is it?",
+        "prompt": "How many islands does this raw grid contain?",
         "choices": [
           {
             "id": "one",
@@ -2528,7 +2612,7 @@
       {
         "id": "islands-three",
         "input": "grid = [[\"1\",\"1\",\"0\",\"0\",\"0\"],[\"1\",\"1\",\"0\",\"0\",\"0\"],[\"0\",\"0\",\"1\",\"0\",\"0\"],[\"0\",\"0\",\"0\",\"1\",\"1\"]]",
-        "prompt": "A 2×2 land block, a diagonal lone land cell, and a separate two-cell pair are pictured. How many islands?",
+        "prompt": "How many islands does this raw grid contain?",
         "choices": [
           {
             "id": "three",
@@ -2562,6 +2646,11 @@
       "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
       "pattern": "^\\(\\d+,\\d+\\)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "island-as-node",
+      "no": "each connected group should become a separate node.",
+      "yes": "Items in one connected group should keep their separate nodes."
     }
   },
   {
@@ -2697,13 +2786,18 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "province-as-node",
+      "no": "each connected group should become a separate node.",
+      "yes": "Items in one connected group should keep their separate nodes."
     }
   },
   {
     "id": "possible-bipartition",
     "visualKind": "undirected-graph",
     "nodeQuestion": {
-      "prompt": "For `n = 5`, which nodes belong in the dislike graph?",
+      "prompt": "For `n = 6`, which nodes belong in the dislike graph?",
       "choices": [
         {
           "id": "people-one-to-five",
@@ -2730,7 +2824,8 @@
           "misconception": "dislike-pair-as-node"
         }
       ],
-      "correct": "people-one-to-five"
+      "correct": "people-one-to-five",
+      "input": "n=6, dislikes=[[1,2],[3,4],[4,5],[5,3]]"
     },
     "edgeQuestion": {
       "prompt": "What graph connection should dislike pair `[2,4]` create?",
@@ -2832,6 +2927,11 @@
       "instruction": "Use each node's 1-based number only. Example: `2`.",
       "pattern": "^[1-9]\\d*$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "dislike-pair-as-node",
+      "no": "each listed relationship should become a node instead of an edge.",
+      "yes": "A listed relationship should connect two nodes rather than become a node itself."
     }
   },
   {
@@ -2933,7 +3033,7 @@
       {
         "id": "swaps-connected",
         "input": "s = \"dcab\", pairs = [[0,3],[1,2],[0,2]]",
-        "prompt": "Adding pair `[0,2]` connects all four indices. What smallest string results?",
+        "prompt": "What is the smallest string possible with these swap pairs?",
         "choices": [
           {
             "id": "abcd",
@@ -2967,6 +3067,11 @@
       "instruction": "Name each position `index:letter`. Example: `2:a`. Do not add spaces.",
       "pattern": "^\\d+:[A-Za-z]$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "letter-as-node",
+      "no": "each letter should become a separate node.",
+      "yes": "Equal letters at different string positions should remain separate nodes."
     }
   },
   {
@@ -3049,18 +3154,6 @@
             "label": "1 minute",
             "feedback": "No message edge needs to be crossed.",
             "misconception": "minimum-one-minute"
-          },
-          {
-            "id": "inform-time",
-            "label": "4 minutes",
-            "feedback": "No report is waiting, so that delay is irrelevant.",
-            "misconception": "always-add-head-time"
-          },
-          {
-            "id": "minus-one",
-            "label": "-1 minutes",
-            "feedback": "The head already knows; the case is reachable.",
-            "misconception": "no-reports-means-failure"
           }
         ],
         "correct": "zero"
@@ -3102,6 +3195,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "reports-as-weights",
+      "no": "Direct reports should become waiting-time labels instead of employee nodes.",
+      "yes": "A direct report should be an employee node rather than a waiting-time label."
     }
   },
   {
@@ -3119,7 +3217,7 @@
         {
           "id": "total-only",
           "label": "Only the total `a+b` currently held across both jugs.",
-          "feedback": "States (3,0) and (0,3) have the same total but allow different pours and fills.",
+          "feedback": "States (1,0) and (0,1) have the same total but allow different pours and fills.",
           "misconception": "lose-per-jug-amount"
         },
         {
@@ -3237,6 +3335,11 @@
       "instruction": "Name a state `(jug1Amount,jug2Amount)`. Example: `(2,3)`. Do not add spaces.",
       "pattern": "^\\(\\d+,\\d+\\)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "capacity-as-state",
+      "no": "each jug capacity should become a separate node.",
+      "yes": "A state node should record the water in both jugs together."
     }
   },
   {
@@ -3372,6 +3475,11 @@
       "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
       "pattern": "^\\(\\d+,\\d+\\)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "merge-equal-letters",
+      "no": "nodes (0,0) and (0,1) should be merged.",
+      "yes": "Equal letters in different cells should remain separate nodes."
     }
   }
 ]

@@ -7,8 +7,20 @@ const sandbox = { window: {} };
 vm.runInNewContext(fs.readFileSync(path.join(root, "visual-data.js"), "utf8"), sandbox);
 const problems = sandbox.window.DFS_VISUAL_DATA.problems;
 const failures = [];
+// Use the shipped claim generator so answer-pattern and authoring regressions
+// are caught even when all stored graphs remain structurally valid.
+sandbox.document = { querySelector: () => null };
+let runtime = fs.readFileSync(path.join(root, "visual-library.js"), "utf8");
+runtime = runtime.replace("  start();\n})();", `window.claimsFor = id => {
+  problem = allProblems.find(item => item.id === id);
+  problemIndex = allProblems.indexOf(problem);
+  return structureTasks();
+};\n})();`);
+vm.runInNewContext(runtime, sandbox);
+const patterns = new Set();
 
 function transferTasks(problem) {
+  if (problem.lesson.structureTasks) return problem.lesson.structureTasks;
   const tasks = problem.lesson.conceptTasks;
   const find = ids => tasks.find(task => ids.includes(task.id));
   const node = find(["core-rule", "concept-node", "concept-nodes", "node-rule"]);
@@ -52,7 +64,17 @@ for (const problem of problems) {
   if (transfers.length !== 5) failures.push(`${problem.id}: expected 5 distinct Step 3 inputs, found ${transfers.length}`);
   const signatures = new Set(transfers.map(task => topologySignature(task.canvas)));
   if (signatures.size < 3) failures.push(`${problem.id}: expected at least 3 graph topologies, found ${signatures.size}`);
+  const rounds = sandbox.window.claimsFor(problem.id);
+  const claims = rounds.flatMap(round => round.claims);
+  const yesCount = claims.filter(claim => claim.correct).length;
+  if (claims.length !== 5 || yesCount < 2 || yesCount > 3) failures.push(`${problem.id}: expected five balanced Yes/No claims`);
+  patterns.add(claims.map(claim => Number(claim.correct)).join(""));
+  const membership = problem.graphRules.membershipClaim;
+  if (!membership?.yes || !membership?.no || !membership?.misconception) failures.push(`${problem.id}: missing authored node-misconception claim pair`);
+  const oldInputs = new Set([...problem.lesson.buildTasks, ...problem.lesson.conceptTasks, ...problem.lesson.conceptTasks.map(task => task.remedial)].map(task => task.input.replace(/\s/g, "")));
+  for (const transfer of transfers) if (oldInputs.has(transfer.input.replace(/\s/g, ""))) failures.push(`${problem.id}: Step 3 repeats a Step 1 input`);
 }
+if (patterns.size < 10) failures.push(`Only ${patterns.size} Yes/No patterns across the library`);
 
 if (failures.length) {
   console.error(failures.join("\n"));

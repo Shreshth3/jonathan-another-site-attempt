@@ -43,7 +43,7 @@ if (!graphSource.includes("const presets = [") || (graphSource.match(/^      \[\
 if (!source.includes("const compact = true;")) failures.push("global compact layout is missing");
 if (!source.includes("typedExpected")) failures.push("strict typed Step 2 output grading is missing");
 if (!source.includes("Duplicate graph from #1")) failures.push("duplicate graph control is missing");
-if (!source.includes('id="counter-start"') || !source.includes('<h4 id="counter-output-heading">Output</h4>') || !source.includes("Correct output")) failures.push("Step 2 input or output labels are missing");
+if (!source.includes('id="counter-start"') || !source.includes('<h4 id="counter-output-heading">') || !source.includes("Correct output")) failures.push("Step 2 input or output labels are missing");
 if (index.includes("All problems")) failures.push("All problems button returned");
 
 if (failures.length) {

@@ -6,7 +6,7 @@
       {
         "id": "quit-middle",
         "input": "ids = [10,2,7,15], bosses = [0,10,10,2], quitId = 2",
-        "prompt": "The chart has 10 above 2 and 7, and 2 above 15. If employee 2 quits, which sorted IDs remain?",
+        "prompt": "Which employee IDs remain, in increasing numeric order?",
         "correct": "seven-ten",
         "choices": [
           {
@@ -38,7 +38,7 @@
       {
         "id": "quit-leaf",
         "input": "ids = [6,1,8,3], bosses = [0,6,6,1], quitId = 3",
-        "prompt": "The chart has 6 above 1 and 8, and 1 above leaf employee 3. If 3 quits, which sorted IDs remain?",
+        "prompt": "Which employee IDs remain, in increasing numeric order?",
         "correct": "one-six-eight",
         "choices": [
           {
@@ -132,6 +132,11 @@
       "instruction": "Use the exact ID from the input only. Example: `15`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "swap-node-edge",
+      "no": "Each reporting relationship should become a node instead of an edge.",
+      "yes": "A listed relationship should connect two nodes rather than become a node itself."
     }
   },
   {
@@ -267,6 +272,11 @@
       "instruction": "Use `root=[]` for the outer list. Then use each index path and value, such as `root[1]=[]` or `root[1][0]=7`.",
       "pattern": "^root(?:\\[\\d+\\])*(?:=\\[\\]|=-?\\d+)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "omit-containers",
+      "no": "containers should be left out.",
+      "yes": "An array container should have its own node, even when it is empty."
     }
   },
   {
@@ -392,8 +402,8 @@
         },
         {
           "id": "deepest-box",
-          "label": "Connect every coin straight to the deepest box that contains it.",
-          "feedback": "A coin connects to its immediate box. Skipping outer boxes gives the wrong depth.",
+          "label": "Connect every coin straight to the outermost box that contains it.",
+          "feedback": "That skips the immediate container and makes a deep coin appear too shallow.",
           "misconception": "skip-parent-boxes"
         }
       ]
@@ -402,6 +412,11 @@
       "instruction": "Use `root=[]` for the outer list. Then use each index path and value, such as `root[1]=[]` or `root[1][0]=7`.",
       "pattern": "^root(?:\\[\\d+\\])*(?:=\\[\\]|=-?\\d+)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "depth-as-node",
+      "no": "each depth should become a separate node.",
+      "yes": "Depth should describe an item’s position in the tree rather than create an extra node."
     }
   },
   {
@@ -537,6 +552,11 @@
       "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
       "pattern": "^\\(\\d+,\\d+\\)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "component-as-node",
+      "no": "each connected group should become a separate node.",
+      "yes": "Items in one connected group should keep their separate nodes."
     }
   },
   {
@@ -662,9 +682,9 @@
         },
         {
           "id": "straight-only",
-          "label": "Join horizontal neighbors only for horizontal boats and vertical neighbors only for vertical boats, deciding orientation first.",
-          "feedback": "The search can simply join every side-touching B pair; no guessed orientation is needed.",
-          "misconception": "preclassify-orientation"
+          "label": "Join horizontal boat neighbors only; never join vertical neighbors.",
+          "feedback": "A vertical boat also needs one edge between each pair of side-touching cells.",
+          "misconception": "horizontal-only"
         }
       ]
     },
@@ -672,6 +692,11 @@
       "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
       "pattern": "^\\(\\d+,\\d+\\)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "boat-as-node",
+      "no": "each connected group should become a separate node.",
+      "yes": "Items in one connected group should keep their separate nodes."
     }
   },
   {
@@ -681,7 +706,7 @@
       {
         "id": "two-cart-routes",
         "input": "graph = [[1,2],[3],[3,4],[5],[5],[]], checkpoint = 3",
-        "prompt": "The picture has three depot-to-customer routes; two pass intersection 3, the coffee cart. What is returned?",
+        "prompt": "Which complete routes from 0 to the final intersection visit the checkpoint?",
         "correct": "two-routes",
         "choices": [
           {
@@ -713,7 +738,7 @@
       {
         "id": "checkpoint-dead-end",
         "input": "graph = [[1,3],[2],[],[4],[]], checkpoint = 2",
-        "prompt": "One branch reaches checkpoint 2 but stops there; the only customer route skips 2. What route list is returned?",
+        "prompt": "Which complete routes from 0 to the final intersection visit the checkpoint?",
         "correct": "empty",
         "choices": [
           {
@@ -807,6 +832,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "street-as-node",
+      "no": "each listed relationship should become a node instead of an edge.",
+      "yes": "A listed relationship should connect two nodes rather than become a node itself."
     }
   },
   {
@@ -942,6 +972,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "remove-well-nodes",
+      "no": "well nodes should be left out.",
+      "yes": "A village with a well should keep its node so paths through it remain visible."
     }
   },
   {
@@ -1077,6 +1112,11 @@
       "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
       "pattern": "^\\(\\d+,\\d+\\)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "region-as-node",
+      "no": "each connected group should become a separate node.",
+      "yes": "Items in one connected group should keep their separate nodes."
     }
   },
   {
@@ -1212,6 +1252,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "color-as-node",
+      "no": "each color should become a separate node.",
+      "yes": "A bulb should have one node; its gold or silver color is a property."
     }
   },
   {
@@ -1221,7 +1266,7 @@
       {
         "id": "reachable-gold",
         "input": "rooms = [[1,3],[2],[1],[],[5],[4]], gold = [5,10,1,8,50,50]",
-        "prompt": "From room 0, rooms 0,1,2,3 are reachable with gold 5,10,1,8; rooms 4 and 5 are locked away with 50 each. What total is collected?",
+        "prompt": "How much gold can be collected starting in room 0?",
         "correct": "twenty-four",
         "choices": [
           {
@@ -1253,7 +1298,7 @@
       {
         "id": "self-key",
         "input": "rooms = [[0],[2],[1]], gold = [7,3,3]",
-        "prompt": "Room 0 has 7 gold and only a key back to room 0. Rooms 1 and 2 are unreachable. What total is collected?",
+        "prompt": "How much gold can be collected starting in room 0?",
         "correct": "seven",
         "choices": [
           {
@@ -1347,6 +1392,11 @@
       "instruction": "Name each room `roomIndex:goldAmountg`. Example: `2:5g`. Do not add spaces.",
       "pattern": "^\\d+:\\d+g$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "key-as-node",
+      "no": "each key should become a separate node.",
+      "yes": "A key should define access between room nodes rather than become its own node."
     }
   },
   {
@@ -1482,6 +1532,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "model-obstacles-only",
+      "no": "only flooded campsites should become nodes.",
+      "yes": "Dry campsites should have nodes as well as flooded campsites."
     }
   },
   {
@@ -1617,6 +1672,11 @@
       "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
       "pattern": "^\\(\\d+,\\d+\\)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "horizontal-only-nodes",
+      "no": "Only train cells with a T directly left or right should become nodes.",
+      "yes": "Cells in a vertical train should each have their own node."
     }
   },
   {
@@ -1752,6 +1812,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "duplicate-station-by-color",
+      "no": "each station should get a separate node for each track color.",
+      "yes": "A station served by both colors should still have one station node."
     }
   },
   {
@@ -1887,6 +1952,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "edge-as-node",
+      "no": "each listed relationship should become a node instead of an edge.",
+      "yes": "A listed relationship should connect two nodes rather than become a node itself."
     }
   },
   {
@@ -2022,6 +2092,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "time-expanded-unneeded",
+      "no": "A warehouse should have a separate node for every possible arrival time.",
+      "yes": "Different possible arrival times should not create extra copies of a warehouse node."
     }
   },
   {
@@ -2157,6 +2232,11 @@
       "instruction": "Name each cell `(row,column)`, starting both numbers at 0. Example: `(0,2)`. Do not add spaces or the cell value.",
       "pattern": "^\\(\\d+,\\d+\\)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "zero-passable",
+      "no": "each blocked square should become a graph node.",
+      "yes": "A non-grass square should stay outside the grass-cell graph."
     }
   },
   {
@@ -2292,6 +2372,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "pre-filter-success",
+      "no": "Only camps on a successful summit route should become nodes.",
+      "yes": "Camps outside successful summit routes should still have nodes."
     }
   },
   {
@@ -2427,6 +2512,11 @@
       "instruction": "Use `start` for the empty root. After that, use the partial rune string itself. Example: `ab`.",
       "pattern": "^(?:start|[a-z]+)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "leaves-only",
+      "no": "only complete-code leaves should become nodes.",
+      "yes": "A legal unfinished prefix should have its own node."
     }
   },
   {
@@ -2562,6 +2652,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "pre-filter-deadline",
+      "no": "Only people who hear by the deadline should become nodes.",
+      "yes": "Someone who hears after the deadline should still have an employee node."
     }
   },
   {
@@ -2664,7 +2759,7 @@
       ]
     },
     "edgeQuestion": {
-      "prompt": "For index i, what arrow is described by `feeds[i]` and `ids[i]`?",
+      "prompt": "When feeds[i] is another sprinkler ID (not 0), which arrow belongs in the graph?",
       "correct": "feeder-to-sprinkler",
       "choices": [
         {
@@ -2697,6 +2792,11 @@
       "instruction": "Name each sprinkler `id:litersPerHour`. Example: sprinkler 7 using 10 L/h is `7:10`. Do not add spaces.",
       "pattern": "^\\d+:\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "pipe-as-node",
+      "no": "each listed relationship should become a node instead of an edge.",
+      "yes": "A listed relationship should connect two nodes rather than become a node itself."
     }
   },
   {
@@ -2832,6 +2932,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "matrix-cell-as-node",
+      "no": "Each worked[i][j] matrix entry should become a separate student node.",
+      "yes": "Each matrix row should identify one student, rather than one node per matrix entry."
     }
   },
   {
@@ -2967,6 +3072,11 @@
       "instruction": "Use `root=[]` for the outer list. Then use each index path and value, such as `root[1]=[]` or `root[1][0]=7`.",
       "pattern": "^root(?:\\[\\d+\\])*(?:=\\[\\]|=-?\\d+)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "flatten-model-early",
+      "no": "Flatten the playlist first, then draw only its song nodes.",
+      "yes": "Playlist folders should keep their nodes before playback is flattened."
     }
   },
   {
@@ -3102,6 +3212,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "key-instance-as-node",
+      "no": "each key should become a node instead of each vault.",
+      "yes": "Two copies of the same key should refer to one vault node."
     }
   },
   {
@@ -3237,6 +3352,11 @@
       "instruction": "Use `root=[]` for the outer list. Then use each index path and value, such as `root[1]=[]` or `root[1][0]=7`.",
       "pattern": "^root(?:\\[\\d+\\])*(?:=\\[\\]|=-?\\d+)$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "omit-boxes",
+      "no": "boxes should be left out.",
+      "yes": "An array container should have its own node, even when it is empty."
     }
   },
   {
@@ -3320,7 +3440,7 @@
         },
         {
           "id": "trusted-offices",
-          "label": "Only offices that have at least one trust score at or above k.",
+          "label": "Only offices with a qualifying trust score with another office.",
           "feedback": "An office with no qualifying line still exists as an isolated network.",
           "misconception": "omit-isolated"
         },
@@ -3344,7 +3464,7 @@
       "choices": [
         {
           "id": "threshold",
-          "label": "When `trust[i][j] >= k`; the qualifying edge is undirected.",
+          "label": "Connect different offices i and j when trust[i][j] >= k. Do not draw self-links.",
           "feedback": "Correct. Meeting the threshold creates a usable secure line in both directions.",
           "misconception": null
         },
@@ -3372,6 +3492,11 @@
       "instruction": "Use each node's 0-based number only. Example: `2`.",
       "pattern": "^\\d+$",
       "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "component-as-node",
+      "no": "each connected group should become a separate node.",
+      "yes": "Items in one connected group should keep their separate nodes."
     }
   }
 ]

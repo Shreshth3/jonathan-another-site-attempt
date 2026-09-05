@@ -14,6 +14,40 @@ if (step2Starters.status !== 0) {
   console.error((step2Starters.stderr || step2Starters.stdout).trim());
   process.exit(1);
 }
+const step2SemanticResults = spawnSync(process.execPath, [path.resolve(__dirname, "validate-step2-semantic-results.js")], { encoding: "utf8" });
+if (step2SemanticResults.status !== 0) {
+  console.error((step2SemanticResults.stderr || step2SemanticResults.stdout).trim());
+  process.exit(1);
+}
+const step2TargetResults = spawnSync(process.execPath, [path.resolve(__dirname, "validate-step2-target-results.js")], { encoding: "utf8" });
+if (step2TargetResults.status !== 0) {
+  console.error((step2TargetResults.stderr || step2TargetResults.stdout).trim());
+  process.exit(1);
+}
+const step2TimedResults = spawnSync(process.execPath, [path.resolve(__dirname, "validate-step2-timed-results.js")], { encoding: "utf8" });
+if (step2TimedResults.status !== 0) {
+  console.error((step2TimedResults.stderr || step2TimedResults.stdout).trim());
+  process.exit(1);
+}
+for (const scriptName of ["validate-step2-parameter-results.js", "validate-step2-marker-results.js"]) {
+  const check = spawnSync(process.execPath, [path.resolve(__dirname, scriptName)], { encoding: "utf8" });
+  if (check.status !== 0) {
+    console.error((check.stderr || check.stdout).trim());
+    process.exit(1);
+  }
+}
+const step2GridAdjacency = spawnSync(process.execPath, [path.resolve(__dirname, "validate-step2-grid-adjacency.js")], { encoding: "utf8" });
+if (step2GridAdjacency.status !== 0) {
+  console.error((step2GridAdjacency.stderr || step2GridAdjacency.stdout).trim());
+  process.exit(1);
+}
+for (const scriptName of ["validate-step4-execution.js", "validate-step4-correct-outputs.js", "validate-step4-readability.js"]) {
+  const check = spawnSync(process.execPath, [path.resolve(__dirname, scriptName)], { encoding: "utf8" });
+  if (check.status !== 0) {
+    console.error((check.stderr || check.stdout).trim());
+    process.exit(1);
+  }
+}
 
 const source = fs.readFileSync(path.resolve(__dirname, "../visual-data.js"), "utf8");
 const sandbox = { window: {} };
@@ -64,7 +98,14 @@ if (membershipStart < 0 || membershipEnd < 0) {
   const membershipSource = uiSource.slice(membershipStart, membershipEnd);
   if (!membershipSource.includes("choice.misconception") || !membershipSource.includes("mistakenRule.misconception")) errors.push("Step 3 membership claims must test an authored misconception");
   if (/stays in the graph|has no outgoing direct edge|has no incoming direct edge/.test(membershipSource)) errors.push("Step 3 membership claims must not use trivial leaf-membership statements");
+  if (/This node rule (?:works for every|fails for at least one) valid input/.test(membershipSource)) errors.push("Step 3 must not use the awkward generic node-rule claim");
+  if (!membershipSource.includes("misconception") || !membershipSource.includes("In this input,")) errors.push("Step 3 membership claims must turn an authored misconception into a current-input statement");
 }
+const structureRenderStart = uiSource.indexOf("function renderStructureClaims(");
+const structureRenderEnd = uiSource.indexOf("function structureFrame(", structureRenderStart);
+const structureRenderSource = uiSource.slice(structureRenderStart, structureRenderEnd);
+if (!structureRenderSource.includes("task.canvas.nodes.length === 0 || Boolean")) errors.push("Step 3 empty graphs must enable the Yes/No controls without a drawn node");
+if (!structureRenderSource.includes("counterGraphChangeHandler();")) errors.push("Step 3 must initialize its claim controls for an already-valid empty graph");
 const ids = new Set();
 const counts = { original: 0, variant: 0, new: 0 };
 const lessonAnswerSlots = new Map();
@@ -72,7 +113,7 @@ const step2Sequences = [];
 const step2Goals = new Set();
 const step4Slots = [];
 const allowedKinds = new Set(["grid", "directed-graph", "undirected-graph", "tree", "nested", "state", "backtracking"]);
-const allowedStep2Bugs = new Set(["make-one-way", "make-two-way", "reverse-arrows", "add-diagonals", "remove-diagonals", "drop-last-edge", "skip-leaf-edges", "shallow-search", "first-branch", "last-branch", "wrong-start", "ignore-colors", "red-only"]);
+const allowedStep2Bugs = new Set(["strict-threshold", "first-start-only", "make-one-way", "make-two-way", "reverse-arrows", "add-diagonals", "remove-diagonals", "drop-last-edge", "skip-leaf-edges", "shallow-search", "first-branch", "last-branch", "wrong-start", "ignore-colors", "red-only"]);
 const allowedPresentations = new Set(["smallest-witness", "repair-case", "exact-difference", "predict-first"]);
 const sourceDataDir = path.resolve(__dirname, "../../jonathan-study-site/data");
 const sourceProblems = fs.readdirSync(sourceDataDir)
@@ -106,6 +147,9 @@ function validateAnswerSlot(problem, question, taskLabel) {
 }
 
 function validateCanvas(problem, canvas, taskLabel, maxNodes = 9) {
+  // A complete two-digit phone prefix tree needs 1 + 3 + 9 = 13 nodes.
+  // Keep this exception narrow; other Step 1 drawings stay capped at nine.
+  if (problem.id === 'letter-combinations-of-a-phone-number' && maxNodes === 9) maxNodes = 13;
   if (!canvas || typeof canvas.directed !== "boolean") {
     errors.push(`${problem.id}/${taskLabel}: canvas needs a boolean directed field`);
     return;
@@ -209,8 +253,9 @@ function validateLesson(problem) {
     if (ids.has(task?.id)) errors.push(`${problem.id}/${label}: duplicate lesson task id ${task?.id}`);
     ids.add(task?.id);
     if (!facets.includes(task?.facet)) errors.push(`${problem.id}/${label}: facet "${task?.facet}" is not in lesson.facets`);
+    if (String(task?.input || "").trim() === String(task?.prompt || "").trim()) errors.push(`${problem.id}/${label}: input must be a concrete case, not a copy of the question`);
     if (!["choice", "visual-options"].includes(task?.kind)) errors.push(`${problem.id}/${label}: kind must be choice or visual-options`);
-    validateChoices(problem, label, task?.choices, task?.correct, 4, 4);
+    validateChoices(problem, label, task?.choices, task?.correct, task.kind === "visual-options" ? 4 : 2, 4);
     if (task?.choices) validateAnswerSlot(problem, task, label);
     if (task?.shownModel) validateCanvas(problem, task.shownModel, `${label}/shownModel`);
     if (task?.kind === "visual-options") for (const choice of task.choices || []) validateCanvas(problem, choice.model, `${label}/${choice.id}/model`);
@@ -220,7 +265,8 @@ function validateLesson(problem) {
       if (task.remedial.input === task.input) errors.push(`${problem.id}/${label}/remedial: input must be fresh, not the revealed question input`);
     }
   }
-  const step3Candidates = (lesson.conceptTasks || []).map(task => task.remedial).filter(task => task?.canvas);
+  const step3Candidates = lesson.structureTasks || (lesson.conceptTasks || []).map(task => task.remedial).filter(task => task?.canvas);
+  step3Candidates.forEach((task, index) => validateCanvas(problem, task.canvas, `step3/case-${index + 1}/canvas`, 24));
   if (step3Candidates.length !== 5) errors.push(`${problem.id}/step3: expected five authored graph-check inputs`);
   if (new Set(step3Candidates.map(task => task.input)).size !== 5) errors.push(`${problem.id}/step3: all five graph-check inputs must be different`);
   if (new Set(step3Candidates.map(task => JSON.stringify([task.input, task.canvas]))).size !== 5) errors.push(`${problem.id}/step3: all five graph-check cases must be different`);
@@ -235,12 +281,26 @@ function validateCodeReasoning(problem) {
     return;
   }
   if (!Array.isArray(spec.cases)) {
-    errors.push(`${problem.id}/step4: expected at least three distinct code cases`);
+    errors.push(`${problem.id}/step4: expected several distinct code cases`);
     return;
   }
-  if (spec.cases.length < 3) errors.push(`${problem.id}/step4: expected at least three distinct code cases`);
+  if (spec.cases.length < 3) errors.push(`${problem.id}/step4: expected at least three distinct misconception cases`);
   if (new Set(spec.cases.map(codeCase => codeCase.caseId)).size !== spec.cases.length) errors.push(`${problem.id}/step4: case ids must be unique`);
   if (new Set(spec.cases.map(codeCase => JSON.stringify(codeCase.input))).size !== spec.cases.length) errors.push(`${problem.id}/step4: every case needs a distinct input`);
+  if (new Set(spec.cases.map(codeCase => codeCase.misconception)).size !== spec.cases.length) errors.push(`${problem.id}/step4: every case needs a distinct misconception`);
+  const semanticCode = code => {
+    const source = String(code).replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+    const preserved = new Set(["break", "case", "catch", "class", "const", "continue", "default", "delete", "do", "else", "false", "finally", "for", "function", "if", "in", "instanceof", "let", "new", "null", "of", "return", "switch", "throw", "true", "try", "typeof", "undefined", "var", "void", "while", "Array", "Boolean", "Infinity", "JSON", "Map", "Math", "NaN", "Number", "Object", "Set", "String"]);
+    const names = new Map();
+    let nextName = 0;
+    return source.replace(/(["'`])(?:\\.|(?!\1)[^\\])*\1|[A-Za-z_$][\w$]*/g, (token, quote, offset, whole) => {
+      if (quote || preserved.has(token) || whole[offset - 1] === ".") return token;
+      if (!names.has(token)) names.set(token, `v${nextName++}`);
+      return names.get(token);
+    }).replace(/\s+/g, "");
+  };
+  if (new Set(spec.cases.map(codeCase => semanticCode(codeCase.code))).size !== spec.cases.length) errors.push(`${problem.id}/step4: every case needs meaningfully different incorrect code, not comment-only changes`);
+  if (new Set(spec.cases.map(codeCase => codeCase.correctDiagnosis)).size !== spec.cases.length) errors.push(`${problem.id}/step4: every case needs its own diagnosis id`);
   spec.cases.forEach((codeCase, index) => validateCodeReasoningCase(problem, codeCase, index));
 }
 
@@ -255,6 +315,16 @@ function validateCodeReasoningCase(problem, spec, index) {
   try { correct = JSON.parse(spec.correctOutput); } catch { errors.push(`${problem.id}/${label}: correctOutput must be valid JSON text`); }
   if (JSON.stringify(buggy) === JSON.stringify(correct)) errors.push(`${problem.id}/${label}: buggy and correct outputs must differ`);
   validateCanvas(problem, spec.canvas, `${label}/canvas`, 16);
+  const labelFormat = problem.graphRules?.nodeLabelFormat;
+  if (labelFormat?.pattern && spec.canvas?.nodes) {
+    let matcher;
+    try { matcher = new RegExp(labelFormat.pattern); } catch { errors.push(`${problem.id}: invalid node-label regex ${labelFormat.pattern}`); }
+    if (matcher) for (const node of spec.canvas.nodes) {
+      if (!matcher.test(String(node.label))) errors.push(`${problem.id}/${label}: node label ${node.label} does not match the shown format`);
+    }
+  }
+  if (problem.id === "letter-combinations-of-a-phone-number" && !spec.canvas?.nodes?.some(node => node.label === "empty prefix")) errors.push(`${problem.id}/${label}: graph must include the empty prefix root`);
+  if (problem.id === "runes-on-the-castle-door" && !spec.canvas?.nodes?.some(node => node.label === "start")) errors.push(`${problem.id}/${label}: graph must include the start root`);
   if (!Array.isArray(spec.diagnoses) || spec.diagnoses.length !== 3) errors.push(`${problem.id}/${label}: diagnoses must contain exactly three choices`);
   else {
     if (new Set(spec.diagnoses.map(choice => choice.id)).size !== 3) errors.push(`${problem.id}/${label}: diagnosis ids must be unique`);
@@ -283,7 +353,89 @@ function validateCounterexampleLesson(problem) {
   if (!spec.input) errors.push(`${problem.id}/step2: missing authored semantic input`);
   for (const field of ["name", "prompt", "result", "resultLabel"]) if (!String(spec.input?.[field] || "").trim()) errors.push(`${problem.id}/step2: input.${field} is required`);
   if (spec.input && Object.prototype.hasOwnProperty.call(spec.input, "outputPlaceholder")) errors.push(`${problem.id}/step2: output placeholders are not allowed`);
-  if (spec.input && !["reached-nodes", "unreached-nodes"].includes(spec.input.result)) errors.push(`${problem.id}/step2: unsupported input.result ${spec.input.result}`);
+  if (spec.input && !["reached-nodes", "unreached-nodes", "reached-count", "unreached-count", "all-reached", "any-unreached", "target-reachable-boolean", "same-color-target-reachable-boolean", "target-state-reachable-boolean", "target-word-path-exists-boolean", "reached-node-value-sum", "shortest-path-weight", "maximum-shortest-path-weight-or-minus-one", "maximum-path-weight", "deadline-reached-count", "border-component-count", "component-count", "maximum-component-size", "minimum-component-size", "maximum-reached-count", "path-count", "path-count-modulo", "enumerated-paths", "longest-path-length", "valid-two-coloring-boolean", "acyclic-completion-boolean", "maximum-reached-node-value", "reachability-matrix", "generated-terminal-strings", "recursive-item-count", "root-expression-value", "component-bounding-boxes", "minimum-universally-reachable-node-or-minus-one", "iterator-output-sequence", "depth-weighted-value-sum", "inverse-depth-weighted-value-sum", "widest-level-index", "level-value-sum", "exact-size-component-count", "kth-visited-node-or-minus-one", "target-root-leaf-sum-exists-boolean", "components-without-source-count", "qualified-component-count", "reached-selected-node-count", "maximum-component-value-sum", "component-sorted-string", "selected-color-count", "minimum-component-bounding-perimeter", "maximum-root-leaf-value-sum", "transformed-grid", "ordered-query-values"].includes(spec.input.result)) errors.push(`${problem.id}/step2: unsupported input.result ${spec.input.result}`);
+  validateCounterSemanticInputs(problem.id, spec.input);
+  if (spec.input?.result === "reached-node-value-sum") {
+    const valueMarker = spec.input.resultConfig?.valueMarker;
+    const marker = spec.input.markers?.find(candidate => candidate.id === valueMarker);
+    if (!String(valueMarker || "").trim() || !marker || marker.target !== "node" || !["integer", "number"].includes(marker.kind) || marker.required === false) errors.push(`${problem.id}/step2: reached-node-value-sum needs resultConfig.valueMarker naming a required numeric node marker`);
+  }
+  if (spec.input?.result === "shortest-path-weight") {
+    const targetField = spec.input.resultConfig?.targetField;
+    const weightMarker = spec.input.resultConfig?.weightMarker;
+    const target = spec.input.fields?.find(field => field.id === targetField);
+    const weight = spec.input.markers?.find(marker => marker.id === weightMarker);
+    if (!String(targetField || "").trim() || !target || target.kind !== "node" || target.required === false) errors.push(`${problem.id}/step2: shortest-path-weight needs resultConfig.targetField naming a required node field`);
+    if (!String(weightMarker || "").trim() || !weight || weight.target !== "edge" || weight.kind !== "number" || weight.required === false || Number(weight.min) < 0) errors.push(`${problem.id}/step2: shortest-path-weight needs resultConfig.weightMarker naming a required nonnegative numeric edge marker`);
+  }
+  if (["target-reachable-boolean", "same-color-target-reachable-boolean"].includes(spec.input?.result)) {
+    const targetField = spec.input.resultConfig?.targetField;
+    const target = spec.input.fields?.find(field => field.id === targetField);
+    if (!String(targetField || "").trim() || !target || target.kind !== "node" || target.required === false) errors.push(`${problem.id}/step2: ${spec.input.result} needs resultConfig.targetField naming a required node field`);
+  }
+  if (spec.input?.result === "transformed-grid" || (spec.input?.result === "ordered-query-values" && problem.id === "ten-kinds-of-people")) {
+    const config = spec.input.resultConfig || {}, rowField = spec.input.fields?.find(field => field.id === config.rowsField), columnField = spec.input.fields?.find(field => field.id === config.columnsField), marker = spec.input.markers?.find(item => item.id === config.valueMarker);
+    if (!rowField || rowField.kind !== "integer" || rowField.required === false || !columnField || columnField.kind !== "integer" || columnField.required === false) errors.push(`${problem.id}/step2: grid result needs required integer row and column fields`);
+    if (!marker || marker.target !== "node" || marker.required === false) errors.push(`${problem.id}/step2: grid result needs a required node value marker`);
+    if (spec.input.result === "ordered-query-values") { const target = spec.input.fields?.find(field => field.id === config.targetField); if (!target || target.kind !== "node" || target.required === false) errors.push(`${problem.id}/step2: ordered query result needs a required target node field`); }
+    if (problem.id === "flood-fill") { const color = spec.input.fields?.find(field => field.id === config.newColorField); if (!color || !["integer", "number"].includes(color.kind) || color.required === false) errors.push(`${problem.id}/step2: flood fill needs a required numeric new-color field`); }
+  }
+  if (spec.input?.result === "ordered-query-values" && problem.id === "evaluate-division") {
+    const config = spec.input.resultConfig || {}, target = spec.input.fields?.find(field => field.id === config.targetField), ratio = spec.input.markers?.find(item => item.id === config.ratioMarker);
+    if (!target || target.kind !== "node" || target.required === false || !ratio || ratio.target !== "edge" || ratio.kind !== "number" || ratio.required === false || Number(ratio.min) <= 0) errors.push(`${problem.id}/step2: division query needs a denominator node and positive edge ratios`);
+  }
+  if (spec.input?.result === "target-state-reachable-boolean") {
+    const config = spec.input.resultConfig || {}, fields = [config.jug1CapacityField, config.jug2CapacityField, config.targetField].map(id => spec.input.fields?.find(field => field.id === id));
+    if (fields.some(field => !field || field.kind !== "integer" || field.required === false)) errors.push(`${problem.id}/step2: jug result needs required integer capacity and target fields`);
+  }
+  if (spec.input?.result === "target-word-path-exists-boolean") {
+    const config = spec.input.resultConfig || {}, rows = spec.input.fields?.find(field => field.id === config.rowsField), columns = spec.input.fields?.find(field => field.id === config.columnsField), word = spec.input.fields?.find(field => field.id === config.wordField), letters = spec.input.markers?.find(item => item.id === config.letterMarker);
+    if (!rows || rows.kind !== "integer" || !columns || columns.kind !== "integer" || !word || word.kind !== "text" || !letters || letters.target !== "node" || letters.kind !== "text") errors.push(`${problem.id}/step2: word search needs dimensions, a word, and cell letters`);
+  }
+  if (spec.input?.result === "maximum-shortest-path-weight-or-minus-one") {
+    const markerId = spec.input.resultConfig?.weightMarker;
+    const marker = spec.input.markers?.find(item => item.id === markerId);
+    if (!markerId || !marker || marker.target !== "edge" || !["integer", "number"].includes(marker.kind) || marker.required === false || Number(marker.min) < 0) errors.push(`${problem.id}/step2: network delay needs a required nonnegative numeric edge marker`);
+  }
+  if (spec.input?.result === "maximum-path-weight") {
+    const markerId = spec.input.resultConfig?.delayMarker;
+    const marker = spec.input.markers?.find(item => item.id === markerId);
+    if (!markerId || !marker || marker.target !== "node" || !["integer", "number"].includes(marker.kind) || marker.required === false || Number(marker.min) < 0) errors.push(`${problem.id}/step2: maximum path time needs a required nonnegative numeric node marker`);
+  }
+  if (spec.input?.result === "deadline-reached-count") {
+    const config = spec.input.resultConfig || {};
+    const wait = spec.input.markers?.find(item => item.id === config.waitMarker);
+    const deadline = spec.input.fields?.find(item => item.id === config.deadlineField);
+    if (!wait || wait.target !== "node" || !["integer", "number"].includes(wait.kind) || wait.required === false || Number(wait.min) < 0) errors.push(`${problem.id}/step2: deadline count needs a required nonnegative numeric node wait marker`);
+    if (!deadline || !["integer", "number"].includes(deadline.kind) || deadline.required === false || Number(deadline.min) < 0) errors.push(`${problem.id}/step2: deadline count needs a required nonnegative deadline field`);
+  }
+  if (["level-value-sum", "kth-visited-node-or-minus-one"].includes(spec.input?.result) && spec.input.resultConfig?.valueMarker) {
+    const config = spec.input.resultConfig, marker = spec.input.markers?.find(item => item.id === config.valueMarker);
+    const fieldId = spec.input.result === "level-value-sum" ? config.depthField : config.positionField;
+    const field = spec.input.fields?.find(item => item.id === fieldId);
+    if (!marker || marker.target !== "node" || !["integer", "number"].includes(marker.kind)) errors.push(`${problem.id}/step2: ${spec.input.result} needs a numeric node value marker`);
+    if (!field || field.kind !== "integer" || field.required === false || Number(field.min) < 1) errors.push(`${problem.id}/step2: ${spec.input.result} needs a required positive integer parameter field`);
+  }
+  if (spec.input?.result === "exact-size-component-count") {
+    const field = spec.input.fields?.find(item => item.id === spec.input.resultConfig?.sizeField);
+    if (!field || field.kind !== "integer" || field.required === false || Number(field.min) < 1) errors.push(`${problem.id}/step2: exact-size-component-count needs a required positive integer size field`);
+  }
+  if (spec.input?.result === "target-root-leaf-sum-exists-boolean") {
+    const config = spec.input.resultConfig || {}, target = spec.input.fields?.find(item => item.id === config.targetField), marker = spec.input.markers?.find(item => item.id === config.valueMarker);
+    if (!target || !["integer", "number"].includes(target.kind) || target.required === false) errors.push(`${problem.id}/step2: path sum needs a required numeric target field`);
+    if (!marker || marker.target !== "node" || !["integer", "number"].includes(marker.kind) || marker.required === false) errors.push(`${problem.id}/step2: path sum needs a required numeric node value marker`);
+  }
+  if (["components-without-source-count", "qualified-component-count", "reached-selected-node-count"].includes(spec.input?.result)) {
+    const config = spec.input.resultConfig || {};
+    const markerId = config.sourceMarker || config.qualifierMarker || config.selectorMarker;
+    const marker = spec.input.markers?.find(item => item.id === markerId);
+    const selectedValue = config.sourceValue ?? config.qualifyingValue ?? config.selectedValue;
+    if (!marker || marker.target !== "node" || marker.required === false || selectedValue === undefined) errors.push(`${problem.id}/step2: ${spec.input.result} needs a required node marker and selected value`);
+  }
+  if (spec.input?.result === "maximum-component-value-sum") {
+    const marker = spec.input.markers?.find(item => item.id === spec.input.resultConfig?.valueMarker);
+    if (!marker || marker.target !== "node" || !["integer", "number"].includes(marker.kind) || marker.required === false) errors.push(`${problem.id}/step2: maximum-component-value-sum needs a required numeric node marker`);
+  }
   if (!Array.isArray(spec.rounds) || spec.rounds.length !== 3) return errors.push(`${problem.id}/step2: expected exactly three single-mistake rounds`);
   spec.rounds.forEach((round, index) => {
     if (!round.level || !round.goal) errors.push(`${problem.id}/step2/round-${index + 1}: level and goal are required`);
@@ -306,6 +458,60 @@ function validateCounterexampleLesson(problem) {
   step2Sequences.push({ id: problem.id, value: spec.rounds.map(round => round.bugs.join("+")).join("|") });
 }
 
+function validateCounterSemanticInputs(problemId, input) {
+  const fields = input?.fields || [];
+  const markers = input?.markers || [];
+  if (!Array.isArray(fields)) errors.push(`${problemId}/step2: input.fields must be an array`);
+  if (!Array.isArray(markers)) errors.push(`${problemId}/step2: input.markers must be an array`);
+  if (!Array.isArray(fields) || !Array.isArray(markers)) return;
+
+  const validId = /^[a-z][a-zA-Z0-9]*$/;
+  const ids = new Set();
+  const validateCommon = (item, path, allowedKinds) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return errors.push(`${path} must be an object`);
+    if (!validId.test(String(item.id || ""))) errors.push(`${path}.id must be a camelCase identifier`);
+    else if (ids.has(item.id)) errors.push(`${problemId}/step2: semantic input id ${item.id} is duplicated`);
+    else ids.add(item.id);
+    if (!allowedKinds.has(item.kind)) errors.push(`${path}.kind ${item.kind} is unsupported`);
+    for (const key of ["label", "prompt"]) if (!String(item[key] || "").trim()) errors.push(`${path}.${key} is required`);
+    if (item.required !== undefined && typeof item.required !== "boolean") errors.push(`${path}.required must be true or false`);
+    if (item.min !== undefined && typeof item.min !== "number") errors.push(`${path}.min must be a number`);
+    if (item.max !== undefined && typeof item.max !== "number") errors.push(`${path}.max must be a number`);
+    if (typeof item.min === "number" && typeof item.max === "number" && item.min > item.max) errors.push(`${path}.min cannot exceed max`);
+    if (item.kind === "choice" || item.kind === "color") {
+      if (!Array.isArray(item.choices) || item.choices.length < 2) errors.push(`${path}.choices must contain at least two choices`);
+      else {
+        const values = new Set();
+        item.choices.forEach((choice, choiceIndex) => {
+          if (!choice || typeof choice !== "object" || !String(choice.value ?? "").trim() || !String(choice.label || "").trim()) errors.push(`${path}.choices[${choiceIndex}] needs value and label`);
+          else if (values.has(String(choice.value))) errors.push(`${path}.choices has duplicate value ${choice.value}`);
+          else values.add(String(choice.value));
+        });
+      }
+    } else if (item.choices !== undefined) errors.push(`${path}.choices is only valid for choice or color inputs`);
+  };
+
+  fields.forEach((field, index) => validateCommon(field, `${problemId}/step2/input.fields[${index}]`, new Set(["node", "integer", "number", "text", "choice", "json"])));
+  markers.forEach((marker, index) => {
+    const path = `${problemId}/step2/input.markers[${index}]`;
+    validateCommon(marker, path, new Set(["integer", "number", "text", "choice", "color", "json"]));
+    if (!new Set(["node", "edge"]).has(marker?.target)) errors.push(`${path}.target must be node or edge`);
+  });
+  const adjacency = input?.resultConfig?.adjacency;
+  if (adjacency) {
+    if (!["all", "equal-marker", "increasing-marker", "from-marker"].includes(adjacency.mode)) errors.push(`${problemId}/step2: resultConfig.adjacency.mode is unsupported`);
+    if (adjacency.mode !== "all") {
+      const marker = markers.find(item => item.id === adjacency.marker);
+      if (!marker || marker.target !== "node" || marker.required === false) errors.push(`${problemId}/step2: marker-based adjacency needs a required node marker`);
+    }
+    if (adjacency.mode === "increasing-marker") {
+      const marker = markers.find(item => item.id === adjacency.marker);
+      if (!marker || !["integer", "number"].includes(marker.kind)) errors.push(`${problemId}/step2: increasing adjacency needs a numeric node marker`);
+    }
+    if (adjacency.mode === "from-marker" && (!Array.isArray(adjacency.fromValues) || !Array.isArray(adjacency.toExcludedValues))) errors.push(`${problemId}/step2: directional marker adjacency needs fromValues and toExcludedValues`);
+  }
+}
+
 function stableHash(value) {
   let hash = 2166136261;
   for (const char of String(value)) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); }
@@ -326,6 +532,9 @@ for (const problem of problems) {
   validateCounterexampleLesson(problem);
   validateCodeReasoning(problem);
 }
+
+const counterSemanticFixtures = JSON.parse(fs.readFileSync(path.resolve(__dirname, "fixtures/step2-semantic-inputs.json"), "utf8"));
+for (const fixture of counterSemanticFixtures) validateCounterSemanticInputs(`fixture/${fixture.id}`, fixture.input);
 
 if (problems.length !== 75) errors.push(`Expected 75 problems; found ${problems.length}`);
 for (const category of Object.keys(counts)) if (counts[category] !== 25) errors.push(`Expected 25 ${category}; found ${counts[category]}`);

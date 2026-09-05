@@ -84,7 +84,7 @@ records.push(lesson("gfg-grid-path-exists",["non-wall cells","cell identity","si
   cs('grid=[[1,2],[0,0]]',open([[1,2],[0,0]]),'true','false','require-an-intermediate-cell','The source touches the destination directly.'),
   cs('grid=[[1,3],[0,2]]',open([[1,3],[0,2]]),'true','false','miss-final-down-step','The 3 touches both endpoints by sides.'),
   cs('grid=[[1,0,2],[0,0,0],[0,0,0]]',open([[1,0,2],[0,0,0],[0,0,0]]),'false','true','walk-through-wall','The 0 cell is not a node.'),
-  cs('grid=[[1,0,0],[3,0,0],[2,0,0]]',open([[1,0,0],[3,0,0],[2,0,0]]),'true','false','horizontal-only-search','Vertical side moves are legal.'),
+  cs('grid=[[1,0,0],[0,3,2],[0,0,0]]',open([[1,0,0],[0,3,2],[0,0,0]]),'false','true','allow-diagonal-move','The source reaches (1,1) only by an illegal corner step; that square would otherwise reach the target.'),
   cs('grid=[[1,3],[3,2]]',open([[1,3],[3,2]]),'true','false','mark-before-exploring','Either side-connected branch reaches 2.'),
   cs('grid=[[1,0],[3,2]]',open([[1,0],[3,2]]),'true','false','require-straight-route','The route goes down then right.')
 ]));
@@ -130,7 +130,7 @@ records.push(lesson("flood-fill",["start-color pixels","cell identity","side edg
   cs('image=[[1,1],[1,0]], sr=0, sc=0, color=2',floodModel([[1,1],[1,0]],0,0),'[[2,2],[2,0]]','[[2,2],[2,2]]','paint-other-colors','Only the connected original-color region changes.'),
   cs('image=[[1,0],[0,1]], sr=0, sc=0, color=2',floodModel([[1,0],[0,1]],0,0),'[[2,0],[0,1]]','[[2,0],[0,2]]','allow-diagonals','The lower-right 1 is only diagonal.'),
   cs('image=[[1,1,0],[0,1,1]], sr=0, sc=0, color=3',floodModel([[1,1,0],[0,1,1]],0,0),'[[3,3,0],[0,3,3]]','[[3,3,0],[0,3,1]]','stop-one-step-early','The region continues through (1,1) to (1,2).'),
-  cs('image=[[5]], sr=0, sc=0, color=5',floodModel([[5]],0,0),'[[5]]','[]','return-empty-on-same-color','The image stays unchanged when old and new colors match.'),
+  cs('image=[[5,5]], sr=0, sc=0, color=5',floodModel([[5,5]],0,0),'Return the unchanged image before searching.','Recoloring still marks visited pixels, so search normally.','same-color-does-not-mark-visited','Painting 5 with 5 does not mark progress. Without a separate visited set, adjacent pixels can revisit each other forever.','A fill uses recoloring as its only visited mark. What is needed when old and new colors match?'),
   cs('image=[[2,2],[0,2]], sr=1, sc=1, color=7',floodModel([[2,2],[0,2]],1,1),'[[7,7],[0,7]]','[[2,7],[0,7]]','miss-upward-branch','All three side-connected 2 pixels repaint.'),
   cs('image=[[1,2,1]], sr=0, sc=0, color=9',floodModel([[1,2,1]],0,0),'[[9,2,1]]','[[9,2,9]]','cross-different-color-wall','The 2 blocks the second 1.'),
   cs('image=[[3],[3],[4]], sr=0, sc=0, color=8',floodModel([[3],[3],[4]],0,0),'[[8],[8],[4]]','[[8],[3],[4]]','horizontal-only-search','Vertical side neighbors repaint.'),
@@ -157,15 +157,15 @@ records.push(lesson("path-sum",["exact tree nodes","node identity","parent-child
 ]));
 
 records.push(lesson("properties-graph",["one node per row","row identity","distinct-overlap edges","component count"],[
-  cs('properties=[[1,2],[2,3],[8]], k=1',propsModel([[1,2],[2,3],[8]],1),'2','1','drop-isolated-row','Rows 0 and 1 connect; row 2 is a separate component.'),
+  cs('properties=[[1,2],[2,3],[8,8]], k=1',propsModel([[1,2],[2,3],[8,8]],1),'2','1','drop-isolated-row','Rows 0 and 1 connect; row 2 is a separate component.'),
   cs('properties=[[1,1],[1,2]], k=2',propsModel([[1,1],[1,2]],2),'2','1','count-duplicate-values','The rows share only one distinct value.'),
   cs('properties=[[1,2],[2,3],[3,4]], k=1',propsModel([[1,2],[2,3],[3,4]],1),'1','2','require-a-clique','A chain still forms one component.'),
   cs('properties=[[5]], k=1',propsModel([[5]],1),'1','0','drop-isolated-row','A nonempty graph has one one-node component.'),
   cs('properties=[[1,2],[1,2]], k=2',propsModel([[1,2],[1,2]],2),'1','2','use-strictly-more-than-k','Sharing exactly k distinct values creates an edge.'),
   cs('properties=[[1],[2],[1]], k=1',propsModel([[1],[2],[1]],1),'2','3','ignore-nonadjacent-row-pair','Rows 0 and 2 connect even though their indexes are not adjacent.'),
-  cs('properties=[[1,2,3],[2,3,4],[3,4,5]], k=2',propsModel([[1,2,3],[2,3,4],[3,4,5]],2),'1','2','ignore-transitive-connectivity','Edges 0-1 and 1-2 make one component.'),
-  cs('properties=[[1],[2]], k=1',propsModel([[1],[2]],1),'2','1','connect-disjoint-rows','Rows with no shared property stay separate.'),
-  cs('properties=[[7,7],[7],[8]], k=1',propsModel([[7,7],[7],[8]],1),'2','1','count-duplicate-as-extra-edge','Duplicate 7s do not change the one edge or the isolated third row.')
+  cs('properties=[[2,2,3],[2,4,4],[3,5,5]], k=2',propsModel([[2,2,3],[2,4,4],[3,5,5]],2),'3','2','count-duplicate-values','Rows 0 and 1 share only distinct value 2; two copies of 2 do not reach k=2.'),
+  cs('properties=[[1,2],[2,3],[3,4],[8,8]], k=1',propsModel([[1,2],[2,3],[3,4],[8,8]],1),'2','3','count-edges-plus-isolates','The two chain edges belong to one component, plus one isolated row. Counting edges and isolated rows gives 3 instead of 2.'),
+  cs('properties=[[7,7],[7,7],[8,8]], k=1',propsModel([[7,7],[7,7],[8,8]],1),'2','1','count-duplicate-as-extra-edge','Duplicate 7s do not change the one edge or the isolated third row.')
 ]));
 
 records.push(lesson("reachable-nodes-with-restrictions",["all n nodes","node identity","two-way tree edges","restricted traversal"],[
@@ -177,7 +177,7 @@ records.push(lesson("reachable-nodes-with-restrictions",["all n nodes","node ide
   cs('n=4, edges=[[0,1],[0,2],[0,3]], restricted=[1,2]',restrictedModel(4,[[0,1],[0,2],[0,3]],[1,2]),'2','4','ignore-restrictions','Only 0 and unrestricted child 3 count.'),
   cs('n=5, edges=[[0,1],[1,2],[2,3],[3,4]], restricted=[2]',restrictedModel(5,[[0,1],[1,2],[2,3],[3,4]],[2]),'2','3','count-first-restricted-node','Nodes 0 and 1 are reachable; restricted 2 is not.'),
   cs('n=3, edges=[[0,1],[0,2]], restricted=[2]',restrictedModel(3,[[0,1],[0,2]],[2]),'2','1','stop-after-restricted-neighbor','The legal branch to node 1 still runs.'),
-  cs('n=3, edges=[[1,0],[2,1]], restricted=[2]',restrictedModel(3,[[1,0],[2,1]],[2]),'2','1','use-written-direction','The reversed pair still connects node 0 to unrestricted node 1.')
+  cs('n=4, edges=[[0,1],[1,2],[0,3]], restricted=[1]',restrictedModel(4,[[0,1],[1,2],[0,3]],[1]),'2','3','walk-through-restricted','Only 0 and 3 can be entered. Unrestricted node 2 is behind restricted node 1.')
 ]));
 
 records.push(lesson("transitive-closure",["matrix vertices","vertex identity","directed road edges","all reachability"],[
@@ -193,13 +193,13 @@ records.push(lesson("transitive-closure",["matrix vertices","vertex identity","d
 ]));
 
 records.push(lesson("structy-tree-sum",["exact tree nodes","node identity","parent-child edges","sum every node"],[
-  cs('root level-order=[3,11,4,4,-2,null,1]',treeModel([3,11,4,4,-2,null,1]),'21','18','skip-negative-node','Negative node -2 still belongs in the sum.'),
+  cs('root level-order=[3,11,4,4,-2,null,1]',treeModel([3,11,4,4,-2,null,1]),'21','23','skip-negative-node','Negative node -2 still belongs in the sum.'),
   cs('root level-order=[1,6,0,null,null,-4]',treeModel([1,6,0,null,null,-4]),'3','7','stop-at-zero-node','Zero is a real node and its child -4 must be visited.'),
   cs('root level-order=[5,5,5]',treeModel([5,5,5]),'15','5','deduplicate-equal-values','Equal values belong to three different node objects.'),
   cs('root level-order=[]',treeModel([]),'0','1','count-empty-root','An empty tree contributes sum 0.'),
   cs('root level-order=[-3]',treeModel([-3]),'-3','0','ignore-negative-leaf','The lone negative root is included.'),
   cs('root level-order=[2,3,null,4]',treeModel([2,3,null,4]),'9','5','sum-direct-children-only','Grandchild 4 must be visited.'),
-  cs('root level-order=[1,null,2,null,null,null,3]',treeModel([1,null,2,null,null,null,3]),'6','3','follow-left-child-only','The right chain includes all three nodes.'),
+  cs('root level-order=[1,null,2,null,null,null,3]',treeModel([1,null,2,null,null,null,3]),'6','1','follow-left-child-only','The right chain includes all three nodes.'),
   cs('root level-order=[0,-1,1]',treeModel([0,-1,1]),'0','1','discard-negative-values','Both -1 and 1 contribute and cancel.'),
   cs('root level-order=[4,2,6,1,3,5,7]',treeModel([4,2,6,1,3,5,7]),'28','16','sum-one-root-to-leaf-path','Tree sum includes every branch, not one path.')
 ]));

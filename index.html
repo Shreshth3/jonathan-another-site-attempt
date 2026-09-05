@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Manrope:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=20260901-2">
+  <link rel="stylesheet" href="/styles.css?v=e81519515e00">
 </head>
 <body>
   <section id="pair-picker" class="pair-picker" aria-label="Visual problem library"></section>
@@ -66,7 +66,7 @@
         </div>
         <div class="graph-toolbar" aria-label="Graph tools">
           <button id="graph-add-node" class="graph-tool-primary" type="button"><span aria-hidden="true">＋</span> Add node</button>
-          <label class="edge-width-control" for="graph-edge-width"><span>Edge width</span><input id="graph-edge-width" type="range" min="2" max="8" step="1"><output id="graph-edge-width-value"></output></label>
+          <label class="edge-width-control" for="graph-edge-width" hidden><span>Edge width</span><input id="graph-edge-width" type="range" min="2" max="8" step="1"><output id="graph-edge-width-value"></output></label>
           <button id="graph-label" class="graph-tool" type="button" disabled>Rename</button>
           <button id="graph-color" class="graph-tool" type="button" disabled>Color</button>
           <button id="graph-clear" class="graph-tool" type="button">Clear</button>
@@ -89,9 +89,8 @@
     <button data-pane="problem" aria-pressed="false">Problem</button>
   </div>
 
-  <script src="/visual-data.js?v=20260901-2"></script>
-  <script src="/character-names.js?v=20260829-2"></script>
-  <script src="/graph.js?v=20260830-8"></script>
-  <script src="/visual-library.js?v=20260901-2"></script>
+  <script src="/visual-data.js?v=e81519515e00"></script>
+  <script src="/graph.js?v=e81519515e00"></script>
+  <script src="/visual-library.js?v=e81519515e00"></script>
 </body>
 </html>

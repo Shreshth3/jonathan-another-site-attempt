@@ -1,0 +1,42 @@
+[
+  {
+    "id": "weighted-target-example",
+    "input": {
+      "fields": [
+        {
+          "id": "target",
+          "kind": "node",
+          "label": "delivery target",
+          "prompt": "Choose the outpost that must receive the package",
+          "required": true
+        }
+      ],
+      "markers": [
+        {
+          "id": "roadTime",
+          "target": "edge",
+          "kind": "number",
+          "label": "road time",
+          "prompt": "Give every road its travel time",
+          "required": true,
+          "min": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "node-value-example",
+    "input": {
+      "markers": [
+        {
+          "id": "importance",
+          "target": "node",
+          "kind": "number",
+          "label": "importance value",
+          "prompt": "Give every employee their importance value",
+          "required": true
+        }
+      ]
+    }
+  }
+]

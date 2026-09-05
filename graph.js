@@ -25,6 +25,7 @@
   let defaultWidth = clamp(Number(readValue(widthStorageKey, "4")) || 4, 2, 8);
 
   let nodeLabelRule = "nonnegative-integer";
+  let nodeLabelFormat = {};
   const api = { enabled, setContext, setSnapshot, setNodeLabelRule, getSnapshot: () => cloneDrawing(drawing) };
   window.DFS_GRAPH = api;
   if (!enabled) return;
@@ -97,6 +98,7 @@
   });
   renameInput.addEventListener("blur", () => { if (!rename.hidden) saveRename(); });
   window.addEventListener("resize", render);
+  if (typeof ResizeObserver !== "undefined") new ResizeObserver(render).observe(board);
 
   function blankDrawing() {
     return { nodes: [], edges: [], directed: false, nextNodeId: 0, nextEdgeId: 0 };
@@ -112,7 +114,10 @@
     clearTimeout(announce.timer);
     const nextKey = `${problemId}:${stepIndex}`;
     contextKey = nextKey;
-    drawing = blankDrawing();
+    try {
+      const saved = JSON.parse(readValue(`dfs-drawing:v1:${contextKey}`, "null"));
+      drawing = saved && Array.isArray(saved.nodes) && Array.isArray(saved.edges) ? saved : blankDrawing();
+    } catch { drawing = blankDrawing(); }
     selected = null;
     interaction = null;
     connectFrom = null;
@@ -125,6 +130,7 @@
 
   function setSnapshot(snapshot) {
     drawing = snapshot ? cloneDrawing(snapshot) : blankDrawing();
+    if (contextKey) writeValue(`dfs-drawing:v1:${contextKey}`, JSON.stringify(drawing));
     selected = null;
     interaction = null;
     connectFrom = null;
@@ -135,8 +141,9 @@
     render();
   }
 
-  function setNodeLabelRule(rule) {
+  function setNodeLabelRule(rule, format = {}) {
     nodeLabelRule = String(rule || "nonnegative-integer");
+    nodeLabelFormat = format || {};
   }
 
   function addNode() {
@@ -161,6 +168,22 @@
 
   function nextNodeLabel(index) {
     const used = new Set(drawing.nodes.map(node => String(node.label)));
+    const pattern = String(nodeLabelFormat.pattern || "");
+    const firstUnused = makeLabel => { let value = 0; while (used.has(makeLabel(value))) value++; return makeLabel(value); };
+    if (pattern === "^[A-Z]$") return firstUnused(value => String.fromCharCode(65 + value));
+    if (pattern.startsWith("^root(?:")) return !used.has("root=[]") ? "root=[]" : firstUnused(value => `root[${value}]=[]`);
+    if (pattern.startsWith("^(?:outer array")) return !used.has("outer array") ? "outer array" : firstUnused(value => `[${value}] array`);
+    if (pattern === "^(?:empty prefix|[a-z]+)$") return !used.has("empty prefix") ? "empty prefix" : firstUnused(value => String.fromCharCode(97 + value));
+    if (pattern === "^(?:start|[a-z]+)$") return !used.has("start") ? "start" : firstUnused(value => String.fromCharCode(97 + value));
+    if (pattern === "^\\d+:(?:true|false|AND|OR)$") return firstUnused(value => value === 0 ? "0:AND" : `${value}:false`);
+    if (pattern === "^node \\d+: -?\\d+$") return firstUnused(value => `node ${value}: 0`);
+    if (pattern === "^\\d+:[A-Za-z]$") return firstUnused(value => `${value}:a`);
+    if (pattern === "^\\d+:\\d+g$") return firstUnused(value => `${value}:0g`);
+    if (pattern === "^\\d+:\\d+$") return firstUnused(value => `${value + 1}:0`);
+    if (pattern === "^\\d+:-?\\d+$") return firstUnused(value => `${value + 1}:0`);
+    if (pattern === "^row \\d+: \\{[^{}]*\\}$") return firstUnused(value => `row ${value}: {}`);
+    if (pattern === "^\\d+:\\(-?\\d+,-?\\d+\\)$") return firstUnused(value => `${value}:(0,0)`);
+    if (pattern === "^\\d+: \\(-?\\d+,-?\\d+\\) p=\\d+$") return firstUnused(value => `${value}: (0,0) p=0`);
     if (["contiguous-zero", "nonnegative-integer"].includes(nodeLabelRule)) {
       let value = 0; while (used.has(String(value))) value++; return String(value);
     }
@@ -574,6 +597,22 @@
   function render() {
     if (!enabled || !svg || !contextKey) return;
     const bounds = boardBounds();
+    if (board.clientWidth > 0) {
+      const previous = drawing.viewport || {
+        width: Math.max(bounds.width, ...drawing.nodes.map(node => node.x + node.r + 16)),
+        height: Math.max(bounds.height, ...drawing.nodes.map(node => node.y + node.r + 16))
+      };
+      if (previous.width !== bounds.width || previous.height !== bounds.height) {
+        for (const node of drawing.nodes) {
+          const margin = node.r + 12;
+          node.x = margin + (node.x - margin) * (bounds.width - margin * 2) / Math.max(1, previous.width - margin * 2);
+          node.y = margin + (node.y - margin) * (bounds.height - margin * 2) / Math.max(1, previous.height - margin * 2);
+          clampNode(node);
+        }
+      }
+      drawing.viewport = bounds;
+      if (contextKey) writeValue(`dfs-drawing:v1:${contextKey}`, JSON.stringify(drawing));
+    }
     svg.setAttribute("viewBox", `0 0 ${bounds.width} ${bounds.height}`);
     svg.innerHTML = "";
 
@@ -616,7 +655,14 @@
     const group = svgElement("g", { class: `scratch-node${isSelected ? " selected" : ""}`, "data-node-id": node.id, transform: `translate(${node.x} ${node.y})`, tabindex: isLocked() ? "-1" : "0", role: "button", "aria-disabled": isLocked(), "aria-label": `Node ${node.label}. ${enterAction} Press F2 to rename, arrows to move, or Delete to remove.` });
     group.append(svgElement("circle", { class: "scratch-node-body", r: node.r, fill: "#151e29", stroke: node.color, "data-node-id": node.id }));
     const text = svgElement("text", { class: "scratch-node-label", "data-node-id": node.id });
-    text.textContent = node.label.length > 10 ? `${node.label.slice(0, 9)}…` : node.label;
+    // Keep the path and value visible: nested items often share the same prefix.
+    const lines = node.label.match(/.{1,10}/g) || [""];
+    lines.forEach((line, index) => {
+      const part = svgElement("tspan", { x: 0, y: (index - (lines.length - 1) / 2) * 13 });
+      part.textContent = line;
+      text.append(part);
+    });
+    if (node.label.length > 7) text.style.fontSize = "11px";
     group.append(text);
     svg.append(group);
   }
@@ -739,7 +785,7 @@
   }
 
   function saveDrawing() {
-    // Drawings intentionally reset on reload. Only edge width is saved.
+    if (contextKey) writeValue(`dfs-drawing:v1:${contextKey}`, JSON.stringify(drawing));
     window.dispatchEvent(new CustomEvent("dfs-graph-change"));
   }
 
