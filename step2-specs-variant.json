@@ -22,7 +22,7 @@
         ],
         "level": "Upside-down org chart",
         "presentation": "predict-first",
-        "goal": "Find an org chart where reading every manager link backward changes who leaves.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "1"
       },
       {
@@ -31,7 +31,7 @@
         ],
         "level": "Manager's manager",
         "presentation": "smallest-witness",
-        "goal": "Use the smallest team where a report two levels down must also leave.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "1"
       },
       {
@@ -40,7 +40,7 @@
         ],
         "level": "Missing final hire",
         "presentation": "repair-case",
-        "goal": "Make the last boss-to-report link matter to the quitting subtree.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "1"
       }
     ],
@@ -66,7 +66,7 @@
         ],
         "level": "Buried shelf",
         "presentation": "smallest-witness",
-        "goal": "Nest an item deeply enough that a one-level scan misses it.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "root=[]"
       },
       {
@@ -75,7 +75,7 @@
         ],
         "level": "Inside-out shelves",
         "presentation": "repair-case",
-        "goal": "Build nesting where reversing container arrows strands the contents.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "root=[]"
       },
       {
@@ -84,7 +84,7 @@
         ],
         "level": "Last cubby only",
         "presentation": "predict-first",
-        "goal": "Give the outer shelf multiple branches so keeping only the last one changes the scan.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "root=[]"
       }
     ],
@@ -116,7 +116,7 @@
         ],
         "level": "Lost last coin",
         "presentation": "exact-difference",
-        "goal": "Place a needed coin behind the final containment link.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "root=[]"
       },
       {
@@ -125,7 +125,7 @@
         ],
         "level": "Wrong box first",
         "presentation": "predict-first",
-        "goal": "Make starting inside the first small box change which coin levels are seen.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "root=[]",
         "mistakenStartLabel": "root[0]"
       },
@@ -135,7 +135,7 @@
         ],
         "level": "Deep coin",
         "presentation": "smallest-witness",
-        "goal": "Create a coin below the first nesting level so a shallow search fails.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "root=[]"
       }
     ],
@@ -191,7 +191,7 @@
         ],
         "level": "Corner-touching stars",
         "presentation": "smallest-witness",
-        "goal": "Use two stars whose only legal connection is diagonal.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       },
       {
@@ -200,7 +200,7 @@
         ],
         "level": "Forked constellation",
         "presentation": "exact-difference",
-        "goal": "Build a constellation whose first-branch scan leaves stars for a later scan to count again. Try three arms: with only two arms the scan may still visit everything.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       },
       {
@@ -209,7 +209,7 @@
         ],
         "level": "Missing star connection",
         "presentation": "repair-case",
-        "goal": "Make the final side-or-corner connection the only link joining two star groups.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       }
     ],
@@ -241,7 +241,7 @@
         ],
         "level": "One-way connection",
         "presentation": "predict-first",
-        "goal": "Draw a straight border-touching boat. Click its later cell before its earlier cell when adding the edge. Treating that edge as one-way must split one docked boat into separate scanned pieces.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       },
       {
@@ -250,7 +250,7 @@
         ],
         "level": "Long hull stopped early",
         "presentation": "smallest-witness",
-        "goal": "Build one straight boat with cells more than one side-step from the start.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       },
       {
@@ -259,7 +259,7 @@
         ],
         "level": "Loose dock line",
         "presentation": "exact-difference",
-        "goal": "Use a straight boat along a border. Make removing the final side link split it into two pieces that each touch the border, so the buggy count is too large.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       }
     ],
@@ -311,7 +311,7 @@
         ],
         "level": "Road signs backward",
         "presentation": "repair-case",
-        "goal": "Choose one-way roads where reversing every arrow blocks the coffee-cart route.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -320,7 +320,7 @@
         ],
         "level": "Coffee on the other branch",
         "presentation": "predict-first",
-        "goal": "Put the coffee cart on a valid route that is not explored first.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -329,7 +329,7 @@
         ],
         "level": "Cart two turns away",
         "presentation": "smallest-witness",
-        "goal": "Put the checkpoint beyond a direct neighbor so one-hop search cannot reach it.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       }
     ],
@@ -362,7 +362,7 @@
         ],
         "level": "End-of-road village",
         "presentation": "exact-difference",
-        "goal": "Make a village at the end of a footpath depend on its only link to a well.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -371,7 +371,7 @@
         ],
         "level": "Footpath made one-way",
         "presentation": "smallest-witness",
-        "goal": "Draw a footpath toward a well so one-way treatment falsely splits its cluster.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -380,7 +380,7 @@
         ],
         "level": "Two paths from the well",
         "presentation": "repair-case",
-        "goal": "Branch from a well so following only the last path leaves a village unserved.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       }
     ],
@@ -435,7 +435,7 @@
         ],
         "level": "Diagonal gas warning",
         "presentation": "exact-difference",
-        "goal": "Place gas at a corner touch so an invented diagonal changes the reveal.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       },
       {
@@ -444,7 +444,7 @@
         ],
         "level": "Long safe tunnel",
         "presentation": "repair-case",
-        "goal": "Make safe cave squares continue beyond the drill's immediate neighbors.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       },
       {
@@ -453,7 +453,7 @@
         ],
         "level": "Final tunnel link omitted",
         "presentation": "predict-first",
-        "goal": "Make the final side passage reach one more safe cave square.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       }
     ],
@@ -530,7 +530,7 @@
         ],
         "level": "Wire drawn as an arrow",
         "presentation": "smallest-witness",
-        "goal": "Orient a listed wire toward the gold bulb so a fake arrow blocks coloring.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -539,7 +539,7 @@
         ],
         "level": "Gold two wires away",
         "presentation": "predict-first",
-        "goal": "Use a wire chain where a later bulb must still receive a color.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -548,7 +548,7 @@
         ],
         "level": "Two lighting branches",
         "presentation": "exact-difference",
-        "goal": "Put a gold bulb two wires down an earlier branch. Keeping only the last branch must miss at least one gold bulb, changing the returned count.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       }
     ],
@@ -580,7 +580,7 @@
         ],
         "level": "Key used backward",
         "presentation": "predict-first",
-        "goal": "Use a key arrow whose reverse would unlock extra gold illegally.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -589,7 +589,7 @@
         ],
         "level": "Wrong dungeon entrance",
         "presentation": "repair-case",
-        "goal": "List a locked room first so the declared starting room cannot be ignored.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0",
         "mistakenStartLabel": "1"
       },
@@ -599,7 +599,7 @@
         ],
         "level": "Key left behind",
         "presentation": "smallest-witness",
-        "goal": "Make the final key arrow unlock a room that changes the reachable gold.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       }
     ],
@@ -645,7 +645,7 @@
         ],
         "level": "Wrong trailhead",
         "presentation": "predict-first",
-        "goal": "Put the dry finish with start 0 while mistaken start 1 cannot reach it.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0",
         "mistakenStartLabel": "1"
       },
@@ -655,7 +655,7 @@
         ],
         "level": "One-way hiking trail",
         "presentation": "exact-difference",
-        "goal": "Write the trail to the dry finish in reverse order so treating it as an arrow blocks the route.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -664,7 +664,7 @@
         ],
         "level": "Flooded dead end",
         "presentation": "repair-case",
-        "goal": "Put a dry dead end first and the dry finish on a second allowed branch. Flooded neighbors are skipped before choosing a branch.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       }
     ],
@@ -707,7 +707,7 @@
         ],
         "level": "One-way connection",
         "presentation": "repair-case",
-        "goal": "Draw one straight train with at least two cars. Draw its connection from the later grid cell toward the earlier one. A one-way search must measure a shorter train.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       },
       {
@@ -716,7 +716,7 @@
         ],
         "level": "Last coupling skipped",
         "presentation": "smallest-witness",
-        "goal": "Make the final listed side coupling necessary to reach the end of one straight train.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       },
       {
@@ -725,7 +725,7 @@
         ],
         "level": "Long freight line",
         "presentation": "exact-difference",
-        "goal": "Build a train longer than one hop from its first car.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       }
     ],
@@ -757,7 +757,7 @@
         ],
         "level": "Blue line forgotten",
         "presentation": "predict-first",
-        "goal": "Give the rider a complete blue route and no complete red route.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -766,7 +766,7 @@
         ],
         "level": "Illegal transfer",
         "presentation": "exact-difference",
-        "goal": "Make the destination reachable only by switching track colors.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -775,7 +775,7 @@
         ],
         "level": "Second same-color route",
         "presentation": "repair-case",
-        "goal": "Put a dead end before another same-color branch that reaches the destination.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       }
     ],
@@ -818,7 +818,7 @@
         ],
         "level": "Friend of a friend",
         "presentation": "smallest-witness",
-        "goal": "Use a friendship chain where the rumor must travel more than one hop.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -827,7 +827,7 @@
         ],
         "level": "Quiet office leaf",
         "presentation": "exact-difference",
-        "goal": "Make an employee with one friend depend on that single friendship.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -836,7 +836,7 @@
         ],
         "level": "Different rumor starter",
         "presentation": "predict-first",
-        "goal": "Start the real search at employee 0, but make the mistaken search begin at employee 1 outside that friend group.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0",
         "mistakenStartLabel": "1"
       }
@@ -868,7 +868,7 @@
         ],
         "level": "Missing final road",
         "presentation": "repair-case",
-        "goal": "Make the last listed road complete the only route to the outpost.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -877,7 +877,7 @@
         ],
         "level": "Road order mistaken",
         "presentation": "predict-first",
-        "goal": "List a road toward HQ so treating it as one-way blocks the package.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -886,7 +886,7 @@
         ],
         "level": "Wrong depot",
         "presentation": "smallest-witness",
-        "goal": "Use warehouse 1 as the outpost so starting there returns 0 instead of the real trip time from HQ.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0",
         "mistakenStartLabel": "1"
       }
@@ -942,7 +942,7 @@
         ],
         "level": "Corner-touching campsites",
         "presentation": "exact-difference",
-        "goal": "Make two separate grass groups touch only at a corner.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       },
       {
@@ -951,7 +951,7 @@
         ],
         "level": "Final grass link missing",
         "presentation": "repair-case",
-        "goal": "Make the final side link join pieces into one campsite whose size equals k.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       },
       {
@@ -960,7 +960,7 @@
         ],
         "level": "Forked patch",
         "presentation": "predict-first",
-        "goal": "Build one grass patch with multiple side branches that all count toward its size.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "(0,0)"
       }
     ],
@@ -1005,7 +1005,7 @@
         ],
         "level": "Second summit route",
         "presentation": "predict-first",
-        "goal": "Give base camp two distinct uphill branches that both reach the summit.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -1014,7 +1014,7 @@
         ],
         "level": "Trails downhill",
         "presentation": "smallest-witness",
-        "goal": "Use one uphill arrow whose reversal prevents leaving base camp.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -1023,7 +1023,7 @@
         ],
         "level": "Last climb missing",
         "presentation": "repair-case",
-        "goal": "Make the final listed trail finish one complete summit route.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       }
     ],
@@ -1056,7 +1056,7 @@
         ],
         "level": "Code starts halfway",
         "presentation": "repair-case",
-        "goal": "Offer complete legal codes beginning with different first runes. Starting at prefix a must miss another complete code.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "start",
         "mistakenStartLabel": "a"
       },
@@ -1066,7 +1066,7 @@
         ],
         "level": "Last rune only",
         "presentation": "predict-first",
-        "goal": "Offer several legal next runes so keeping only the last loses valid codes.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "start"
       },
       {
@@ -1075,7 +1075,7 @@
         ],
         "level": "Three-dial door",
         "presentation": "exact-difference",
-        "goal": "Require a legal code longer than one rune beyond the empty prefix.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "start"
       }
     ],
@@ -1116,7 +1116,7 @@
         ],
         "level": "Caller's caller",
         "presentation": "exact-difference",
-        "goal": "Put a person two calls away so direct contacts are not enough.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -1125,7 +1125,7 @@
         ],
         "level": "Last invitation lost",
         "presentation": "smallest-witness",
-        "goal": "Make the final caller row bring one more person into the chain.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -1134,7 +1134,7 @@
         ],
         "level": "Phone chain backward",
         "presentation": "predict-first",
-        "goal": "Choose a caller link where reversing it stops news from flowing downward.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       }
     ],
@@ -1190,7 +1190,7 @@
         ],
         "level": "Water flows backward",
         "presentation": "smallest-witness",
-        "goal": "Use one feeder pipe where reversing flow shuts the wrong sprinkler.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "1"
       },
       {
@@ -1199,7 +1199,7 @@
         ],
         "level": "Half-watered fork",
         "presentation": "repair-case",
-        "goal": "Give one feeder multiple child pipes so every downstream branch must shut.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "1"
       },
       {
@@ -1208,7 +1208,7 @@
         ],
         "level": "Wrong valve closed",
         "presentation": "exact-difference",
-        "goal": "Shut sprinkler 1, but make the mistaken search begin at sprinkler 2.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "1",
         "mistakenStartLabel": "2"
       }
@@ -1255,7 +1255,7 @@
         ],
         "level": "Teamwork as an arrow",
         "presentation": "predict-first",
-        "goal": "Use a matrix link whose written direction would wrongly block a teammate.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -1264,7 +1264,7 @@
         ],
         "level": "More than one teammate",
         "presentation": "exact-difference",
-        "goal": "Give one student separate teamwork branches that belong to the same group.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -1273,7 +1273,7 @@
         ],
         "level": "Solo-looking teammate",
         "presentation": "repair-case",
-        "goal": "Make a degree-one student enlarge the biggest study group.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       }
     ],
@@ -1304,7 +1304,7 @@
         ],
         "level": "Last album only",
         "presentation": "smallest-witness",
-        "goal": "Place songs in multiple folders so keeping the last folder changes play order.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "root=[]"
       },
       {
@@ -1313,7 +1313,7 @@
         ],
         "level": "Song in a subfolder",
         "presentation": "predict-first",
-        "goal": "Bury a song more than one folder deep so a shallow player misses it.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "root=[]"
       },
       {
@@ -1322,7 +1322,7 @@
         ],
         "level": "Final track missing",
         "presentation": "repair-case",
-        "goal": "Make the last containment link point to a song needed in the playlist.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "root=[]"
       }
     ],
@@ -1378,7 +1378,7 @@
         ],
         "level": "Key in the last vault",
         "presentation": "predict-first",
-        "goal": "Make the final key arrow unlock one additional vault.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -1387,7 +1387,7 @@
         ],
         "level": "Key works backward",
         "presentation": "exact-difference",
-        "goal": "Use an arrow whose reverse would open a vault without owning its key.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -1396,7 +1396,7 @@
         ],
         "level": "Only the first key",
         "presentation": "smallest-witness",
-        "goal": "Give at least two starting keys whose reachable vaults differ. The mistake uses only the first starting key.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       }
     ],
@@ -1427,7 +1427,7 @@
         ],
         "level": "Pile turned inside out",
         "presentation": "repair-case",
-        "goal": "Use nested boxes where reversing containment prevents reaching their items.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "root=[]"
       },
       {
@@ -1436,7 +1436,7 @@
         ],
         "level": "Start inside the pile",
         "presentation": "exact-difference",
-        "goal": "Start at root=[]. Put a nonzero integer outside the first inner array, so starting at root[0] changes the occupied layer sums.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "root=[]",
         "mistakenStartLabel": "root[0]"
       },
@@ -1446,7 +1446,7 @@
         ],
         "level": "Two top-level branches",
         "presentation": "predict-first",
-        "goal": "Place items in separate branches so the search must return after the first.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "root=[]"
       }
     ],
@@ -1481,7 +1481,7 @@
         ],
         "level": "Threshold equality",
         "presentation": "exact-difference",
-        "goal": "Use a score exactly equal to k that connects two offices. The mistake keeps only scores greater than k.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -1490,7 +1490,7 @@
         ],
         "level": "Trust treated one-way",
         "presentation": "repair-case",
-        "goal": "List a qualifying trust link toward the start so a fake arrow blocks it.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       },
       {
@@ -1499,7 +1499,7 @@
         ],
         "level": "Trust through a partner",
         "presentation": "smallest-witness",
-        "goal": "Connect an office through an intermediate trusted partner, not directly.",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "0"
       }
     ],

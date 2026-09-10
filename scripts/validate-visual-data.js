@@ -459,11 +459,12 @@ function validateCounterexampleLesson(problem) {
     for (const bug of round.bugs || []) if (!allowedStep2Bugs.has(bug)) errors.push(`${problem.id}/step2/round-${index + 1}: unsupported bug ${bug}`);
     if (new Set(round.bugs || []).size !== (round.bugs || []).length) errors.push(`${problem.id}/step2/round-${index + 1}: repeated bug`);
     const goalKey = String(round.goal || "").trim().toLowerCase();
-    if (step2Goals.has(goalKey)) errors.push(`${problem.id}/step2/round-${index + 1}: goal copy repeats another problem`);
-    step2Goals.add(goalKey);
+    // Active variants share a neutral task; unique construction hints would spoil it.
+    if (problem.category !== "variant" && step2Goals.has(goalKey)) errors.push(`${problem.id}/step2/round-${index + 1}: goal copy repeats another problem`);
+    if (problem.category !== "variant") step2Goals.add(goalKey);
   });
   if (spec.fixedStart && spec.rounds.some(round => String(round.startLabel) !== String(spec.fixedStart))) errors.push(`${problem.id}/step2: every round start must match fixedStart ${spec.fixedStart}`);
-  if (new Set(spec.rounds.map(round => round.goal)).size !== spec.rounds.length) errors.push(`${problem.id}/step2: round goals must be distinct`);
+  if (problem.category !== "variant" && new Set(spec.rounds.map(round => round.goal)).size !== spec.rounds.length) errors.push(`${problem.id}/step2: round goals must be distinct`);
   if (new Set(spec.rounds.map(round => round.presentation)).size < 3) errors.push(`${problem.id}/step2: use at least three presentation styles`);
   step2Sequences.push({ id: problem.id, value: spec.rounds.map(round => round.bugs.join("+")).join("|") });
 }

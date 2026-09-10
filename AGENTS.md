@@ -29,6 +29,7 @@ Use that site and repo when checking or importing the original problem content.
 - The browser loads only `visual-data.js`, `graph.js`, and `visual-library.js`.
 - Step 2 is available at `/<problem-id>?section=2` and from the lesson header.
 - Step 2 must accept student-designed graphs through simple node, start, and edge fields, compare the drawing to those fields, and calculate both the correct and buggy reachable sets. Never replace it with fixed stored inputs or answer-string lookup.
+- Step 2 goals explain the task: invent a valid input that makes the mistaken search return a wrong answer, draw both graphs, and predict both outputs. Never suggest the graph shape, depth, branch placement, edge order, values, or other construction that exposes the bug. Keep necessary bug definitions and drawing/format rules clear. See [the spoiler review](docs/step2-no-spoilers-2026-09-09.md).
 - Step 2 retains exactly three authored single-misconception cases; active variants show only the first two. Never add a case with multiple misconceptions. Each problem has its own character name.
 - Every active variant input/output text field must have a problem-specific format placeholder. Never derive placeholders from the current answer. Use separate fields per input variable, simple lists/grid rows, and no JSON instructions or strict JSON requirement.
 - Step 3 is currently hidden; its preserved route was `/<problem-id>?section=3`. Variants show exactly three concise Yes/No claims with three exact graph builds; original/new retain five.

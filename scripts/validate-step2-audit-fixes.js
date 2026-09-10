@@ -7,7 +7,7 @@ const vm = require("vm");
 const path = require("path");
 const assert = require("assert/strict");
 const root = path.resolve(__dirname, "..");
-const sandbox = { window: {}, document: { querySelector: () => null } };
+const sandbox = { window: { addEventListener() {} }, document: { querySelector: () => null, addEventListener() {} } };
 vm.runInNewContext(fs.readFileSync(path.join(root, "visual-data.js"), "utf8"), sandbox);
 let source = fs.readFileSync(path.join(root, "visual-library.js"), "utf8");
 source = source.replace("  start();\n})();", `  window.step2Test = {
