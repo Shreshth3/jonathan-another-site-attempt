@@ -1,3 +1,10 @@
+# Current lesson steps (2026-09-09)
+
+- Active variants show **Step 1 → Step 2 → Step 6**. Steps 3–5 are hidden, including direct links; preserve their code and content.
+- Step 2 shows the first **two** authored questions. Keep all three in the source pool.
+- Keep the optional Step 2 shortcut after the first three Step 1 tasks pass without a mistake or skip.
+- See [the dated summary and restore guide](docs/lesson-steps-2026-09-09.md) before changing this setup. Historical Step 3–5 instructions below apply to their preserved content, not current navigation.
+
 # Current scope
 
 - Unless explicitly stated otherwise, apply changes only to problems in the **variant** category.
@@ -22,18 +29,18 @@ Use that site and repo when checking or importing the original problem content.
 - The browser loads only `visual-data.js`, `graph.js`, and `visual-library.js`.
 - Step 2 is available at `/<problem-id>?section=2` and from the lesson header.
 - Step 2 must accept student-designed graphs through simple node, start, and edge fields, compare the drawing to those fields, and calculate both the correct and buggy reachable sets. Never replace it with fixed stored inputs or answer-string lookup.
-- Step 2 has exactly three single-misconception cases. Never add a case with multiple misconceptions. Each problem has its own character name.
+- Step 2 retains exactly three authored single-misconception cases; active variants show only the first two. Never add a case with multiple misconceptions. Each problem has its own character name.
 - Every active variant input/output text field must have a problem-specific format placeholder. Never derive placeholders from the current answer. Use separate fields per input variable, simple lists/grid rows, and no JSON instructions or strict JSON requirement.
-- Step 3 is available at `/<problem-id>?section=3`. Variants show exactly three concise Yes/No claims with three exact graph builds; original/new retain five.
+- Step 3 is currently hidden; its preserved route was `/<problem-id>?section=3`. Variants show exactly three concise Yes/No claims with three exact graph builds; original/new retain five.
 - In variants, prioritize node membership, direct edges versus reachability, and an edge-detail or reachability boundary. In original/new, across the five Step 3 claims, test node membership, direct edges versus reachability, local degree, direction, and one edge-detail or reachability-boundary idea. Show feedback only after submission.
 - Every Step 3 membership claim must test an authored misconception about what becomes a node. Never use a trivial claim that a listed node remains a node because it is a leaf or has no edges in one direction.
 - Steps 3 and 4 must not reveal a prewritten correct graph model. Their input and exact drawing requirements must still make strict grading fair.
-- Step 4 is available at `/<problem-id>?section=4`. It uses at least three deep, real, problem-specific code-reasoning cases per problem.
+- Step 4 is currently hidden; its preserved route was `/<problem-id>?section=4`. It uses at least three deep, real, problem-specific code-reasoning cases per problem.
 - Each Step 4 case must test a different, realistic, single misconception with different incorrect code and an input that exposes that exact mistake. Never repeat one bug on several inputs.
 - Step 4 must grade the exact graph, the code's graph-level behavior, and the real problem's exact output. Its shown code and declared buggy output must always agree.
 - Step 4 feedback teaches `code rule → changed graph → reachable boundary → returned value`. Never make students trace every line.
 - Author Step 4 in `step4-specs-*.json`, then regenerate and validate `visual-data.js`.
-- Step 5 is available for variant problems at `/<problem-id>?section=5` and from the lesson header.
+- Step 5 is currently hidden; its preserved variant route was `/<problem-id>?section=5` and from the lesson header.
 - For Step 5, read each correct solution and identify its most likely problem-specific mistakes (usually 2–4). Author one question per mistake, with exactly that one bug.
 - Show a frozen incorrect solution in pseudocode. Ask students to construct an input that exposes the bug and give both the correct output and the buggy output. Use one field per actual function input, with type-correct format placeholders. Outputs are direct values, with format examples. Do not ask for a JSON object. Then ask for a written explanation of the mistake and its repair; do not show repair menus.
 - Execute the student's input to check the counterexample and both outputs. Grade the written explanation with GPT-5.6 Luna against the server-owned saved correct answer. Accept equivalent wording. After an incorrect explanation, offer a button to reveal the saved answer. API failures are retryable and never count as a wrong answer.

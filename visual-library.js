@@ -174,6 +174,8 @@
     "variant",
     // "new", // ARCHIVED: not part of the current app.
   ];
+  // Restore guide: docs/lesson-steps-2026-09-09.md. Full content stays below.
+  const variantPractice = { sections: [1, 2, 6], step2Questions: 2 };
   let problem = null;
   let problemIndex = -1;
   let progress = null;
@@ -399,7 +401,7 @@
     document.addEventListener("input", saveFormDraft);
     document.addEventListener("click", () => queueMicrotask(saveFormDraft));
     window.addEventListener("pagehide", () => { if (pendingAdvance) pendingAdvance(); });
-    $("#section-nav-btn").onclick = () => switchSection(section === 1 ? 2 : section === 2 ? 3 : section === 3 ? 4 : section === 4 && hasStep5() ? 5 : section === 5 && hasStep6() ? 6 : section === 6 ? 5 : section === 5 ? 4 : 3);
+    $("#section-nav-btn").onclick = () => switchSection(adjacentSection());
     window.onpopstate = () => {
       saveFormDraft();
       pendingAdvance?.();
@@ -479,10 +481,13 @@
       : isStructure
       ? "Answer one useful Yes/No question, then build the exact graph."
       : "Answer each question and build exact graphs from fresh inputs.";
-    $("#section-nav-btn").innerHTML = isCoding ? "Back to Step 5 <span>←</span>" : isDebugging && hasStep6() ? "Next: Step 6 <span>→</span>" : isDebugging ? "Back to Step 4 <span>←</span>" : isReasoning && hasStep5() ? "Next: Step 5 <span>→</span>" : isReasoning ? "Back to Step 3 <span>←</span>" : isStructure ? "Next: Step 4 <span>→</span>" : isCounterexample ? "Next: Step 3 <span>→</span>" : "Skip to Step 2 <span>→</span>";
+    const nextSection = adjacentSection();
+    const back = nextSection < section;
+    $("#section-nav-btn").innerHTML = `${back ? "Back to" : section === 1 ? "Skip to" : "Next:"} Step ${nextSection} <span>${back ? "←" : "→"}</span>`;
   }
 
   function switchSection(nextSection) {
+    if (!availableSections().includes(nextSection)) return;
     saveFormDraft();
     if (pendingAdvance) pendingAdvance();
     section = nextSection;
@@ -766,6 +771,11 @@
   }
 
   function counterexampleRounds() {
+    const rounds = authoredCounterexampleRounds();
+    return problem.category === "variant" ? rounds.slice(0, variantPractice.step2Questions) : rounds;
+  }
+
+  function authoredCounterexampleRounds() {
     if (problem.counterexampleLesson?.rounds?.length) return problem.counterexampleLesson.rounds;
     if (problem.id === "one-color-metro-ride") return [
       { bugs: ["ignore-colors"], level: "Transfer trap" },
@@ -2436,10 +2446,10 @@
 
   function renderCounterexampleComplete() {
     $("#graph-lab").hidden = true;
-    const skipped = counterProgress.skipped.length;
+    const skipped = counterProgress.skipped.filter(index => index < counterexampleRounds().length).length;
     const passed = counterexampleRounds().length - skipped;
-    $("#challenge").innerHTML = `<div class="challenge-body victory counter-victory${skipped ? " has-skips" : ""}"><div class="stamp">${skipped ? "Finished" : "Disproven"}</div><h3>${skipped ? "Step 2 finished." : "Step 2 complete."}</h3>${skipped ? `<p>${passed} passed · ${skipped} skipped.</p>` : ""}<div class="completion-actions"><button id="start-structure" class="primary-btn">Start Step 3 <span>→</span></button><a class="ghost-btn link-button" href="/">Choose another problem</a><button id="restart-counter" class="ghost-btn">Practice Step 2 again</button></div></div>`;
-    $("#start-structure").onclick = () => switchSection(3);
+    $("#challenge").innerHTML = `<div class="challenge-body victory counter-victory${skipped ? " has-skips" : ""}"><div class="stamp">${skipped ? "Finished" : "Disproven"}</div><h3>${skipped ? "Step 2 finished." : "Step 2 complete."}</h3>${skipped ? `<p>${passed} passed · ${skipped} skipped.</p>` : ""}<div class="completion-actions"><button id="start-after-counter" class="primary-btn">Start Step ${adjacentSection()} <span>→</span></button><a class="ghost-btn link-button" href="/">Choose another problem</a><button id="restart-counter" class="ghost-btn">Practice Step 2 again</button></div></div>`;
+    $("#start-after-counter").onclick = () => switchSection(adjacentSection());
     $("#restart-counter").onclick = resetCounterexamples;
   }
 
@@ -3131,7 +3141,12 @@
 
   function hasStep5() { return problem.category === "variant" && Boolean(problem.debuggingLesson?.cases?.length); }
   function hasStep6() { return problem.category === "variant" && Boolean(problem.codingLesson); }
-  function availableSections() { return hasStep6() ? [1, 2, 3, 4, 5, 6] : hasStep5() ? [1, 2, 3, 4, 5] : [1, 2, 3, 4]; }
+  function availableSections() { if (problem.category === "variant") return variantPractice.sections; return hasStep6() ? [1, 2, 3, 4, 5, 6] : hasStep5() ? [1, 2, 3, 4, 5] : [1, 2, 3, 4]; }
+  function adjacentSection() {
+    const sections = availableSections();
+    const index = sections.indexOf(section);
+    return sections[index + 1] ?? sections[index - 1];
+  }
   function debuggingRounds() { return hasStep5() ? problem.debuggingLesson.cases : []; }
   function debuggingStorageKey() { return `dfs-debugging:${problem.id}:v1`; }
   function loadDebuggingProgress() {
@@ -4350,7 +4365,7 @@
   function loadCounterProgress() {
     try {
       const value = JSON.parse(localStorage.getItem(counterStorageKey()) || "{}");
-      const total = problem.counterexampleLesson?.rounds?.length || 3;
+      const total = counterexampleRounds().length;
       const skipped = Array.isArray(value.skipped)
         ? [...new Set(value.skipped.map(Number).filter(index => Number.isInteger(index) && index >= 0 && index < total))]
         : [];

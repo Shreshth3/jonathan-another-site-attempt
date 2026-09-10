@@ -68,8 +68,7 @@ for (const p of data.problems) {
     await answer(); await page.locator('#visual-check').click(); await answer();
     assert.equal(await page.locator('#fast-track-step2').count(),0);
     await page.goto('http://practice.test/office-rumor-reach?section=3');
-    for (let i=0;i<3;i++) await page.locator('#next-question-btn').click();
-    assert.match(await page.locator('#challenge').innerText(), /3 skipped/);
+    assert.equal(await page.locator('[data-section="1"]').getAttribute('aria-current'), 'step');
     await page.goto('http://practice.test/office-rumor-reach');
     page.once('dialog', dialog => dialog.accept());
     await page.locator('#reset-btn').click();
