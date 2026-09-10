@@ -1,0 +1,137 @@
+{
+  "originalOrder": [
+    "number-of-connected-components-in-an-undirected-graph",
+    "number-of-provinces",
+    "number-of-islands",
+    "battleships-in-a-board",
+    "detonate-the-maximum-bombs",
+    "keys-and-rooms",
+    "time-needed-to-inform-all-employees",
+    "kill-process",
+    "letter-combinations-of-a-phone-number",
+    "network-delay-time",
+    "find-if-path-exists-in-graph",
+    "all-paths-from-source-to-target",
+    "evaluate-division",
+    "flatten-nested-list-iterator",
+    "nested-list-weight-sum",
+    "nested-list-weight-sum-ii",
+    "minesweeper",
+    "smallest-string-with-swaps",
+    "water-and-jug-problem",
+    "number-of-increasing-paths-in-a-grid",
+    "course-schedule",
+    "is-graph-bipartite",
+    "possible-bipartition",
+    "word-search",
+    "longest-increasing-path-in-a-matrix",
+    "critical-connections-in-a-network"
+  ],
+  "groups": [
+    {
+      "parentId": "number-of-connected-components-in-an-undirected-graph",
+      "variants": [
+        { "id": "office-rumor-reach", "reason": "Start with one search and count the people reached." },
+        { "id": "villages-without-wells", "reason": "Then search every component and check whether each contains a well." }
+      ]
+    },
+    {
+      "parentId": "number-of-provinces",
+      "variants": [
+        { "id": "biggest-study-group", "reason": "Read a binary matrix, count each group, and keep the largest." },
+        { "id": "trusted-courier-networks", "reason": "Then decide which matrix entries become connections using a threshold." }
+      ]
+    },
+    {
+      "parentId": "number-of-islands",
+      "variants": [
+        { "id": "counting-constellations", "reason": "Count groups using eight neighbor directions; no per-group measurement is needed." },
+        { "id": "perfect-size-campsites", "reason": "Then measure each whole group and count only exact-size matches." }
+      ]
+    },
+    {
+      "parentId": "battleships-in-a-board",
+      "variants": [
+        { "id": "longest-freight-train", "reason": "Measure straight groups and keep the largest." },
+        { "id": "counting-docked-boats", "reason": "Then carry a border-contact condition across each group and count it only once." }
+      ]
+    },
+    {
+      "parentId": "keys-and-rooms",
+      "variants": [
+        { "id": "dungeon-gold-run", "reason": "One fixed starting room; visit each reachable room once and add its gold." },
+        { "id": "museum-vault-keyring", "reason": "Then handle multiple starting keys and share visited state across overlapping searches." }
+      ]
+    },
+    {
+      "parentId": "time-needed-to-inform-all-employees",
+      "variants": [
+        { "id": "save-the-date-phone-chain", "reason": "Carry arrival time down a tree and compare it with an inclusive deadline." }
+      ]
+    },
+    {
+      "parentId": "kill-process",
+      "variants": [
+        { "id": "who-keeps-their-job", "reason": "Find the leaving subtree, then filter and sort the remaining IDs." },
+        { "id": "shut-the-garden-valve", "reason": "Then add a separate weight list and match arbitrary IDs to positions when summing saved water." }
+      ]
+    },
+    {
+      "parentId": "letter-combinations-of-a-phone-number",
+      "variants": [
+        { "id": "runes-on-the-castle-door", "reason": "Build combinations while rejecting adjacent repeated characters." }
+      ]
+    },
+    {
+      "parentId": "network-delay-time",
+      "variants": [
+        { "id": "package-to-the-outpost", "reason": "Accumulate road weights along the unique path in a tree." }
+      ]
+    },
+    {
+      "parentId": "find-if-path-exists-in-graph",
+      "variants": [
+        { "id": "flooded-campsite-trails", "reason": "One reachability search with a blocked-node check." },
+        { "id": "one-color-metro-ride", "reason": "Then run separate color-filtered searches, keeping their visited sets independent." }
+      ]
+    },
+    {
+      "parentId": "all-paths-from-source-to-target",
+      "variants": [
+        { "id": "count-routes-to-summit", "reason": "Count completed paths without constructing the path lists." },
+        { "id": "routes-past-the-coffee-cart", "reason": "Then keep each complete path and require a checkpoint on that exact path." }
+      ]
+    },
+    {
+      "parentId": "flatten-nested-list-iterator",
+      "variants": [
+        { "id": "kth-song-in-playlist", "reason": "Traverse nested lists in playback order and select a one-based position." }
+      ]
+    },
+    {
+      "parentId": "nested-list-weight-sum",
+      "variants": [
+        { "id": "coins-on-level-k", "reason": "Track depth and add values at one requested level." },
+        { "id": "busiest-shelf-level", "reason": "Then count every depth, find the maximum, and break ties toward the shallowest." }
+      ]
+    },
+    {
+      "parentId": "nested-list-weight-sum-ii",
+      "variants": [
+        { "id": "top-of-the-pile", "reason": "Find the globally shallowest integer depth, then sum all values there." }
+      ]
+    },
+    {
+      "parentId": "minesweeper",
+      "variants": [
+        { "id": "gas-pocket-survey", "reason": "Combine neighboring-hazard counts, grid updates, and a stopping boundary." }
+      ]
+    },
+    {
+      "parentId": "is-graph-bipartite",
+      "variants": [
+        { "id": "gold-and-silver-lights", "reason": "Carry alternating colors through a tree; kept in the user's Advanced DFS parent group." }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+const assert = require('node:assert/strict');
+const scope = require('../netlify/functions/lib/ai-help.cjs');
+const expected = { nodes: [{ id: 0, label: '(0,0)' }, { id: 2, label: '(0,2)' }, { id: 3, label: '(0,3)' }], edges: [{ from: 2, to: 3 }], directed: false };
+const actual = { nodes: [...expected.nodes, { id: 1, label: '(0,1)' }], edges: [], directed: false };
+const kinds = graph => Array.from(scope.graphMistakes(expected, graph), item => item.kind);
+assert.deepEqual(kinds(actual), ['extra or misnamed nodes', 'missing direct connections between correctly named nodes already present']);
+assert.deepEqual(kinds(expected), []);
+assert.deepEqual(kinds({ ...expected, nodes: [expected.nodes[0]], edges: [] }), ['missing or misnamed nodes']);
+assert.deepEqual(kinds({ ...expected, nodes: expected.nodes.map(node => ({ ...node, label: node.label.slice(1, -1) })) }), []);
+console.log('PASS: independent mistakes together, no duplicate consequences, correct graph, equivalent coordinate labels.');

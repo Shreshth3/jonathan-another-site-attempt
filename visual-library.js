@@ -5,6 +5,107 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char]);
+  let aiRequest = null;
+  function clearAiHelp() {
+    aiRequest?.abort();
+    aiRequest = null;
+    $("#ai-help")?.remove();
+  }
+  window.addEventListener("dfs-graph-change", () => {
+    clearAiHelp();
+    if (section === 6) queueMicrotask(refreshCodingHelp);
+  });
+  document.addEventListener("input", event => {
+    if (event.target.closest("#challenge")) {
+      clearAiHelp();
+      if (section === 6) queueMicrotask(refreshCodingHelp);
+    }
+  });
+  document.addEventListener("click", event => {
+    if (event.target.closest("[data-choice-id], [data-claim-index]")) clearAiHelp();
+  });
+
+  function offerAiHelp(attempt) {
+    clearAiHelp();
+    const slot = $("#feedback-slot");
+    if (!slot) return;
+    const panel = document.createElement("div");
+    panel.id = "ai-help";
+    panel.className = "ai-help";
+    panel.innerHTML = '<button type="button">Ask AI for help</button><p class="ai-help-answer" role="status" aria-live="polite" hidden></p>';
+    slot.append(panel);
+    const button = $("button", panel);
+    const answer = $("p", panel);
+    button.onclick = async () => {
+      aiRequest?.abort();
+      const controller = new AbortController();
+      aiRequest = controller;
+      button.disabled = true;
+      button.textContent = "Asking Luna…";
+      answer.hidden = false;
+      answer.textContent = "Looking at your attempt…";
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      let output = "";
+      let completed = false;
+      let timedOut = false;
+      const timeout = section === 6 ? setTimeout(() => { timedOut = true; controller.abort(); }, 45000) : null;
+      try {
+        let currentAttempt = typeof attempt === "function" ? attempt() : attempt;
+        let graphRules = problem.graphRules;
+        if (usesArrayNumberDrawing()) {
+          currentAttempt = arrayDrawingHelpAttempt(currentAttempt);
+          graphRules = {
+            nodes: "Every array is labeled Array. Each separate value has its own node. Repeated Array labels and repeated values are valid; node IDs distinguish occurrences.",
+            edges: "An Array points to each element directly inside it.",
+            drawingEditor: problem.lesson.drawingEditor
+          };
+        }
+        const context = JSON.stringify({
+          problem: { id: problem.id, title: problem.title, statement: problem.statement, graphRules },
+          section, attempt: currentAttempt,
+          graderFeedback: [...slot.childNodes].filter(node => node !== panel).map(node => node.textContent).join("\n")
+        });
+        const response = await fetch("/api/ai-help", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: context, signal: controller.signal
+        });
+        if (!response.ok) throw new Error(await response.text());
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let pending = "";
+        while (true) {
+          const { value, done } = await reader.read();
+          pending += decoder.decode(value, { stream: !done }).replace(/\r/g, "");
+          let boundary;
+          while ((boundary = pending.indexOf("\n\n")) >= 0) {
+            const frame = pending.slice(0, boundary);
+            pending = pending.slice(boundary + 2);
+            const json = frame.split("\n").filter(line => line.startsWith("data:")).map(line => line.slice(5).trim()).join("\n");
+            if (!json || json === "[DONE]") continue;
+            const event = JSON.parse(json);
+            if (event.type === "response.output_text.delta") {
+              output += event.delta;
+              answer.textContent = output;
+            }
+            if (event.type === "response.completed") completed = true;
+            if (["error", "response.failed", "response.incomplete"].includes(event.type)) throw new Error("AI help stopped. Please try again.");
+          }
+          if (done) break;
+        }
+        if (!completed || !output) throw new Error("AI help stopped. Please try again.");
+      } catch (error) {
+        if (controller.signal.aborted && !timedOut) return;
+        if (timedOut) answer.textContent = "AI help took too long. Your code is still here. Please try again.";
+        else answer.textContent = output ? `${output}\n\nThe answer was cut short. Please try again.` : error.message;
+      } finally {
+        clearTimeout(timeout);
+        if ((!controller.signal.aborted || timedOut) && panel.isConnected) {
+          button.disabled = false;
+          button.textContent = "Ask AI again";
+        }
+      }
+    };
+  }
+
   const categoryNames = { original: "Original", variant: "Variants", new: "New" };
   const colorValues = { slate: "#8392a8", red: "#ff7e82", blue: "#72a7ff", amber: "#f1b75b" };
   const STEP3_MEMBERSHIP_OVERRIDES = {
@@ -65,13 +166,24 @@
     const uniqueIndex = problemIndex * 8 + (characterSlots[offset] ?? offset % 8);
     return generatedCharacterNames[uniqueIndex % generatedCharacterNames.length];
   };
+  // Original/new source content is archived for a future return. Keep the full
+  // reference bank to preserve variant parent links and stable lesson indices.
   const allProblems = data.problems;
+  const activeCategories = [
+    // "original", // ARCHIVED: not part of the current app.
+    "variant",
+    // "new", // ARCHIVED: not part of the current app.
+  ];
   let problem = null;
   let problemIndex = -1;
   let progress = null;
   let counterProgress = null;
   let structureProgress = null;
   let reasoningProgress = null;
+  let debuggingProgress = null;
+  let codingRunner = null;
+  let codingRunVersion = 0;
+  let codingResult = null;
   let counterDrawings = { correct: null, mistaken: null };
   let counterDrawingMode = "correct";
   let counterDuplicated = false;
@@ -83,8 +195,16 @@
   let pendingAdvance = null;
   let draftKey = null;
   let restoringDraft = false;
+  const MANUAL_COMPLETION_KEY = "dfs-manual-completed:v1";
+  const DEVICE_ID_KEY = "dfs-device-id:v1";
+  let manualCompleted = {};
+  let manualSyncStarted = false;
+  let manualSyncPromise = null;
+  let manualSyncStatus = "syncing";
+  let manualChangedDuringSync = false;
 
   function start() {
+    loadManualCompletionCache();
     if (/^\/visual\/?$/.test(location.pathname)) {
       history.replaceState({}, "", `/${location.search}${location.hash}`);
       return renderPicker();
@@ -96,16 +216,22 @@
     problemIndex = allProblems.findIndex(item => item.id === id);
     if (problemIndex < 0) return renderPicker("That visual problem was not found. Choose one below.");
     problem = allProblems[problemIndex];
+    if (!activeCategories.includes(problem.category)) return renderPicker("This lesson is archived. Choose a variant below.");
     progress = loadProgress();
     counterProgress = loadCounterProgress();
     structureProgress = loadStructureProgress();
     reasoningProgress = loadReasoningProgress();
-    section = [2, 3, 4].includes(Number(new URLSearchParams(location.search).get("section"))) ? Number(new URLSearchParams(location.search).get("section")) : 1;
+    debuggingProgress = loadDebuggingProgress();
+    section = availableSections().includes(Number(new URLSearchParams(location.search).get("section"))) ? Number(new URLSearchParams(location.search).get("section")) : 1;
     renderLessonShell();
     render();
   }
 
   function renderPicker(notice = "") {
+    if (!manualSyncStarted) {
+      manualSyncStarted = true;
+      manualSyncPromise = loadManualCompletionFromCloud();
+    }
     document.title = "Visual DFS Problem Library";
     document.body.className = "choosing-pair visual-picker-page";
     let savedTheme = "dark";
@@ -114,26 +240,131 @@
     const picker = $("#pair-picker");
     picker.hidden = false;
     picker.innerHTML = `<button class="theme-toggle" id="visual-theme-toggle" aria-label="Switch theme"><svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg></button>
-      <main class="home"><div class="problem-list-topbar"><strong>DFS Visual Proof Library</strong>${notice ? `<span class="picker-message" role="status">${esc(notice)}</span>` : ""}</div><nav class="category-jumps" aria-label="Problem categories"><a href="#category-original">Original</a><a href="#category-variant">Variants</a><a href="#category-new">New</a></nav><div class="columns">${renderCategoryColumns()}</div></main>`;
+      <main class="home"><div class="problem-list-topbar"><div><strong>DFS Visual Proof Library</strong><span class="picker-subtitle">Check off anything you’ve completed.</span></div><span class="picker-sync-status ${manualSyncStatus === "offline" ? "offline" : ""}" role="status">${manualSyncStatus === "syncing" ? "Syncing progress…" : manualSyncStatus === "offline" ? "Offline · saved on this device" : "Progress saved online"}</span>${notice ? `<span class="picker-message" role="status">${esc(notice)}</span>` : ""}</div><div class="columns">${renderCategoryColumns()}</div></main>`;
     $("#visual-theme-toggle").onclick = () => {
       const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
       document.documentElement.dataset.theme = theme;
       try { localStorage.setItem("dfs-theme", theme); } catch {}
     };
+    $$(".card-check-toggle").forEach(button => {
+      button.onclick = () => toggleManualCompletion(button.dataset.problemId);
+    });
   }
 
   function renderCategoryColumns() {
-    return ["original", "variant", "new"].map(category => {
+    return activeCategories.map(category => {
       const items = sortProblems(allProblems.filter(item => item.category === category));
-      return `<section class="col-${category}" aria-labelledby="category-${category}"><div class="column-head"><span class="column-dot"></span><h2 id="category-${category}">${category}</h2><span class="column-count">${items.length}</span></div><div class="card-list">${items.map(item => {
+      const manualCount = items.filter(item => isManuallyCompleted(item)).length;
+      return `<section class="col-${category}" aria-labelledby="category-${category}"><div class="column-head"><span class="column-dot"></span><h2 id="category-${category}">${category}</h2><span class="column-count">${manualCount}/${items.length}</span></div><div class="card-list">${items.map(item => {
         const complete = isProblemComplete(item);
-        return `<a class="card${complete ? " completed" : ""}" href="/${encodeURIComponent(item.id)}"${complete ? ` aria-label="${esc(item.title)}, completed"` : ""}><span class="card-title">${esc(item.title)}</span>${complete ? `<span class="card-check" aria-hidden="true" title="Completed">✓</span>` : ""}</a>`;
+        const manuallyCompleted = isManuallyCompleted(item);
+        return `<div class="card${complete || manuallyCompleted ? " completed" : ""}"><a class="card-link" href="/${encodeURIComponent(item.id)}"><span class="card-title">${esc(item.title)}</span>${complete ? `<span class="card-auto-status">Proven</span>` : ""}</a><button class="card-check-toggle${manuallyCompleted ? " checked" : ""}" type="button" data-problem-id="${esc(item.id)}" aria-pressed="${manuallyCompleted}" aria-label="${manuallyCompleted ? "Uncheck" : "Check off"} ${esc(item.title)}"><span aria-hidden="true">${manuallyCompleted ? "✓" : ""}</span></button></div>`;
       }).join("")}</div></section>`;
     }).join("");
   }
 
+  function isManuallyCompleted(item) {
+    return manualCompleted[item.id] === true;
+  }
+
+  function toggleManualCompletion(id) {
+    manualChangedDuringSync = true;
+    manualCompleted[id] = manualCompleted[id] !== true;
+    saveManualCompletionCache();
+    manualSyncStatus = "syncing";
+    renderPicker();
+    document.querySelector(`[data-problem-id="${CSS.escape(id)}"]`)?.focus();
+    void saveManualCompletionToCloud();
+  }
+
+  function loadManualCompletionCache() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(MANUAL_COMPLETION_KEY) || "{}");
+      manualCompleted = Object.fromEntries(Object.entries(saved).filter(([id, value]) => value === true && allProblems.some(item => item.id === id)));
+    } catch {
+      manualCompleted = {};
+    }
+  }
+
+  function saveManualCompletionCache() {
+    try { localStorage.setItem(MANUAL_COMPLETION_KEY, JSON.stringify(manualCompleted)); } catch {}
+  }
+
+  function getDeviceId() {
+    try {
+      const saved = localStorage.getItem(DEVICE_ID_KEY);
+      if (saved && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(saved)) return saved;
+      const created = globalThis.crypto?.randomUUID?.() || "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, character => {
+        const random = Math.random() * 16 | 0;
+        const value = character === "x" ? random : random & 3 | 8;
+        return value.toString(16);
+      });
+      localStorage.setItem(DEVICE_ID_KEY, created);
+      return created;
+    } catch {
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, character => {
+        const random = Math.random() * 16 | 0;
+        const value = character === "x" ? random : random & 3 | 8;
+        return value.toString(16);
+      });
+    }
+  }
+
+  function completedProblemIds() {
+    return Object.entries(manualCompleted).filter(([, value]) => value === true).map(([id]) => id);
+  }
+
+  async function loadManualCompletionFromCloud() {
+    try {
+      const response = await fetch(`/api/progress?deviceId=${encodeURIComponent(getDeviceId())}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Progress could not be loaded.");
+      const saved = await response.json();
+      if (saved.found && !manualChangedDuringSync) {
+        manualCompleted = Object.fromEntries((Array.isArray(saved.completedProblemIds) ? saved.completedProblemIds : []).map(id => [id, true]));
+        saveManualCompletionCache();
+      } else {
+        await writeManualCompletionToCloud();
+      }
+      manualSyncStatus = "saved";
+    } catch {
+      manualSyncStatus = "offline";
+    } finally {
+      manualSyncPromise = null;
+      if (document.body.classList.contains("choosing-pair")) renderPicker();
+    }
+  }
+
+  async function writeManualCompletionToCloud() {
+    const response = await fetch(`/api/progress?deviceId=${encodeURIComponent(getDeviceId())}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ completedProblemIds: completedProblemIds() })
+    });
+    if (!response.ok) throw new Error("Progress could not be saved.");
+  }
+
+  async function saveManualCompletionToCloud() {
+    if (manualSyncPromise) {
+      await manualSyncPromise;
+      if (manualSyncStatus === "offline") return;
+    }
+    try {
+      await writeManualCompletionToCloud();
+      manualSyncStatus = "saved";
+      if (document.body.classList.contains("choosing-pair")) renderPicker();
+    } catch {
+      manualSyncStatus = "offline";
+      if (document.body.classList.contains("choosing-pair")) renderPicker();
+    }
+  }
+
   function isProblemComplete(item) {
     try {
+      if (item.category === "variant" && item.codingLesson && !JSON.parse(localStorage.getItem(`dfs-coding:${item.id}:v1`) || "{}").passed) return false;
+      if (item.category === "variant" && item.debuggingLesson?.cases?.length) {
+        const debugging = JSON.parse(localStorage.getItem(`dfs-debugging:${item.id}:v1`) || "{}");
+        if (Number(debugging.index || 0) < item.debuggingLesson.cases.length || (debugging.skipped || []).length) return false;
+      }
       const current = localStorage.getItem(`dfs-reasoning:${item.id}:v3`);
       const legacy = current ? null : localStorage.getItem(`dfs-reasoning:${item.id}:v2`);
       const reasoning = JSON.parse(current || legacy || "{}");
@@ -145,6 +376,9 @@
   }
 
   function sortProblems(items) {
+    if (items.every(item => item.category === "variant")) {
+      return [...items].sort((a, b) => a.variantListOrder - b.variantListOrder);
+    }
     const rank = { Easy: 0, Medium: 1, Hard: 2 };
     return [...items].sort((a, b) => (rank[a.difficulty] ?? 1) - (rank[b.difficulty] ?? 1) || (a.curriculumOrder ?? 999) - (b.curriculumOrder ?? 999) || a.title.localeCompare(b.title));
   }
@@ -159,17 +393,17 @@
     const nav = document.createElement("nav");
     nav.className = "lesson-step-nav";
     nav.setAttribute("aria-label", "Lesson steps");
-    nav.innerHTML = [1, 2, 3, 4].map(number => `<button type="button" data-section="${number}">Step ${number}</button>`).join("");
+    nav.innerHTML = availableSections().map(number => `<button type="button" data-section="${number}">Step ${number}</button>`).join("");
     $("#section-nav-btn").before(nav);
     nav.querySelectorAll("button").forEach(button => { button.onclick = () => switchSection(Number(button.dataset.section)); });
     document.addEventListener("input", saveFormDraft);
     document.addEventListener("click", () => queueMicrotask(saveFormDraft));
     window.addEventListener("pagehide", () => { if (pendingAdvance) pendingAdvance(); });
-    $("#section-nav-btn").onclick = () => switchSection(section === 1 ? 2 : section === 2 ? 3 : section === 3 ? 4 : 3);
+    $("#section-nav-btn").onclick = () => switchSection(section === 1 ? 2 : section === 2 ? 3 : section === 3 ? 4 : section === 4 && hasStep5() ? 5 : section === 5 && hasStep6() ? 6 : section === 6 ? 5 : section === 5 ? 4 : 3);
     window.onpopstate = () => {
       saveFormDraft();
       pendingAdvance?.();
-      section = [2, 3, 4].includes(Number(new URLSearchParams(location.search).get("section"))) ? Number(new URLSearchParams(location.search).get("section")) : 1;
+      section = availableSections().includes(Number(new URLSearchParams(location.search).get("section"))) ? Number(new URLSearchParams(location.search).get("section")) : 1;
       render();
     };
     $(".brand").setAttribute("href", "/");
@@ -194,7 +428,9 @@
   }
 
   function configureSectionShell() {
-    window.DFS_GRAPH?.setNodeLabelRule(problem.counterexampleLesson?.nodeLabels?.rule || "free", problem.graphRules?.nodeLabelFormat);
+    $("#challenge").oninput = null;
+    $("#challenge").onchange = null;
+    window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? problem.lesson.drawingEditor : problem.graphRules?.nodeLabelFormat);
     draftKey = null;
     pendingAdvance = null;
     $$("[data-section]").forEach(button => {
@@ -211,24 +447,29 @@
     const isCounterexample = section === 2;
     const isStructure = section === 3;
     const isReasoning = section === 4;
-    const questionIndex = section === 1 ? progress.index : section === 2 ? counterProgress.index : section === 3 ? structureProgress.index : reasoningProgress.index;
+    const isDebugging = section === 5;
+    const isCoding = section === 6;
+    const questionIndex = section === 1 ? progress.index : section === 2 ? counterProgress.index : section === 3 ? structureProgress.index : section === 4 ? reasoningProgress.index : debuggingProgress.index;
     const questionTotal = section === 1
       ? mainTasks().length
       : section === 2
         ? counterexampleRounds().length
         : section === 3
           ? structureTasks().length
-          : reasoningRounds().length;
-    $("#next-question-btn").hidden = questionIndex >= questionTotal;
+          : section === 4 ? reasoningRounds().length : debuggingRounds().length;
+    $("#next-question-btn").hidden = isCoding || questionIndex >= questionTotal;
     $("#next-question-btn").onclick = skipCurrentQuestion;
-    document.title = `${problem.title} · ${isReasoning ? "Trace Lab" : isStructure ? "Graph Structure" : isCounterexample ? "Counterexample Lab" : "Visual Proof"}`;
+    document.title = `${problem.title} · ${isCoding ? "Code Lab" : isDebugging ? "Debug Lab" : isReasoning ? "Trace Lab" : isStructure ? "Graph Structure" : isCounterexample ? "Counterexample Lab" : "Visual Proof"}`;
     document.body.classList.toggle("counterexample-route", isCounterexample);
     document.body.classList.toggle("structure-route", isStructure);
     document.body.classList.toggle("reasoning-route", isReasoning);
+    document.body.classList.toggle("debugging-route", isDebugging);
+    document.body.classList.toggle("coding-route", isCoding);
+    document.body.classList.toggle("has-step5", hasStep5());
     const graphActions = $("#graph-lab-actions");
     graphActions.hidden = true;
     graphActions.innerHTML = "";
-    $("#section-kicker").textContent = isReasoning ? "STEP 4 · TRACE LAB" : isStructure ? "STEP 3 · GRAPH STRUCTURE" : isCounterexample ? "STEP 2 · COUNTEREXAMPLE LAB" : "STEP 1 · VISUAL PROOF";
+    $("#section-kicker").textContent = isCoding ? "STEP 6 · CODE LAB" : isDebugging ? "STEP 5 · DEBUG LAB" : isReasoning ? "STEP 4 · TRACE LAB" : isStructure ? "STEP 3 · GRAPH STRUCTURE" : isCounterexample ? "STEP 2 · COUNTEREXAMPLE LAB" : "STEP 1 · VISUAL PROOF";
     $("#section-title").hidden = true;
     $("#section-subtitle").hidden = true;
     $("#evidence-chip").hidden = true;
@@ -238,7 +479,7 @@
       : isStructure
       ? "Answer one useful Yes/No question, then build the exact graph."
       : "Answer each question and build exact graphs from fresh inputs.";
-    $("#section-nav-btn").innerHTML = isReasoning ? "Back to Step 3 <span>←</span>" : isStructure ? "Next: Step 4 <span>→</span>" : isCounterexample ? "Next: Step 3 <span>→</span>" : "Skip to Step 2 <span>→</span>";
+    $("#section-nav-btn").innerHTML = isCoding ? "Back to Step 5 <span>←</span>" : isDebugging && hasStep6() ? "Next: Step 6 <span>→</span>" : isDebugging ? "Back to Step 4 <span>←</span>" : isReasoning && hasStep5() ? "Next: Step 5 <span>→</span>" : isReasoning ? "Back to Step 3 <span>←</span>" : isStructure ? "Next: Step 4 <span>→</span>" : isCounterexample ? "Next: Step 3 <span>→</span>" : "Skip to Step 2 <span>→</span>";
   }
 
   function switchSection(nextSection) {
@@ -271,6 +512,11 @@
       if (!structureProgress.skipped.includes(structureProgress.index)) structureProgress.skipped.push(structureProgress.index);
       structureProgress.index++;
       saveStructureProgress();
+    } else if (section === 5) {
+      saveFormDraft();
+      if (!debuggingProgress.skipped.includes(debuggingProgress.index)) debuggingProgress.skipped.push(debuggingProgress.index);
+      debuggingProgress.index++;
+      saveDebuggingProgress();
     } else {
       if (!reasoningProgress.skipped.includes(reasoningProgress.index)) reasoningProgress.skipped.push(reasoningProgress.index);
       reasoningProgress.index++;
@@ -285,6 +531,10 @@
     if (!problem.lesson) return [];
     const builds = problem.lesson.buildTasks.map((task, index) => ({ ...task, kind: "build", buildOrdinal: index + 1 }));
     const concepts = problem.lesson.conceptTasks.map((task, index) => ({ ...task, conceptOrdinal: index + 1 }));
+    if (problem.category === "variant" && problem.lesson.practicePlan) {
+      const tasks = new Map([...builds, ...concepts].map(task => [task.id, task]));
+      return problem.lesson.practicePlan.step1.map(id => tasks.get(id));
+    }
     const patterns = [
       ["b", "b", "c", "b", "c", "b", "c", "c", "c"],
       ["b", "c", "b", "c", "c", "b", "c", "b", "c"],
@@ -300,11 +550,18 @@
     return progress.remedialFor ? { ...task.remedial, facet: task.facet, kind: "build", remedial: true } : task;
   }
 
+  let debuggingRequest = null;
   function render() {
+    debuggingRequest?.abort();
+    debuggingRequest = null;
+    stopCodingRun();
+    clearAiHelp();
     configureSectionShell();
     if (section === 2) return renderCounterexampleRound();
     if (section === 3) return renderStructureRound();
     if (section === 4) return renderReasoningRound();
+    if (section === 5) return renderDebuggingRound();
+    if (section === 6) return renderCodingLesson();
     selectedId = null;
     answered = false;
     updateProgress();
@@ -313,13 +570,14 @@
     if (!problem.lesson) return renderMissingLesson();
     if (progress.index >= mainTasks().length) return renderComplete();
     const task = currentTask();
-    window.DFS_GRAPH?.setContext(`${problem.id}:${task.id}:${progress.remedialFor || "main"}`, 0);
-    window.DFS_GRAPH?.setNodeLabelRule(problem.counterexampleLesson?.nodeLabels?.rule || "free", problem.graphRules?.nodeLabelFormat);
+    window.DFS_GRAPH?.setContext(`${problem.id}:${task.id}:${progress.remedialFor || "main"}${usesArrayNumberDrawing() ? ":array-number-v1" : ""}`, 0);
+    window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? problem.lesson.drawingEditor : problem.graphRules?.nodeLabelFormat);
     unlockCounterexampleEditor();
     $("#graph-lab").hidden = false;
     $("#graph-lab-title").textContent = task.kind === "build" ? "Draw the graph from the raw input" : "Optional: draw this input before answering";
     if (task.kind === "build") renderBuild(task);
     else renderConcept(task);
+    renderFastTrack();
     $(".test-pane").scrollTop = 0;
   }
 
@@ -348,7 +606,16 @@
     focusPrompt();
   }
 
+  function usesArrayNumberDrawing() {
+    return section === 1 && problem.lesson?.drawingEditor?.mode === "array-number";
+  }
+
   function renderNodeLabelGuide(task) {
+    if (usesArrayNumberDrawing()) {
+      const guide = problem.lesson.drawingEditor;
+      const valueName = guide.valueKind === "literal" ? "Value" : "Number";
+      return `<div class="node-label-guide shelf-drawing-guide"><b>Two kinds of nodes</b><div class="shelf-node-key"><span class="shelf-array-key">Array</span><span>an array, even <code>[]</code></span><span class="shelf-number-key">7</span><span>${guide.valueKind === "literal" ? 'a value: number, quoted text, true, or false' : 'a number from the input'}</span></div><ol>${guide.instructions.map(line => `<li>${esc(line)}</li>`).join("")}</ol><p class="shelf-quick-help"><b>Add node → right-click → Array or ${valueName}.</b><br>Choose ${valueName}, type its value, then press Enter. <b>Type / value</b> also opens the menu.<br>For an arrow: click the parent, then the child. Drag nodes to move them.${guide.ordered ? '' : ' Placement and child order are not graded.'}</p></div>`;
+    }
     const format = problem.graphRules?.nodeLabelFormat;
     const hasLabels = Boolean(task?.canvas?.edges?.some(edge => edge.label));
     const hasEdgeColors = Boolean(task?.canvas?.edges?.some(edge => edge.color));
@@ -360,12 +627,13 @@
   }
 
   function checkBuild(task) {
+    clearAiHelp();
     if (!selectedId || answered) return;
     const result = gradeCanvas(task.canvas, window.DFS_GRAPH?.getSnapshot() || { nodes: [], edges: [], directed: false });
     const answerCorrect = selectedId === task.decision.correct;
     const checks = [
-      ["Every exact node label, with no missing or extra node", result.nodes],
-      [result.nodes ? "Every exact direct edge, with no missing or extra edge" : "Edge check waits until the node names are correct", result.nodes ? result.edges : null],
+      [usesArrayNumberDrawing() ? "Every Array and value has its own node" : "Every exact node label, with no missing or extra node", result.nodes],
+      [result.nodes ? (usesArrayNumberDrawing() && problem.lesson.drawingEditor.ordered ? "Every direct arrow and its child order match the input" : "Every exact direct edge, with no missing or extra edge") : "Edge check waits until the nodes are correct", result.nodes ? result.edges : null],
       [task.canvas.directed ? "Edges use the required arrow direction" : "Edges use the required two-way direction", result.direction],
       [result.nodes ? "Graph colors match the input" : "Graph color check waits until the node names are correct", result.nodes ? result.colors : null],
       [result.nodes ? "Edge labels or weights match the input" : "Edge labels or weights check waits until the node names are correct", result.nodes ? result.labels : null],
@@ -379,6 +647,7 @@
       const chosen = task.decision.choices.find(choice => choice.id === selectedId);
       const answerHelp = answerCorrect ? "" : `<div class="feedback-next"><b>About your answer:</b> ${formatText(chosen?.feedback || "Use the finished graph to decide again.")}</div>`;
       $("#feedback-slot").innerHTML = `<div class="feedback"><b>${result.nodes && result.edges && result.direction && result.colors && result.labels ? "Your graph is right. Recheck the answer." : "Fix the marked graph details."}</b><ul class="feedback-checklist">${checks.map(([label, pass]) => `<li class="${pass == null ? "waiting" : pass ? "passed" : "failed"}"><span>${pass == null ? "•" : pass ? "✓" : "×"}</span>${esc(label)}</li>`).join("")}</ul>${answerHelp}${result.hint ? `<p class="feedback-next">${esc(result.hint)}</p>` : ""}</div>`;
+      offerAiHelp({ task, studentGraph: window.DFS_GRAPH?.getSnapshot(), selectedAnswer: selectedId, checks });
       $("#visual-check").innerHTML = "Check revised proof <span>→</span>";
       return;
     }
@@ -418,6 +687,7 @@
   }
 
   function checkConcept(task) {
+    clearAiHelp();
     if (!selectedId || answered) return;
     const choice = task.choices.find(item => item.id === selectedId);
     answered = true;
@@ -431,19 +701,32 @@
     updateProgress();
     const correct = task.choices.find(item => item.id === task.correct);
     $("#feedback-slot").innerHTML = `<div class="feedback"><b>Contradiction found.</b><div class="feedback-answer correct"><span>Correct choice</span>${task.kind === "visual-options" ? `Picture ${String.fromCharCode(65 + arrangeChoices(task.choices, task.correct, task.answerSlot).findIndex(choice => choice.id === task.correct))}` : formatText(correct.label)}</div><div class="feedback-why"><b>Your choice:</b> ${formatText(choice.feedback)}</div><div class="feedback-next">This revealed answer does not count. Prove the idea on a fresh blank graph.</div></div>`;
+    offerAiHelp({ task, selectedAnswer: selectedId, scratchGraphUngraded: true, studentGraph: window.DFS_GRAPH?.getSnapshot() });
     const button = $("#visual-check");
     button.disabled = false;
     button.innerHTML = "Build a fresh proof <span>→</span>";
     button.onclick = render;
   }
 
+  function renderFastTrack() {
+    $("#step1-fast-track")?.remove();
+    if (!progress.fastTrackEarned || problem.category !== "variant") return;
+    const panel = document.createElement("div");
+    panel.id = "step1-fast-track";
+    panel.className = "feedback good";
+    panel.innerHTML = '<p>First three correct, with no mistakes! You can move to Step 2 or keep practicing.</p><button class="primary-btn" id="fast-track-step2">Go to Step 2 <span>→</span></button>';
+    $("#challenge").prepend(panel);
+    $("#fast-track-step2").onclick = () => switchSection(2);
+  }
+
   function makeContinueButton() {
+    if (problem.category === "variant" && progress.index === 2 && progress.mistakes === 0 && !progress.skipped.length && !progress.remedialFor) progress.fastTrackEarned = true;
     updateProgress(progress.index + 1);
     lockCounterexampleEditor();
     $$('[data-choice-id]').forEach(button => { button.disabled = true; });
     const button = $("#visual-check");
     button.disabled = false;
-    button.innerHTML = progress.index === 8 ? "Finish visual proof <span>→</span>" : "Next visual check <span>→</span>";
+    button.innerHTML = progress.index === mainTasks().length - 1 ? "Finish visual proof <span>→</span>" : "Next visual check <span>→</span>";
     pendingAdvance = () => {
       pendingAdvance = null;
       progress.index++;
@@ -452,6 +735,7 @@
     };
     persistProgress(storageKey(), { ...progress, index: progress.index + 1, remedialFor: null });
     button.onclick = () => { pendingAdvance?.(); render(); };
+    renderFastTrack();
   }
 
   function selectChoice(id, buttonSelector) {
@@ -569,7 +853,7 @@
     counterDrawings = { correct: null, mistaken: null };
     counterDrawingMode = "correct";
     counterDuplicated = false;
-    window.DFS_GRAPH?.setNodeLabelRule(problem.counterexampleLesson?.nodeLabels?.rule || "free", problem.graphRules?.nodeLabelFormat);
+    window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? problem.lesson.drawingEditor : problem.graphRules?.nodeLabelFormat);
     window.DFS_GRAPH?.setContext(`${problem.id}:counterexample:${done}:${round.bugs[0]}:correct`, 0);
     unlockCounterexampleEditor();
     $("#graph-lab").hidden = false;
@@ -581,15 +865,15 @@
         <p class="drawing-target-note counter-main-goal"><b>Your main goal:</b> ${esc(round.goal || `Expose ${name}'s mistake.`)} Draw two graphs: first the correct graph, then ${esc(name)}'s graph using the mistake.${coffeeProblem ? " Color the coffee-cart intersection <b>Amber</b> in both." : ""}${problem.id === "flooded-campsite-trails" ? " Color flooded campsite nodes <b>Blue</b> in both drawings; searches cannot enter them." : ""}${["first-branch", "last-branch", "drop-last-edge"].includes(round.bugs[0]) ? " The first edge you draw is #1; the last edge has the largest number." : ""}${round.bugs.includes("wrong-start") ? ` ${esc(name)} starts at ${esc(displayCounterNodeName(round.mistakenStartLabel))} instead.` : ""}${round.bugs.includes("make-one-way") ? ` In ${esc(name)}'s graph, each arrow goes from the node you clicked first to the node you clicked second; turn <b>Directed edges</b> on.` : ""}${round.bugs.includes("make-two-way") ? ` In ${esc(name)}'s graph, turn <b>Directed edges</b> off.` : ""}${round.bugs.includes("ignore-colors") ? " In drawing 2, color every edge <b>Slate</b> to show that its track color was erased." : ""}</p>
         <div class="node-label-guide"><b>Required node-name format:</b> ${formatText(problem.graphRules?.nodeLabelFormat?.instruction || problem.counterexampleLesson?.nodeLabels?.description || "Use the same names as Step 1.")}</div>
         <div class="counter-predictions">
-          <label class="counter-field counter-input-field"><span>${esc(inputSpec.prompt)} <small>${esc(inputSpec.name)}${problem.counterexampleLesson.fixedStart ? `: ${esc(problem.counterexampleLesson.fixedStart)} (${problem.counterexampleLesson?.nodeLabels?.rule === "tree-path" ? "root index fixed; your value may differ" : "fixed"})` : ""}</small></span><input id="counter-start" autocomplete="off"${problem.counterexampleLesson.fixedStart ? ` value="${esc(problem.counterexampleLesson.fixedStart)}" readonly` : ` placeholder="Example: ${esc(roundSuggestedStart(round))}"`}></label>
+          <label class="counter-field counter-input-field"><span>${esc(inputSpec.prompt)} <small>${esc(inputSpec.name)}${problem.counterexampleLesson.fixedStart ? `: ${esc(problem.counterexampleLesson.fixedStart)} (${problem.counterexampleLesson?.nodeLabels?.rule === "tree-path" ? "root index fixed; your value may differ" : "fixed"})` : ""}</small></span><input id="counter-start" autocomplete="off"${problem.counterexampleLesson.fixedStart ? ` value="${esc(problem.counterexampleLesson.fixedStart)}" readonly` : ` placeholder="Example: ${esc(problem.id === "museum-vault-keyring" ? "0, 2" : roundSuggestedStart(round))}"`}></label>
           ${["component-count", "border-component-count", "maximum-component-size", "minimum-component-size", "exact-size-component-count", "qualified-component-count", "components-without-source-count", "maximum-component-value-sum", "component-bounding-boxes", "minimum-component-bounding-perimeter"].includes(inputSpec.result) ? "<p class=\"counter-output-help\">This function scans all nodes in numeric name order, starting a new search at each still-unseen node. The chosen node is only for the reachability trace. Neighbors follow edge drawing order.</p>" : ""}
           ${inputSpec.markers?.some(marker => marker.target === "edge") || inputSpec.resultConfig?.waitMarker || inputSpec.resultConfig?.delayMarker ? "<p class=\"counter-output-help\">Label every drawn edge with its value too. For waiting times, use the sending node’s wait. Both drawings must agree with these fields.</p>" : ""}
           ${renderCounterSemanticInputs(inputSpec)}
           <section class="counter-output-section" aria-labelledby="counter-output-heading">
             <h4 id="counter-output-heading">${counterUsesRealOutput(inputSpec.result) ? "Returned output from each search" : "Nodes reached by each search"}</h4>
             <div class="counter-output-fields">
-              <label class="counter-field"><span>${counterUsesRealOutput(inputSpec.result) ? `Correct output · ${esc(inputSpec.resultLabel)}` : "Nodes the correct search reaches"}</span><input id="counter-real-output" autocomplete="off" disabled></label>
-              <label class="counter-field"><span>${counterUsesRealOutput(inputSpec.result) ? `${esc(name)}’s output · ${esc(inputSpec.resultLabel)}` : `Nodes ${esc(name)}’s search reaches`}</span><input id="counter-bug-output" autocomplete="off" disabled></label>
+              <label class="counter-field"><span>${counterUsesRealOutput(inputSpec.result) ? `Correct output · ${esc(inputSpec.resultLabel)}` : "Nodes the correct search reaches"}</span><input id="counter-real-output" placeholder="${esc(outputPlaceholder())}" autocomplete="off" disabled></label>
+              <label class="counter-field"><span>${counterUsesRealOutput(inputSpec.result) ? `${esc(name)}’s output · ${esc(inputSpec.resultLabel)}` : `Nodes ${esc(name)}’s search reaches`}</span><input id="counter-bug-output" placeholder="${esc(outputPlaceholder())}" autocomplete="off" disabled></label>
             </div>
             <p class="counter-output-help">${counterOutputHelp(inputSpec.result)}</p>
           </section>
@@ -670,9 +954,11 @@
   function renderCounterSemanticInputs(inputSpec) {
     const control = item => item.kind === "choice"
       ? `<select id="counter-field-${esc(item.id)}" data-counter-semantic data-required="${item.required !== false}"><option value="">Choose…</option>${item.choices.map(choice => `<option value="${esc(choice.value)}">${esc(choice.label)}</option>`).join("")}</select>`
-      : `<input id="counter-field-${esc(item.id)}" data-counter-semantic data-required="${item.required !== false}" autocomplete="off" inputmode="${["number", "integer"].includes(item.kind) ? "decimal" : "text"}">`;
+      : item.kind === "json"
+        ? `<textarea id="counter-field-${esc(item.id)}" data-counter-semantic data-required="${item.required !== false}" rows="3" autocomplete="off" spellcheck="false" placeholder="${esc(inputPlaceholder(item.id))}"></textarea>`
+      : `<input id="counter-field-${esc(item.id)}" data-counter-semantic data-required="${item.required !== false}" autocomplete="off" inputmode="${["number", "integer"].includes(item.kind) ? "decimal" : "text"}" placeholder="${esc(inputPlaceholder(item.id))}">`;
     const fields = (inputSpec.fields || []).map(field => `<label class="counter-field"><span>${esc(field.prompt)} <small>${esc(field.label)}</small></span>${control(field)}</label>`).join("");
-    const markers = (inputSpec.markers || []).map(marker => `<label class="counter-field"><span>${esc(marker.prompt)} <small>${esc(marker.label)}</small></span><textarea id="counter-marker-${esc(marker.id)}" data-counter-semantic data-required="${marker.required !== false}" rows="3" autocomplete="off" spellcheck="false" aria-describedby="counter-marker-help-${esc(marker.id)}"></textarea><small id="counter-marker-help-${esc(marker.id)}">${marker.target === "node" ? "One per line: node=value" : "One per line: from->to=value"}</small></label>`).join("");
+    const markers = (inputSpec.markers || []).map(marker => `<label class="counter-field"><span>${esc(marker.prompt)} <small>${esc(marker.label)}</small></span><textarea id="counter-marker-${esc(marker.id)}" placeholder="${esc(counterMarkerExample(marker))}" data-counter-semantic data-required="${marker.required !== false}" rows="3" autocomplete="off" spellcheck="false" aria-describedby="counter-marker-help-${esc(marker.id)}"></textarea><small id="counter-marker-help-${esc(marker.id)}">${marker.target === "node" ? "One per line: node=value" : "One per line: from->to=value"}</small></label>`).join("");
     return fields || markers ? `<div class="counter-semantic-inputs">${fields}${markers}</div>` : "";
   }
 
@@ -681,7 +967,7 @@
     if (!value && spec.required !== false) throw new Error(`${label} is required.`);
     if (!value) return null;
     if (spec.kind === "json") {
-      try { return JSON.parse(value); } catch { throw new Error(`${label} must be valid JSON, such as ["a","b"].`); }
+      return parseLessonValue(value, label, inputSample(spec.id));
     }
     if (spec.kind === "integer" && !/^-?\d+$/.test(value)) throw new Error(`${label} must be a whole number.`);
     if (["integer", "number"].includes(spec.kind)) {
@@ -749,12 +1035,12 @@
   }
 
   function counterOutputHelp(resultKind) {
-    if (resultKind === "unreached-nodes" && problem.id === "who-keeps-their-job") return "Type the remaining employee IDs as a JSON list in ascending numeric order.";
+    if (resultKind === "unreached-nodes" && problem.id === "who-keeps-their-job") return "Type the remaining employee IDs as a list in ascending numeric order.";
     if (["widest-level-index", "depth-weighted-value-sum", "inverse-depth-weighted-value-sum", "border-component-count", "selected-color-count", "minimum-component-bounding-perimeter", "maximum-root-leaf-value-sum"].includes(resultKind)) return `Type one number.${resultKind === "widest-level-index" ? " If the broken scan reaches no integers, it returns 0." : ""}`;
-    if (resultKind === "unreached-nodes") return "Type the JSON list the real function returns. Any allowed output order is accepted.";
+    if (resultKind === "unreached-nodes") return "Type the list the real function returns. Any allowed output order is accepted.";
     if (["reached-count", "unreached-count", "reached-node-value-sum", "shortest-path-weight", "maximum-shortest-path-weight-or-minus-one", "maximum-path-weight", "deadline-reached-count", "component-count", "maximum-component-size", "minimum-component-size", "maximum-reached-count", "path-count", "path-count-modulo", "longest-path-length", "maximum-reached-node-value", "recursive-item-count", "minimum-universally-reachable-node-or-minus-one", "level-value-sum", "exact-size-component-count", "kth-visited-node-or-minus-one", "components-without-source-count", "qualified-component-count", "reached-selected-node-count", "maximum-component-value-sum"].includes(resultKind)) return "Type the number the real function returns. Example: <code>3</code>.";
     if (["all-reached", "any-unreached", "target-reachable-boolean", "same-color-target-reachable-boolean", "target-state-reachable-boolean", "target-word-path-exists-boolean", "target-root-leaf-sum-exists-boolean", "valid-two-coloring-boolean", "acyclic-completion-boolean", "root-expression-value"].includes(resultKind)) return "Type <code>true</code> or <code>false</code>, just like the real function returns.";
-    if (["enumerated-paths", "reachability-matrix", "generated-terminal-strings", "component-bounding-boxes", "iterator-output-sequence", "transformed-grid", "ordered-query-values"].includes(resultKind)) return "Type the JSON list the real function returns.";
+    if (["enumerated-paths", "reachability-matrix", "generated-terminal-strings", "component-bounding-boxes", "iterator-output-sequence", "transformed-grid", "ordered-query-values"].includes(resultKind)) return "Type the list the real function returns.";
     if (counterUsesRealOutput(resultKind)) return 'Type the list the real function returns. Examples: <code>[0,1,2]</code> or <code>["(0,0)","(0,1)"]</code>.';
     return 'Type the reached-node list used to trace the search. Examples: <code>[0,1,2]</code> or <code>["(0,0)","(0,1)"]</code>. Any order is accepted.';
   }
@@ -904,7 +1190,7 @@
       let starts = null;
       if (problem.id === "museum-vault-keyring") {
         let keys;
-        try { keys = JSON.parse(requestedStart); } catch { throw new Error("Enter starting keys as a JSON list, for example [0,2] or []."); }
+        try { keys = parseLessonValue(requestedStart, "starting keys", [0, 2]); } catch { throw new Error("Enter starting keys like 0, 2. Use [] for no keys."); }
         if (!Array.isArray(keys) || keys.some(key => !["number", "string"].includes(typeof key))) throw new Error("Starting keys must be a list of vault IDs.");
         starts = keys.map(key => resolveCounterNode(nodes, String(key)));
         if (starts.some(key => !key)) throw new Error("Every starting key must name a drawn vault.");
@@ -1946,6 +2232,7 @@
   }
 
   function checkCounterexample(round) {
+    clearAiHelp();
     const blank = { nodes: [], edges: [], directed: false };
     const dualDrawings = usesDualCounterDrawings();
     const drawing = window.DFS_GRAPH?.getSnapshot() || blank;
@@ -2001,6 +2288,7 @@
         if (!exposes) outputHints.push("Both searches return the same result here. Add or change a part of the input that this mistake would miss or wrongly include.");
       }
       $("#feedback-slot").innerHTML = `<div class="feedback case-feedback"><b>The contradiction is not complete yet.</b><ul class="feedback-checklist">${checks.map(([label, pass]) => `<li class="${pass === null ? "blocked" : pass ? "passed" : "failed"}"><span>${pass === null ? "—" : pass ? "✓" : "×"}</span>${esc(label)}</li>`).join("")}</ul>${outputHints.map(hint => `<p class="feedback-next">${esc(hint)}</p>`).join("")}</div>`;
+      offerAiHelp({ round, input: parsed, studentGraph: correctDrawing, studentMistakenGraph: mistakenDrawing, expectedGraph: parsed.graph ? expectedCanvas(parsed.graph) : null, expectedMistakenGraph: parsed.graph ? expectedCanvas(mistakenGraph(parsed.graph, round.bugs, mistakenStart)) : null, correctReachability, buggyReachability, correctOutput, buggyOutput, studentCorrectOutput: $("#counter-real-output").value, studentBuggyOutput: $("#counter-bug-output").value, checks });
       $("#feedback-slot").scrollIntoView({ behavior: "smooth", block: "center" });
       $("#counter-check").innerHTML = "Run revised searches <span>→</span>";
       return;
@@ -2053,7 +2341,7 @@
     try {
       const source = String(value).trim();
       let actual;
-      try { actual = JSON.parse(source); }
+      try { actual = parseLessonValue(source, "output", expected); }
       catch {
         const body = source.replace(/^\s*[\[{]\s*|\s*[\]}]\s*$/g, "");
         actual = body ? body.split(/\s*[,;]\s*/).map(item => item.replace(/^['"]|['"]$/g, "")) : [];
@@ -2069,11 +2357,11 @@
 
   function counterOutputMatches(value, expected) {
     if (Array.isArray(expected) && problem.id === "who-keeps-their-job") {
-      try { return JSON.stringify(JSON.parse(String(value)).map(Number)) === JSON.stringify(expected.map(Number)); } catch { return false; }
+      try { return JSON.stringify(parseLessonValue(String(value), "output", expected).map(Number)) === JSON.stringify(expected.map(Number)); } catch { return false; }
     }
     if (Array.isArray(expected) && ["iterator-output-sequence", "ordered-query-values"].includes(counterInputSpec().result)) {
       try {
-        const actual = JSON.parse(String(value).trim());
+        const actual = parseLessonValue(String(value), "output", expected);
         if (counterInputSpec().resultConfig?.mode === "ratio") return Array.isArray(actual) && actual.length === expected.length && actual.every((item, index) => typeof item === "number" && Math.abs(item - expected[index]) <= 1e-9 * Math.max(1, Math.abs(expected[index])));
         return JSON.stringify(actual) === JSON.stringify(expected);
       }
@@ -2081,7 +2369,7 @@
     }
     if (Array.isArray(expected) && expected.some(Array.isArray)) {
       try {
-        const actual = JSON.parse(String(value).trim());
+        const actual = parseLessonValue(String(value), "output", expected);
         if (["enumerated-paths", "component-bounding-boxes"].includes(counterInputSpec().result)) {
           const sortPaths = paths => [...paths].sort((one, two) => JSON.stringify(one).localeCompare(JSON.stringify(two), undefined, { numeric: true }));
           const normalize = item => Array.isArray(item) ? item.map(normalize) : /^-?\d+$/.test(String(item)) ? Number(item) : item;
@@ -2111,7 +2399,7 @@
       let parsed;
       if (/^(true|false)$/i.test(raw)) parsed = raw.toLowerCase() === "true";
       else {
-        try { parsed = JSON.parse(raw); }
+        try { parsed = parseLessonValue(raw, "output", expected); }
         catch { parsed = typeof expected === "string" ? raw : null; }
       }
       const unordered = new Set(["all-paths-from-source-to-target", "kill-process", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "find-all-groups-of-farmland"]);
@@ -2185,7 +2473,7 @@
   function structureTasks() {
     const source = structureSourceTasks();
     if (Array.isArray(problem.lesson.structureTasks) && problem.lesson.structureTasks.length === 5) source.transfers = problem.lesson.structureTasks;
-    return source.transfers.map((transfer, roundIndex) => ({
+    const rounds = source.transfers.map((transfer, roundIndex) => ({
       kind: "claims-build",
       label: "GRAPH CHECK + BUILD",
       facet: "claims + exact graph",
@@ -2193,6 +2481,7 @@
       claims: makeStructureClaims({ ...source, transfer }, roundIndex),
       task: transfer
     }));
+    return problem.category === "variant" && problem.lesson.practicePlan ? problem.lesson.practicePlan.step3.map(index => rounds[index]) : rounds;
   }
 
   function makeStructureClaims({ node, edge, transfer }, roundIndex) {
@@ -2202,7 +2491,10 @@
     const canvas = transfer.canvas;
     const answerMasks = [3,5,6,9,10,12,17,18,20,24,7,11,13,14,19,21,22,25,26,28];
     const answerMask = answerMasks[stableChoiceSlot(`${problem.id}:claims`, answerMasks.length)];
-    const expectedAnswer = Boolean(answerMask & (1 << roundIndex));
+    const shortSlot = problem.category === "variant" ? problem.lesson.practicePlan?.step3.indexOf(roundIndex) : undefined;
+    const expectedAnswer = shortSlot >= 0
+      ? Boolean((1 + stableChoiceSlot(`${problem.id}:short-claims`, 6)) & (1 << shortSlot))
+      : Boolean(answerMask & (1 << roundIndex));
     const claimFactories = [
       () => {
         const check = nodeMembershipClaim(canvas, nodeRule, node, seed);
@@ -2750,6 +3042,7 @@
   }
 
   function checkStructureClaims(claims, answers, task, roundIndex, total) {
+    clearAiHelp();
     if (answered || answers.some(answer => answer === null)) return;
     const missed = claims.map((claim, index) => ({ ...claim, index })).filter(claim => answers[claim.index] !== claim.correct);
     const graph = gradeCanvas(task.canvas, window.DFS_GRAPH?.getSnapshot() || { nodes: [], edges: [], directed: false });
@@ -2767,6 +3060,7 @@
       saveStructureProgress();
       updateStructureProgress(structureProgress.index, structureTasks());
       $("#feedback-slot").innerHTML = `<div class="feedback"><b>Review ${missed.length === 1 ? "this claim" : "these claims"}, then try again.</b><ul class="feedback-checklist">${missed.map(claim => `<li class="failed"><span>×</span>${formatText(stripVerdictCue(claim.feedback))}</li>`).join("")}</ul></div>`;
+      offerAiHelp({ task, claims, answers, studentGraph: window.DFS_GRAPH?.getSnapshot(), graphChecks });
       $$('[data-claim-index]').forEach(item => { item.disabled = true; });
       const button = $("#structure-check");
       button.disabled = false;
@@ -2787,6 +3081,7 @@
       saveStructureProgress();
       updateStructureProgress(structureProgress.index, structureTasks());
       $("#feedback-slot").innerHTML = `<div class="feedback"><b>Your answer is right. Fix the graph below.</b><ul class="feedback-checklist">${graphChecks.map(([label, pass]) => `<li class="${pass == null ? "waiting" : pass ? "passed" : "failed"}"><span>${pass == null ? "•" : pass ? "✓" : "×"}</span>${esc(label)}</li>`).join("")}</ul>${graph.hint ? `<p class="feedback-next">${esc(graph.hint)}</p>` : ""}</div>`;
+      offerAiHelp({ task, claims, answers, studentGraph: window.DFS_GRAPH?.getSnapshot(), graphChecks });
       $("#feedback-slot").scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -2834,6 +3129,460 @@
     $("#restart-structure").onclick = resetStructure;
   }
 
+  function hasStep5() { return problem.category === "variant" && Boolean(problem.debuggingLesson?.cases?.length); }
+  function hasStep6() { return problem.category === "variant" && Boolean(problem.codingLesson); }
+  function availableSections() { return hasStep6() ? [1, 2, 3, 4, 5, 6] : hasStep5() ? [1, 2, 3, 4, 5] : [1, 2, 3, 4]; }
+  function debuggingRounds() { return hasStep5() ? problem.debuggingLesson.cases : []; }
+  function debuggingStorageKey() { return `dfs-debugging:${problem.id}:v1`; }
+  function loadDebuggingProgress() {
+    const total = debuggingRounds().length;
+    try {
+      const value = JSON.parse(localStorage.getItem(debuggingStorageKey()) || "{}");
+      const index = Math.min(Math.max(Math.floor(Number(value.index) || 0), 0), total);
+      return { index, skipped: [...new Set((Array.isArray(value.skipped) ? value.skipped : []).filter(n => Number.isInteger(n) && n >= 0 && n < index))] };
+    } catch { return { index: 0, skipped: [] }; }
+  }
+  function saveDebuggingProgress() { persistProgress(debuggingStorageKey(), debuggingProgress); }
+  function resetDebugging() {
+    if (debuggingProgress.index > 0 && !confirm("Restart Step 5 and clear its answers?")) return;
+    clearSectionDrafts(5);
+    debuggingProgress = { index: 0, skipped: [] };
+    saveDebuggingProgress();
+    render();
+  }
+  // Read values, not programs. Lists may omit their outer brackets; grids may
+  // use one comma-separated row per line. Text cells do not need quotes.
+  function parseLessonValue(raw, label, sample) {
+    const text = String(raw).trim();
+    if (!text) throw new Error(`Enter ${label}.`);
+    if (text.length > 100000) throw new Error(`Please use a smaller ${label}.`);
+    const leaves = value => Array.isArray(value) ? value.flatMap(leaves) : [value];
+    const textValues = sample !== undefined && leaves(sample).some(value => typeof value === 'string');
+    const read = (source, depth = 0) => {
+      if (depth > 60) throw new Error();
+      source = source.trim();
+      if (source[0] === '[') {
+        if (!source.endsWith(']')) throw new Error();
+        const body = source.slice(1, -1), parts = [];
+        let start = 0, level = 0, quote = '', escaped = false;
+        for (let i = 0; i < body.length; i++) {
+          const c = body[i];
+          if (quote) { if (escaped) escaped = false; else if (c === '\\') escaped = true; else if (c === quote) quote = ''; continue; }
+          if (c === '"' || c === "'") { quote = c; continue; }
+          if (c === '[') level++;
+          if (c === ']') { level--; if (level < 0) throw new Error(); }
+          if ((c === ',' || c === ';' || c === '\n') && level === 0) {
+            const part = body.slice(start, i).trim();
+            if (part) parts.push(read(part, depth + 1));
+            else if (c === ',') throw new Error();
+            start = i + 1;
+          }
+        }
+        if (level || quote) throw new Error();
+        const last = body.slice(start).trim();
+        if (last) parts.push(read(last, depth + 1));
+        return parts;
+      }
+      if (/^["']/.test(source)) {
+        const node = window.acorn.parseExpressionAt(source, 0, {ecmaVersion: 2024});
+        if (node.end !== source.length || node.type !== 'Literal' || typeof node.value !== 'string') throw new Error();
+        return node.value;
+      }
+      if (/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(source)) {
+        const value = Number(source); if (!Number.isFinite(value)) throw new Error();
+        return textValues ? source : value;
+      }
+      if (/^(true|false)$/i.test(source)) return textValues ? source : source.toLowerCase() === 'true';
+      if (source === 'null') return null;
+      if (textValues && /^[\w. -]+$/.test(source)) return source;
+      throw new Error();
+    };
+    try {
+      let value;
+      try { value = read(text); } catch (error) { if (!Array.isArray(sample)) throw error; }
+      if (Array.isArray(sample) && !Array.isArray(value)) {
+        const rows = text.split(/\r?\n/).map(row => row.trim()).filter(Boolean);
+        const grid = Array.isArray(sample[0]);
+        value = read('[' + (grid ? rows.map(row => row.startsWith('[') ? row : '[' + row + ']').join(',') : rows.join(',')) + ']');
+      }
+      return value;
+    } catch { throw new Error(`Check the format of ${label}. Follow the example in that field.`); }
+  }
+
+  function inputSample(name) { return JSON.parse(debuggingInputExample(name === 'scores' ? 'trust' : name)); }
+  function inputPlaceholder(name) {
+    const value = inputSample(name);
+    const plain = item => typeof item === 'string' ? item : Array.isArray(item) ? '[' + item.map(plain).join(', ') + ']' : String(item);
+    if (['sky','park','marina','yard','cave','worked','trust','scores'].includes(name)) return value.map(row => row.map(String).join(', ')).join('\n');
+    return Array.isArray(value) && !value.some(Array.isArray) ? value.map(String).join(', ') : plain(value);
+  }
+  function outputSample() { return problem.debuggingLesson.tests[0].expected; }
+  function outputPlaceholder() {
+    return debuggingOutputExample().replace(/"/g, '');
+  }
+  function counterMarkerExample(marker) {
+    const node = problem.counterexampleLesson?.nodeLabels?.rule === 'coordinate' ? '(0,0)' : problem.counterexampleLesson?.nodeLabels?.rule === 'nested-path' ? 'root[0]' : problem.counterexampleLesson?.nodeLabels?.rule === 'positive-integer' ? '2' : '0';
+    const value = marker.choices?.[0]?.value || '5';
+    return `${node}${marker.target === 'edge' ? '->1' : ''}=${value}`;
+  }
+
+  function debuggingInputExample(name) {
+    const examples = {
+      sky: '[[0, 1], [0, 0]]', park: '[[0, 1], [0, 0]]', marina: '[[".", "B"], [".", "."]]', yard: '[[".", "T"], [".", "."]]',
+      cave: '[["U", "G"], ["U", "U"]]', worked: '[[1, 0], [0, 1]]', trust: '[[10, 4], [4, 10]]',
+      items: '[6, [2, 9]]', playlist: '[6, [2, 9]]', vaults: '[[1], []]', rooms: '[[1], []]', graph: '[[1], []]',
+      friendships: '[[0, 1], [1, 2]]', trails: '[[0, 1], [1, 2]]', tracks: '[[0, 1], [1, 2]]', paths: '[[0, 1], [1, 2]]', wires: '[[0, 1], [1, 2]]', roads: '[[0, 1, 6], [1, 2, 4]]',
+      colors: '["red", "blue"]', dials: '["xy", "mn"]', ids: '[2, 5, 9]', bosses: '[0, 2, 5]', feeds: '[0, 2, 5]', caller: '[-1, 0, 1]',
+      liters: '[6, 8, 3]', gold: '[6, 8]', waitDays: '[2, 4, 0]', wells: '[0, 2]', flooded: '[1]', startKeys: '[0, 2]'
+    };
+    return examples[name] || (['row', 'col', 'start', 'source', 'headId', 'hq'].includes(name) ? '0' : '3');
+  }
+
+  function debuggingOutputExample() {
+    const sample = problem.debuggingLesson.tests[0].expected;
+    if (typeof sample === 'boolean') return 'true or false';
+    if (typeof sample === 'number') return '42';
+    if (Array.isArray(sample)) {
+      if (problem.id === 'gas-pocket-survey') return '[["U", "2"], ["G", "1"]]';
+      if (problem.id === 'routes-past-the-coffee-cart') return '[[0, 3, 5], [0, 2, 5]]';
+      if (problem.id === 'runes-on-the-castle-door') return '["xm", "yn"]';
+      return '[5, 9]';
+    }
+    return '"text"';
+  }
+
+  function renderDebuggingRound() {
+    const rounds = debuggingRounds();
+    const done = Math.min(debuggingProgress.index, rounds.length);
+    const passed = done - debuggingProgress.skipped.length;
+    $("#graph-lab").hidden = true;
+    $("#evidence-label").textContent = `${passed} of ${rounds.length} repairs passed`;
+    $("#attempt-label").textContent = "";
+    $("#evidence-fill").style.width = `${100 * passed / Math.max(rounds.length, 1)}%`;
+    $(".evidence-track").setAttribute("aria-valuemax", String(rounds.length));
+    $(".evidence-track").setAttribute("aria-valuenow", String(passed));
+    $("#facet-list").innerHTML = "";
+    if (done >= rounds.length) {
+      const skipped = debuggingProgress.skipped.length;
+      $("#challenge").innerHTML = `<div class="challenge-body victory"><div class="stamp">${skipped ? "Finished" : "Repaired"}</div><h3>${skipped ? "Step 5 finished." : "Step 5 complete."}</h3><p>${passed} repairs passed${skipped ? ` · ${skipped} skipped` : ""}.</p><div class="completion-actions">${hasStep6() ? `<button id="start-coding" class="primary-btn">Start Step 6 →</button>` : ""}<a class="ghost-btn link-button" href="/">Choose another problem →</a><button id="restart-debugging" class="ghost-btn">Practice Step 5 again</button></div></div>`;
+      if ($("#start-coding")) $("#start-coding").onclick = () => switchSection(6);
+      $("#restart-debugging").onclick = resetDebugging;
+      return;
+    }
+    const round = rounds[done];
+    const parameters = problem.codingLesson.parameters;
+    const outputExample = outputPlaceholder();
+    const frozen = round.lines.map(line => line.options.find(option => option.id === line.selected)?.text || "");
+    $("#challenge").innerHTML = `<div class="challenge-body debugging-case">
+      <span class="probe-type">CHALLENGE ${done + 1} OF ${rounds.length}</span>
+      <h3>Break it. Then fix it.</h3>
+      <p>This solution has one mistake. Find an input that proves it, then explain how to fix it.</p>
+      <section class="code-window" aria-label="Frozen incorrect pseudocode"><div class="code-window-label">Incorrect pseudocode · stays unchanged</div><pre tabindex="0"><code>${renderCodeLines(frozen)}</code></pre></section>
+      <h4>1 · Build an input where this code gives the wrong answer</h4>
+      <p class="coding-hint">Enter each value separately. Lists use commas; grids can use one row per line. Text does not need quotes. Placeholders show the format only.</p>
+      <div class="coding-inputs">${parameters.map((parameter, i) => `<label class="counter-field"><span>${esc(parameter.name)}</span><textarea id="debugging-input-${i}" rows="3" spellcheck="false" autocomplete="off" placeholder="${esc(inputPlaceholder(parameter.name))}" aria-describedby="debugging-parameter-help-${i}"></textarea><small id="debugging-parameter-help-${i}">${esc((parameter.description || parameter.help || '').replace(/JSON /gi, ''))}</small></label>`).join("")}</div>
+      <details class="debugging-input-guide"><summary>Input rules</summary><div>${formatText(problem.debuggingLesson.inputHelp)}</div></details>
+      <div class="debugging-outputs">
+        <label class="counter-field"><span>2 · What should the correct solution return?</span><textarea id="debugging-correct-output" placeholder="${esc(outputExample)}" rows="2" autocomplete="off" spellcheck="false" aria-describedby="debugging-output-help"></textarea></label>
+        <label class="counter-field"><span>3 · What does the incorrect code above return?</span><textarea id="debugging-buggy-output" placeholder="${esc(outputExample)}" rows="2" autocomplete="off" spellcheck="false" aria-describedby="debugging-output-help"></textarea></label>
+      </div>
+      <p id="debugging-output-help" class="counter-output-help">Write the exact returned value, using the format shown. Keep list order when the problem asks for an order.</p>
+      <section class="debugging-repair" aria-labelledby="debugging-repair-title"><h4 id="debugging-repair-title">4 · Explain the mistake and how to fix it</h4><label class="counter-field"><span>What is wrong with the pseudocode above? How would you fix it?</span><textarea id="debugging-explanation" rows="6" maxlength="6000" placeholder="Explain in your own words." aria-describedby="debugging-explanation-help"></textarea></label><p id="debugging-explanation-help" class="coding-hint">Luna checks your explanation. You do not need to write code.</p></section>
+      <div id="feedback-slot" role="status" aria-live="polite"></div>
+      <div class="challenge-actions"><button id="debugging-check" class="primary-btn">Check input + repair <span>→</span></button></div>
+    </div>`;
+    restoreFormDraft(round.id);
+    const button = $("#debugging-check");
+    let passedThisAttempt = false;
+    const clearResult = () => {
+      debuggingRequest?.abort(); debuggingRequest = null;
+      if (passedThisAttempt) {
+        passedThisAttempt = false;
+        pendingAdvance = null;
+        saveDebuggingProgress();
+      }
+      $("#feedback-slot").innerHTML = "";
+      button.disabled = false;
+      button.innerHTML = "Check input + explanation <span>→</span>";
+      saveFormDraft();
+    };
+    $("#challenge").oninput = clearResult;
+    $("#challenge").onchange = clearResult;
+    button.innerHTML = "Check input + explanation <span>→</span>";
+    button.onclick = async () => {
+      if (passedThisAttempt) { pendingAdvance?.(); render(); return; }
+      saveFormDraft();
+      const slot = $("#feedback-slot");
+      slot.className = "debugging-feedback needs-work";
+      slot.textContent = "";
+      let attempt;
+      try {
+        attempt = {
+          problemId: problem.id, caseId: round.id,
+          input: Object.fromEntries(parameters.map((parameter, i) => [parameter.name, parseLessonValue($(`#debugging-input-${i}`).value, parameter.name, inputSample(parameter.name))])),
+          correctOutput: parseLessonValue($("#debugging-correct-output").value, "the correct solution’s output", outputSample()),
+          buggyOutput: parseLessonValue($("#debugging-buggy-output").value, "the incorrect code’s output", outputSample()),
+          studentAnswer: $("#debugging-explanation").value.trim()
+        };
+        const result = window.DFS_STEP5.gradeEvidence(problem.id, round.id, attempt.input, attempt.correctOutput, attempt.buggyOutput);
+        if (!result.ok) { slot.textContent = result.feedback; return; }
+        if (!attempt.studentAnswer) { slot.textContent = "Explain the mistake and how you would fix it."; return; }
+      } catch (error) { slot.textContent = error.message; return; }
+      const controller = new AbortController();
+      debuggingRequest = controller;
+      const timeout = setTimeout(() => controller.abort(), 45000);
+      button.disabled = true;
+      button.textContent = "Luna is checking…";
+      slot.textContent = "Your input and outputs are right. Checking your explanation…";
+      try {
+        const response = await fetch("/api/grade-debugging", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(attempt), signal: controller.signal });
+        let result;
+        try { result = await response.json(); }
+        catch { throw new Error(response.status === 429 ? "Too many checks at once. Your answer is saved; try again in a minute." : "Luna could not check this time. Your answer is saved; please try again."); }
+        if (debuggingRequest !== controller || !slot.isConnected) return;
+        if (!response.ok || typeof result.correct !== "boolean") throw new Error(result.error || "Luna could not check this time. Please try again.");
+        slot.className = `debugging-feedback ${result.correct ? "is-correct" : "needs-work"}`;
+        slot.textContent = result.feedback;
+        if (!result.correct) {
+          const reveal = document.createElement("button");
+          reveal.type = "button"; reveal.className = "ghost-btn"; reveal.id = "debugging-reveal";
+          reveal.textContent = "Read the correct answer";
+          reveal.onclick = () => { const answer = document.createElement("pre"); answer.className = "debugging-saved-answer"; answer.textContent = result.correctAnswer; reveal.replaceWith(answer); };
+          slot.append(document.createElement("br"), reveal);
+          return;
+        }
+        passedThisAttempt = true;
+        persistProgress(debuggingStorageKey(), { ...debuggingProgress, index: done + 1 });
+        pendingAdvance = () => { pendingAdvance = null; debuggingProgress.index = done + 1; saveDebuggingProgress(); };
+        button.innerHTML = done + 1 < rounds.length ? "Next challenge <span>→</span>" : "Finish Step 5 <span>→</span>";
+      } catch (error) {
+        if (debuggingRequest === controller && slot.isConnected) slot.textContent = error.name === "AbortError" ? "Luna took too long. Your answer is saved; please try again." : error instanceof TypeError ? "Could not reach Luna. Your answer is saved; check your connection and try again." : error.message;
+      } finally {
+        clearTimeout(timeout);
+        if (debuggingRequest === controller) { debuggingRequest = null; button.disabled = false; if (!passedThisAttempt) button.innerHTML = "Check input + explanation <span>→</span>"; }
+      }
+    };
+    $(".test-pane").scrollTop = 0;
+    focusPrompt();
+  }
+
+  function highlightEditorJavaScript(code) {
+    const tokens = [];
+    try {
+      const lexer = window.acorn.tokenizer(code, {ecmaVersion: 2024, onComment: (_block, _text, start, end) => tokens.push({start, end, kind: 'comment'})});
+      for (;;) {
+        const token = lexer.getToken();
+        if (token.type.label === 'eof') break;
+        const label = token.type.label;
+        const kind = token.type.keyword ? 'keyword' : ['string', 'template', '`', 'regexp'].includes(label) ? 'string' : ['num', 'bigint'].includes(label) ? 'number' : label === 'name' ? 'name' : 'operator';
+        tokens.push({start: token.start, end: token.end, kind});
+      }
+    } catch { /* An unfinished line stays editable while its earlier tokens stay colored. */ }
+    let cursor = 0, html = '';
+    for (const token of tokens.sort((a, b) => a.start - b.start)) {
+      html += esc(code.slice(cursor, token.start)) + `<span class="syntax-${token.kind}">${esc(code.slice(token.start, token.end))}</span>`;
+      cursor = token.end;
+    }
+    return html + esc(code.slice(cursor)) + '\n';
+  }
+
+  function codingStorageKey() { return `dfs-coding:${problem.id}:v1`; }
+  function stopCodingRun() {
+    codingRunVersion++;
+    codingRunner?.cancel();
+  }
+  function codingInputs() { return problem.codingLesson.parameters.map((parameter, i) => ({ name: parameter.name, raw: $(`#coding-input-${i}`)?.value || "" })); }
+  function refreshCodingHelp() {
+    if (section !== 6 || !$("#coding-editor")) return;
+    offerAiHelp(() => ({ kind: "code", functionName: problem.codingLesson.functionName, parameters: problem.codingLesson.parameters, correctCode: problem.codingLesson.correctCode, studentCode: $("#coding-editor").value, inputs: codingInputs(), ...(codingResult || {}) }));
+  }
+  function codingValue(value) {
+    if (value === undefined) return "undefined (nothing was returned)";
+    try { return JSON.stringify(value, null, 2) ?? String(value); } catch { return String(value); }
+  }
+  function codingError(error) {
+    return `${error?.name || "Error"}${error?.line ? ` · line ${error.line}${error.column ? `, column ${error.column}` : ""}` : ""}: ${error?.message || "The code could not run."}`;
+  }
+  function codingOutput(result) {
+    return `${result.ok ? `<strong>Returned</strong><pre>${esc(result.display ?? codingValue(result.value))}</pre>` : `<pre class="coding-error">${esc(codingError(result.error))}</pre>`}${result.logs?.length ? `<strong>Console</strong><pre>${esc(result.logs.map(log => typeof log === "string" ? log : codingValue(log)).join("\n"))}</pre>` : ""}`;
+  }
+  function updateCodingProgress(passed, total) {
+    $("#evidence-label").textContent = `${passed} of ${total} tests passed`;
+    $("#evidence-fill").style.width = `${100 * passed / total}%`;
+    $(".evidence-track").setAttribute("aria-valuemax", String(total));
+    $(".evidence-track").setAttribute("aria-valuenow", String(passed));
+  }
+  function resetCoding() {
+    if (!confirm("Clear your Step 6 code and inputs?")) return;
+    stopCodingRun();
+    try { localStorage.removeItem(codingStorageKey()); localStorage.removeItem(`dfs-form:v1:${problem.id}:6:solution:`); } catch {}
+    render();
+  }
+  function renderCodingLesson() {
+    const lesson = problem.codingLesson;
+    codingResult = null;
+    $("#graph-lab").hidden = true;
+    $("#attempt-label").textContent = "";
+    $("#facet-list").innerHTML = "";
+    $('.tab[data-tab="examples"]').hidden = false;
+    updateCodingProgress(0, lesson.tests.length);
+    $("#challenge").innerHTML = `<div class="challenge-body coding-case">
+      <h3>Write your solution.</h3><p>Write JavaScript, try your own input, then submit against ${lesson.tests.length} fresh tests.</p>
+      <details id="coding-graph-disclosure" class="coding-graph-disclosure">
+        <summary><span>Optional: draw the graph</span><small>Open a scratchpad</small></summary>
+        <div class="coding-graph-disclosure-body"><p class="coding-hint">Sketch the problem graph here if a picture helps. This drawing is private and is not graded.</p><div id="coding-graph-slot"></div></div>
+      </details>
+      <label for="coding-editor" class="coding-editor-label">Your JavaScript</label>
+      <p id="coding-editor-help" class="coding-hint">Keep the function name <code>${esc(lesson.functionName)}</code> and return your answer. Use <code>console.log</code> to inspect values. Tab indents; Shift+Tab unindents. Escape then Tab leaves the editor.</p>
+      <div class="coding-editor-wrap"><pre id="coding-line-numbers" aria-hidden="true"></pre><div class="coding-editor-area"><pre id="coding-highlight" aria-hidden="true"></pre><textarea id="coding-editor" placeholder="${esc(lesson.starterCode)}" aria-describedby="coding-editor-help" rows="18" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">${esc(lesson.starterCode)}</textarea></div></div>
+      <p id="coding-save-warning" class="coding-error" role="status" hidden></p>
+      <h4>Try your own input</h4><p class="coding-hint">Enter one value per field. For a grid, put one row on each line. Lists use commas; text does not need quotes. “Run my input” shows what your code returns.</p>
+      <div class="coding-inputs">${lesson.parameters.map((parameter, i) => `<label class="counter-field" for="coding-input-${i}"><span>${esc(parameter.name)}${parameter.label && parameter.label !== parameter.name ? ` · ${esc(parameter.label)}` : ""}</span><textarea id="coding-input-${i}" placeholder="${esc(parameter.placeholder || inputPlaceholder(parameter.name))}" rows="3" wrap="soft" spellcheck="false" aria-describedby="coding-input-help-${i}"></textarea><small id="coding-input-help-${i}">${esc(parameter.help || "Follow the format shown in this field.")}</small></label>`).join("")}</div>
+      <div class="challenge-actions coding-actions"><button id="coding-run" class="ghost-btn">Run my input</button><button id="coding-submit" class="primary-btn">Submit ${lesson.tests.length} tests</button><button id="coding-stop" class="ghost-btn" hidden>Stop</button></div>
+      <div id="coding-results" role="status" aria-live="polite"></div><div id="feedback-slot" role="status" aria-live="polite"></div>
+    </div>`;
+    const graphDisclosure = $("#coding-graph-disclosure");
+    $("#coding-graph-slot").append($("#graph-lab"));
+    window.DFS_GRAPH?.setContext(`${problem.id}:coding`, 0);
+    window.DFS_GRAPH?.setNodeLabelRule(problem.counterexampleLesson?.nodeLabels?.rule || "free", problem.graphRules?.nodeLabelFormat);
+    $("#graph-lab").hidden = false;
+    $("#graph-lab-title").textContent = "Scratch graph";
+    graphDisclosure.addEventListener("toggle", () => {
+      if (graphDisclosure.open) requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+    });
+    restoreFormDraft("solution");
+    const editor = $("#coding-editor");
+    const numbers = $("#coding-line-numbers");
+    const highlight = $("#coding-highlight");
+    const syncEditorScroll = () => { numbers.scrollTop = editor.scrollTop; highlight.scrollTop = editor.scrollTop; highlight.scrollLeft = editor.scrollLeft; };
+    const refreshLines = () => {
+      numbers.textContent = Array.from({ length: editor.value.split("\n").length }, (_, i) => i + 1).join("\n");
+      highlight.innerHTML = highlightEditorJavaScript(editor.value);
+      syncEditorScroll();
+    };
+    refreshLines();
+    editor.onscroll = syncEditorScroll;
+    let escapeTab = false;
+    editor.onkeydown = event => {
+      if (event.key === "Escape") { escapeTab = true; return; }
+      if (event.key === "Tab" && !escapeTab && !event.ctrlKey && !event.metaKey && !event.altKey && !event.isComposing) {
+        event.preventDefault();
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const value = editor.value;
+        if (!event.shiftKey && start === end) {
+          document.execCommand("insertText", false, "  ");
+        } else {
+          const first = value.slice(0, start).lastIndexOf("\n") + 1;
+          // A selection ending at the next line's start does not include that line.
+          const last = end > start && value[end - 1] === "\n" ? end - 1 : end;
+          const newline = value.indexOf("\n", last);
+          const finish = newline < 0 ? value.length : newline;
+          const lines = value.slice(first, finish).split("\n");
+          const removed = lines.map(line => event.shiftKey ? (line.match(/^(?: {1,2}|\t)/) || [""])[0].length : 0);
+          const replacement = lines.map((line, i) => event.shiftKey ? line.slice(removed[i]) : "  " + line).join("\n");
+          const firstDelta = event.shiftKey ? -Math.min(removed[0], start - first) : 2;
+          const endLineStart = value.slice(0, end).lastIndexOf("\n") + 1;
+          const endsAfterBlock = end > finish;
+          const totalDelta = event.shiftKey
+            ? -removed.reduce((sum, count, i) => sum + (i === removed.length - 1 && !endsAfterBlock ? Math.min(count, end - endLineStart) : count), 0)
+            : lines.length * 2;
+          if (replacement !== value.slice(first, finish)) {
+            editor.setSelectionRange(first, finish);
+            // Native insertion keeps indentation in the browser's undo history.
+            document.execCommand("insertText", false, replacement);
+            editor.setSelectionRange(start + firstDelta, Math.max(start + firstDelta, end + totalDelta));
+          }
+        }
+      }
+      escapeTab = false;
+    };
+    const setBusy = busy => {
+      $("#coding-run").disabled = busy;
+      $("#coding-submit").disabled = busy;
+      $("#coding-stop").hidden = !busy;
+    };
+    $("#challenge").oninput = event => {
+      stopCodingRun(); setBusy(false); refreshLines(); codingResult = null;
+      $("#coding-results").textContent = "";
+      if (event.target === editor) { persistProgress(codingStorageKey(), { passed: false }); updateCodingProgress(0, lesson.tests.length); }
+      saveFormDraft();
+    };
+    $("#coding-stop").onclick = () => { stopCodingRun(); setBusy(false); codingResult = { stopped: true }; $("#coding-results").textContent = "Stopped. You can edit and try again."; refreshCodingHelp(); };
+    const execute = async mode => {
+      stopCodingRun();
+      const version = codingRunVersion;
+      const code = editor.value;
+      const results = $("#coding-results");
+      codingResult = null;
+      if (mode === "submit") { persistProgress(codingStorageKey(), { passed: false }); updateCodingProgress(0, lesson.tests.length); }
+      let args;
+      if (mode === "run") {
+        args = [];
+        for (const [i, input] of codingInputs().entries()) {
+          try { args.push(parseLessonValue(input.raw, input.name, lesson.parameters[i].example ?? inputSample(input.name))); }
+          catch (error) {
+            const message = error.message;
+            results.innerHTML = `<pre class="coding-error">${esc(message)}</pre>`;
+            codingResult = { inputError: message }; $(`#coding-input-${i}`).focus(); refreshCodingHelp(); return;
+          }
+        }
+        try {
+          const input = Object.fromEntries(lesson.parameters.map((parameter, i) => [parameter.name, args[i]]));
+          if ('scores' in input) input.trust = input.scores;
+          window.DFS_STEP5.validate(problem.id, input);
+        } catch (error) {
+          const message = 'Check your input: ' + error.message;
+          results.innerHTML = `<pre class="coding-error">${esc(message)}</pre>`;
+          codingResult = { inputError: message };
+          const index = lesson.parameters.findIndex(parameter => new RegExp('\\b' + parameter.name + '\\b').test(error.message));
+          if (index >= 0) $(`#coding-input-${index}`).focus();
+          refreshCodingHelp(); return;
+        }
+      }
+      setBusy(true); results.textContent = mode === "run" ? "Running your input…" : "Running tests…";
+      refreshCodingHelp();
+      try {
+        if (!window.Step6Runtime) throw new Error("The code runner did not load. Refresh and try again.");
+        codingRunner ||= window.Step6Runtime.createRunner();
+        if (mode === "run") {
+          const result = await codingRunner.run({ code, functionName: lesson.functionName, args });
+          if (version !== codingRunVersion || section !== 6) return;
+          codingResult = { args, runResult: result };
+          results.innerHTML = `<section class="coding-run-result"><h4>Your input</h4>${codingOutput(result)}</section>`;
+        } else {
+          const testResults = [];
+          for (const [i, test] of lesson.tests.entries()) {
+            results.textContent = `Running test ${i + 1} of ${lesson.tests.length}…`;
+            const result = await codingRunner.run({ code, functionName: lesson.functionName, args: test.args });
+            if (version !== codingRunVersion || section !== 6) return;
+            const passed = result.ok && window.DFS_STEP5.equal(problem.id, result.value, test.expected);
+            testResults.push({ id: test.id, label: test.label, args: test.args, expected: test.expected, ...result, passed });
+          }
+          const passed = testResults.filter(test => test.passed).length;
+          codingResult = { testResults };
+          persistProgress(codingStorageKey(), { passed: passed === lesson.tests.length, code });
+          updateCodingProgress(passed, lesson.tests.length);
+          results.innerHTML = `<h4>${passed === lesson.tests.length ? "All tests passed!" : `${passed} of ${lesson.tests.length} tests passed`}</h4>${testResults.map((test, i) => `<details class="coding-test ${test.passed ? "is-correct" : "needs-work"}"${test.passed ? "" : " open"}><summary>${test.passed ? "✓ Passed" : "✗ Failed"} · Test ${i + 1}: ${esc(test.label)}</summary><strong>Input</strong><pre>${esc(lesson.parameters.map((parameter, n) => `${parameter.name} = ${codingValue(test.args[n])}`).join("\n"))}</pre><strong>Expected</strong><pre>${esc(codingValue(test.expected))}</pre>${codingOutput(test)}</details>`).join("")}`;
+        }
+      } catch (error) {
+        if (version !== codingRunVersion || section !== 6) return;
+        codingResult = { runResult: { ok: false, error: { name: error.name, message: error.message } } };
+        results.innerHTML = `<pre class="coding-error">${esc(codingError(codingResult.runResult.error))}</pre>`;
+      } finally {
+        if (version === codingRunVersion && section === 6) { setBusy(false); refreshCodingHelp(); }
+      }
+    };
+    $("#coding-run").onclick = () => execute("run");
+    $("#coding-submit").onclick = () => execute("submit");
+    try {
+      const saved = JSON.parse(localStorage.getItem(codingStorageKey()) || "{}");
+      if (saved.passed && saved.code === editor.value) { updateCodingProgress(lesson.tests.length, lesson.tests.length); $("#coding-results").textContent = "Your saved solution passed all tests. Run them again whenever you like."; }
+    } catch {}
+    refreshCodingHelp();
+    $(".test-pane").scrollTop = 0;
+  }
+
   function reasoningRounds() {
     return problem.codeReasoning?.cases || [];
   }
@@ -2856,9 +3605,9 @@
     const displayInput = formatReasoningInput(round.input);
     const frame = reasoningFrame();
     const compact = true;
-    const outputField = `<label class="counter-field reasoning-output"><span>2 · What does the incorrect code return?</span><textarea id="reasoning-output" rows="3" autocomplete="off" spellcheck="false" placeholder='Examples: false, 3, "text", or [1, 2]' ${compact ? "disabled" : ""}></textarea></label><p id="reasoning-output-help" class="counter-output-help">Type the value the function returns. ${esc(friendlyOutputFormat(round.outputFormat))}</p>`;
+    const outputField = `<label class="counter-field reasoning-output"><span>2 · What does the incorrect code return?</span><textarea id="reasoning-output" rows="3" autocomplete="off" spellcheck="false" placeholder="${esc(outputPlaceholder())}" ${compact ? "disabled" : ""}></textarea></label><p id="reasoning-output-help" class="counter-output-help">Type the value the function returns. ${esc(friendlyOutputFormat(round.outputFormat))}</p>`;
     const diagnosisField = `<fieldset class="reasoning-rule"><legend>3 · What graph-level behavior does this code create?</legend><div class="choices">${diagnoses.map((choice, index) => `<button class="choice" data-choice-id="${esc(choice.id)}" aria-pressed="false" ${compact ? "disabled" : ""}><span class="choice-key">${String.fromCharCode(65 + index)}</span><span>${esc(choice.label)}</span></button>`).join("")}</div></fieldset>`;
-    const correctOutputField = `<label class="counter-field reasoning-output"><span>What should the correct solution return?</span><textarea id="reasoning-correct-output" rows="2" autocomplete="off" spellcheck="false" disabled></textarea></label>`;
+    const correctOutputField = `<label class="counter-field reasoning-output"><span>What should the correct solution return?</span><textarea id="reasoning-correct-output" placeholder="${esc(outputPlaceholder())}" rows="2" autocomplete="off" spellcheck="false" disabled></textarea></label>`;
     const reasoningQuestions = outputField + correctOutputField + diagnosisField;
     window.DFS_GRAPH?.setContext(`${problem.id}:reasoning:${round.caseId || done}`, 0);
     unlockCounterexampleEditor();
@@ -3036,6 +3785,7 @@
   }
 
   function checkReasoning(round) {
+    clearAiHelp();
     const drawing = window.DFS_GRAPH?.getSnapshot() || { nodes: [], edges: [], directed: false };
     const graph = gradeCanvas(round.canvas, drawing);
     const checks = [
@@ -3056,6 +3806,7 @@
       const selected = round.diagnoses.find(choice => choice.id === selectedId);
       const diagnosisHelp = selectedId && selectedId !== round.correctDiagnosis ? `<div class="feedback-next"><b>About your diagnosis:</b> ${esc(selected?.feedback || "Compare the code's graph behavior with the locked problem rule.")}</div>` : "";
       $("#feedback-slot").innerHTML = `<div class="feedback trace-feedback"><b>${!graph.nodes || !graph.edges || !graph.direction || !graph.colors || !graph.labels ? "Fix the marked graph details." : selectedId !== round.correctDiagnosis ? "Recheck what the code changes." : "Recheck the returned values."}</b><ul class="feedback-checklist">${checks.map(([label, pass]) => `<li class="${pass == null ? "waiting" : pass ? "passed" : "failed"}"><span>${pass == null ? "•" : pass ? "✓" : "×"}</span>${esc(label)}</li>`).join("")}</ul>${graph.hint ? `<p class="feedback-next">${esc(graph.hint)}</p>` : ""}${diagnosisHelp}${reasoningWalkthrough(round)}</div>`;
+      offerAiHelp({ round, studentGraph: drawing, selectedDiagnosis: selectedId, studentBuggyOutput: $("#reasoning-output").value, studentCorrectOutput: $("#reasoning-correct-output").value, checks });
       $("#reasoning-check").disabled = false;
       $("#feedback-slot").scrollIntoView({ behavior: "smooth", block: "center" });
       $("#feedback-slot").tabIndex = -1;
@@ -3098,10 +3849,88 @@
     $("#challenge").innerHTML = `<div class="challenge-body victory reasoning-victory${skipped ? " has-skips" : ""}"><div class="stamp">${skipped ? "Skipped" : "Traced"}</div><h3>${skipped ? "Step 4 skipped." : "Step 4 complete."}</h3><p>${skipped ? `${skipped} code case${skipped === 1 ? "" : "s"} skipped.` : `You solved all ${reasoningRounds().length} code cases.`}</p><div class="completion-actions"><a class="primary-btn link-button" href="/">Choose another problem <span>→</span></a><button id="restart-reasoning" class="ghost-btn">Practice Step 4 again</button></div></div>`;
     $(".test-pane").scrollTop = 0;
     focusPrompt();
+    if (hasStep5()) {
+      const next = document.createElement("button");
+      next.className = "primary-btn";
+      next.textContent = "Start Step 5 →";
+      next.onclick = () => switchSection(5);
+      $("#challenge .completion-actions").prepend(next);
+    }
     $("#restart-reasoning").onclick = resetReasoning;
   }
 
+  // Canonical rooted-tree signatures distinguish identical labels by their children.
+  // Unordered lessons sort children; traversal lessons preserve each parent’s arrow order.
+  function arrayNumberLabel(node) {
+    const label = String(node.label).trim();
+    if (label === "outer array" || /^root(?:\[\d+\])*=\[\]$/.test(label) || /^(?:\[\d+\])+ array$/.test(label)) return "Array";
+    const value = label.match(/^(?:root)?(?:\[\d+\])*=(.*)$/)?.[1] ?? label;
+    try { return JSON.stringify(JSON.parse(value)); } catch { return value; }
+  }
+
+  function arrayTreeSignature(graph, labelOf, ordered = false) {
+    const byId = new Map(graph.nodes.map(node => [String(node.id), node]));
+    if (!byId.size || byId.size !== graph.nodes.length || graph.edges.length !== byId.size - 1) return null;
+    const children = new Map([...byId.keys()].map(id => [id, []]));
+    const parents = new Map([...byId.keys()].map(id => [id, 0]));
+    for (const edge of graph.edges) {
+      const from = String(edge.from), to = String(edge.to);
+      if (!byId.has(from) || !byId.has(to) || from === to || labelOf(byId.get(from)) !== "Array") return null;
+      children.get(from).push(to);
+      parents.set(to, parents.get(to) + 1);
+      if (parents.get(to) > 1) return null;
+    }
+    const roots = [...parents.keys()].filter(id => parents.get(id) === 0);
+    if (roots.length !== 1 || labelOf(byId.get(roots[0])) !== "Array") return null;
+    const visited = new Set();
+    function visit(id) {
+      if (visited.has(id)) return null;
+      visited.add(id);
+      const branches = children.get(id).map(visit);
+      if (branches.includes(null)) return null;
+      if (!ordered) branches.sort();
+      return `[${JSON.stringify(labelOf(byId.get(id)))},[${branches.join(",")}]]`;
+    }
+    const signature = visit(roots[0]);
+    return visited.size === byId.size ? signature : null;
+  }
+
+  function arrayDrawingHelpAttempt(attempt) {
+    const copy = structuredClone(attempt);
+    // Answer-key IDs stay private identifiers; all shown names use the same editor model.
+    function adapt(value) {
+      if (!value || typeof value !== "object") return;
+      if (Array.isArray(value.nodes) && Array.isArray(value.edges)) {
+        value.nodeLabelMode = "array-number";
+        value.nodes.forEach(node => { node.label = arrayNumberLabel(node); });
+        return;
+      }
+      Object.entries(value).forEach(([key, child]) => { if (key !== "studentGraph") adapt(child); });
+    }
+    adapt(copy);
+    return copy;
+  }
+
+  function gradeArrayNumberCanvas(expected, drawing, options = {}) {
+    const actualLabel = node => String(node.label).trim();
+    const wanted = expected.nodes.map(arrayNumberLabel).sort();
+    const actual = drawing.nodes.map(actualLabel).sort();
+    const nodes = JSON.stringify(wanted) === JSON.stringify(actual);
+    const signature = arrayTreeSignature(drawing, actualLabel, options.ordered);
+    const edges = nodes && signature !== null && signature === arrayTreeSignature(expected, arrayNumberLabel, options.ordered);
+    const direction = drawing.directed === expected.directed;
+    const labels = drawing.edges.every(edge => !String(edge.label || "").trim());
+    let hint = "";
+    if (!nodes) hint = "Use one Array for each array (including empty arrays), and one node for each value. Keep repeated values as separate nodes.";
+    else if (!direction) hint = "Turn on Directed edges. Arrows go from an Array to its children.";
+    else if (!edges && options.ordered && arrayTreeSignature(drawing, actualLabel) === arrayTreeSignature(expected, arrayNumberLabel)) hint = "Your connections are right, but the arrow order is different. For each Array, draw arrows to its children in the input’s left-to-right order. Delete and reconnect those arrows to fix the order.";
+    else if (!edges) hint = "Check which Array directly contains each child. Do not skip an Array, join siblings, or connect a child to two parents." + (options.ordered ? " For each Array, its numbered arrows must follow the input’s left-to-right order. Delete and reconnect arrows to fix their order." : "");
+    else if (!labels) hint = "Leave arrows unlabeled. Put values on value nodes.";
+    return { nodes, edges: edges && labels, direction, colors: true, labels, hint };
+  }
+
   function gradeCanvas(expected, drawing) {
+    if (usesArrayNumberDrawing()) return gradeArrayNumberCanvas(expected, drawing, problem.lesson.drawingEditor);
     const expectedLabels = expected.nodes.map(node => normalizeNodeLabel(node.label)).sort();
     const actualLabels = drawing.nodes.map(node => normalizeNodeLabel(node.label)).sort();
     const nodes = new Set(actualLabels).size === actualLabels.length && JSON.stringify(expectedLabels) === JSON.stringify(actualLabels);
@@ -3238,6 +4067,10 @@
     const hasChildren = new Set(model.edges.map(edge => String(edge.from)));
     const rawItems = nestedInputItems(rawInput);
     const displayNodes = model.nodes.map((node, index) => {
+      if (usesArrayNumberDrawing()) {
+        const main = arrayNumberLabel(node);
+        return { isContainer: main === "Array", label: { main, path: "" } };
+      }
       const naturalLabel = nestedLabelParts(node.label, false, rawItems[index]);
       const isContainer = rawItems[index]
         ? rawItems[index].container
@@ -3245,7 +4078,7 @@
       return { isContainer, label: nestedLabelParts(node.label, isContainer, rawItems[index]) };
     });
     const displayById = Object.fromEntries(model.nodes.map((node, index) => [String(node.id), displayNodes[index].label]));
-    const edges = model.edges.map(edge => {
+    const edges = model.edges.map((edge, index) => {
       const from = byId[String(edge.from)], to = byId[String(edge.to)];
       if (!from || !to) return "";
       const dx = to.x - from.x, dy = to.y - from.y, length = Math.hypot(dx, dy) || 1;
@@ -3256,7 +4089,9 @@
       const color = colorValues[edge.color] || "#8392a8";
       const line = `<line x1="${start.x}" y1="${start.y}" x2="${tip.x}" y2="${tip.y}" stroke="${color}" stroke-width="4" stroke-linecap="round"/>`;
       const arrow = model.directed ? `<polygon points="${tip.x},${tip.y} ${tip.x - ux * 13 - uy * 7},${tip.y - uy * 13 + ux * 7} ${tip.x - ux * 13 + uy * 7},${tip.y - uy * 13 - ux * 7}" fill="${color}"/>` : "";
-      return line + arrow;
+      const order = usesArrayNumberDrawing() && problem.lesson.drawingEditor.ordered
+        ? `<text class="mini-edge-label" x="${(start.x + tip.x) / 2}" y="${(start.y + tip.y) / 2 - 7}">#${model.edges.slice(0, index + 1).filter(item => String(item.from) === String(edge.from)).length}</text>` : "";
+      return line + arrow + order;
     }).join("");
     const nodes = model.nodes.map((node, index) => {
       const { isContainer, label } = displayNodes[index];
@@ -3427,7 +4262,7 @@
   }
 
   function updateProgress(completed = progress.index) {
-    const total = 9;
+    const total = mainTasks().length;
     const done = Math.min(completed, total);
     const passed = done - progress.skipped.filter(index => index < done).length;
     $("#evidence-label").textContent = `${passed} of ${total} visual checks passed`;
@@ -3445,7 +4280,7 @@
     $("#graph-lab").hidden = true;
     const skipped = progress.skipped.length;
     const passed = mainTasks().length - skipped;
-    $("#challenge").innerHTML = `<div class="challenge-body victory${skipped ? " has-skips" : ""}"><div class="stamp">${skipped ? "Finished" : "Proven"}</div><h3>${skipped ? "Step 1 finished." : "Step 1 complete."}</h3><p>${skipped ? `${passed} passed · ${skipped} skipped.` : `You built four fresh inputs and checked five realistic mistakes.`}</p><div class="completion-actions"><button id="start-counterexamples" class="primary-btn">Start Step 2 <span>→</span></button><a class="ghost-btn link-button" href="/">Choose another problem</a><button id="restart-visual" class="ghost-btn">Practice Step 1 again</button></div></div>`;
+    $("#challenge").innerHTML = `<div class="challenge-body victory${skipped ? " has-skips" : ""}"><div class="stamp">${skipped ? "Finished" : "Proven"}</div><h3>${skipped ? "Step 1 finished." : "Step 1 complete."}</h3><p>${skipped ? `${passed} passed · ${skipped} skipped.` : `You passed all ${mainTasks().length} visual checks.`}</p><div class="completion-actions"><button id="start-counterexamples" class="primary-btn">Start Step 2 <span>→</span></button><a class="ghost-btn link-button" href="/">Choose another problem</a><button id="restart-visual" class="ghost-btn">Practice Step 1 again</button></div></div>`;
     $("#start-counterexamples").onclick = () => switchSection(2);
     $("#restart-visual").onclick = reset;
   }
@@ -3489,20 +4324,29 @@
 
   function saveFormDraft() {
     if (!draftKey || restoringDraft || section === 2) return;
-    const fields = Object.fromEntries($$("#challenge textarea[id], #challenge input[id]").map(field => [field.id, field.value]));
+    const fields = Object.fromEntries($$("#challenge textarea[id], #challenge input[id], #challenge select[id]").map(field => [field.id, field.value]));
     const choices = $$('[data-choice-id][aria-pressed="true"]').map(button => `[data-choice-id="${button.dataset.choiceId}"]`);
     choices.push(...$$('[data-claim-index][aria-pressed="true"]').map(button => `[data-claim-index="${button.dataset.claimIndex}"][data-claim-value="${button.dataset.claimValue}"]`));
-    try { localStorage.setItem(draftKey, JSON.stringify({ fields, choices })); } catch {}
+    try {
+      localStorage.setItem(draftKey, JSON.stringify({ fields, choices }));
+      if (section === 6 && $("#coding-save-warning")) $("#coding-save-warning").hidden = true;
+    } catch {
+      const warning = section === 6 && $("#coding-save-warning");
+      if (warning) {
+        warning.hidden = false;
+        warning.textContent = "Your browser could not save this code. Copy it before leaving or refreshing this page.";
+      }
+    }
   }
 
   function loadProgress() {
     try {
       const value = JSON.parse(localStorage.getItem(storageKey()) || "{}");
-      return { index: Math.min(Math.max(Number(value.index) || 0, 0), 9), mistakes: Math.max(Number(value.mistakes) || 0, 0), remedialFor: value.remedialFor || null, skipped: Array.isArray(value.skipped) ? value.skipped.map(Number) : [] };
+      return { index: Math.min(Math.max(Number(value.index) || 0, 0), mainTasks().length), mistakes: Math.max(Number(value.mistakes) || 0, 0), remedialFor: value.remedialFor || null, fastTrackEarned: value.fastTrackEarned === true, skipped: Array.isArray(value.skipped) ? value.skipped.map(Number) : [] };
     } catch { return { index: 0, mistakes: 0, remedialFor: null, skipped: [] }; }
   }
   function saveProgress() { localStorage.setItem(storageKey(), JSON.stringify(progress)); }
-  function storageKey() { return `dfs-visual:${problem.id}:v${data.version}-coffee-rollout`; }
+  function storageKey() { return `dfs-visual:${problem.id}:v${data.version}-coffee-rollout${problem.category === "variant" ? "-short-v1" : ""}${problem.lesson?.drawingEditor?.mode === "array-number" ? "-array-number-v1" : ""}`; }
   function loadCounterProgress() {
     try {
       const value = JSON.parse(localStorage.getItem(counterStorageKey()) || "{}");
@@ -3518,12 +4362,13 @@
   function loadStructureProgress() {
     try {
       const value = JSON.parse(localStorage.getItem(structureStorageKey()) || "{}");
-      const skipped = [...new Set(Array.isArray(value.skipped) ? value.skipped.map(Number).filter(index => Number.isInteger(index) && index >= 0 && index < 5) : [])];
-      return { index: Math.min(Math.max(Number(value.index) || 0, 0), 5), mistakes: Math.max(Number(value.mistakes) || 0, 0), claimVariant: 0, skipped };
+      const total = problem.category === "variant" ? 3 : 5;
+      const skipped = [...new Set(Array.isArray(value.skipped) ? value.skipped.map(Number).filter(index => Number.isInteger(index) && index >= 0 && index < total) : [])];
+      return { index: Math.min(Math.max(Number(value.index) || 0, 0), total), mistakes: Math.max(Number(value.mistakes) || 0, 0), claimVariant: 0, skipped };
     } catch { return { index: 0, mistakes: 0, claimVariant: 0, skipped: [] }; }
   }
   function saveStructureProgress() { localStorage.setItem(structureStorageKey(), JSON.stringify(structureProgress)); }
-  function structureStorageKey() { return `dfs-structure:${problem.id}:v8`; }
+  function structureStorageKey() { return `dfs-structure:${problem.id}:v8${problem.category === "variant" ? "-short-v1" : ""}`; }
   function loadReasoningProgress() {
     try {
       const saved = localStorage.getItem(reasoningStorageKey());
@@ -3538,7 +4383,7 @@
   }
   function saveReasoningProgress() { localStorage.setItem(reasoningStorageKey(), JSON.stringify(reasoningProgress)); }
   function reasoningStorageKey() { return `dfs-reasoning:${problem.id}:v3`; }
-  function resetCurrentSection() { if (section === 4) resetReasoning(); else if (section === 3) resetStructure(); else if (section === 2) resetCounterexamples(); else reset(); }
+  function resetCurrentSection() { if (section === 6) resetCoding(); else if (section === 5) resetDebugging(); else if (section === 4) resetReasoning(); else if (section === 3) resetStructure(); else if (section === 2) resetCounterexamples(); else reset(); }
   function reset() {
     if (progress.index > 0 && !confirm("Restart the entire visual proof from the first blank graph?")) return;
     clearSectionDrafts(1);

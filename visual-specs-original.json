@@ -971,6 +971,19 @@
       "misconception": "omit-list-containers",
       "no": "list containers should be left out.",
       "yes": "An array container should have its own node, even when it is empty."
+    },
+    "step1Drawing": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -1000000,
+      "max": 1000000,
+      "ordered": true,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "Visit each Array’s children in input order. Finish an inner Array before moving to the next child. Output only numbers.",
+        "For each Array, draw its arrows in the input’s left-to-right order. Arrow numbers show that order. To fix the order, delete those arrows and reconnect them."
+      ]
     }
   },
   {
@@ -1951,6 +1964,18 @@
       "misconception": "omit-list-nodes",
       "no": "list nodes should be left out.",
       "yes": "An array container should have its own node, even when it is empty."
+    },
+    "step1Drawing": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -100,
+      "max": 100,
+      "ordered": false,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0; each arrow adds 1. Multiply each number by its depth, then add the results."
+      ]
     }
   },
   {
@@ -2091,6 +2116,18 @@
       "misconception": "omit-integer-nodes",
       "no": "integer nodes should be left out.",
       "yes": "Each integer occurrence should have a node inside its containing array."
+    },
+    "step1Drawing": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -100,
+      "max": 100,
+      "ordered": false,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0; each arrow adds 1. Use the deepest number’s depth for maxDepth. Each number’s weight is maxDepth − depth + 1. Empty arrays do not increase maxDepth."
+      ]
     }
   },
   {

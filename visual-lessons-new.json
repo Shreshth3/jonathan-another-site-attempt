@@ -1790,7 +1790,7 @@
           {
             "id": "missing-node",
             "label": "Picture B",
-            "feedback": "[3][0]=17 is an input item and needs its own node.",
+            "feedback": "17 is an input item and needs its own node.",
             "misconception": "omit-input-item",
             "model": {
               "directed": true,
@@ -1855,7 +1855,7 @@
           {
             "id": "missing-edge",
             "label": "Picture C",
-            "feedback": "The direct relation [3] → [3][0] is missing.",
+            "feedback": "An arrow from an Array to one of its direct children is missing. Connect every element to the Array directly containing it.",
             "misconception": "omit-direct-relation",
             "model": {
               "directed": true,
@@ -2100,13 +2100,13 @@
         "choices": [
           {
             "id": "correct",
-            "label": "Keep every container and every separate item occurrence.",
+            "label": "Every Array and every separate value.",
             "feedback": "Each separate input item required by this model keeps its identity.",
             "misconception": null
           },
           {
             "id": "wrong",
-            "label": "Use only plain values.",
+            "label": "Every separate value, but no Array nodes.",
             "feedback": "Containers determine which item belongs inside which parent. Omitting them loses that nesting.",
             "misconception": "wrong-node-identity"
           }
@@ -2884,7 +2884,17 @@
           ]
         }
       }
-    ]
+    ],
+    "drawingEditor": {
+      "mode": "array-number",
+      "valueKind": "literal",
+      "ordered": false,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one value node for each value. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "Count every node except the outer Array. Inner arrays count too, even when empty. Value nodes may contain numbers, quoted text, true, or false."
+      ]
+    }
   },
   {
     "id": "gfg-grid-path-exists",

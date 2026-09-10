@@ -9,6 +9,11 @@ if (freshness.status !== 0) {
   console.error((freshness.stderr || freshness.stdout).trim());
   process.exit(1);
 }
+const nestedDrawings = spawnSync(process.execPath, [path.resolve(__dirname, "validate-nested-array-drawing.js")], { encoding: "utf8" });
+if (nestedDrawings.status !== 0) {
+  console.error((nestedDrawings.stderr || nestedDrawings.stdout).trim());
+  process.exit(1);
+}
 const step2Starters = spawnSync(process.execPath, [path.resolve(__dirname, "validate-step2-starters.js")], { encoding: "utf8" });
 if (step2Starters.status !== 0) {
   console.error((step2Starters.stderr || step2Starters.stdout).trim());
@@ -41,7 +46,7 @@ if (step2GridAdjacency.status !== 0) {
   console.error((step2GridAdjacency.stderr || step2GridAdjacency.stdout).trim());
   process.exit(1);
 }
-for (const scriptName of ["validate-step4-execution.js", "validate-step4-correct-outputs.js", "validate-step4-readability.js"]) {
+for (const scriptName of ["validate-step4-execution.js", "validate-step4-correct-outputs.js", "validate-step4-readability.js", "validate-step5-content.js", "step5-validate.js", "validate-step6-content.js", "validate-step6-ai.js"]) {
   const check = spawnSync(process.execPath, [path.resolve(__dirname, scriptName)], { encoding: "utf8" });
   if (check.status !== 0) {
     console.error((check.stderr || check.stdout).trim());
@@ -58,7 +63,7 @@ const errors = [];
 for (const filename of ["step2-specs-original.json", "step2-specs-variant.json", "step2-specs-new.json"]) {
   const specs = JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", filename), "utf8"));
   for (const spec of specs) {
-    if (spec.input && Object.prototype.hasOwnProperty.call(spec.input, "outputPlaceholder")) errors.push(`${spec.id}/step2 source: output placeholders are not allowed`);
+    if (filename !== "step2-specs-variant.json" && spec.input && Object.prototype.hasOwnProperty.call(spec.input, "outputPlaceholder")) errors.push(`${spec.id}/step2 source: archived output fields remain unchanged`);
   }
 }
 const uiSource = fs.readFileSync(path.resolve(__dirname, "../visual-library.js"), "utf8");
@@ -89,7 +94,6 @@ if (renderConceptStart < 0 || renderConceptEnd < 0) {
   if (!renderConceptSource.includes("renderNodeLabelGuide(task)")) errors.push("Step 1 concept drawings must show the node-name format");
 }
 if (uiSource.includes('$("#graph-lab").hidden = task.kind !== "build"')) errors.push("Step 1 concept questions must not hide the drawing tool");
-if (uiSource.includes("counterOutputPlaceholder") || /id="counter-(?:real|bug)-output"[^>]*placeholder=/.test(uiSource)) errors.push("Step 2 output fields must not contain placeholders");
 const membershipStart = uiSource.indexOf("function nodeMembershipClaim(");
 const membershipEnd = uiSource.indexOf("function directVsReachabilityClaim(", membershipStart);
 if (membershipStart < 0 || membershipEnd < 0) {
@@ -236,6 +240,12 @@ function validateLesson(problem) {
     errors.push(`${problem.id}: missing v3 lesson. Add it to visual-lessons-${problem.category}.json using {id, facets[4], buildTasks[4], conceptTasks[5]}.`);
     return;
   }
+  if (problem.category === "variant") {
+    const plan = lesson.practicePlan;
+    const builds = new Set(lesson.buildTasks.map(task => task.id));
+    const concepts = new Set(lesson.conceptTasks.map(task => task.id));
+    if (plan?.version !== "short-v1" || plan.step1?.length !== 5 || new Set(plan.step1).size !== 5 || plan.step1.filter(id => builds.has(id)).length !== 2 || plan.step1.filter(id => concepts.has(id)).length !== 3 || JSON.stringify(plan.step3) !== "[0,1,4]") errors.push(`${problem.id}: invalid short practice plan`);
+  }
   const facets = lesson.facets || [];
   if (facets.length !== 4 || new Set(facets).size !== 4 || facets.some(facet => !String(facet).trim())) errors.push(`${problem.id}: lesson.facets must contain exactly four unique names`);
   if (!Array.isArray(lesson.buildTasks) || lesson.buildTasks.length !== 4) errors.push(`${problem.id}: lesson.buildTasks must contain exactly four blank-graph builds`);
@@ -352,7 +362,7 @@ function validateCounterexampleLesson(problem) {
   if (spec.startRule && spec.startRule !== "graph-root") errors.push(`${problem.id}/step2: unsupported startRule ${spec.startRule}`);
   if (!spec.input) errors.push(`${problem.id}/step2: missing authored semantic input`);
   for (const field of ["name", "prompt", "result", "resultLabel"]) if (!String(spec.input?.[field] || "").trim()) errors.push(`${problem.id}/step2: input.${field} is required`);
-  if (spec.input && Object.prototype.hasOwnProperty.call(spec.input, "outputPlaceholder")) errors.push(`${problem.id}/step2: output placeholders are not allowed`);
+  if (problem.category !== "variant" && spec.input && Object.prototype.hasOwnProperty.call(spec.input, "outputPlaceholder")) errors.push(`${problem.id}/step2: archived output fields remain unchanged`);
   if (spec.input && !["reached-nodes", "unreached-nodes", "reached-count", "unreached-count", "all-reached", "any-unreached", "target-reachable-boolean", "same-color-target-reachable-boolean", "target-state-reachable-boolean", "target-word-path-exists-boolean", "reached-node-value-sum", "shortest-path-weight", "maximum-shortest-path-weight-or-minus-one", "maximum-path-weight", "deadline-reached-count", "border-component-count", "component-count", "maximum-component-size", "minimum-component-size", "maximum-reached-count", "path-count", "path-count-modulo", "enumerated-paths", "longest-path-length", "valid-two-coloring-boolean", "acyclic-completion-boolean", "maximum-reached-node-value", "reachability-matrix", "generated-terminal-strings", "recursive-item-count", "root-expression-value", "component-bounding-boxes", "minimum-universally-reachable-node-or-minus-one", "iterator-output-sequence", "depth-weighted-value-sum", "inverse-depth-weighted-value-sum", "widest-level-index", "level-value-sum", "exact-size-component-count", "kth-visited-node-or-minus-one", "target-root-leaf-sum-exists-boolean", "components-without-source-count", "qualified-component-count", "reached-selected-node-count", "maximum-component-value-sum", "component-sorted-string", "selected-color-count", "minimum-component-bounding-perimeter", "maximum-root-leaf-value-sum", "transformed-grid", "ordered-query-values"].includes(spec.input.result)) errors.push(`${problem.id}/step2: unsupported input.result ${spec.input.result}`);
   validateCounterSemanticInputs(problem.id, spec.input);
   if (spec.input?.result === "reached-node-value-sum") {

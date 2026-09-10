@@ -4,3 +4,11 @@ docs/
 scripts/
 visual-lessons-*.json
 visual-specs-*.json
+netlify/
+tmp/
+.env
+.env.*
+*.png
+*.log
+step2-specs-*.json
+step4-specs-*.json

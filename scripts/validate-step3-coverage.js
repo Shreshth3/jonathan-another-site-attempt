@@ -3,13 +3,13 @@ const path = require("path");
 const vm = require("vm");
 
 const root = path.resolve(__dirname, "..");
-const sandbox = { window: {} };
+const sandbox = { window: { addEventListener() {} } };
 vm.runInNewContext(fs.readFileSync(path.join(root, "visual-data.js"), "utf8"), sandbox);
 const problems = sandbox.window.DFS_VISUAL_DATA.problems;
 const failures = [];
 // Use the shipped claim generator so answer-pattern and authoring regressions
 // are caught even when all stored graphs remain structurally valid.
-sandbox.document = { querySelector: () => null };
+sandbox.document = { querySelector: () => null, addEventListener() {} };
 let runtime = fs.readFileSync(path.join(root, "visual-library.js"), "utf8");
 runtime = runtime.replace("  start();\n})();", `window.claimsFor = id => {
   problem = allProblems.find(item => item.id === id);
@@ -67,7 +67,7 @@ for (const problem of problems) {
   const rounds = sandbox.window.claimsFor(problem.id);
   const claims = rounds.flatMap(round => round.claims);
   const yesCount = claims.filter(claim => claim.correct).length;
-  if (claims.length !== 5 || yesCount < 2 || yesCount > 3) failures.push(`${problem.id}: expected five balanced Yes/No claims`);
+  if (problem.category === "variant" ? (claims.length !== 3 || yesCount < 1 || yesCount > 2) : (claims.length !== 5 || yesCount < 2 || yesCount > 3)) failures.push(`${problem.id}: expected balanced Yes/No claims`);
   patterns.add(claims.map(claim => Number(claim.correct)).join(""));
   const membership = problem.graphRules.membershipClaim;
   if (!membership?.yes || !membership?.no || !membership?.misconception) failures.push(`${problem.id}: missing authored node-misconception claim pair`);
@@ -80,4 +80,4 @@ if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);
 }
-console.log(`Validated 5 Step 3 inputs and at least 3 graph topologies for all ${problems.length} lessons.`);
+console.log(`Validated Step 3 question counts, answer balance, and authored graph pools for all ${problems.length} lessons.`);

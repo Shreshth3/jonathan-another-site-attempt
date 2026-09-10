@@ -7008,7 +7008,7 @@
           {
             "id": "missing-node",
             "label": "Picture B",
-            "feedback": "root[3][0]=13 is an input item and needs its own node.",
+            "feedback": "13 is an input item and needs its own node.",
             "misconception": "omit-input-item",
             "model": {
               "directed": true,
@@ -7081,7 +7081,7 @@
           {
             "id": "missing-edge",
             "label": "Picture C",
-            "feedback": "The direct relation root[3]=[] → root[3][0]=13 is missing.",
+            "feedback": "The direct relation Array → 13 is missing.",
             "misconception": "omit-direct-relation",
             "model": {
               "directed": true,
@@ -8134,7 +8134,20 @@
           ]
         }
       }
-    ]
+    ],
+    "drawingEditor": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -1000000,
+      "max": 1000000,
+      "ordered": true,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "Visit each Array’s children in input order. Finish an inner Array before moving to the next child. Output only numbers.",
+        "For each Array, draw its arrows in the input’s left-to-right order. Arrow numbers show that order. To fix the order, delete those arrows and reconnect them."
+      ]
+    }
   },
   {
     "id": "is-graph-bipartite",
@@ -18364,7 +18377,7 @@
           {
             "id": "missing-node",
             "label": "Picture B",
-            "feedback": "root[3][0]=17 is an input item and needs its own node.",
+            "feedback": "17 is an input item and needs its own node.",
             "misconception": "omit-input-item",
             "model": {
               "directed": true,
@@ -18429,7 +18442,7 @@
           {
             "id": "missing-edge",
             "label": "Picture C",
-            "feedback": "The direct relation root[3]=[] → root[3][0]=17 is missing.",
+            "feedback": "The direct relation Array → 17 is missing.",
             "misconception": "omit-direct-relation",
             "model": {
               "directed": true,
@@ -18815,7 +18828,7 @@
           "id": "remedial-3",
           "title": "Fresh proof · Protect the direct-relation rule",
           "prompt": "Build this different input exactly, then answer from your drawing.",
-          "input": "nestedList=[[7],[],[8,[9]],101]",
+          "input": "nestedList=[[7],[],[8,[9]],91]",
           "canvas": {
             "directed": true,
             "nodes": [
@@ -18852,8 +18865,8 @@
                 "label": "root[2][1][0]=9"
               },
               {
-                "id": "root[3]=101",
-                "label": "root[3]=101"
+                "id": "root[3]=91",
+                "label": "root[3]=91"
               }
             ],
             "edges": [
@@ -18887,7 +18900,7 @@
               },
               {
                 "from": "root=[]",
-                "to": "root[3]=101"
+                "to": "root[3]=91"
               }
             ]
           },
@@ -19458,7 +19471,19 @@
           ]
         }
       }
-    ]
+    ],
+    "drawingEditor": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -100,
+      "max": 100,
+      "ordered": false,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0; each arrow adds 1. Multiply each number by its depth, then add the results."
+      ]
+    }
   },
   {
     "id": "nested-list-weight-sum-ii",
@@ -19839,7 +19864,7 @@
           {
             "id": "missing-node",
             "label": "Picture B",
-            "feedback": "root[3][0]=17 is an input item and needs its own node.",
+            "feedback": "17 is an input item and needs its own node.",
             "misconception": "omit-input-item",
             "model": {
               "directed": true,
@@ -19904,7 +19929,7 @@
           {
             "id": "missing-edge",
             "label": "Picture C",
-            "feedback": "The direct relation root[3]=[] → root[3][0]=17 is missing.",
+            "feedback": "The direct relation Array → 17 is missing.",
             "misconception": "omit-direct-relation",
             "model": {
               "directed": true,
@@ -20290,7 +20315,7 @@
           "id": "remedial-3",
           "title": "Fresh proof · Protect the direct-relation rule",
           "prompt": "Build this different input exactly, then answer from your drawing.",
-          "input": "nestedList=[[7],[],[8,[9]],101]",
+          "input": "nestedList=[[7],[],[8,[9]],91]",
           "canvas": {
             "directed": true,
             "nodes": [
@@ -20327,8 +20352,8 @@
                 "label": "root[2][1][0]=9"
               },
               {
-                "id": "root[3]=101",
-                "label": "root[3]=101"
+                "id": "root[3]=91",
+                "label": "root[3]=91"
               }
             ],
             "edges": [
@@ -20362,7 +20387,7 @@
               },
               {
                 "from": "root=[]",
-                "to": "root[3]=101"
+                "to": "root[3]=91"
               }
             ]
           },
@@ -20933,7 +20958,19 @@
           ]
         }
       }
-    ]
+    ],
+    "drawingEditor": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -100,
+      "max": 100,
+      "ordered": false,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0; each arrow adds 1. Use the deepest number’s depth for maxDepth. Each number’s weight is maxDepth − depth + 1. Empty arrays do not increase maxDepth."
+      ]
+    }
   },
   {
     "id": "network-delay-time",

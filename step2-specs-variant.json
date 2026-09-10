@@ -1093,8 +1093,8 @@
         {
           "id": "dials",
           "kind": "json",
-          "label": "dial choices as a JSON list of strings",
-          "prompt": "Enter dial choices as a JSON list of strings",
+          "label": "dial choices as a list of dial choices",
+          "prompt": "Enter dial choices as a list of dial choices",
           "required": true
         }
       ]
@@ -1406,7 +1406,7 @@
     },
     "input": {
       "name": "starting keys",
-      "prompt": "Enter all starting keys as a JSON list; [] means no keys",
+      "prompt": "Enter all starting keys as a list; [] means no keys",
       "result": "reached-count",
       "resultLabel": "total number of different vaults opened"
     }
@@ -1524,8 +1524,8 @@
         {
           "id": "scores",
           "kind": "json",
-          "label": "symmetric trust matrix as JSON",
-          "prompt": "Enter symmetric trust matrix as JSON",
+          "label": "symmetric trust matrix (one row per line)",
+          "prompt": "Enter symmetric trust matrix (one row per line)",
           "required": true
         }
       ]

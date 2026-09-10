@@ -1,0 +1,33 @@
+const assert = require('node:assert/strict');
+const { handleAiHelp } = require('../netlify/functions/lib/ai-help.cjs');
+const url = 'https://lesson.example/api/ai-help';
+const payload = { problem: { title: 'Test' }, attempt: { studentGraph: { nodes: [], edges: [], directed: false } } };
+const request = (body = payload, headers = {}) => new Request(url, { method: 'POST', headers: { origin: 'https://lesson.example', ...headers }, body: typeof body === 'string' ? body : JSON.stringify(body) });
+(async () => {
+  const options = { apiKey: 'test-key', fetchApi: () => { throw new Error('Should not call API'); } };
+  assert.equal((await handleAiHelp(new Request(url), options)).status, 405);
+  assert.equal((await handleAiHelp(request(payload, { origin: 'https://other.example' }), options)).status, 403);
+  assert.equal((await handleAiHelp(request('bad json'), options)).status, 400);
+  assert.equal((await handleAiHelp(request({}), options)).status, 400);
+  assert.equal((await handleAiHelp(request('x'.repeat(150001)), options)).status, 413);
+  assert.equal((await handleAiHelp(request(), { apiKey: '' })).status, 503);
+  let feed, sent, upstreamSignal;
+  const response = await handleAiHelp(request(), { apiKey: 'test-key', fetchApi: async (url, options) => {
+    sent = JSON.parse(options.body); upstreamSignal = options.signal;
+    return new Response(new ReadableStream({ start(controller) { feed = controller; } }));
+  } });
+  assert.equal(sent.model, 'gpt-5.6-luna');
+  assert.equal(sent.stream, true);
+  assert.match(sent.instructions, /Assume the student has a weak foundation in programming and in algorithms/);
+  const reader = response.body.getReader();
+  feed.enqueue(new TextEncoder().encode('first chunk'));
+  assert.equal(new TextDecoder().decode((await reader.read()).value), 'first chunk');
+  feed.enqueue(new TextEncoder().encode('second chunk'));
+  assert.equal(new TextDecoder().decode((await reader.read()).value), 'second chunk');
+  await reader.cancel();
+  assert.equal(upstreamSignal.aborted, true);
+  const failed = await handleAiHelp(request(), { apiKey: 'test-key', fetchApi: async () => new Response('private provider detail', { status: 401 }) });
+  assert.equal(failed.status, 502);
+  assert.equal((await failed.text()).includes('private provider detail'), false);
+  console.log('PASS: validation, origin, key isolation, real chunk streaming, cancellation, and provider errors.');
+})().catch(error => { console.error(error); process.exitCode = 1; });

@@ -53,7 +53,10 @@
   labelButton.addEventListener("click", () => {
     if (!selected) return;
     connectFrom = null;
-    openRename(selected.type, selected.id);
+    if (arrayNumberMode() && selected.type === "node") {
+      const rect = labelButton.getBoundingClientRect();
+      openColorMenu("node", selected.id, rect.left, rect.bottom - board.getBoundingClientRect().top + 30);
+    } else openRename(selected.type, selected.id);
   });
   colorButton.addEventListener("click", () => {
     if (!selected) return;
@@ -141,9 +144,35 @@
     render();
   }
 
+  function arrayNumberMode() { return nodeLabelRule === "array-number"; }
+  function literalValueMode() { return arrayNumberMode() && nodeLabelFormat.valueKind === "literal"; }
+
+  function normalizeArrayValue(value, format) {
+    if (format.valueKind === "literal") {
+      try {
+        const parsed = JSON.parse(value);
+        if (["number", "string", "boolean"].includes(typeof parsed) && (typeof parsed !== "number" || Number.isFinite(parsed))) return JSON.stringify(parsed);
+      } catch {}
+      return null;
+    }
+    const number = Number(value);
+    return /^-?\d+$/.test(value) && Number.isSafeInteger(number) && number >= format.min && number <= format.max ? String(number) : null;
+  }
+
+  function renamePlaceholder(type = "node") { return type === "edge" ? "5" : arrayNumberMode() ? "7" : nodeLabelRule === "coordinate" ? "(0,2)" : nodeLabelRule === "nested-path" ? "root[0]=7" : nodeLabelRule === "partial-string" ? "ab" : "2"; }
+
   function setNodeLabelRule(rule, format = {}) {
     nodeLabelRule = String(rule || "nonnegative-integer");
     nodeLabelFormat = format || {};
+    renameInput.placeholder = renamePlaceholder();
+    renameInput.maxLength = literalValueMode() ? 10000 : 24;
+    lab.classList.toggle("array-number-editor", arrayNumberMode());
+    labelButton.textContent = arrayNumberMode() ? "Type / value" : "Rename";
+    colorButton.hidden = arrayNumberMode();
+    if (arrayNumberMode() && !drawing.nodes.length) {
+      drawing.directed = true;
+      directed.checked = true;
+    }
   }
 
   function addNode() {
@@ -167,6 +196,7 @@
   }
 
   function nextNodeLabel(index) {
+    if (arrayNumberMode()) return "Array";
     const used = new Set(drawing.nodes.map(node => String(node.label)));
     const pattern = String(nodeLabelFormat.pattern || "");
     const firstUnused = makeLabel => { let value = 0; while (used.has(makeLabel(value))) value++; return makeLabel(value); };
@@ -270,10 +300,11 @@
       return;
     }
     drawing = blankDrawing();
+    drawing.directed = arrayNumberMode();
     selected = null;
     connectFrom = null;
     lastNodeClick = null;
-    directed.checked = false;
+    directed.checked = drawing.directed;
     saveDrawing();
     render();
     resetClearButton();
@@ -295,7 +326,7 @@
     const point = svgPoint(event);
     const nodeId = nodeElement ? Number(nodeElement.dataset.nodeId) : null;
     const isDoubleClick = nodeId !== null && lastNodeClick?.id === nodeId && performance.now() - lastNodeClick.time < 450;
-    if (nodeElement && (event.detail === 2 || isDoubleClick)) {
+    if (!arrayNumberMode() && nodeElement && (event.detail === 2 || isDoubleClick)) {
       interaction = null;
       connectFrom = null;
       lastNodeClick = null;
@@ -391,6 +422,7 @@
   }
 
   function onDoubleClick(event) {
+    if (arrayNumberMode()) return;
     const nodeElement = event.target.closest("[data-node-id]");
     const edgeElement = event.target.closest("[data-edge-id]");
     if (!nodeElement && !edgeElement) return;
@@ -399,21 +431,28 @@
     else openRename("edge", Number(edgeElement.dataset.edgeId));
   }
 
-  function openRename(type, id) {
+  function openRename(type, id, numberEntry = false) {
     if (isLocked()) return;
     const item = type === "node" ? findNode(id) : findEdge(id);
     if (!item) return;
+    if (arrayNumberMode() && type === "node" && item.label === "Array" && !numberEntry) {
+      openColorMenu(type, id, item.x, item.y + 45);
+      return;
+    }
     connectFrom = null;
     lastNodeClick = null;
     renameTarget = { type, id };
     returnFocusTarget = { type, id };
-    renameInput.value = item.label || "";
+    renameInput.value = numberEntry && item.label === "Array" ? "" : item.label || "";
+    renameInput.placeholder = renamePlaceholder(type);
+    renameInput.inputMode = arrayNumberMode() && !literalValueMode() && type === "node" ? "numeric" : "text";
+    renameInput.removeAttribute("aria-invalid");
     const bounds = boardBounds();
     const from = type === "edge" ? findNode(item.from) : item;
     const to = type === "edge" ? findNode(item.to) : item;
     rename.style.left = `${clamp((from.x + to.x) / 2, 105, bounds.width - 105)}px`;
     rename.style.top = `${clamp((from.y + to.y) / 2 + (type === "node" ? item.r + 12 : 18), 64, bounds.height - 84)}px`;
-    rename.querySelector("label").textContent = type === "node" ? "Node name" : "Edge label";
+    rename.querySelector("label").textContent = type === "node" ? (arrayNumberMode() ? (literalValueMode() ? "Value (use quotes for text)" : "Number value") : "Node name") : "Edge label";
     rename.hidden = false;
     announce(type === "node" ? "Rename the node, then press Enter." : "Rename the edge, then press Enter.");
     requestAnimationFrame(() => { renameInput.focus(); renameInput.select(); });
@@ -424,9 +463,16 @@
     if (!item) return closeRename();
     const renamedType = renameTarget.type;
     const renamedId = renameTarget.id;
-    const value = renameInput.value.trim().slice(0, 24);
-    if (!value && renameTarget.type === "node") { announce("A node name cannot be empty."); renameInput.focus(); return; }
-    item.label = value;
+    const value = renameInput.value.trim();
+    if (!value && renameTarget.type === "node") { announce(arrayNumberMode() ? "Enter a value, or press Esc to cancel." : "A node name cannot be empty."); renameInput.focus(); return; }
+    const normalized = arrayNumberMode() && renamedType === "node" ? normalizeArrayValue(value, nodeLabelFormat) : value;
+    if (normalized === null) {
+      renameInput.setAttribute("aria-invalid", "true");
+      announce(literalValueMode() ? 'Enter a number, quoted text, true, or false.' : `Enter a whole number from ${nodeLabelFormat.min} to ${nodeLabelFormat.max}.`);
+      renameInput.focus();
+      return;
+    }
+    item.label = normalized;
     saveDrawing();
     closeRename();
     render();
@@ -462,6 +508,32 @@
     if (isLocked()) return;
     returnFocusTarget = { type, id };
     colorMenu.innerHTML = "";
+    if (arrayNumberMode()) { connectFrom = null; lastNodeClick = null; }
+    const typedNode = arrayNumberMode() && type === "node";
+    colorMenu.setAttribute("aria-label", typedNode ? "Choose node type" : "Color and delete options");
+    if (typedNode) {
+      for (const kind of ["Array", literalValueMode() ? "Value" : "Number"]) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "graph-menu-action";
+        button.textContent = kind;
+        button.addEventListener("click", event => {
+          event.stopPropagation();
+          const node = findNode(id);
+          if (!node) return;
+          closeColorMenu();
+          if (kind !== "Array") openRename("node", id, true);
+          else {
+            node.label = "Array";
+            saveDrawing();
+            render();
+            focusItem("node", id);
+            announce("Array node selected. Connect it to the elements directly inside it.");
+          }
+        });
+        colorMenu.append(button);
+      }
+    }
     const renameButton = document.createElement("button");
     renameButton.type = "button";
     renameButton.className = "graph-menu-action";
@@ -471,8 +543,8 @@
       closeColorMenu();
       openRename(type, id);
     });
-    colorMenu.append(renameButton);
-    colors.forEach(color => {
+    if (!typedNode) colorMenu.append(renameButton);
+    (typedNode ? [] : colors).forEach(color => {
       const button = document.createElement("button");
       button.type = "button";
       button.title = color.name;
@@ -531,6 +603,7 @@
       }
       return;
     }
+    if (arrayNumberMode() && event.target.closest("#graph-color-menu")) return;
     if (!selected || event.target.matches("input, textarea")) return;
     const item = selected.type === "node" ? findNode(selected.id) : findEdge(selected.id);
     if (!item) return;
@@ -629,9 +702,13 @@
     if (!from || !to) return;
     const geometry = connectedGeometry(from, to, drawing.directed, edge.width);
     const colorName = colors.find(color => color.value.toLowerCase() === edge.color.toLowerCase())?.name || "colored";
-    const relation = drawing.directed ? `Directed ${colorName} edge from ${from.label} to ${to.label}` : `Two-way ${colorName} edge between ${from.label} and ${to.label}`;
-    const showsOrder = /:(first-branch|last-branch|drop-last-edge)(?::|$)/.test(contextKey);
-    const edgeLabel = `${edge.label ? `${relation}, labeled ${edge.label}` : relation}${showsOrder ? `, drawing order ${index + 1}` : ""}`;
+    const fromName = arrayNumberMode() ? `${from.label} (node ${from.id + 1})` : from.label;
+    const toName = arrayNumberMode() ? `${to.label} (node ${to.id + 1})` : to.label;
+    const relation = drawing.directed ? `Directed ${colorName} edge from ${fromName} to ${toName}` : `Two-way ${colorName} edge between ${fromName} and ${toName}`;
+    const siblingOrder = arrayNumberMode() && nodeLabelFormat.ordered;
+    const showsOrder = siblingOrder || /:(first-branch|last-branch|drop-last-edge)(?::|$)/.test(contextKey);
+    const orderNumber = siblingOrder ? drawing.edges.slice(0, index + 1).filter(item => item.from === edge.from).length : index + 1;
+    const edgeLabel = `${edge.label ? `${relation}, labeled ${edge.label}` : relation}${showsOrder ? `, drawing order ${orderNumber}` : ""}`;
     const group = svgElement("g", { "data-edge-id": edge.id, class: selected?.type === "edge" && selected.id === edge.id ? "scratch-edge selected" : "scratch-edge", tabindex: isLocked() ? "-1" : "0", role: "button", "aria-disabled": isLocked(), "aria-label": `${edgeLabel}. Press F2 to rename or Delete to remove.` });
     group.append(svgElement("path", { class: "scratch-edge-hit", d: geometry.hitPath, "data-edge-id": edge.id }));
     group.append(svgElement("path", { class: "scratch-edge-line", d: geometry.linePath, stroke: edge.color, "stroke-width": edge.width, "stroke-linecap": drawing.directed ? "butt" : "round", "data-edge-id": edge.id }));
@@ -643,7 +720,7 @@
     }
     if (showsOrder) {
       const order = svgElement("text", { class: "scratch-edge-order", x: geometry.labelPoint.x, y: geometry.labelPoint.y + (edge.label ? 13 : -9), "data-edge-id": edge.id });
-      order.textContent = `#${index + 1}`;
+      order.textContent = `#${orderNumber}`;
       group.append(order);
     }
     svg.append(group);
@@ -652,11 +729,13 @@
   function renderNode(node) {
     const isSelected = selected?.type === "node" && selected.id === node.id;
     const enterAction = connectFrom === null ? "Press Enter to choose it as the first node." : "Press Enter to connect it as the second node.";
-    const group = svgElement("g", { class: `scratch-node${isSelected ? " selected" : ""}`, "data-node-id": node.id, transform: `translate(${node.x} ${node.y})`, tabindex: isLocked() ? "-1" : "0", role: "button", "aria-disabled": isLocked(), "aria-label": `Node ${node.label}. ${enterAction} Press F2 to rename, arrows to move, or Delete to remove.` });
-    group.append(svgElement("circle", { class: "scratch-node-body", r: node.r, fill: "#151e29", stroke: node.color, "data-node-id": node.id }));
+    const group = svgElement("g", { class: `scratch-node${isSelected ? " selected" : ""}`, "data-node-id": node.id, transform: `translate(${node.x} ${node.y})`, tabindex: isLocked() ? "-1" : "0", role: "button", "aria-disabled": isLocked(), "aria-label": `Node ${node.label}. ${arrayNumberMode() ? `Drawing node ${node.id + 1}. ` : ""}${enterAction} Press F2 to ${arrayNumberMode() ? "edit type or value" : "rename"}, arrows to move, or Delete to remove.` });
+    const isArray = arrayNumberMode() && node.label === "Array";
+    group.append(svgElement(isArray ? "rect" : "circle", { class: "scratch-node-body", ...(isArray ? { x: -32, y: -27, width: 64, height: 54, rx: 12 } : { r: node.r }), fill: isArray ? "#182a40" : "#151e29", stroke: isArray ? "#72a7ff" : node.color, "data-node-id": node.id }));
     const text = svgElement("text", { class: "scratch-node-label", "data-node-id": node.id });
     // Keep the path and value visible: nested items often share the same prefix.
-    const lines = node.label.match(/.{1,10}/g) || [""];
+    const displayLabel = literalValueMode() && node.label.length > 30 ? `${node.label.slice(0, 27)}…` : node.label;
+    const lines = displayLabel.match(/.{1,10}/g) || [""];
     lines.forEach((line, index) => {
       const part = svgElement("tspan", { x: 0, y: (index - (lines.length - 1) / 2) * 13 });
       part.textContent = line;

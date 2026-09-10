@@ -137,6 +137,21 @@
       "misconception": "swap-node-edge",
       "no": "Each reporting relationship should become a node instead of an edge.",
       "yes": "A listed relationship should connect two nodes rather than become a node itself."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "quit-middle",
+        "concept-node",
+        "quit-leaf",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -277,6 +292,33 @@
       "misconception": "omit-containers",
       "no": "containers should be left out.",
       "yes": "An array container should have its own node, even when it is empty."
+    },
+    "step1Drawing": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -1000,
+      "max": 1000,
+      "ordered": false,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0. Each arrow adds 1 to the depth. Count only number nodes; ties go to the smaller depth."
+      ]
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -302,16 +344,16 @@
             "misconception": "sum-all-coins"
           },
           {
-            "id": "six",
-            "label": "`6`",
-            "feedback": "That counts 1, 2, and 3 while missing the separate level-2 coin 7.",
-            "misconception": "flatten-by-order"
+            "id": "through-k",
+            "label": "`10`",
+            "feedback": "This adds coins from every level up to k: 1 + 2 + 7. Only coins at exactly level 2 belong in this sum.",
+            "misconception": "sum-through-k"
           },
           {
             "id": "eight",
             "label": "`8`",
-            "feedback": "Coin 1 is at level 1, while level 2 contains 2 and 7.",
-            "misconception": "count-top-and-seven"
+            "feedback": "This adds 3 and 5 at level 3, one level deeper than k = 2.",
+            "misconception": "off-by-one-deep"
           }
         ]
       },
@@ -417,6 +459,33 @@
       "misconception": "depth-as-node",
       "no": "each depth should become a separate node.",
       "yes": "Depth should describe an item’s position in the tree rather than create an extra node."
+    },
+    "step1Drawing": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -100,
+      "max": 100,
+      "ordered": false,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0; each arrow adds 1. Add only the numbers at depth k. If there are none, return 0."
+      ]
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -557,6 +626,21 @@
       "misconception": "component-as-node",
       "no": "each connected group should become a separate node.",
       "yes": "Items in one connected group should keep their separate nodes."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -697,6 +781,21 @@
       "misconception": "boat-as-node",
       "no": "each connected group should become a separate node.",
       "yes": "Items in one connected group should keep their separate nodes."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -837,6 +936,21 @@
       "misconception": "street-as-node",
       "no": "each listed relationship should become a node instead of an edge.",
       "yes": "A listed relationship should connect two nodes rather than become a node itself."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -977,6 +1091,21 @@
       "misconception": "remove-well-nodes",
       "no": "well nodes should be left out.",
       "yes": "A village with a well should keep its node so paths through it remain visible."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -1117,6 +1246,21 @@
       "misconception": "region-as-node",
       "no": "each connected group should become a separate node.",
       "yes": "Items in one connected group should keep their separate nodes."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -1257,6 +1401,21 @@
       "misconception": "color-as-node",
       "no": "each color should become a separate node.",
       "yes": "A bulb should have one node; its gold or silver color is a property."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -1397,6 +1556,21 @@
       "misconception": "key-as-node",
       "no": "each key should become a separate node.",
       "yes": "A key should define access between room nodes rather than become its own node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -1537,6 +1711,21 @@
       "misconception": "model-obstacles-only",
       "no": "only flooded campsites should become nodes.",
       "yes": "Dry campsites should have nodes as well as flooded campsites."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -1677,6 +1866,21 @@
       "misconception": "horizontal-only-nodes",
       "no": "Only train cells with a T directly left or right should become nodes.",
       "yes": "Cells in a vertical train should each have their own node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -1817,6 +2021,21 @@
       "misconception": "duplicate-station-by-color",
       "no": "each station should get a separate node for each track color.",
       "yes": "A station served by both colors should still have one station node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "build-exact-map",
+        "no-color-mixing",
+        "build-mixed-map",
+        "two-way-tracks",
+        "counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -1957,6 +2176,21 @@
       "misconception": "edge-as-node",
       "no": "each listed relationship should become a node instead of an edge.",
       "yes": "A listed relationship should connect two nodes rather than become a node itself."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -2097,6 +2331,21 @@
       "misconception": "time-expanded-unneeded",
       "no": "A warehouse should have a separate node for every possible arrival time.",
       "yes": "Different possible arrival times should not create extra copies of a warehouse node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "route-branch",
+        "concept-nodes",
+        "reverse-listed",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -2237,6 +2486,21 @@
       "misconception": "zero-passable",
       "no": "each blocked square should become a graph node.",
       "yes": "A non-grass square should stay outside the grass-cell graph."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "two-perfect",
+        "concept-nodes",
+        "diagonal-separate",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -2377,6 +2641,21 @@
       "misconception": "pre-filter-success",
       "no": "Only camps on a successful summit route should become nodes.",
       "yes": "Camps outside successful summit routes should still have nodes."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "diamond",
+        "concept-nodes",
+        "direct-plus-long",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -2517,6 +2796,21 @@
       "misconception": "leaves-only",
       "no": "only complete-code leaves should become nodes.",
       "yes": "A legal unfinished prefix should have its own node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "two-dials",
+        "concept-nodes",
+        "forced-second",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -2657,6 +2951,21 @@
       "misconception": "pre-filter-deadline",
       "no": "Only people who hear by the deadline should become nodes.",
       "yes": "Someone who hears after the deadline should still have an employee node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "deadline-four",
+        "concept-nodes",
+        "head-only",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -2797,6 +3106,21 @@
       "misconception": "pipe-as-node",
       "no": "each listed relationship should become a node instead of an edge.",
       "yes": "A listed relationship should connect two nodes rather than become a node itself."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "shut-middle",
+        "concept-nodes",
+        "shut-root",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -2937,6 +3261,21 @@
       "misconception": "matrix-cell-as-node",
       "no": "Each worked[i][j] matrix entry should become a separate student node.",
       "yes": "Each matrix row should identify one student, rather than one node per matrix entry."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "ring-and-pair",
+        "concept-node",
+        "two-tied-pairs",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -3077,6 +3416,34 @@
       "misconception": "flatten-model-early",
       "no": "Flatten the playlist first, then draw only its song nodes.",
       "yes": "Playlist folders should keep their nodes before playback is flattened."
+    },
+    "step1Drawing": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": 0,
+      "max": 100000,
+      "ordered": true,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "Visit each Array’s children in input order. Finish an inner Array before moving on. Count only numbers (songs), starting at 1. Return the k-th song, or −1 if it does not exist.",
+        "For each Array, draw its arrows in the input’s left-to-right order. Arrow numbers show that order. To fix the order, delete those arrows and reconnect them."
+      ]
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "fourth-song",
+        "concept-nodes",
+        "empty-folders",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -3217,6 +3584,21 @@
       "misconception": "key-instance-as-node",
       "no": "each key should become a node instead of each vault.",
       "yes": "Two copies of the same key should refer to one vault node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "two-starts",
+        "concept-nodes",
+        "cycle",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -3357,6 +3739,33 @@
       "misconception": "omit-boxes",
       "no": "boxes should be left out.",
       "yes": "An array container should have its own node, even when it is empty."
+    },
+    "step1Drawing": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -100,
+      "max": 100,
+      "ordered": false,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0; each arrow adds 1. Find the shallowest depth with any numbers and add those numbers. A sum of 0 still counts as an occupied depth."
+      ]
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "top-item",
+        "concept-nodes",
+        "empty-top",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   },
   {
@@ -3497,6 +3906,21 @@
       "misconception": "component-as-node",
       "no": "each connected group should become a separate node.",
       "yes": "Items in one connected group should keep their separate nodes."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
     }
   }
 ]

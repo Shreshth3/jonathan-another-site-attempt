@@ -278,6 +278,16 @@
       "misconception": "does-not-count-arrays",
       "no": "array containers should be left out.",
       "yes": "An array container should have its own node, even when it is empty."
+    },
+    "step1Drawing": {
+      "mode": "array-number",
+      "valueKind": "literal",
+      "ordered": false,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one value node for each value. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "Count every node except the outer Array. Inner arrays count too, even when empty. Value nodes may contain numbers, quoted text, true, or false."
+      ]
     }
   },
   {

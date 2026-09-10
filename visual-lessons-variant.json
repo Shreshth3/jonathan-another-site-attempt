@@ -1034,7 +1034,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "quit-middle",
+        "concept-node",
+        "quit-leaf",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "busiest-shelf-level",
@@ -1415,7 +1430,7 @@
           {
             "id": "missing-node",
             "label": "Picture D",
-            "feedback": "Input item root[2]=9 is missing. It still needs its own node.",
+            "feedback": "The number 9 is missing. Every number needs its own node.",
             "misconception": "omit-input-item",
             "model": {
               "directed": true,
@@ -1537,7 +1552,7 @@
           {
             "id": "missing-edge",
             "label": "Picture B",
-            "feedback": "The direct connection root=[]→root[2]=9 is missing.",
+            "feedback": "The arrow from the outer Array to 9 is missing. Connect every array to each element directly inside it.",
             "misconception": "omit-direct-edge",
             "model": {
               "directed": true,
@@ -1793,7 +1808,7 @@
         "facet": "direct containment",
         "kind": "choice",
         "prompt": "When should the nesting picture connect a container to something below it?",
-        "input": "items = [1,[2,3],[[4]]]\nFocus on one listed relation.",
+        "input": "items = [1,[2,3],[[4]]]",
         "choices": [
           {
             "id": "nonempty-only",
@@ -2012,7 +2027,7 @@
           {
             "id": "zero",
             "label": "Depth `0`",
-            "feedback": "The outer array is the container; its direct integer 1 is at depth 1.",
+            "feedback": "The Array is the container; its direct integer 1 is at depth 1.",
             "misconception": "start-at-zero"
           },
           {
@@ -2024,7 +2039,7 @@
           {
             "id": "three",
             "label": "Depth `3`",
-            "feedback": "The depth-3 box is empty, so it contributes no item.",
+            "feedback": "There are no numbers at depth 3. An empty Array adds no items to the count.",
             "misconception": "count-empty-box"
           }
         ],
@@ -2408,7 +2423,34 @@
           ]
         }
       }
-    ]
+    ],
+    "drawingEditor": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -1000,
+      "max": 1000,
+      "ordered": false,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0. Each arrow adds 1 to the depth. Count only number nodes; ties go to the smaller depth."
+      ]
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "coins-on-level-k",
@@ -2854,7 +2896,7 @@
           {
             "id": "missing-node",
             "label": "Picture D",
-            "feedback": "Input item root[2]=[] is missing. It still needs its own node.",
+            "feedback": "Input item Array is missing. It still needs its own node.",
             "misconception": "omit-input-item",
             "model": {
               "directed": true,
@@ -2903,7 +2945,7 @@
           {
             "id": "missing-edge",
             "label": "Picture B",
-            "feedback": "The direct connection root=[]→root[2]=[] is missing.",
+            "feedback": "The direct connection Array→Array is missing.",
             "misconception": "omit-direct-edge",
             "model": {
               "directed": true,
@@ -3151,7 +3193,7 @@
         "facet": "direct containment",
         "kind": "choice",
         "prompt": "What does one parent-child edge mean in this nesting tree?",
-        "input": "items = [[3,2],5,[[4]]], k = 2\nFocus on one listed relation.",
+        "input": "items = [[3,2],5,[[4]]], k = 2",
         "choices": [
           {
             "id": "box-contains",
@@ -3256,10 +3298,10 @@
             "misconception": null
           },
           {
-            "id": "six",
-            "label": "`6`",
-            "feedback": "That counts 1, 2, and 3 while missing the separate level-2 coin 7.",
-            "misconception": "flatten-by-order"
+            "id": "through-k",
+            "label": "`10`",
+            "feedback": "This adds coins from every level up to k: 1 + 2 + 7. Only coins at exactly level 2 belong in this sum.",
+            "misconception": "sum-through-k"
           },
           {
             "id": "eighteen",
@@ -3270,8 +3312,8 @@
           {
             "id": "eight",
             "label": "`8`",
-            "feedback": "Coin 1 is at level 1, while level 2 contains 2 and 7.",
-            "misconception": "count-top-and-seven"
+            "feedback": "This adds 3 and 5 at level 3, one level deeper than k = 2.",
+            "misconception": "off-by-one-deep"
           }
         ],
         "correct": "nine",
@@ -3766,7 +3808,34 @@
           ]
         }
       }
-    ]
+    ],
+    "drawingEditor": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -100,
+      "max": 100,
+      "ordered": false,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0; each arrow adds 1. Add only the numbers at depth k. If there are none, return 0."
+      ]
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "counting-constellations",
@@ -4715,7 +4784,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "counting-docked-boats",
@@ -5561,7 +5645,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "routes-past-the-coffee-cart",
@@ -6815,7 +6914,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "villages-without-wells",
@@ -7932,7 +8046,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "gas-pocket-survey",
@@ -9472,7 +9601,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "gold-and-silver-lights",
@@ -10673,7 +10817,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "dungeon-gold-run",
@@ -11778,7 +11937,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "flooded-campsite-trails",
@@ -12986,7 +13160,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "longest-freight-train",
@@ -13931,7 +14120,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "one-color-metro-ride",
@@ -15452,7 +15656,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "build-exact-map",
+        "no-color-mixing",
+        "build-mixed-map",
+        "two-way-tracks",
+        "counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "office-rumor-reach",
@@ -16613,7 +16832,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "package-to-the-outpost",
@@ -17843,7 +18077,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "route-branch",
+        "concept-nodes",
+        "reverse-listed",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "perfect-size-campsites",
@@ -18883,7 +19132,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "two-perfect",
+        "concept-nodes",
+        "diagonal-separate",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "count-routes-to-summit",
@@ -20147,7 +20411,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "diamond",
+        "concept-nodes",
+        "direct-plus-long",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "runes-on-the-castle-door",
@@ -21399,7 +21678,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "two-dials",
+        "concept-nodes",
+        "forced-second",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "save-the-date-phone-chain",
@@ -22622,7 +22916,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "deadline-four",
+        "concept-nodes",
+        "head-only",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "shut-the-garden-valve",
@@ -23729,7 +24038,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "shut-middle",
+        "concept-nodes",
+        "shut-root",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "biggest-study-group",
@@ -24842,7 +25166,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "ring-and-pair",
+        "concept-node",
+        "two-tied-pairs",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "kth-song-in-playlist",
@@ -25198,7 +25537,7 @@
           {
             "id": "missing-node",
             "label": "Picture D",
-            "feedback": "Input item root[2][1][0]=2 is missing. It still needs its own node.",
+            "feedback": "Input item 2 is missing. It still needs its own node.",
             "misconception": "omit-input-item",
             "model": {
               "directed": true,
@@ -25336,7 +25675,7 @@
           {
             "id": "missing-edge",
             "label": "Picture B",
-            "feedback": "The direct connection root[2][1]=[]→root[2][1][0]=2 is missing.",
+            "feedback": "The direct connection Array→2 is missing.",
             "misconception": "omit-direct-edge",
             "model": {
               "directed": true,
@@ -26020,8 +26359,8 @@
           {
             "id": "one",
             "label": "`1`",
-            "feedback": "The return value is a song ID, not the number of folders opened.",
-            "misconception": "return-depth"
+            "feedback": "This returns the position k = 1 instead of the song ID at that position. The first song is 2.",
+            "misconception": "return-position-instead-of-song"
           },
           {
             "id": "six",
@@ -26422,7 +26761,35 @@
           ]
         }
       }
-    ]
+    ],
+    "drawingEditor": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": 0,
+      "max": 100000,
+      "ordered": true,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "Visit each Array’s children in input order. Finish an inner Array before moving on. Count only numbers (songs), starting at 1. Return the k-th song, or −1 if it does not exist.",
+        "For each Array, draw its arrows in the input’s left-to-right order. Arrow numbers show that order. To fix the order, delete those arrows and reconnect them."
+      ]
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "fourth-song",
+        "concept-nodes",
+        "empty-folders",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "museum-vault-keyring",
@@ -27558,7 +27925,22 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "two-starts",
+        "concept-nodes",
+        "cycle",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "top-of-the-pile",
@@ -27946,7 +28328,7 @@
           {
             "id": "missing-edge",
             "label": "Picture B",
-            "feedback": "The direct connection root[2]=[]→root[2][0]=2 is missing.",
+            "feedback": "The direct connection Array→2 is missing.",
             "misconception": "omit-direct-edge",
             "model": {
               "directed": true,
@@ -28137,7 +28519,7 @@
           {
             "id": "missing-node",
             "label": "Picture D",
-            "feedback": "Input item root[2][0]=2 is missing. It still needs its own node.",
+            "feedback": "Input item 2 is missing. It still needs its own node.",
             "misconception": "omit-input-item",
             "model": {
               "directed": true,
@@ -29118,7 +29500,34 @@
           ]
         }
       }
-    ]
+    ],
+    "drawingEditor": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -100,
+      "max": 100,
+      "ordered": false,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0; each arrow adds 1. Find the shallowest depth with any numbers and add those numbers. A sum of 0 still counts as an occupied depth."
+      ]
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "top-item",
+        "concept-nodes",
+        "empty-top",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   },
   {
     "id": "trusted-courier-networks",
@@ -30219,6 +30628,21 @@
           ]
         }
       }
-    ]
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "case-1",
+        "concept-node",
+        "case-2",
+        "concept-edge",
+        "concept-counterexample"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   }
 ]

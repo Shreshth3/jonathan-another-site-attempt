@@ -1,0 +1,7 @@
+const assert=require('node:assert/strict');const fs=require('fs');const vm=require('vm');const {chromium}=require('playwright');
+const box={window:{}};vm.runInNewContext(fs.readFileSync('visual-data.js','utf8'),box);const data=box.window.DFS_VISUAL_DATA;
+(async()=>{const b=await chromium.launch();try{const p=await b.newPage({viewport:{width:1440,height:1050}});const base=process.env.PREVIEW_URL||'http://localhost:4182';await p.goto(base);const links=await p.locator('.card-list a').evaluateAll(nodes=>nodes.map(n=>new URL(n.href).pathname.slice(1)));assert.equal(links.length,25);assert.deepEqual(new Set(links),new Set(data.problems.filter(p=>p.category==='variant').map(p=>p.id)));assert.equal(await p.locator('#category-original, #category-new').count(),0);await p.screenshot({path:'tmp/step5-refresh/variant-picker.png',fullPage:true});
+for(const problem of data.problems.filter(p=>p.category!=='variant')){await p.goto(base+'/'+problem.id+'?section=3');assert.match(await p.locator('#pair-picker').innerText(),/archived/);assert.equal(await p.locator('.workspace').isVisible(),false);}
+await p.goto(base+'/visual/flood-fill');assert.match(await p.locator('#pair-picker').innerText(),/archived/);
+await p.goto(base+'/office-rumor-reach?section=5');assert.equal(await p.locator('#debugging-explanation').isVisible(),true);
+console.log('Archive verified: only 25 variant links; all 50 archived routes and legacy links stay out of the active app.');}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

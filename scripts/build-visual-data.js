@@ -23,6 +23,10 @@ const rawVisualLessons = lessonFiles.flatMap(name => {
   return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : [];
 });
 if (new Set(rawVisualLessons.map(item => item.id)).size !== rawVisualLessons.length) throw new Error("Visual lessons contain duplicate problem IDs.");
+for (const lesson of rawVisualLessons) {
+  const plan = visualSpecs.get(lesson.id)?.practicePlan;
+  if (plan) lesson.practicePlan = plan;
+}
 const visualLessons = new Map(rawVisualLessons.map(item => [item.id, item]));
 
 const step4Files = ["step4-specs-original.json", "step4-specs-variant.json", "step4-specs-new.json"];
@@ -32,6 +36,34 @@ const rawStep4Specs = step4Files.flatMap(name => {
 });
 if (new Set(rawStep4Specs.map(item => item.id)).size !== rawStep4Specs.length) throw new Error("Step 4 specs contain duplicate problem IDs.");
 const step4Specs = new Map(rawStep4Specs.map(item => [item.id, resolveAuthoredStep4Cases(item)]));
+
+const rawStep5Specs = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../step5-specs-variant.json"), "utf8"));
+if (new Set(rawStep5Specs.map(item => item.id)).size !== rawStep5Specs.length) throw new Error("Step 5 specs contain duplicate problem IDs.");
+const variantIds = new Set(problems.filter(problem => problem.category === "variant").map(problem => problem.id));
+if (rawStep5Specs.length !== variantIds.size || rawStep5Specs.some(item => !variantIds.has(item.id))) throw new Error("Step 5 must cover exactly the variant category.");
+const step5Specs = new Map(rawStep5Specs.map(item => [item.id, item]));
+const rawStep6Specs = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../step6-specs-variant.json"), "utf8"));
+if (new Set(rawStep6Specs.map(item => item.id)).size !== rawStep6Specs.length) throw new Error("Step 6 specs contain duplicate problem IDs.");
+if (rawStep6Specs.length !== variantIds.size || rawStep6Specs.some(item => !variantIds.has(item.id))) throw new Error("Step 6 must cover exactly the variant category.");
+const step6Specs = new Map(rawStep6Specs.map(item => [item.id, item]));
+
+// Parent groups follow the user's curriculum; siblings have a manually reviewed order.
+const variantOrder = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../variant-order.json"), "utf8"));
+const parentOrder = new Map(variantOrder.originalOrder.map((id, index) => [id, index]));
+if (parentOrder.size !== variantOrder.originalOrder.length) throw new Error("Duplicate parent in variant curriculum order.");
+if (new Set(variantOrder.groups.map(group => group.parentId)).size !== variantOrder.groups.length) throw new Error("Duplicate variant parent group.");
+const variantListOrder = new Map();
+const sourceVariants = new Map(problems.filter(problem => problem.category === "variant").map(problem => [problem.id, problem]));
+for (const group of [...variantOrder.groups].sort((a, b) => parentOrder.get(a.parentId) - parentOrder.get(b.parentId))) {
+  if (!parentOrder.has(group.parentId)) throw new Error(`Unknown curriculum parent: ${group.parentId}`);
+  for (const entry of group.variants) {
+    if (variantListOrder.has(entry.id)) throw new Error(`Duplicate ordered variant: ${entry.id}`);
+    if (sourceVariants.get(entry.id)?.parentId !== group.parentId) throw new Error(`Variant parent mismatch: ${entry.id}`);
+    if (!entry.reason?.trim()) throw new Error(`Missing manual difficulty rationale: ${entry.id}`);
+    variantListOrder.set(entry.id, variantListOrder.size + 1);
+  }
+}
+if (variantListOrder.size !== variantIds.size) throw new Error("Curriculum order must cover every variant exactly once.");
 
 function resolveAuthoredStep4Cases(spec) {
   if (!Array.isArray(spec.cases) || !spec.cases.length) return spec;
@@ -198,7 +230,8 @@ const catalog = problems.map(problem => {
     },
     counterexampleLesson: step2Specs.get(problem.id) || null,
     lesson: visualLessons.get(problem.id) || null,
-    codeReasoning: step4Specs.get(problem.id) || null
+    codeReasoning: step4Specs.get(problem.id) || null,
+    ...(problem.category === "variant" ? { parentId: problem.parentId, variantListOrder: variantListOrder.get(problem.id), debuggingLesson: step5Specs.get(problem.id), codingLesson: step6Specs.get(problem.id) } : {})
   };
 });
 
@@ -242,7 +275,11 @@ lessonQuestionRefs.forEach(ref => {
 for (const group of lessonGroups.values()) group.forEach(({ question }, index) => { question.answerSlot = index % question.choices.length; });
 
 const characterData = fs.readFileSync(path.resolve(__dirname, "../character-names.js"), "utf8");
-const output = `${characterData}\nwindow.DFS_VISUAL_DATA = ${JSON.stringify({ version: 3, problems: catalog })};\n`;
+const step5Engine = fs.readFileSync(path.resolve(__dirname, "step5-engine.js"), "utf8");
+const step6Runtime = fs.readFileSync(path.resolve(__dirname, "step6-runtime.js"), "utf8");
+const step6ParserLicense = fs.readFileSync(path.resolve(__dirname, "step6-acorn.LICENSE"), "utf8");
+const step6Parser = `/* Acorn JavaScript parser\n${step6ParserLicense}\n*/\n` + fs.readFileSync(path.resolve(__dirname, "step6-acorn.js"), "utf8");
+const output = `${characterData}\n${step5Engine}\n${step6Parser}\n${step6Runtime}\nwindow.DFS_VISUAL_DATA = ${JSON.stringify({ version: 3, problems: catalog })};\n`;
 const outputPath = path.resolve(__dirname, "../visual-data.js");
 if (process.argv.includes("--check")) {
   const existing = fs.existsSync(outputPath) ? fs.readFileSync(outputPath, "utf8") : "";
