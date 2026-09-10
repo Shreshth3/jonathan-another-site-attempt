@@ -395,7 +395,7 @@
     const nav = document.createElement("nav");
     nav.className = "lesson-step-nav";
     nav.setAttribute("aria-label", "Lesson steps");
-    nav.innerHTML = availableSections().map(number => `<button type="button" data-section="${number}">Step ${number}</button>`).join("");
+    nav.innerHTML = availableSections().map(number => `<button type="button" data-section="${number}">Step ${sectionLabel(number)}</button>`).join("");
     $("#section-nav-btn").before(nav);
     nav.querySelectorAll("button").forEach(button => { button.onclick = () => switchSection(Number(button.dataset.section)); });
     document.addEventListener("input", saveFormDraft);
@@ -471,7 +471,7 @@
     const graphActions = $("#graph-lab-actions");
     graphActions.hidden = true;
     graphActions.innerHTML = "";
-    $("#section-kicker").textContent = isCoding ? "STEP 6 · CODE LAB" : isDebugging ? "STEP 5 · DEBUG LAB" : isReasoning ? "STEP 4 · TRACE LAB" : isStructure ? "STEP 3 · GRAPH STRUCTURE" : isCounterexample ? "STEP 2 · COUNTEREXAMPLE LAB" : "STEP 1 · VISUAL PROOF";
+    $("#section-kicker").textContent = isCoding ? `STEP ${sectionLabel(6)} · CODE LAB` : isDebugging ? "STEP 5 · DEBUG LAB" : isReasoning ? "STEP 4 · TRACE LAB" : isStructure ? "STEP 3 · GRAPH STRUCTURE" : isCounterexample ? "STEP 2 · COUNTEREXAMPLE LAB" : "STEP 1 · VISUAL PROOF";
     $("#section-title").hidden = true;
     $("#section-subtitle").hidden = true;
     $("#evidence-chip").hidden = true;
@@ -483,7 +483,7 @@
       : "Answer each question and build exact graphs from fresh inputs.";
     const nextSection = adjacentSection();
     const back = nextSection < section;
-    $("#section-nav-btn").innerHTML = `${back ? "Back to" : section === 1 ? "Skip to" : "Next:"} Step ${nextSection} <span>${back ? "←" : "→"}</span>`;
+    $("#section-nav-btn").innerHTML = `${back ? "Back to" : section === 1 ? "Skip to" : "Next:"} Step ${sectionLabel(nextSection)} <span>${back ? "←" : "→"}</span>`;
   }
 
   function switchSection(nextSection) {
@@ -2448,7 +2448,7 @@
     $("#graph-lab").hidden = true;
     const skipped = counterProgress.skipped.filter(index => index < counterexampleRounds().length).length;
     const passed = counterexampleRounds().length - skipped;
-    $("#challenge").innerHTML = `<div class="challenge-body victory counter-victory${skipped ? " has-skips" : ""}"><div class="stamp">${skipped ? "Finished" : "Disproven"}</div><h3>${skipped ? "Step 2 finished." : "Step 2 complete."}</h3>${skipped ? `<p>${passed} passed · ${skipped} skipped.</p>` : ""}<div class="completion-actions"><button id="start-after-counter" class="primary-btn">Start Step ${adjacentSection()} <span>→</span></button><a class="ghost-btn link-button" href="/">Choose another problem</a><button id="restart-counter" class="ghost-btn">Practice Step 2 again</button></div></div>`;
+    $("#challenge").innerHTML = `<div class="challenge-body victory counter-victory${skipped ? " has-skips" : ""}"><div class="stamp">${skipped ? "Finished" : "Disproven"}</div><h3>${skipped ? "Step 2 finished." : "Step 2 complete."}</h3>${skipped ? `<p>${passed} passed · ${skipped} skipped.</p>` : ""}<div class="completion-actions"><button id="start-after-counter" class="primary-btn">Start Step ${sectionLabel(adjacentSection())} <span>→</span></button><a class="ghost-btn link-button" href="/">Choose another problem</a><button id="restart-counter" class="ghost-btn">Practice Step 2 again</button></div></div>`;
     $("#start-after-counter").onclick = () => switchSection(adjacentSection());
     $("#restart-counter").onclick = resetCounterexamples;
   }
@@ -3142,6 +3142,9 @@
   function hasStep5() { return problem.category === "variant" && Boolean(problem.debuggingLesson?.cases?.length); }
   function hasStep6() { return problem.category === "variant" && Boolean(problem.codingLesson); }
   function availableSections() { if (problem.category === "variant") return variantPractice.sections; return hasStep6() ? [1, 2, 3, 4, 5, 6] : hasStep5() ? [1, 2, 3, 4, 5] : [1, 2, 3, 4]; }
+  function sectionLabel(number) {
+    return problem.category === "variant" ? availableSections().indexOf(number) + 1 : number;
+  }
   function adjacentSection() {
     const sections = availableSections();
     const index = sections.indexOf(section);
@@ -3279,7 +3282,7 @@
     $("#facet-list").innerHTML = "";
     if (done >= rounds.length) {
       const skipped = debuggingProgress.skipped.length;
-      $("#challenge").innerHTML = `<div class="challenge-body victory"><div class="stamp">${skipped ? "Finished" : "Repaired"}</div><h3>${skipped ? "Step 5 finished." : "Step 5 complete."}</h3><p>${passed} repairs passed${skipped ? ` · ${skipped} skipped` : ""}.</p><div class="completion-actions">${hasStep6() ? `<button id="start-coding" class="primary-btn">Start Step 6 →</button>` : ""}<a class="ghost-btn link-button" href="/">Choose another problem →</a><button id="restart-debugging" class="ghost-btn">Practice Step 5 again</button></div></div>`;
+      $("#challenge").innerHTML = `<div class="challenge-body victory"><div class="stamp">${skipped ? "Finished" : "Repaired"}</div><h3>${skipped ? "Step 5 finished." : "Step 5 complete."}</h3><p>${passed} repairs passed${skipped ? ` · ${skipped} skipped` : ""}.</p><div class="completion-actions">${hasStep6() ? `<button id="start-coding" class="primary-btn">Start Step ${sectionLabel(6)} →</button>` : ""}<a class="ghost-btn link-button" href="/">Choose another problem →</a><button id="restart-debugging" class="ghost-btn">Practice Step 5 again</button></div></div>`;
       if ($("#start-coding")) $("#start-coding").onclick = () => switchSection(6);
       $("#restart-debugging").onclick = resetDebugging;
       return;
@@ -3428,7 +3431,7 @@
     $(".evidence-track").setAttribute("aria-valuenow", String(passed));
   }
   function resetCoding() {
-    if (!confirm("Clear your Step 6 code and inputs?")) return;
+    if (!confirm(`Clear your Step ${sectionLabel(6)} code and inputs?`)) return;
     stopCodingRun();
     try { localStorage.removeItem(codingStorageKey()); localStorage.removeItem(`dfs-form:v1:${problem.id}:6:solution:`); } catch {}
     render();

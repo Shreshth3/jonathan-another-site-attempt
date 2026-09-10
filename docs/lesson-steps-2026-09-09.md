@@ -13,7 +13,7 @@ The active site had 25 variant problems with Steps 1–6. Original and new probl
 
 ## Current behavior
 
-Students see **Step 1 → Step 2 → Step 6**, keeping the old step numbers. The header lets students return from Step 6 to Step 2. Steps 3–5 are hidden from navigation, and their old direct URLs display Step 1. Their code, content, and saved progress keys remain intact.
+Students see **Step 1 → Step 2 → Step 3**. Following the same-day naming correction, the code lab is displayed as Step 3. Internally it remains section 6, preserving its URLs and saved code; `sectionLabel()` maps visible numbers to the active order. The header lets students return from the code lab to Step 2. Steps 3–5 are hidden from navigation, and their old direct URLs display Step 1. Their code, content, and saved progress keys remain intact.
 
 Step 2 shows the first two questions in their existing order. Its third question remains in the authored pool. Existing progress is capped at two for display, and skips from the third question do not affect completion. Loading alone does not overwrite the old saved progress.
 

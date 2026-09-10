@@ -23,7 +23,7 @@ const variants = box.window.DFS_VISUAL_DATA.problems.filter(p => p.category === 
     for (const p of variants) {
       assert.equal(p.counterexampleLesson.rounds.length, 3, `${p.id}: authored pool preserved`);
       await page.goto(`${base}/${p.id}`);
-      assert.deepEqual(await page.locator('[data-section]').allTextContents(), ['Step 1', 'Step 2', 'Step 6']);
+      assert.deepEqual(await page.locator('[data-section]').allTextContents(), ['Step 1', 'Step 2', 'Step 3']);
       await page.locator('[data-section="2"]').click();
       assert.match(page.url(), /section=2/);
       assert.match(await page.locator('#evidence-label').innerText(), /of 2/i);
@@ -33,6 +33,8 @@ const variants = box.window.DFS_VISUAL_DATA.problems.filter(p => p.category === 
       await page.locator('#start-after-counter').click();
       assert.match(page.url(), /section=6/);
       assert.equal(await page.locator('#coding-editor').count(), 1);
+      assert.match(await page.locator('#section-kicker').innerText(), /STEP 3/);
+      assert.doesNotMatch(await page.locator('body').innerText(), /Step 6|STEP 6/);
       await page.locator('[data-section="2"]').click();
       assert.match(page.url(), /section=2/);
       for (const section of [3, 4, 5]) {

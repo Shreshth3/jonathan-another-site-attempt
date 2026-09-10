@@ -1,6 +1,6 @@
 # Current lesson steps (2026-09-09)
 
-- Active variants show **Step 1 → Step 2 → Step 6**. Steps 3–5 are hidden, including direct links; preserve their code and content.
+- Active variants show **Step 1 → Step 2 → Step 3**. The displayed Step 3 is the code lab (internal section 6; keep existing URLs and saved code). Steps 3–5 are hidden, including direct links; preserve their code and content.
 - Step 2 shows the first **two** authored questions. Keep all three in the source pool.
 - Keep the optional Step 2 shortcut after the first three Step 1 tasks pass without a mistake or skip.
 - See [the dated summary and restore guide](docs/lesson-steps-2026-09-09.md) before changing this setup. Historical Step 3–5 instructions below apply to their preserved content, not current navigation.
