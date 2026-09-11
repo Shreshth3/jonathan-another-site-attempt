@@ -820,6 +820,16 @@ html[data-theme="light"] body.visual-picker-page .icon-sun { display: none; }
 .coding-graph-disclosure-body { padding: 15px 17px 17px; }
 .coding-graph-disclosure-body > .coding-hint { margin-bottom: 0; }
 .coding-graph-disclosure .graph-lab { margin-top: 14px; }
+.coding-graph-input-block { margin-top: 14px; }
+.coding-graph-input-block textarea { min-height: 72px; }
+.coding-graph-actions { margin-top: 10px; display: flex; gap: 10px; align-items: center; }
+.coding-graph-actions .ghost-btn { min-height: 36px; }
+.coding-graph-examples { margin-top: 10px; display: grid; gap: 10px; }
+.coding-graph-case { display: grid; gap: 8px; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 8px; color: var(--muted); }
+.coding-graph-case.active { border-color: var(--blue); color: var(--text); background: rgba(114, 167, 255, 0.08); }
+.coding-graph-case-input { min-width: 0; font: 12px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.coding-graph-switch { justify-self: start; }
+.coding-graph-delete { justify-self: end; }
 .coding-editor-label { display: block; font-weight: 650; margin-top: 24px; }
 .coding-hint { color: var(--muted); font-size: 13px; line-height: 1.6; }
 .coding-editor-wrap { display: flex; height: 390px; overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
