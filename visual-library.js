@@ -3458,15 +3458,6 @@
 
   function renderCodingWithBackwardReference() {
     renderCodingLesson();
-    $$(".coding-workflow-profile, .coding-workflow").forEach(element => element.remove());
-    const graphDisclosure = $("#coding-graph-disclosure");
-    if (graphDisclosure) {
-      $(".activity-layout")?.append($("#graph-lab"));
-      $("#graph-lab").hidden = true;
-      graphDisclosure.remove();
-    }
-    const target = $(".coding-editor-label");
-    target?.insertAdjacentHTML("beforebegin", referenceToggles({ graph: true, graphOpen: true, pseudocode: true, pseudocodeOpen: true }));
   }
 
   function renderCounterexampleWithRevisionPrompt() {
@@ -3861,76 +3852,11 @@
     $("#facet-list").innerHTML = "";
     $('.tab[data-tab="examples"]').hidden = false;
     updateCodingProgress(0, lesson.tests.length);
-    const workflowProfile = codingWorkflowProfile(problem);
-    const workflowGuide =
-      problem.id === "busiest-shelf-level"
-        ? `<details class="coding-workflow">
-            <summary>Optional: workflow I use on this problem</summary>
-            <div class="coding-workflow-body">
-              <ol>
-                <li>Make graph + work through examples.</li>
-                <li>Write pseudocode by working backward.
-                  <ul>
-                    <li>Start at final return value, then ask: what inputs do I need to compute it?</li>
-                    <li>Repeat until you have the exact state contract from input to output.</li>
-                  </ul>
-                </li>
-                <li>Counterexample (optional):
-                  <ul>
-                    <li>Build one small failing case from a plausible bug you might make when writing quickly.</li>
-                    <li>Use the lesson's counterexample workflow for checking.</li>
-                  </ul>
-                </li>
-                <li>Compress the pseudocode into ~5 key ideas.
-                  <ul>
-                    <li>For this problem: <code>init counts by depth; walk nested items with DFS; increment at depth; return first depth with max count</code>.</li>
-                  </ul>
-                </li>
-                <li>Code from pseudocode and run your own input, then submit tests with timing.</li>
-              </ol>
-            </div>
-          </details>`
-        : problem.visualKind === "backtracking"
-          ? `<details class="coding-workflow">
-              <summary>Optional: adapted workflow for this backtracking problem</summary>
-              <div class="coding-workflow-body">
-                <ol>
-                  <li>Make graph/picture and work through examples.</li>
-                  <li>Work backward from the answer to the state tuple:
-                    <ul>
-                      <li>What is the recursion state? (path, visited, remaining choices, constraints)</li>
-                      <li>What is one valid base case?</li>
-                    </ul>
-                  </li>
-                  <li>Build one counterexample that checks one branch-pruning or duplicate-handling mistake.</li>
-                  <li>Compress the logic into 3-5 ideas:
-                    <ul>
-                      <li>base case, generate choices, apply choice, recurse, undo choice</li>
-                    </ul>
-                  </li>
-                  <li>Code from the compressed plan, then run inputs and submit tests with timing.</li>
-                </ol>
-              </div>
-            </details>`
-          : `<details class="coding-workflow">
-              <summary>Optional: your coding workflow (adapted)</summary>
-              <div class="coding-workflow-body">
-                <ol>
-                  <li>Build a small graph/picture and solve examples.</li>
-                  <li>Work backward with pseudocode from outputs to required state.</li>
-                  <li>Add a quick counterexample for a likely bug.</li>
-                  <li>Compress pseudocode to 3-5 core ideas and code from those.</li>
-                  <li>Run your input and submit tests; track time on successful runs.</li>
-                </ol>
-              </div>
-            </details>`;
-
     $("#challenge").innerHTML = `<div class="challenge-body coding-case">
       <h3>Write your solution.</h3><p>Write JavaScript, try your own input, then submit against ${lesson.tests.length} fresh tests.</p>
-      ${workflowProfile}
-      ${workflowGuide}
+      ${referenceToggles({ graph: true, pseudocode: true, graphOpen: true, pseudocodeOpen: true })}
       <details id="coding-graph-disclosure" class="coding-graph-disclosure">
-        <summary><span>Optional: draw the graph</span><small>Open a scratchpad</small></summary>
+        <summary><span>Optional: draw more example graphs</span><small>Open a scratchpad</small></summary>
         <div class="coding-graph-disclosure-body"><p class="coding-hint">Sketch the problem graph here if a picture helps. This drawing is private and is not graded.</p><div id="coding-graph-slot"></div>
           <label class="counter-field coding-graph-input-block">
             <span>Input that this graph is based on</span>
