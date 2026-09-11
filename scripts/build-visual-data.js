@@ -4,6 +4,10 @@ const vm = require("vm");
 
 const sourceRoot = path.resolve(__dirname, "../../jonathan-study-site");
 const dataDir = path.join(sourceRoot, "data");
+if (!fs.existsSync(dataDir) && process.argv.includes("--check")) {
+  console.warn("Authoring source checkout is unavailable; using the committed visual-data.js artifact.");
+  process.exit(0);
+}
 const problemFiles = fs.readdirSync(dataDir)
   .filter(name => /^(originals-|variants-final-|new-final-).*\.json$/.test(name))
   .sort();

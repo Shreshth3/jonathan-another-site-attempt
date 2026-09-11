@@ -793,6 +793,24 @@ html[data-theme="light"] body.visual-picker-page .icon-sun { display: none; }
 .coding-route .evidence-strip { display: block; }
 .coding-case { max-width: 980px; margin-inline: auto; min-width: 0; }
 .coding-case > p { line-height: 1.6; }
+.coding-workflow { border: 1px solid var(--line); border-radius: 8px; margin: 12px 0 22px; background: #0f1620; }
+.coding-workflow summary { cursor: pointer; padding: 12px 14px; font-weight: 650; color: var(--text); }
+.coding-workflow summary::marker { color: var(--blue); }
+.coding-workflow[open] summary { border-bottom: 1px solid var(--line); }
+.coding-workflow .coding-workflow-body { padding: 12px 14px 14px; line-height: 1.6; color: var(--muted); }
+.coding-workflow .coding-workflow-body ol,
+.coding-workflow .coding-workflow-body ul { margin: 0 0 0 18px; }
+.coding-workflow .coding-workflow-body li { margin: 0 0 10px 0; }
+.coding-workflow-profile { border: 1px solid var(--line); border-radius: 8px; margin: 12px 0 22px; padding: 12px 14px 14px; background: #0f1620; }
+.coding-workflow-profile-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.coding-workflow-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 9px; font: 11px var(--mono); font-weight: 650; border: 1px solid #2b3a4d; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.coding-workflow-profile p { margin: 0 0 10px 0; color: var(--muted); line-height: 1.52; }
+.coding-workflow-profile ul { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.45; }
+.coding-workflow-profile li { margin-bottom: 8px; }
+.coding-workflow-profile a { color: var(--blue); }
+.coding-workflow-profile.is-direct .coding-workflow-badge { color: #3cf2d3; border-color: rgba(60, 242, 211, .4); }
+.coding-workflow-profile.is-adapted .coding-workflow-badge { color: #f2c23f; border-color: rgba(242, 194, 63, .4); }
+.coding-workflow-profile.is-needs .coding-workflow-badge { color: #ff9f7f; border-color: rgba(255, 159, 127, .45); }
 .coding-graph-disclosure { margin: 22px 0 28px; overflow: hidden; border: 1px solid #2c3a4d; border-radius: 9px; background: #0d141c; }
 .coding-graph-disclosure summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 17px; cursor: pointer; color: var(--text); font-weight: 700; }
 .coding-graph-disclosure summary::marker { color: var(--blue); }

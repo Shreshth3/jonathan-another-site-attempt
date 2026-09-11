@@ -6,6 +6,10 @@ const engine = require('./step5-engine');
 const inputs = require('./step6-inputs');
 const root = path.resolve(__dirname, '..');
 const sourceRoot = path.resolve(root, '../jonathan-study-site');
+if (!fs.existsSync(path.join(sourceRoot, 'data')) && process.argv.includes('--check')) {
+ console.warn('Authoring source checkout is unavailable; using the committed Step 6 specification.');
+ process.exit(0);
+}
 const sourceFiles = fs.readdirSync(path.join(sourceRoot,'data')).filter(name=>/^variants-final-.*\.json$/.test(name)).sort();
 const sources = sourceFiles.flatMap(name=>JSON.parse(fs.readFileSync(path.join(sourceRoot,'data',name),'utf8')).map(p=>({...p,sourceFile:name})));
 const step5 = JSON.parse(fs.readFileSync(path.join(root,'step5-specs-variant.json'),'utf8'));
