@@ -735,7 +735,11 @@
     if (usesArrayNumberDrawing()) {
       const guide = arrayDrawingOptions();
       const valueName = guide.valueKind === "literal" ? "Value" : "Number";
-      return `<div class="node-label-guide shelf-drawing-guide"><b>${section === 2 ? "Correct graph: two kinds of nodes" : "Two kinds of nodes"}</b><div class="shelf-node-key"><span class="shelf-array-key">Array</span><span>an array, even <code>[]</code></span><span class="shelf-number-key">7</span><span>${guide.valueKind === "literal" ? 'a value: number, quoted text, true, or false' : 'a number from the input'}</span></div><ol>${guide.instructions.map(line => `<li>${esc(line)}</li>`).join("")}</ol>${section === 2 ? "<p>For drawing 2, keep every node and apply the stated mistake. Arrows may change or leave nodes disconnected. If the mistake only changes the search, the two drawings stay the same.</p>" : ""}<p class="shelf-quick-help"><b>Add node → right-click → Array or ${valueName}.</b><br>Choose ${valueName}, type its value, then press Enter. <b>Type / value</b> also opens the menu.<br>For an arrow: click the parent, then the child. Drag nodes to move them.${guide.ordered ? '' : ' Placement and child order are not graded.'}</p></div>`;
+      const title = section === 2 ? "Correct graph: two kinds of nodes" : "Two kinds of nodes";
+      const content = `<div class="shelf-node-key"><span class="shelf-array-key">Array</span><span>an array, even <code>[]</code></span><span class="shelf-number-key">7</span><span>${guide.valueKind === "literal" ? 'a value: number, quoted text, true, or false' : 'a number from the input'}</span></div><ol>${guide.instructions.map(line => `<li>${esc(line)}</li>`).join("")}</ol>${section === 2 ? "<p>For drawing 2, keep every node and apply the stated mistake. Arrows may change or leave nodes disconnected. If the mistake only changes the search, the two drawings stay the same.</p>" : ""}<p class="shelf-quick-help"><b>Add node → right-click → Array or ${valueName}.</b><br>Choose ${valueName}, type its value, then press Enter. <b>Type / value</b> also opens the menu.<br>For an arrow: click the parent, then the child. Drag nodes to move them.${guide.ordered ? '' : ' Placement and child order are not graded.'}</p>`;
+      return section === 1
+        ? `<details class="node-label-guide shelf-drawing-guide"><summary><b>${title}</b></summary>${content}</details>`
+        : `<div class="node-label-guide shelf-drawing-guide"><b>${title}</b>${content}</div>`;
     }
     const format = problem.graphRules?.nodeLabelFormat;
     const hasLabels = Boolean(task?.canvas?.edges?.some(edge => edge.label));
@@ -744,7 +748,11 @@
     const nodeColors = [...new Set((task?.canvas?.nodes || []).map(node => node.color || (node.blocked ? "blue" : "")).filter(Boolean))];
     const hasColors = hasEdgeColors || hasNodeColors;
     if (!format?.instruction && !hasLabels && !hasColors) return "";
-    return `<div class="node-label-guide">${format?.instruction ? `<b>Required node-name format:</b> ${formatText(format.instruction)}` : ""}${hasLabels ? `<div><b>Edge weights:</b> ${problem.id === "save-the-date-phone-chain" || problem.id === "time-needed-to-inform-all-employees" ? "Label each arrow with the sending employee’s wait time." : "Label each edge with the matching number from the input."} Fractions and equal decimals both work. Select an edge, then use <b>Rename</b> or <kbd>F2</kbd>.</div>` : ""}${hasEdgeColors ? `<div><b>Edge colors:</b> Color every edge to match the input.</div>` : ""}${hasNodeColors ? `<div><b>Node colors:</b> Use ${nodeColors.map(color => `<b>${esc(color)}</b>`).join(" or ")} for the marked nodes in the input.</div>` : ""}</div>`;
+    const title = format?.instruction ? "Required node-name format" : "Graph labeling requirements";
+    const content = `${format?.instruction ? formatText(format.instruction) : ""}${hasLabels ? `<div><b>Edge weights:</b> ${problem.id === "save-the-date-phone-chain" || problem.id === "time-needed-to-inform-all-employees" ? "Label each arrow with the sending employee’s wait time." : "Label each edge with the matching number from the input."} Fractions and equal decimals both work. Select an edge, then use <b>Rename</b> or <kbd>F2</kbd>.</div>` : ""}${hasEdgeColors ? `<div><b>Edge colors:</b> Color every edge to match the input.</div>` : ""}${hasNodeColors ? `<div><b>Node colors:</b> Use ${nodeColors.map(color => `<b>${esc(color)}</b>`).join(" or ")} for the marked nodes in the input.</div>` : ""}`;
+    return section === 1
+      ? `<details class="node-label-guide"><summary><b>${title}</b></summary><div class="node-label-guide-content">${content}</div></details>`
+      : `<div class="node-label-guide"><b>${title}:</b> ${content}</div>`;
   }
 
   function checkBuild(task) {
