@@ -167,6 +167,57 @@
     const uniqueIndex = problemIndex * 8 + (characterSlots[offset] ?? offset % 8);
     return generatedCharacterNames[uniqueIndex % generatedCharacterNames.length];
   };
+  const codingWorkflowProfiles = {
+    tree: {
+      fit: "Direct-fit",
+      badge: "Direct fit",
+      summary: "The 5-step workflow maps cleanly here: graph from the problem, pseudocode, counterexample, compression, then implementation.",
+      positive: "save-the-date-phone-chain",
+      negative: "routes-past-the-coffee-cart"
+    },
+    nested: {
+      fit: "Direct-fit",
+      badge: "Direct fit",
+      summary: "This problem class works well with the full workflow: build structure, reason backward from output, then compress to core ideas before code.",
+      positive: "busiest-shelf-level",
+      negative: ["runes-on-the-castle-door", "flatten-nested-list-iterator"]
+    },
+    grid: {
+      fit: "Direct-fit",
+      badge: "Direct fit",
+      summary: "Grid-based search problems match the same sequence: explicit states, backward design, then implementation from key ideas.",
+      positive: "counting-constellations",
+      negative: "routes-past-the-coffee-cart"
+    },
+    "directed-graph": {
+      fit: "Direct-fit",
+      badge: "Direct fit",
+      summary: "Directed graph problems are ideal for this workflow: exact modeling, recursive state, and concise code extraction.",
+      positive: "dungeon-gold-run",
+      negative: "busiest-shelf-level"
+    },
+    "undirected-graph": {
+      fit: "Direct-fit",
+      badge: "Direct fit",
+      summary: "Undirected DFS problems are the same flow: build the graph model, then synthesize output from a minimal state contract.",
+      positive: "office-rumor-reach",
+      negative: "runes-on-the-castle-door"
+    },
+    backtracking: {
+      fit: "Adapted",
+      badge: "Adapted workflow",
+      summary: "Apply the same order, but frame the state around path/visited/constraints plus undo instead of final output counts.",
+      positive: "routes-past-the-coffee-cart",
+      negative: "busiest-shelf-level"
+    },
+    state: {
+      fit: "Needs adaptation",
+      badge: "Needs adaptation",
+      summary: "State problems need a separate framing; the graph-first sequence is only partially relevant.",
+      positive: null,
+      negative: "runes-on-the-castle-door"
+    }
+  };
   // Original/new source content is archived for a future return. Keep the full
   // reference bank to preserve variant parent links and stable lesson indices.
   const allProblems = data.problems;
@@ -187,6 +238,10 @@
   let codingRunner = null;
   let codingRunVersion = 0;
   let codingResult = null;
+  let compressedPlan = "";
+  let savedBackwardPlan = { mode: "backward", returnValue: "", steps: [] };
+  const stepTimers = {};
+  let stepTimerInterval = null;
   let counterDrawings = { correct: null, mistaken: null };
   let counterDrawingMode = "correct";
   let counterDuplicated = false;
@@ -447,48 +502,104 @@
     const activityLayout = $(".activity-layout");
     const graphLab = $("#graph-lab");
     if (activityLayout && graphLab && graphLab.parentElement !== activityLayout) activityLayout.append(graphLab);
-    const isCounterexample = section === 2;
-    const isStructure = section === 3;
-    const isReasoning = section === 4;
-    const isDebugging = section === 5;
-    const isCoding = section === 6;
-    const questionIndex = section === 1 ? progress.index : section === 2 ? counterProgress.index : section === 3 ? structureProgress.index : section === 4 ? reasoningProgress.index : debuggingProgress.index;
+    const isWorkBackward = section === 2;
+    const isCounterexample = section === 3;
+    const isCoding = section === 4;
+    const isCompress = section === 5;
+    const isCodeAgain = section === 6;
+    const questionIndex = section === 1 ? progress.index : section === 3 ? counterProgress.index : 0;
     const questionTotal = section === 1
       ? mainTasks().length
-      : section === 2
+      : section === 3
         ? counterexampleRounds().length
-        : section === 3
-          ? structureTasks().length
-          : section === 4 ? reasoningRounds().length : debuggingRounds().length;
-    $("#next-question-btn").hidden = isCoding || questionIndex >= questionTotal;
+        : 0;
+    $("#next-question-btn").hidden = section === 2 || section >= 4 || questionIndex >= questionTotal;
     $("#next-question-btn").onclick = skipCurrentQuestion;
-    document.title = `${problem.title} · ${isCoding ? "Code Lab" : isDebugging ? "Debug Lab" : isReasoning ? "Trace Lab" : isStructure ? "Graph Structure" : isCounterexample ? "Counterexample Lab" : "Visual Proof"}`;
+    document.title = `${problem.title} · ${isCodeAgain ? "Code Again" : isCompress ? "Compress" : isCoding ? "Code" : isCounterexample ? "Counterexample Lab" : isWorkBackward ? "Work Backward" : "Visual Proof"}`;
     document.body.classList.toggle("counterexample-route", isCounterexample);
-    document.body.classList.toggle("structure-route", isStructure);
-    document.body.classList.toggle("reasoning-route", isReasoning);
-    document.body.classList.toggle("debugging-route", isDebugging);
-    document.body.classList.toggle("coding-route", isCoding);
+    document.body.classList.toggle("structure-route", false);
+    document.body.classList.toggle("reasoning-route", isWorkBackward);
+    document.body.classList.toggle("debugging-route", isCompress);
+    document.body.classList.toggle("coding-route", isCoding || isCodeAgain);
     document.body.classList.toggle("has-step5", hasStep5());
     const graphActions = $("#graph-lab-actions");
     graphActions.hidden = true;
     graphActions.innerHTML = "";
-    $("#section-kicker").textContent = isCoding ? `STEP ${sectionLabel(6)} · CODE LAB` : isDebugging ? "STEP 5 · DEBUG LAB" : isReasoning ? "STEP 4 · TRACE LAB" : isStructure ? "STEP 3 · GRAPH STRUCTURE" : isCounterexample ? "STEP 2 · COUNTEREXAMPLE LAB" : "STEP 1 · VISUAL PROOF";
+    $("#section-kicker").textContent = isCodeAgain ? "STEP 6 · OPTIONAL CODE AGAIN" : isCompress ? "STEP 5 · COMPRESS" : isCoding ? "STEP 4 · CODE + TEST" : isCounterexample ? "STEP 3 · COUNTEREXAMPLE" : isWorkBackward ? "STEP 2 · WORK BACKWARD" : "STEP 1 · GRAPH + EXAMPLES";
+    renderStepTimer();
     $("#section-title").hidden = true;
     $("#section-subtitle").hidden = true;
     $("#evidence-chip").hidden = true;
-    $("#section-title").textContent = isReasoning ? "Run the code in your head." : isStructure ? "Test the graph rules." : "Build it. Read it. Prove it.";
-    $("#section-subtitle").textContent = isReasoning
-      ? "Turn the code into one graph rule, then predict its exact return value."
-      : isStructure
-      ? "Answer one useful Yes/No question, then build the exact graph."
-      : "Answer each question and build exact graphs from fresh inputs.";
+    $("#section-title").textContent = isWorkBackward ? "Work backward from the return value." : isCompress ? "Compress the plan." : isCodeAgain ? "Code it again." : "Build it. Read it. Prove it.";
+    $("#section-subtitle").textContent = isWorkBackward ? "Derive every required intermediate value until you reach the input." : "Answer each question and build exact graphs from fresh inputs.";
     const nextSection = adjacentSection();
     const back = nextSection < section;
     $("#section-nav-btn").innerHTML = `${back ? "Back to" : section === 1 ? "Skip to" : "Next:"} Step ${sectionLabel(nextSection)} <span>${back ? "←" : "→"}</span>`;
   }
 
+  // TODO: Later, persist step timing and summarize it in a learner report.
+  // For now timers are deliberately optional and live only until page refresh.
+  function stepTimerKey() {
+    return `${problem.id}:${section}`;
+  }
+
+  function stepTimerValue() {
+    if (!stepTimers[stepTimerKey()]) stepTimers[stepTimerKey()] = { elapsed: 0, startedAt: null };
+    return stepTimers[stepTimerKey()];
+  }
+
+  function stepTimerText(milliseconds) {
+    const seconds = Math.floor(milliseconds / 1000);
+    return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+  }
+
+  function updateStepTimerDisplay() {
+    const output = $("#step-timer-toggle");
+    if (!output) return;
+    const timer = stepTimerValue();
+    const elapsed = timer.elapsed + (timer.startedAt ? performance.now() - timer.startedAt : 0);
+    output.textContent = `Time: ${stepTimerText(elapsed)}`;
+  }
+
+  function pauseStepTimer() {
+    const timer = stepTimerValue();
+    if (timer.startedAt) {
+      timer.elapsed += performance.now() - timer.startedAt;
+      timer.startedAt = null;
+    }
+    clearInterval(stepTimerInterval);
+    stepTimerInterval = null;
+  }
+
+  function renderStepTimer() {
+    let controls = $("#step-timer-controls");
+    if (!controls) {
+      controls = document.createElement("div");
+      controls.id = "step-timer-controls";
+      controls.className = "step-timer-controls";
+      $("#section-kicker").insertAdjacentElement("afterend", controls);
+    }
+    const timer = stepTimerValue();
+    const timerAction = timer.startedAt ? "Pause timer" : timer.elapsed ? "Resume timer" : "Start timer";
+    controls.innerHTML = `<button id="step-timer-toggle" class="ghost-btn" type="button" aria-label="${timerAction}" title="${timerAction}" aria-live="polite">Time: 00:00</button>`;
+    updateStepTimerDisplay();
+    $("#step-timer-toggle").onclick = () => {
+      const current = stepTimerValue();
+      if (current.startedAt) {
+        pauseStepTimer();
+      } else {
+        current.startedAt = performance.now();
+        clearInterval(stepTimerInterval);
+        stepTimerInterval = setInterval(updateStepTimerDisplay, 250);
+      }
+      renderStepTimer();
+    };
+  }
+
   function switchSection(nextSection) {
     if (!availableSections().includes(nextSection)) return;
+    pauseStepTimer();
+    if (section === 1) saveStep1GraphReference();
     saveFormDraft();
     if (pendingAdvance) pendingAdvance();
     section = nextSection;
@@ -508,16 +619,13 @@
       progress.index = Math.min(progress.index + 1, mainTasks().length);
       progress.remedialFor = null;
       saveProgress();
-    } else if (section === 2) {
+    } else if (section === 3) {
       if (!counterProgress.skipped.includes(counterProgress.index)) counterProgress.skipped.push(counterProgress.index);
       counterProgress.index = Math.min(counterProgress.index + 1, counterexampleRounds().length);
       counterProgress.skills = [false, false, false, false];
       saveCounterProgress();
-    } else if (section === 3) {
-      if (answered) return;
-      if (!structureProgress.skipped.includes(structureProgress.index)) structureProgress.skipped.push(structureProgress.index);
-      structureProgress.index++;
-      saveStructureProgress();
+    } else if (section === 2 || section >= 4) {
+      return;
     } else if (section === 5) {
       saveFormDraft();
       if (!debuggingProgress.skipped.includes(debuggingProgress.index)) debuggingProgress.skipped.push(debuggingProgress.index);
@@ -563,11 +671,11 @@
     stopCodingRun();
     clearAiHelp();
     configureSectionShell();
-    if (section === 2) return renderCounterexampleRound();
-    if (section === 3) return renderStructureRound();
-    if (section === 4) return renderReasoningRound();
-    if (section === 5) return renderDebuggingRound();
-    if (section === 6) return renderCodingLesson();
+    if (section === 2) return renderWorkBackward();
+    if (section === 3) return renderCounterexampleWithRevisionPrompt();
+    if (section === 4) return renderCodingWithBackwardReference();
+    if (section === 5) return renderCompress();
+    if (section === 6) return renderCodeAgain();
     selectedId = null;
     answered = false;
     updateProgress();
@@ -3186,9 +3294,217 @@
     $("#restart-structure").onclick = resetStructure;
   }
 
+  function renderWorkBackward() {
+    $("#graph-lab").hidden = true;
+    $("#attempt-label").textContent = "Scratch work";
+    $("#evidence-label").textContent = "Not scored or saved";
+    $("#evidence-fill").style.width = "0%";
+    $("#facet-list").innerHTML = "";
+    $("#challenge").innerHTML = `<div class="challenge-body coding-case">
+      <h3 id="plan-direction-title"></h3>
+      <p id="plan-direction-description"></p>
+      <button id="toggle-plan-direction" class="ghost-btn" type="button" style="margin-bottom: 1rem"></button>
+      <div id="plan-fields"></div>
+      <button id="add-plan-box" class="ghost-btn" type="button">Add another box</button>
+      <p class="coding-hint"><strong>Click Continue to save this work.</strong> It will remain available in later steps until you refresh the webpage.</p>
+      <div id="feedback-slot" role="status" aria-live="polite"></div>
+      <div class="challenge-actions"><button id="backward-next" class="primary-btn">Continue to counterexample <span>→</span></button></div>
+    </div>`;
+    const saved = loadBackwardPlan();
+    let draft = {
+      mode: saved.mode === "forward" ? "forward" : "backward",
+      returnValue: saved.returnValue || "",
+      steps: Array.isArray(saved.steps) ? [...saved.steps] : []
+    };
+
+    const captureDraft = () => {
+      draft.returnValue = $("#plan-return")?.value || "";
+      const displayed = $$("[data-plan-step]").map(field => field.value);
+      draft.steps = draft.mode === "forward" ? displayed : displayed.reverse();
+    };
+
+    const renderPlanFields = () => {
+      const forward = draft.mode === "forward";
+      const displayed = forward ? [...draft.steps] : [...draft.steps].reverse();
+      if (!displayed.length) displayed.push("");
+      const stepFields = displayed.map((value, index) => {
+        const label = forward ? (index === 0 ? "First..." : "Next...") : (index === 0 ? "Information needed immediately before returning" : "And before that...");
+        const placeholder = forward ? (index === 0 ? "What happens first, starting from the inputs?" : "What happens next?") : "What information or operation must come before the previous step?";
+        const number = forward ? index + 1 : index + 2;
+        return `<label class="counter-field"><span>${number} · ${label}</span><textarea rows="4" data-plan-step placeholder="${placeholder}">${esc(value)}</textarea></label>`;
+      }).join("");
+      const returnNumber = forward ? displayed.length + 1 : 1;
+      const returnField = `<label class="counter-field"><span>${returnNumber} · Exact return value</span><textarea id="plan-return" rows="3" placeholder="What must the function return?">${esc(draft.returnValue)}</textarea></label>`;
+      $("#plan-fields").innerHTML = forward ? stepFields + returnField : returnField + stepFields;
+      $("#plan-direction-title").textContent = forward ? "Write pseudocode forward." : "Write pseudocode backward.";
+      $("#plan-direction-description").textContent = forward
+        ? "Start from the inputs and describe what happens next until you reach the exact return value."
+        : "Start with the exact return value. Ask what information must already exist to obtain it with one simple operation, then repeat until you reach the inputs.";
+      $("#toggle-plan-direction").textContent = forward ? "Write it backward instead" : "I'd rather write it forward";
+      $("#add-plan-box").textContent = forward ? 'Add another “Next…” box' : 'Add another “And before that…” box';
+    };
+
+    renderPlanFields();
+    const refreshPlanHelp = () => offerAiHelp(() => {
+      captureDraft();
+      return {
+        kind: "pseudocode-plan",
+        direction: draft.mode,
+        stepsInExecutionOrder: draft.steps,
+        returnValue: draft.returnValue,
+        step1Graph: loadStep1GraphReference()
+      };
+    });
+    refreshPlanHelp();
+    $("#challenge").oninput = () => queueMicrotask(refreshPlanHelp);
+    $("#toggle-plan-direction").onclick = () => {
+      draft = {
+        mode: draft.mode === "forward" ? "backward" : "forward",
+        returnValue: "",
+        steps: []
+      };
+      renderPlanFields();
+      refreshPlanHelp();
+    };
+    $("#add-plan-box").onclick = () => {
+      captureDraft();
+      if (draft.mode === "forward") draft.steps.push("");
+      else draft.steps.unshift("");
+      renderPlanFields();
+      $$("[data-plan-step]").at(-1)?.focus();
+    };
+    $("#backward-next").onclick = () => {
+      captureDraft();
+      saveBackwardPlan(draft);
+      switchSection(3);
+    };
+  }
+
+  function loadBackwardPlan() {
+    return savedBackwardPlan;
+  }
+
+  function saveBackwardPlan(value) {
+    savedBackwardPlan = {
+      mode: value.mode === "forward" ? "forward" : "backward",
+      returnValue: value.returnValue || "",
+      steps: Array.isArray(value.steps) ? [...value.steps] : []
+    };
+  }
+
+  function step1GraphReferenceKey() {
+    return `dfs-step1-reference:${problem.id}:v1`;
+  }
+
+  function saveStep1GraphReference() {
+    const snapshot = window.DFS_GRAPH?.getSnapshot?.();
+    if (!snapshot?.nodes?.length) return;
+    try { localStorage.setItem(step1GraphReferenceKey(), JSON.stringify(snapshot)); } catch {}
+  }
+
+  function loadStep1GraphReference() {
+    try {
+      const snapshot = JSON.parse(localStorage.getItem(step1GraphReferenceKey()) || "null");
+      return snapshot?.nodes && snapshot?.edges ? snapshot : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function graphReferenceHtml() {
+    const snapshot = loadStep1GraphReference();
+    if (!snapshot?.nodes?.length) return "<p>No Step 1 graph has been saved yet.</p>";
+    const markerId = `saved-graph-arrow-${problem.id}`;
+    const byId = Object.fromEntries(snapshot.nodes.map(node => [String(node.id), node]));
+    const edges = snapshot.edges.map(edge => {
+      const from = byId[String(edge.from)];
+      const to = byId[String(edge.to)];
+      if (!from || !to) return "";
+      return `<line x1="${Number(from.x) || 0}" y1="${Number(from.y) || 0}" x2="${Number(to.x) || 0}" y2="${Number(to.y) || 0}" stroke="#8392a8" stroke-width="4" ${snapshot.directed ? `marker-end="url(#${markerId})"` : ""}/>`;
+    }).join("");
+    const nodes = snapshot.nodes.map(node => `<g><circle cx="${Number(node.x) || 0}" cy="${Number(node.y) || 0}" r="28" fill="${esc(node.color || "#8392a8")}" stroke="#172033" stroke-width="3"/><text x="${Number(node.x) || 0}" y="${(Number(node.y) || 0) + 5}" text-anchor="middle" fill="#101522" font-weight="700">${esc(node.label || "")}</text></g>`).join("");
+    return `<svg viewBox="0 0 760 460" role="img" aria-label="Saved Step 1 graph" style="width:100%;max-height:320px;background:#f7f4ed;border-radius:12px"><defs><marker id="${markerId}" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8392a8"/></marker></defs>${edges}${nodes}</svg>`;
+  }
+
+  function pseudocodeReferenceHtml() {
+    const saved = loadBackwardPlan();
+    const entries = [...saved.steps, saved.returnValue].filter(value => value.trim());
+    return entries.length
+      ? `<ol>${entries.map(value => `<li>${formatText(value)}</li>`).join("")}</ol>`
+      : '<p>No Step 2 pseudocode has been saved yet. <a href="?section=2">Return to Step 2.</a></p>';
+  }
+
+  function referenceToggles(options = {}) {
+    let html = '<div class="coding-reference-toggles">';
+    const savedCompression = compressedPlan;
+    if (options.graph) html += `<details class="coding-workflow" ${options.graphOpen ? "open" : ""}><summary>My graph (Step 1)</summary><div class="coding-workflow-body">${graphReferenceHtml()}</div></details>`;
+    if (options.pseudocode) html += `<details class="coding-workflow" ${options.pseudocodeOpen ? "open" : ""}><summary>My ${loadBackwardPlan().mode === "forward" ? "forward" : "backward"} pseudocode (Step 2)</summary><div class="coding-workflow-body">${pseudocodeReferenceHtml()}</div></details>`;
+    if (options.compression) html += `<details class="coding-workflow" ${options.compressionOpen ? "open" : ""}><summary>My compression (Step 5)</summary><div class="coding-workflow-body">${savedCompression ? `<p>${formatText(savedCompression)}</p>` : '<p>No compression has been saved yet. <a href="?section=5">Return to Step 5.</a></p>'}</div></details>`;
+    return html + "</div>";
+  }
+
+  function renderCodingWithBackwardReference() {
+    renderCodingLesson();
+    $$(".coding-workflow-profile, .coding-workflow").forEach(element => element.remove());
+    const graphDisclosure = $("#coding-graph-disclosure");
+    if (graphDisclosure) {
+      $(".activity-layout")?.append($("#graph-lab"));
+      $("#graph-lab").hidden = true;
+      graphDisclosure.remove();
+    }
+    const target = $(".coding-editor-label");
+    target?.insertAdjacentHTML("beforebegin", referenceToggles({ graph: true, graphOpen: true, pseudocode: true, pseudocodeOpen: true }));
+  }
+
+  function renderCounterexampleWithRevisionPrompt() {
+    renderCounterexampleRound();
+    const body = $("#challenge .challenge-body");
+    body?.insertAdjacentHTML("afterbegin", `${referenceToggles({ graph: true, pseudocode: true })}<p class="coding-hint"><strong>Feedback loop:</strong> if this counterexample exposes something your backward plan missed, return to Step 2 and revise it before coding.</p>`);
+    const onward = $("#start-structure");
+    if (onward) {
+      onward.innerHTML = 'Continue to code <span>→</span>';
+      onward.onclick = () => switchSection(4);
+    }
+  }
+
+  function renderCompress() {
+    $("#graph-lab").hidden = true;
+    $("#attempt-label").textContent = "Scratch work";
+    $("#evidence-label").textContent = "Not scored or saved";
+    $("#evidence-fill").style.width = "0%";
+    $("#facet-list").innerHTML = "";
+    const placeholder = "initialize result/state; DFS(current, state); handle base case; update state; recurse on next items; return result";
+    $("#challenge").innerHTML = `<div class="challenge-body coding-case">
+      <h3>Compress the algorithm.</h3>
+      <p>Compress the saved backward plan below into roughly 3-5 key concepts in the fewest useful words.</p>
+      ${referenceToggles({ graph: true, pseudocode: true, pseudocodeOpen: true })}
+      <label class="counter-field"><span>Compressed pseudocode</span><textarea id="compression-plan" rows="7" placeholder="${esc(placeholder)}">${esc(compressedPlan)}</textarea></label>
+      <p class="coding-hint"><strong>Click “Use this to code again” to save this work.</strong> It will remain available for Step 6 until you refresh the webpage.</p>
+      <div id="feedback-slot" role="status" aria-live="polite"></div>
+      <div class="challenge-actions"><button id="compress-next" class="primary-btn">Use this to code again <span>→</span></button></div>
+    </div>`;
+    const refreshCompressionHelp = () => offerAiHelp(() => ({
+      kind: "pseudocode-compression",
+      step1Graph: loadStep1GraphReference(),
+      step2Direction: loadBackwardPlan().mode,
+      step2PseudocodeInExecutionOrder: [...loadBackwardPlan().steps, loadBackwardPlan().returnValue],
+      compressionDraft: $("#compression-plan")?.value || ""
+    }));
+    refreshCompressionHelp();
+    $("#challenge").oninput = () => queueMicrotask(refreshCompressionHelp);
+    $("#compress-next").onclick = () => {
+      compressedPlan = $("#compression-plan").value.trim();
+      switchSection(6);
+    };
+  }
+
   function hasStep5() { return problem.category === "variant" && Boolean(problem.debuggingLesson?.cases?.length); }
   function hasStep6() { return problem.category === "variant" && Boolean(problem.codingLesson); }
-  function availableSections() { if (problem.category === "variant") return variantPractice.sections; return hasStep6() ? [1, 2, 3, 4, 5, 6] : hasStep5() ? [1, 2, 3, 4, 5] : [1, 2, 3, 4]; }
+  function availableSections() {
+    const sections = [1, 2, 3, 4, 5];
+    if (problem.codingLesson) sections.push(6);
+    return sections;
+  }
   function sectionLabel(number) {
     return problem.category === "variant" ? availableSections().indexOf(number) + 1 : number;
   }
@@ -3458,7 +3774,7 @@
   }
   function codingInputs() { return problem.codingLesson.parameters.map((parameter, i) => ({ name: parameter.name, raw: $(`#coding-input-${i}`)?.value || "" })); }
   function refreshCodingHelp() {
-    if (section !== 6 || !$("#coding-editor")) return;
+    if ((section !== 4 && section !== 6) || !$("#coding-editor")) return;
     offerAiHelp(() => ({ kind: "code", functionName: problem.codingLesson.functionName, parameters: problem.codingLesson.parameters, correctCode: problem.codingLesson.correctCode, studentCode: $("#coding-editor").value, inputs: codingInputs(), ...(codingResult || {}) }));
   }
   function codingValue(value) {
@@ -3470,6 +3786,30 @@
   }
   function codingOutput(result) {
     return `${result.ok ? `<strong>Returned</strong><pre>${esc(result.display ?? codingValue(result.value))}</pre>` : `<pre class="coding-error">${esc(codingError(result.error))}</pre>`}${result.logs?.length ? `<strong>Console</strong><pre>${esc(result.logs.map(log => typeof log === "string" ? log : codingValue(log)).join("\n"))}</pre>` : ""}`;
+  }
+  function formatDuration(ms) {
+    const rounded = Math.max(0, Math.round(ms * 10) / 10);
+    return `${rounded.toFixed(1)} ms`;
+  }
+  function problemTitle(problemId) {
+    const target = allProblems.find(item => item.id === problemId);
+    return target ? target.title : problemId;
+  }
+  function codingWorkflowProfile(problem) {
+    const profile = codingWorkflowProfiles[problem.visualKind] || codingWorkflowProfiles.state;
+    const fitClass = profile.fit === "Direct-fit" ? "is-direct" : profile.fit === "Adapted" ? "is-adapted" : "is-needs";
+    const toList = value => Array.isArray(value) ? value : value ? [value] : [];
+    const positive = profile.positive
+      ? `<li>Positive example: <a href="/${encodeURIComponent(profile.positive)}">${esc(problemTitle(profile.positive))}</a></li>`
+      : "<li>Positive example: add later if this class changes.</li>";
+    const negative = toList(profile.negative)
+      .map(id => `<li>Negative example: <a href="/${encodeURIComponent(id)}">${esc(problemTitle(id))}</a></li>`)
+      .join("");
+    return `<aside class="coding-workflow-profile ${fitClass}">
+      <div class="coding-workflow-profile-head"><span class="coding-workflow-badge">${esc(profile.badge)}</span><strong>${esc(profile.fit)}</strong></div>
+      <p>${esc(profile.summary)}</p>
+      <ul>${positive}${negative}</ul>
+    </aside>`;
   }
   function updateCodingProgress(passed, total) {
     $("#evidence-label").textContent = `${passed} of ${total} tests passed`;
@@ -3491,8 +3831,74 @@
     $("#facet-list").innerHTML = "";
     $('.tab[data-tab="examples"]').hidden = false;
     updateCodingProgress(0, lesson.tests.length);
+    const workflowProfile = codingWorkflowProfile(problem);
+    const workflowGuide =
+      problem.id === "busiest-shelf-level"
+        ? `<details class="coding-workflow">
+            <summary>Optional: workflow I use on this problem</summary>
+            <div class="coding-workflow-body">
+              <ol>
+                <li>Make graph + work through examples.</li>
+                <li>Write pseudocode by working backward.
+                  <ul>
+                    <li>Start at final return value, then ask: what inputs do I need to compute it?</li>
+                    <li>Repeat until you have the exact state contract from input to output.</li>
+                  </ul>
+                </li>
+                <li>Counterexample (optional):
+                  <ul>
+                    <li>Build one small failing case from a plausible bug you might make when writing quickly.</li>
+                    <li>Use the lesson's counterexample workflow for checking.</li>
+                  </ul>
+                </li>
+                <li>Compress the pseudocode into ~5 key ideas.
+                  <ul>
+                    <li>For this problem: <code>init counts by depth; walk nested items with DFS; increment at depth; return first depth with max count</code>.</li>
+                  </ul>
+                </li>
+                <li>Code from pseudocode and run your own input, then submit tests with timing.</li>
+              </ol>
+            </div>
+          </details>`
+        : problem.visualKind === "backtracking"
+          ? `<details class="coding-workflow">
+              <summary>Optional: adapted workflow for this backtracking problem</summary>
+              <div class="coding-workflow-body">
+                <ol>
+                  <li>Make graph/picture and work through examples.</li>
+                  <li>Work backward from the answer to the state tuple:
+                    <ul>
+                      <li>What is the recursion state? (path, visited, remaining choices, constraints)</li>
+                      <li>What is one valid base case?</li>
+                    </ul>
+                  </li>
+                  <li>Build one counterexample that checks one branch-pruning or duplicate-handling mistake.</li>
+                  <li>Compress the logic into 3-5 ideas:
+                    <ul>
+                      <li>base case, generate choices, apply choice, recurse, undo choice</li>
+                    </ul>
+                  </li>
+                  <li>Code from the compressed plan, then run inputs and submit tests with timing.</li>
+                </ol>
+              </div>
+            </details>`
+          : `<details class="coding-workflow">
+              <summary>Optional: your coding workflow (adapted)</summary>
+              <div class="coding-workflow-body">
+                <ol>
+                  <li>Build a small graph/picture and solve examples.</li>
+                  <li>Work backward with pseudocode from outputs to required state.</li>
+                  <li>Add a quick counterexample for a likely bug.</li>
+                  <li>Compress pseudocode to 3-5 core ideas and code from those.</li>
+                  <li>Run your input and submit tests; track time on successful runs.</li>
+                </ol>
+              </div>
+            </details>`;
+
     $("#challenge").innerHTML = `<div class="challenge-body coding-case">
       <h3>Write your solution.</h3><p>Write JavaScript, try your own input, then submit against ${lesson.tests.length} fresh tests.</p>
+      ${workflowProfile}
+      ${workflowGuide}
       <details id="coding-graph-disclosure" class="coding-graph-disclosure">
         <summary><span>Optional: draw the graph</span><small>Open a scratchpad</small></summary>
         <div class="coding-graph-disclosure-body"><p class="coding-hint">Sketch the problem graph here if a picture helps. This drawing is private and is not graded.</p><div id="coding-graph-slot"></div></div>
@@ -3607,28 +4013,34 @@
       }
       setBusy(true); results.textContent = mode === "run" ? "Running your input…" : "Running tests…";
       refreshCodingHelp();
+      const runStart = performance.now();
       try {
         if (!window.Step6Runtime) throw new Error("The code runner did not load. Refresh and try again.");
         codingRunner ||= window.Step6Runtime.createRunner();
         if (mode === "run") {
           const result = await codingRunner.run({ code, functionName: lesson.functionName, args });
+          const elapsed = performance.now() - runStart;
           if (version !== codingRunVersion || section !== 6) return;
-          codingResult = { args, runResult: result };
-          results.innerHTML = `<section class="coding-run-result"><h4>Your input</h4>${codingOutput(result)}</section>`;
+          codingResult = { args, runResult: result, elapsed };
+          results.innerHTML = `<section class="coding-run-result"><h4>Your input · ${formatDuration(elapsed)}</h4>${codingOutput(result)}</section>`;
         } else {
           const testResults = [];
           for (const [i, test] of lesson.tests.entries()) {
             results.textContent = `Running test ${i + 1} of ${lesson.tests.length}…`;
+            const testStart = performance.now();
             const result = await codingRunner.run({ code, functionName: lesson.functionName, args: test.args });
+            const elapsed = performance.now() - testStart;
             if (version !== codingRunVersion || section !== 6) return;
             const passed = result.ok && window.DFS_STEP5.equal(problem.id, result.value, test.expected);
-            testResults.push({ id: test.id, label: test.label, args: test.args, expected: test.expected, ...result, passed });
+            testResults.push({ id: test.id, label: test.label, args: test.args, expected: test.expected, elapsed, ...result, passed });
           }
           const passed = testResults.filter(test => test.passed).length;
           codingResult = { testResults };
           persistProgress(codingStorageKey(), { passed: passed === lesson.tests.length, code });
           updateCodingProgress(passed, lesson.tests.length);
-          results.innerHTML = `<h4>${passed === lesson.tests.length ? "All tests passed!" : `${passed} of ${lesson.tests.length} tests passed`}</h4>${testResults.map((test, i) => `<details class="coding-test ${test.passed ? "is-correct" : "needs-work"}"${test.passed ? "" : " open"}><summary>${test.passed ? "✓ Passed" : "✗ Failed"} · Test ${i + 1}: ${esc(test.label)}</summary><strong>Input</strong><pre>${esc(lesson.parameters.map((parameter, n) => `${parameter.name} = ${codingValue(test.args[n])}`).join("\n"))}</pre><strong>Expected</strong><pre>${esc(codingValue(test.expected))}</pre>${codingOutput(test)}</details>`).join("")}`;
+          const totalElapsed = testResults.reduce((sum, test) => sum + test.elapsed, 0);
+          const header = `${passed === lesson.tests.length ? "All tests passed!" : `${passed} of ${lesson.tests.length} tests passed`} · total time ${formatDuration(totalElapsed)}`;
+          results.innerHTML = `<h4>${header}</h4>${testResults.map((test, i) => `<details class="coding-test ${test.passed ? "is-correct" : "needs-work"}"${test.passed ? "" : " open"}><summary>${test.passed ? "✓ Passed" : "✗ Failed"} · Test ${i + 1}: ${esc(test.label)} (${formatDuration(test.elapsed)})</summary><strong>Input</strong><pre>${esc(lesson.parameters.map((parameter, n) => `${parameter.name} = ${codingValue(test.args[n])}`).join("\n"))}</pre><strong>Expected</strong><pre>${esc(codingValue(test.expected))}</pre>${codingOutput(test)}</details>`).join("")}`;
         }
       } catch (error) {
         if (version !== codingRunVersion || section !== 6) return;
@@ -3646,6 +4058,26 @@
     } catch {}
     refreshCodingHelp();
     $(".test-pane").scrollTop = 0;
+  }
+
+  function renderCodeAgain() {
+    renderCodingLesson();
+    const challenge = $("#challenge");
+    const body = challenge.querySelector(".coding-case");
+    const title = body?.querySelector("h3");
+    const intro = title?.nextElementSibling;
+    if (title) title.textContent = "Optional: code it again.";
+    if (intro) intro.textContent = "Use only the problem statement and your compressed plan. Aim for a much faster implementation than your first attempt.";
+    body?.querySelector(".coding-workflow-profile")?.remove();
+    body?.querySelector(".coding-workflow")?.remove();
+    const disclosure = $("#coding-graph-disclosure");
+    if (disclosure) {
+      $(".activity-layout")?.append($("#graph-lab"));
+      $("#graph-lab").hidden = true;
+      disclosure.remove();
+    }
+    const editorLabel = $(".coding-editor-label");
+    editorLabel?.insertAdjacentHTML("beforebegin", referenceToggles({ graph: true, pseudocode: true, compression: true, compressionOpen: true }));
   }
 
   function reasoningRounds() {
@@ -4532,7 +4964,7 @@
   }
   function saveReasoningProgress() { localStorage.setItem(reasoningStorageKey(), JSON.stringify(reasoningProgress)); }
   function reasoningStorageKey() { return `dfs-reasoning:${problem.id}:v3`; }
-  function resetCurrentSection() { if (section === 6) resetCoding(); else if (section === 5) resetDebugging(); else if (section === 4) resetReasoning(); else if (section === 3) resetStructure(); else if (section === 2) resetCounterexamples(); else reset(); }
+  function resetCurrentSection() { if (section === 6 || section === 4) resetCoding(); else if (section === 5 || section === 2) render(); else if (section === 3) resetCounterexamples(); else reset(); }
   function reset() {
     if (progress.index > 0 && !confirm("Restart the entire visual proof from the first blank graph?")) return;
     clearSectionDrafts(1);

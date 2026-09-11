@@ -4,7 +4,8 @@ const vm = require("vm");
 
 const sourceRoot = path.resolve(__dirname, "../source/jonathan-study-site");
 const sourceSandbox = { window: {} };
-vm.runInNewContext(fs.readFileSync(path.join(sourceRoot, "site/problems.js"), "utf8"), sourceSandbox);
+const sourceProblemsFile = path.join(sourceRoot, "site/problems.js");
+vm.runInNewContext(fs.readFileSync(sourceProblemsFile, "utf8"), sourceSandbox);
 const sourceProblems = new Map(sourceSandbox.window.PROBLEMS.map(problem => [problem.id, problem]));
 const specFiles = ["step4-specs-original.json", "step4-specs-variant.json", "step4-specs-new.json"];
 const specs = specFiles.flatMap(file => JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", file), "utf8")));
