@@ -1,0 +1,447 @@
+[
+  {
+    "id": "ladder-takahashi",
+    "title": "Ladder Takahashi",
+    "category": "new",
+    "sourceName": "AtCoder",
+    "sourceLink": "https://atcoder.jp/contests/abc277/tasks/abc277_c",
+    "difficulty": "Medium",
+    "whyGoodFit": "Plain reachability DFS like Keys and Rooms, but node labels go up to a billion, so the student must swap the usual array for an object/Map keyed by number - a small, valuable twist with tiny code changes.",
+    "statement": "You are in a skyscraper with floors numbered `1` up to `1,000,000,000` (one billion), standing on floor `1`.\n\nThe ONLY way to change floors is by ladder. You are given an array `ladders`, where each `ladders[k] = [a, b]` is a ladder connecting floor `a` and floor `b`; you can climb it in either direction. You can freely walk around on whatever floor you are on, so from one floor you may use any ladder that touches it.\n\nWrite a function `highestFloor(ladders)` that returns the highest floor number you can possibly reach starting from floor `1`. If no ladder touches floor 1, the answer is `1`.",
+    "examples": [
+      {
+        "input": "ladders = [[1,4],[4,3],[4,10],[8,3]]",
+        "output": "10",
+        "explanation": "From floor 1 climb to 4. From 4 you can reach 3 and 10, and from 3 you can reach 8. Everything reachable is {1, 3, 4, 8, 10}, and the highest is 10."
+      },
+      {
+        "input": "ladders = [[500000000,600000000],[600000000,700000000],[700000000,800000000]]",
+        "output": "1",
+        "explanation": "No ladder touches floor 1, so you can never leave it. The answer is 1."
+      }
+    ],
+    "constraints": [
+      "1 <= ladders.length <= 1000",
+      "1 <= a, b <= 10^9 and a != b"
+    ],
+    "functionName": "highestFloor",
+    "solution": "const START_FLOOR = 1;\n\nconst buildGraph = (edges) => {\n    const graph = {};\n\n    for (const edge of edges) {\n        const [nodeOne, nodeTwo] = edge;\n\n        const nodeOneInGraph = graph.hasOwnProperty(nodeOne);\n        const nodeTwoInGraph = graph.hasOwnProperty(nodeTwo);\n\n        if (!nodeOneInGraph) graph[nodeOne] = [];\n        if (!nodeTwoInGraph) graph[nodeTwo] = [];\n\n        graph[nodeOne].push(nodeTwo);\n        graph[nodeTwo].push(nodeOne);\n    }\n\n    return graph;\n};\n\n// CONTRACT for markReachableFloors(graph, floor, visited):\n//     when this call returns, `floor` and every floor reachable\n//     from it by ladders is in the visited set.\nconst markReachableFloors = (graph, floor, visited) => {\n    // Base case\n    if (visited.has(floor)) return;\n\n    // Process node\n    visited.add(floor);\n\n    // Recurse on neighbors\n    const floorInGraph = graph.hasOwnProperty(floor);\n    if (!floorInGraph) return;\n\n    const neighbors = graph[floor];\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `neighbor` and every\n        // floor reachable from it is in the visited set. Trust it, do\n        // not trace it. This function already put `floor` into visited,\n        // and each neighbor's contract covers the rest — together, that\n        // is this function's full contract, kept.\n        markReachableFloors(graph, neighbor, visited);\n    }\n};\n\nconst highestFloor = (ladders) => {\n    // Floor numbers go up to a billion, so the graph must be keyed by\n    // floor number (a plain object) instead of using an array slot per floor.\n    const graph = buildGraph(ladders);\n\n    const visited = new Set();\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, visited holds floor 1 and every floor reachable\n    // from it by ladders. We do not trace inside; we just scan\n    // visited for the highest floor.\n    markReachableFloors(graph, START_FLOOR, visited);\n\n    let highestReachableFloor = START_FLOOR;\n\n    for (const floor of visited) {\n        if (floor <= highestReachableFloor) continue;\n\n        highestReachableFloor = floor;\n    }\n\n    return highestReachableFloor;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              4
+            ],
+            [
+              4,
+              3
+            ],
+            [
+              4,
+              10
+            ],
+            [
+              8,
+              3
+            ]
+          ]
+        ],
+        "expected": 10
+      },
+      {
+        "args": [
+          [
+            [
+              500000000,
+              600000000
+            ],
+            [
+              600000000,
+              700000000
+            ],
+            [
+              700000000,
+              800000000
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ]
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1000000000
+            ]
+          ]
+        ],
+        "expected": 1000000000
+      },
+      {
+        "args": [
+          [
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              3,
+              999999999
+            ]
+          ]
+        ],
+        "expected": 999999999
+      },
+      {
+        "args": [
+          [
+            [
+              5,
+              1
+            ],
+            [
+              5,
+              7
+            ],
+            [
+              7,
+              2
+            ],
+            [
+              2,
+              6
+            ],
+            [
+              9,
+              10
+            ]
+          ]
+        ],
+        "expected": 7
+      }
+    ]
+  },
+  {
+    "id": "wheres-my-internet",
+    "title": "Where's My Internet??",
+    "category": "new",
+    "sourceName": "Kattis",
+    "sourceLink": "https://open.kattis.com/problems/wheresmyinternet",
+    "difficulty": "Easy",
+    "whyGoodFit": "Same reachability skill as Find if Path Exists, but with a fresh output: instead of a yes/no answer, the student collects and sorts every node the DFS never reached.",
+    "statement": "A brand-new town has `n` houses, numbered `1` to `n`. House `1` is the only house with a direct internet line to the outside world.\n\nSome pairs of houses are already joined by network cables, and cables carry internet in both directions. A house is online if it is house `1`, or if it is connected by a cable to a house that is already online. In other words, a house is online exactly when you can walk from it to house `1` through a chain of cables.\n\nYou are given `n` and an array `cables`, where each `cables[k] = [a, b]` means houses `a` and `b` are joined by a cable.\n\nWrite a function `findOfflineHouses(n, cables)` that returns an array of all house numbers that do NOT have internet, sorted from smallest to largest. If every house is online, return an empty array `[]`.",
+    "examples": [
+      {
+        "input": "n = 6, cables = [[1,2],[2,3],[3,4],[5,6]]",
+        "output": "[5, 6]",
+        "explanation": "Houses 2, 3 and 4 are joined to house 1 by a chain of cables, so they are online. Houses 5 and 6 are only cabled to each other, so neither can reach house 1 and both are offline."
+      },
+      {
+        "input": "n = 2, cables = [[2,1]]",
+        "output": "[]",
+        "explanation": "House 2 is cabled directly to house 1, so every house in town is online and the answer is an empty array."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 1000",
+      "0 <= cables.length <= 2000",
+      "1 <= a, b <= n and a != b",
+      "Each pair of houses appears at most once in cables"
+    ],
+    "functionName": "findOfflineHouses",
+    "solution": "const INTERNET_HOUSE = 1;\n\nconst buildGraph = (edges) => {\n    const graph = {};\n\n    for (const edge of edges) {\n        const [nodeOne, nodeTwo] = edge;\n\n        const nodeOneInGraph = graph.hasOwnProperty(nodeOne);\n        const nodeTwoInGraph = graph.hasOwnProperty(nodeTwo);\n\n        if (!nodeOneInGraph) graph[nodeOne] = [];\n        if (!nodeTwoInGraph) graph[nodeTwo] = [];\n\n        graph[nodeOne].push(nodeTwo);\n        graph[nodeTwo].push(nodeOne);\n    }\n\n    return graph;\n};\n\n// CONTRACT for markOnlineHouses(graph, house, visited):\n//     when this call returns, `house` and every house connected\n//     to it by cables is in the visited set.\nconst markOnlineHouses = (graph, house, visited) => {\n    // Base case\n    if (visited.has(house)) return;\n\n    // Process node\n    visited.add(house);\n\n    // Recurse on neighbors\n    const houseInGraph = graph.hasOwnProperty(house);\n    if (!houseInGraph) return;\n\n    const neighbors = graph[house];\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `neighbor` and every\n        // house connected to it is in the visited set. Trust it, do\n        // not trace it. This function already put `house` into visited,\n        // and each neighbor's contract covers the rest — together, that\n        // is this function's full contract, kept.\n        markOnlineHouses(graph, neighbor, visited);\n    }\n};\n\nconst findOfflineHouses = (n, cables) => {\n    const graph = buildGraph(cables);\n\n    // Every house the DFS reaches from house 1 is online.\n    const visited = new Set();\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, visited holds house 1 and every house connected\n    // to it — all the online houses. We do not trace inside; we just\n    // report the houses that are missing from visited.\n    markOnlineHouses(graph, INTERNET_HOUSE, visited);\n\n    const offlineHouses = [];\n\n    // Checking houses from 1 up to n means the answer comes out already sorted.\n    for (let house = 1; house <= n; house++) {\n        if (visited.has(house)) continue;\n\n        offlineHouses.push(house);\n    }\n\n    return offlineHouses;\n};\n",
+    "tests": [
+      {
+        "args": [
+          6,
+          [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              5,
+              6
+            ]
+          ]
+        ],
+        "expected": [
+          5,
+          6
+        ]
+      },
+      {
+        "args": [
+          2,
+          [
+            [
+              2,
+              1
+            ]
+          ]
+        ],
+        "expected": []
+      },
+      {
+        "args": [
+          1,
+          []
+        ],
+        "expected": []
+      },
+      {
+        "args": [
+          5,
+          []
+        ],
+        "expected": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      {
+        "args": [
+          7,
+          [
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              6,
+              7
+            ]
+          ]
+        ],
+        "expected": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ]
+      },
+      {
+        "args": [
+          4,
+          [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ]
+        ],
+        "expected": []
+      }
+    ]
+  },
+  {
+    "id": "ten-kinds-of-people",
+    "title": "10 Kinds of People",
+    "category": "new",
+    "sourceName": "Kattis",
+    "sourceLink": "https://open.kattis.com/problems/10kindsofpeople",
+    "difficulty": "Medium",
+    "whyGoodFit": "Grid flood fill exactly like Number of Islands, but with two terrain types and connectivity queries between specific cells - a genuinely new way to use the same DFS.",
+    "statement": "The world's map is a rectangular grid given as an array of strings, where every character is either `'1'` or `'0'`. Decimal people may only stand on `'1'` cells, and binary people may only stand on `'0'` cells. Anyone can step up, down, left, or right to a neighboring cell of the SAME character - never diagonally, and never onto the other kind of cell.\n\nYou are given the map `grid` and a list `queries`. Each query is `[r1, c1, r2, c2]` (all 0-indexed): a starting cell `(r1, c1)` and a target cell `(r2, c2)`.\n\nWrite a function `whoCanTravel(grid, queries)` that returns an array with one answer per query, in order:\n\n- `\"decimal\"` if both cells contain `'1'` and you can walk between them stepping only on `'1'` cells,\n- `\"binary\"` if both cells contain `'0'` and you can walk between them stepping only on `'0'` cells,\n- `\"neither\"` otherwise (for example, if the two cells hold different characters, or they sit in separate regions).\n\nA query may start and end at the same cell - the person standing there can always \"travel\" to it.",
+    "examples": [
+      {
+        "input": "grid = [\"1100\"], queries = [[0,0,0,3],[0,0,0,0]]",
+        "output": "[\"neither\", \"decimal\"]",
+        "explanation": "Query 1: (0,0) holds '1' but (0,3) holds '0', so no single kind of person can stand on both - \"neither\". Query 2: start and target are the same '1' cell, so a decimal person is already there - \"decimal\"."
+      },
+      {
+        "input": "grid = [\"110\", \"010\", \"011\"], queries = [[0,0,2,2],[2,0,0,2]]",
+        "output": "[\"decimal\", \"neither\"]",
+        "explanation": "Query 1: the '1' path (0,0) -> (0,1) -> (1,1) -> (2,1) -> (2,2) connects the cells, so \"decimal\". Query 2: the '0' region around (2,0) is only {(2,0),(1,0)} - the DFS is blocked by '1's - and (0,2) is a separate '0' region, so \"neither\"."
+      }
+    ],
+    "constraints": [
+      "1 <= number of rows, columns <= 50",
+      "grid[r][c] is '0' or '1'",
+      "1 <= queries.length <= 20",
+      "0 <= r1, r2 < rows and 0 <= c1, c2 < cols"
+    ],
+    "functionName": "whoCanTravel",
+    "solution": "const DECIMAL_CELL = '1';\nconst DECIMAL_ANSWER = 'decimal';\nconst BINARY_ANSWER = 'binary';\nconst NEITHER_ANSWER = 'neither';\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\n// CONTRACT for labelRegion(grid, row, col, regionCellType, regionLabel, visited, regionLabels):\n//     when this call returns, every cell of the region containing\n//     (`row`, `col`) — the connected cells whose character equals\n//     `regionCellType` — is in the visited set and has\n//     `regionLabel` stored for it in `regionLabels`.\nconst labelRegion = (grid, row, col, regionCellType, regionLabel, visited, regionLabels) => {\n    // Base cases\n    if (!isInBounds(grid, row, col)) return;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return;\n\n    // A region only contains cells with the SAME character as its start.\n    if (grid[row][col] !== regionCellType) return;\n\n    // Process node\n    visited.add(curPositionString);\n    regionLabels.set(curPositionString, regionLabel);\n\n    // Recurse on neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighbor's side of\n        // the region is in the visited set and labeled. Trust it, do\n        // not trace it. This function already put (`row`, `col`) into\n        // visited and labeled it, and each neighbor's contract covers\n        // the rest — together, that is this function's full contract,\n        // kept.\n        labelRegion(grid, newRow, newCol, regionCellType, regionLabel, visited, regionLabels);\n    }\n};\n\nconst whoCanTravel = (grid, queries) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    // Label every region once up front. Two cells are connected exactly\n    // when they share a label, so each query becomes a cheap lookup\n    // instead of its own DFS.\n    const visited = new Set();\n    const regionLabels = new Map();\n    let nextRegionLabel = 0;\n\n    for (let row = 0; row < numRows; row++) {\n        for (let col = 0; col < numCols; col++) {\n            const curPositionString = getPositionString(row, col);\n            if (visited.has(curPositionString)) continue;\n\n            // The recursive leap of faith: trust the contract. When this\n            // call returns, the whole region around this cell is in the\n            // visited set and every one of its cells shares the same label.\n            // We do not trace inside; we just move on to the next unlabeled\n            // cell.\n            labelRegion(grid, row, col, grid[row][col], nextRegionLabel, visited, regionLabels);\n            nextRegionLabel++;\n        }\n    }\n\n    const answers = [];\n\n    for (const query of queries) {\n        const [startRow, startCol, targetRow, targetCol] = query;\n\n        const startLabel = regionLabels.get(getPositionString(startRow, startCol));\n        const targetLabel = regionLabels.get(getPositionString(targetRow, targetCol));\n\n        // Different labels mean different regions (or different cell types).\n        if (startLabel !== targetLabel) {\n            answers.push(NEITHER_ANSWER);\n            continue;\n        }\n\n        const cellType = grid[startRow][startCol];\n        answers.push(cellType === DECIMAL_CELL ? DECIMAL_ANSWER : BINARY_ANSWER);\n    }\n\n    return answers;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            "1100"
+          ],
+          [
+            [
+              0,
+              0,
+              0,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ]
+        ],
+        "expected": [
+          "neither",
+          "decimal"
+        ]
+      },
+      {
+        "args": [
+          [
+            "110",
+            "010",
+            "011"
+          ],
+          [
+            [
+              0,
+              0,
+              2,
+              2
+            ],
+            [
+              2,
+              0,
+              0,
+              2
+            ]
+          ]
+        ],
+        "expected": [
+          "decimal",
+          "neither"
+        ]
+      },
+      {
+        "args": [
+          [
+            "0"
+          ],
+          [
+            [
+              0,
+              0,
+              0,
+              0
+            ]
+          ]
+        ],
+        "expected": [
+          "binary"
+        ]
+      },
+      {
+        "args": [
+          [
+            "010"
+          ],
+          [
+            [
+              0,
+              0,
+              0,
+              2
+            ],
+            [
+              0,
+              1,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": [
+          "neither",
+          "decimal"
+        ]
+      },
+      {
+        "args": [
+          [
+            "0000",
+            "1111",
+            "0000"
+          ],
+          [
+            [
+              0,
+              0,
+              0,
+              3
+            ],
+            [
+              2,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              1,
+              3
+            ],
+            [
+              0,
+              2,
+              2,
+              1
+            ]
+          ]
+        ],
+        "expected": [
+          "binary",
+          "neither",
+          "decimal",
+          "neither"
+        ]
+      }
+    ]
+  }
+]

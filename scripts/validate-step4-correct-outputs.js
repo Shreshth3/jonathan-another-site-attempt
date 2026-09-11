@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 
-const sourceRoot = path.resolve(__dirname, "../../jonathan-study-site");
+const sourceRoot = path.resolve(__dirname, "../source/jonathan-study-site");
 const sourceSandbox = { window: {} };
 vm.runInNewContext(fs.readFileSync(path.join(sourceRoot, "site/problems.js"), "utf8"), sourceSandbox);
 const sourceProblems = new Map(sourceSandbox.window.PROBLEMS.map(problem => [problem.id, problem]));

@@ -1,0 +1,992 @@
+[
+  {
+    "id": "kth-song-in-playlist",
+    "title": "The K-th Song",
+    "category": "variant",
+    "parentId": "flatten-nested-list-iterator",
+    "parentTitle": "Flatten Nested List Iterator",
+    "difficulty": "Easy",
+    "twist": "Instead of building an iterator class with next/hasNext, you flatten the same kind of nested structure once and return just the k-th value (or -1 if it does not exist).",
+    "statement": "Your music app stores a playlist as a **nested array**. Each element is either an integer (a song ID) or another array (a folder that contains more songs and folders). Folders can be nested inside folders, and some folders may be empty.\n\nWhen you press play, the app plays the songs in the order you would read them left to right, diving into each folder the moment it reaches it. For example, `[[1,2],[3,[4,5]]]` plays in the order `1, 2, 3, 4, 5`.\n\nWrite a function `kthSong(playlist, k)` that returns the ID of the `k`-th song played (`k` is 1-indexed, so `k = 1` means the very first song). If the playlist contains fewer than `k` songs in total, return `-1`.",
+    "examples": [
+      {
+        "input": "playlist = [[1,2],[3,[4,5]]], k = 4",
+        "output": "4",
+        "explanation": "The play order is 1, 2, 3, 4, 5. The 4th song played has ID 4."
+      },
+      {
+        "input": "playlist = [7,[[]],[8,[9]]], k = 5",
+        "output": "-1",
+        "explanation": "The empty folder contributes nothing, so the play order is just 7, 8, 9 — only 3 songs. There is no 5th song, so we return -1."
+      }
+    ],
+    "constraints": [
+      "1 <= total number of integers and arrays <= 1000",
+      "Nesting depth is at most 50",
+      "Song IDs are integers between 0 and 100000",
+      "1 <= k <= 1000"
+    ],
+    "functionName": "kthSong",
+    "solution": "const NOT_FOUND = -1;\n\n// CONTRACT for flattenPlaylist(nestedPlaylist, flatSongIds):\n//     when this call returns, every song id inside `nestedPlaylist` —\n//     including songs buried in folders within folders — has been\n//     appended to `flatSongIds`, in exact play order.\nconst flattenPlaylist = (nestedPlaylist, flatSongIds) => {\n    for (const element of nestedPlaylist) {\n        // Base case: a plain integer is a song, so record it in play order.\n        if (typeof element === 'number') {\n            flatSongIds.push(element);\n            continue;\n        }\n\n        // Recurse on neighbors: an array is a folder, so dive inside it\n        // the moment we reach it (this matches the play order).\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every song inside this\n        // folder has been appended to `flatSongIds` in play order. Trust\n        // it, do not trace it. Songs recorded directly here + each\n        // folder's guaranteed songs, all in the order we meet them —\n        // exactly this function's contract, kept.\n        flattenPlaylist(element, flatSongIds);\n    }\n};\n\nconst kthSong = (playlist, k) => {\n    const flatSongIds = [];\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, `flatSongIds` holds every song in the whole\n    // playlist in play order. We do not trace inside; we just read\n    // off the k-th entry.\n    flattenPlaylist(playlist, flatSongIds);\n\n    // Empty folders contribute nothing, so the playlist can hold\n    // fewer than k songs.\n    if (k > flatSongIds.length) return NOT_FOUND;\n\n    // k is 1-indexed, so the k-th song lives at index k - 1.\n    return flatSongIds[k - 1];\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              [
+                4,
+                5
+              ]
+            ]
+          ],
+          4
+        ],
+        "expected": 4
+      },
+      {
+        "args": [
+          [
+            7,
+            [
+              []
+            ],
+            [
+              8,
+              [
+                9
+              ]
+            ]
+          ],
+          5
+        ],
+        "expected": -1
+      },
+      {
+        "args": [
+          [
+            [
+              [
+                42
+              ]
+            ]
+          ],
+          1
+        ],
+        "expected": 42
+      },
+      {
+        "args": [
+          [
+            10,
+            20,
+            30
+          ],
+          3
+        ],
+        "expected": 30
+      },
+      {
+        "args": [
+          [
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ],
+          1
+        ],
+        "expected": -1
+      }
+    ]
+  },
+  {
+    "id": "shut-the-garden-valve",
+    "title": "Shut the Valve",
+    "category": "variant",
+    "parentId": "kill-process",
+    "parentTitle": "Kill Process",
+    "difficulty": "Easy",
+    "twist": "Instead of returning the list of nodes removed with the subtree, every node now has a number attached (liters per hour), and you must return the SUM over the affected subtree.",
+    "statement": "A garden watering system has several sprinklers, described by three lists of the same length. `ids[i]` is the ID of a sprinkler, `feeds[i]` is the ID of the sprinkler that passes water along to it, and `liters[i]` is how many liters of water sprinkler `ids[i]` sprays per hour. A sprinkler with `feeds[i] = 0` gets its water straight from the main line. Every other sprinkler receives water through exactly one other sprinkler, and the piping never loops, so it forms a tree. All IDs are unique positive numbers.\n\nIf you shut off sprinkler `shutId`, it stops spraying, and so does every sprinkler that receives its water through it (directly or through a chain of other sprinklers).\n\nReturn the total number of liters per hour you save by shutting off sprinkler `shutId`.",
+    "examples": [
+      {
+        "input": "ids = [1,2,3,4], feeds = [0,1,1,2], liters = [5,10,20,40], shutId = 2",
+        "output": "50",
+        "explanation": "Sprinkler 2 feeds sprinkler 4. Shutting 2 stops sprinklers 2 and 4, saving 10 + 40 = 50 liters per hour."
+      },
+      {
+        "input": "ids = [1,2,3,4], feeds = [0,1,1,2], liters = [5,10,20,40], shutId = 1",
+        "output": "75",
+        "explanation": "Sprinkler 1 feeds 2 and 3, and 2 feeds 4, so shutting 1 stops everything: 5 + 10 + 20 + 40 = 75 liters per hour."
+      }
+    ],
+    "constraints": [
+      "1 <= ids.length <= 100",
+      "ids.length == feeds.length == liters.length",
+      "All IDs are unique integers between 1 and 10000",
+      "1 <= liters[i] <= 1000",
+      "The piping forms a tree, and shutId is guaranteed to be one of the IDs in ids"
+    ],
+    "functionName": "litersSaved",
+    "solution": "const buildChildrenGraph = (ids, feeds) => {\n    const childrenGraph = {};\n\n    for (let index = 0; index < ids.length; index++) {\n        const sprinklerId = ids[index];\n        const feederId = feeds[index];\n\n        const feederInGraph = childrenGraph.hasOwnProperty(feederId);\n        if (!feederInGraph) childrenGraph[feederId] = [];\n\n        childrenGraph[feederId].push(sprinklerId);\n    }\n\n    return childrenGraph;\n};\n\n// CONTRACT for sumSubtreeLiters(childrenGraph, litersById, sprinklerId):\n//     when this call returns, the returned value equals the liters\n//     used by `sprinklerId` plus the liters used by every sprinkler\n//     fed through it, all the way down.\nconst sumSubtreeLiters = (childrenGraph, litersById, sprinklerId) => {\n    // Base case is automatic: a sprinkler that feeds no other\n    // sprinklers has no children to recurse on.\n\n    // Process node\n    let totalLiters = litersById[sprinklerId];\n\n    // Recurse on neighbors\n    const sprinklerInGraph = childrenGraph.hasOwnProperty(sprinklerId);\n    if (!sprinklerInGraph) return totalLiters;\n\n    const childIds = childrenGraph[sprinklerId];\n    for (const childId of childIds) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, it hands back the total\n        // liters for `childId` and everything fed through it. Trust it,\n        // do not trace it. This sprinkler's own liters + each child's\n        // guaranteed total = exactly this function's contract.\n        totalLiters += sumSubtreeLiters(childrenGraph, litersById, childId);\n    }\n\n    return totalLiters;\n};\n\nconst litersSaved = (ids, feeds, liters, shutId) => {\n    // The piping is a tree, so shutting one sprinkler cuts off exactly\n    // the subtree rooted at it.\n    const childrenGraph = buildChildrenGraph(ids, feeds);\n\n    const litersById = {};\n    for (let index = 0; index < ids.length; index++) {\n        litersById[ids[index]] = liters[index];\n    }\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, its value is the total liters used by `shutId`\n    // and every sprinkler fed through it. We do not trace inside; we\n    // just return that total.\n    return sumSubtreeLiters(childrenGraph, litersById, shutId);\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            0,
+            1,
+            1,
+            2
+          ],
+          [
+            5,
+            10,
+            20,
+            40
+          ],
+          2
+        ],
+        "expected": 50
+      },
+      {
+        "args": [
+          [
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            0,
+            1,
+            1,
+            2
+          ],
+          [
+            5,
+            10,
+            20,
+            40
+          ],
+          1
+        ],
+        "expected": 75
+      },
+      {
+        "args": [
+          [
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            0,
+            1,
+            1,
+            2
+          ],
+          [
+            5,
+            10,
+            20,
+            40
+          ],
+          3
+        ],
+        "expected": 20
+      },
+      {
+        "args": [
+          [
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            0,
+            1,
+            1,
+            2
+          ],
+          [
+            5,
+            10,
+            20,
+            40
+          ],
+          4
+        ],
+        "expected": 40
+      },
+      {
+        "args": [
+          [
+            9
+          ],
+          [
+            0
+          ],
+          [
+            7
+          ],
+          9
+        ],
+        "expected": 7
+      }
+    ]
+  },
+  {
+    "id": "count-routes-to-summit",
+    "title": "Routes to the Summit",
+    "category": "variant",
+    "parentId": "all-paths-from-source-to-target",
+    "parentTitle": "All Paths From Source to Target",
+    "difficulty": "Medium",
+    "twist": "Instead of returning the list of every path from source to target, you only return HOW MANY such paths exist.",
+    "statement": "A mountain has `n` camps, numbered `0` to `n - 1`. Camp `0` is base camp and camp `n - 1` is the summit.\n\nThe trails between camps are one-way and always lead uphill: `graph[i]` is the list of camps you can walk to directly from camp `i`. Because every trail goes uphill, you can never walk in a circle back to a camp you already visited.\n\nTwo routes are different if the sequence of camps they visit is different.\n\nReturn the number of different routes from base camp `0` to the summit `n - 1`.",
+    "examples": [
+      {
+        "input": "graph = [[1,2],[3],[3],[]]",
+        "output": "2",
+        "explanation": "The routes are 0 -> 1 -> 3 and 0 -> 2 -> 3. That makes 2 routes."
+      },
+      {
+        "input": "graph = [[1,2,3],[3],[3],[]]",
+        "output": "3",
+        "explanation": "The routes are 0 -> 1 -> 3, 0 -> 2 -> 3, and the direct trail 0 -> 3. That makes 3 routes."
+      }
+    ],
+    "constraints": [
+      "n == graph.length, 2 <= n <= 10",
+      "0 <= graph[i].length <= n - 1",
+      "graph[i] never contains i, and all values in graph[i] are different",
+      "The trails never form a cycle (they always lead uphill)"
+    ],
+    "functionName": "countSummitRoutes",
+    "solution": "const BASE_CAMP = 0;\n\n// CONTRACT for countRoutesFromCamp(graph, curCamp, summitCamp):\n//     when this call returns, the returned value equals the number of\n//     different trail routes that lead from `curCamp` all the way to\n//     `summitCamp`.\nconst countRoutesFromCamp = (graph, curCamp, summitCamp) => {\n    // Base case: reaching the summit completes exactly one route.\n    if (curCamp === summitCamp) return 1;\n\n    // Process node\n    let routeCount = 0;\n\n    // Recurse on neighbors\n    const neighborCamps = graph[curCamp];\n    for (const neighborCamp of neighborCamps) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, it hands back the number\n        // of routes from `neighborCamp` to the summit. Trust it, do not\n        // trace it. Every route out of `curCamp` starts by stepping to\n        // some neighbor, so adding up each neighbor's guaranteed count\n        // gives exactly this function's contract.\n        routeCount += countRoutesFromCamp(graph, neighborCamp, summitCamp);\n    }\n\n    return routeCount;\n};\n\nconst countSummitRoutes = (graph) => {\n    const summitCamp = graph.length - 1;\n\n    // Every trail leads uphill, so the graph has no cycles and we\n    // never need a visited set.\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, its value is the number of routes from base camp\n    // to the summit. We do not trace inside; we just return it.\n    return countRoutesFromCamp(graph, BASE_CAMP, summitCamp);\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              3
+            ],
+            [
+              3
+            ],
+            []
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2,
+              3
+            ],
+            [
+              3
+            ],
+            [
+              3
+            ],
+            []
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ],
+            [],
+            []
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3
+            ],
+            []
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ],
+            []
+          ]
+        ],
+        "expected": 1
+      }
+    ]
+  },
+  {
+    "id": "package-to-the-outpost",
+    "title": "Package to the Outpost",
+    "category": "variant",
+    "parentId": "network-delay-time",
+    "parentTitle": "Network Delay Time",
+    "difficulty": "Easy",
+    "twist": "The weighted graph becomes a tree (exactly one route between any two nodes), and instead of the time for a signal to reach ALL nodes, you only need the travel time along the unique route to ONE target, so no shortest-path algorithm is needed.",
+    "statement": "A delivery company has `n` warehouses, numbered `0` to `n - 1`, connected by two-way roads. `roads[i] = [a, b, hours]` means there is a road between warehouse `a` and warehouse `b` that takes `hours` hours to drive.\n\nThere are exactly `n - 1` roads and every warehouse can be reached from every other one. That means there are no shortcut loops: between any two warehouses there is exactly **one** possible route.\n\nA truck starts at warehouse `hq` and drives to warehouse `target` along that one route. Return the total number of hours the drive takes. If `hq` and `target` are the same warehouse, return `0`.",
+    "examples": [
+      {
+        "input": "n = 5, roads = [[0,1,4],[1,2,3],[0,3,2],[3,4,7]], hq = 0, target = 4",
+        "output": "9",
+        "explanation": "The only route from 0 to 4 is 0 -> 3 -> 4, which takes 2 + 7 = 9 hours."
+      },
+      {
+        "input": "n = 3, roads = [[1,0,5],[1,2,1]], hq = 2, target = 0",
+        "output": "6",
+        "explanation": "The only route from 2 to 0 is 2 -> 1 -> 0, which takes 1 + 5 = 6 hours."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 100",
+      "roads.length == n - 1, and every warehouse is reachable from every other (the roads form a tree)",
+      "0 <= a, b <= n - 1",
+      "1 <= hours <= 100",
+      "0 <= hq, target <= n - 1"
+    ],
+    "functionName": "deliveryHours",
+    "solution": "const buildWeightedGraph = (roads) => {\n    const graph = {};\n\n    for (const road of roads) {\n        const [warehouseOne, warehouseTwo, hours] = road;\n\n        const warehouseOneInGraph = graph.hasOwnProperty(warehouseOne);\n        const warehouseTwoInGraph = graph.hasOwnProperty(warehouseTwo);\n\n        if (!warehouseOneInGraph) graph[warehouseOne] = [];\n        if (!warehouseTwoInGraph) graph[warehouseTwo] = [];\n\n        // Roads are two-way, so add each road in both directions.\n        graph[warehouseOne].push([warehouseTwo, hours]);\n        graph[warehouseTwo].push([warehouseOne, hours]);\n    }\n\n    return graph;\n};\n\n// CONTRACT for recordArrivalHours(graph, warehouse, hoursSoFar, bestKnownHours):\n//     when this call returns, `bestKnownHours` has an entry for\n//     `warehouse` and for every warehouse reachable from it, holding\n//     the fewest driving hours needed to arrive there.\nconst recordArrivalHours = (graph, warehouse, hoursSoFar, bestKnownHours) => {\n    // Base case: if we already reached this warehouse at least as fast,\n    // this route cannot improve anything (this also stops us from\n    // driving back and forth forever).\n    const warehouseHasBestTime = bestKnownHours.hasOwnProperty(warehouse);\n    if (warehouseHasBestTime && bestKnownHours[warehouse] <= hoursSoFar) return;\n\n    // Process node\n    bestKnownHours[warehouse] = hoursSoFar;\n\n    // Recurse on neighbors\n    const warehouseInGraph = graph.hasOwnProperty(warehouse);\n    if (!warehouseInGraph) return;\n\n    const neighborRoads = graph[warehouse];\n    for (const neighborRoad of neighborRoads) {\n        const [neighborWarehouse, roadHours] = neighborRoad;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `bestKnownHours` has the\n        // fewest hours for `neighborWarehouse` and everything reachable\n        // beyond it. Trust it, do not trace it. This function already\n        // recorded `warehouse`'s time, and each neighbor's contract covers\n        // the warehouses past it — together, that is this function's full\n        // contract, kept.\n        recordArrivalHours(\n            graph,\n            neighborWarehouse,\n            hoursSoFar + roadHours,\n            bestKnownHours,\n        );\n    }\n};\n\nconst deliveryHours = (n, roads, hq, target) => {\n    const graph = buildWeightedGraph(roads);\n\n    // Track the best-known driving time from hq to every warehouse,\n    // then read off the answer for the target. The roads form a tree,\n    // so the one route the DFS finds is THE route.\n    const bestKnownHours = {};\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, `bestKnownHours` holds the driving time from `hq`\n    // to every reachable warehouse. We do not trace inside; we just\n    // read off the entry for `target`.\n    recordArrivalHours(graph, hq, 0, bestKnownHours);\n\n    return bestKnownHours[target];\n};",
+    "tests": [
+      {
+        "args": [
+          5,
+          [
+            [
+              0,
+              1,
+              4
+            ],
+            [
+              1,
+              2,
+              3
+            ],
+            [
+              0,
+              3,
+              2
+            ],
+            [
+              3,
+              4,
+              7
+            ]
+          ],
+          0,
+          4
+        ],
+        "expected": 9
+      },
+      {
+        "args": [
+          3,
+          [
+            [
+              1,
+              0,
+              5
+            ],
+            [
+              1,
+              2,
+              1
+            ]
+          ],
+          2,
+          0
+        ],
+        "expected": 6
+      },
+      {
+        "args": [
+          4,
+          [
+            [
+              0,
+              1,
+              1
+            ],
+            [
+              1,
+              2,
+              1
+            ],
+            [
+              2,
+              3,
+              1
+            ]
+          ],
+          2,
+          2
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          1,
+          [],
+          0,
+          0
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          4,
+          [
+            [
+              0,
+              1,
+              2
+            ],
+            [
+              1,
+              2,
+              3
+            ],
+            [
+              2,
+              3,
+              4
+            ]
+          ],
+          0,
+          3
+        ],
+        "expected": 9
+      }
+    ]
+  },
+  {
+    "id": "gold-and-silver-lights",
+    "title": "Gold and Silver Lights",
+    "category": "variant",
+    "parentId": "is-graph-bipartite",
+    "parentTitle": "Is Graph Bipartite?",
+    "difficulty": "Easy",
+    "twist": "Much easier than the parent: the graph is guaranteed to be a tree, so a valid two-coloring always exists and no conflict-checking is needed; instead of answering yes/no, you count how many nodes get the same color as the root.",
+    "statement": "You are decorating with a set of `n` connected light bulbs, numbered `0` to `n - 1`. The list `wires` contains pairs `[a, b]` meaning bulbs `a` and `b` are joined by a wire. There are exactly `n - 1` wires and every bulb is connected to the rest, so the wiring forms a tree: there is exactly one way to travel between any two bulbs, and there are no loops.\n\nYou will paint every bulb either **gold** or **silver**, following two rules:\n\n1. Bulb `0` must be gold.\n2. Any two bulbs joined by a wire must be different colors.\n\nBecause the wiring is a tree, there is exactly one way to paint everything. Return how many bulbs end up **gold**.",
+    "examples": [
+      {
+        "input": "n = 4, wires = [[0,1],[0,2],[1,3]]",
+        "output": "2",
+        "explanation": "Bulb 0 is gold, so bulbs 1 and 2 must be silver. Bulb 3 is wired to silver bulb 1, so bulb 3 is gold. Gold bulbs: 0 and 3, which is 2."
+      },
+      {
+        "input": "n = 5, wires = [[0,1],[1,2],[2,3],[3,4]]",
+        "output": "3",
+        "explanation": "The bulbs form a chain, so the colors alternate: gold, silver, gold, silver, gold. Bulbs 0, 2, and 4 are gold, which is 3."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 100",
+      "wires.length == n - 1",
+      "0 <= a, b <= n - 1",
+      "The wires connect all bulbs and form a tree (no loops)"
+    ],
+    "functionName": "countGoldBulbs",
+    "solution": "const ROOT_BULB = 0;\n\nconst buildGraph = (edges) => {\n    const graph = {};\n\n    for (const edge of edges) {\n        const [nodeOne, nodeTwo] = edge;\n\n        const nodeOneInGraph = graph.hasOwnProperty(nodeOne);\n        const nodeTwoInGraph = graph.hasOwnProperty(nodeTwo);\n\n        if (!nodeOneInGraph) graph[nodeOne] = [];\n        if (!nodeTwoInGraph) graph[nodeTwo] = [];\n\n        graph[nodeOne].push(nodeTwo);\n        graph[nodeTwo].push(nodeOne);\n    }\n\n    return graph;\n};\n\n// CONTRACT for countGoldFromBulb(graph, bulb, isGold, visited):\n//     when this call returns, `bulb` and every bulb reachable from it\n//     is in the visited set, and the returned value is how many of\n//     the bulbs this call put into visited are gold (with `bulb`\n//     itself being gold exactly when `isGold` is true).\nconst countGoldFromBulb = (graph, bulb, isGold, visited) => {\n    // Base case\n    if (visited.has(bulb)) return 0;\n\n    // Process node\n    visited.add(bulb);\n\n    // Neighbors must alternate colors, so a bulb's color depends only\n    // on how many wires away from bulb 0 it is: even = gold, odd = silver.\n    let goldCount = isGold ? 1 : 0;\n\n    // Recurse on neighbors\n    const bulbInGraph = graph.hasOwnProperty(bulb);\n    if (!bulbInGraph) return goldCount;\n\n    const neighbors = graph[bulb];\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `neighbor` and everything\n        // reachable from it is in visited, and it hands back the number\n        // of gold bulbs it put there (the neighbor's color is the\n        // opposite of ours). Trust it, do not trace it. This bulb's own\n        // 1 or 0 + each neighbor call's guaranteed count = exactly this\n        // function's contract.\n        goldCount += countGoldFromBulb(graph, neighbor, !isGold, visited);\n    }\n\n    return goldCount;\n};\n\nconst countGoldBulbs = (n, wires) => {\n    const graph = buildGraph(wires);\n    const visited = new Set();\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, its value is the total number of gold bulbs in\n    // the whole string of lights (bulb 0 is gold). We do not trace\n    // inside; we just return that number.\n    return countGoldFromBulb(graph, ROOT_BULB, true, visited);\n};",
+    "tests": [
+      {
+        "args": [
+          4,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              3
+            ]
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          5,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          1,
+          []
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          2,
+          [
+            [
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          4,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              3
+            ]
+          ]
+        ],
+        "expected": 1
+      }
+    ]
+  },
+  {
+    "id": "top-of-the-pile",
+    "title": "Top of the Pile",
+    "category": "variant",
+    "parentId": "nested-list-weight-sum-ii",
+    "parentTitle": "Nested List Weight Sum II",
+    "difficulty": "Medium",
+    "twist": "Nested List Weight Sum II favors shallow integers with big weights; this variant pushes that idea to the limit: find the shallowest depth that contains any integer at all, and sum only those integers. Like the parent, it takes one pass to discover a key depth and another to compute the answer.",
+    "statement": "A moving company stacks boxes inside boxes. The load is written as a **nested array**: each element is either an integer (the weight of a loose item) or another array (a box containing more things).\n\nElements directly in the top-level array are at depth `1`; each layer of nesting adds `1`. For example, in `[[9],5]`, the item `5` is at depth 1 and the item `9` is at depth 2.\n\nWhen unloading the truck, workers only grab the items that are the **least buried** — the items at the smallest depth where any loose item exists at all. Everything deeper stays in its boxes for now.\n\nWrite a function `topLayerSum(items)` that finds the **smallest depth containing at least one integer** and returns the **sum of all integers at that depth**. You are guaranteed the nested array contains at least one integer.",
+    "examples": [
+      {
+        "input": "items = [[[5,6]],7,[8]]",
+        "output": "7",
+        "explanation": "Depth 1 contains the integer 7, so depth 1 is the least-buried level with any items. Only 7 is at depth 1 (5, 6 are at depth 3 and 8 is at depth 2), so the answer is 7."
+      },
+      {
+        "input": "items = [[[2,3]],[[4],[5,[6]]]]",
+        "output": "14",
+        "explanation": "Depths 1 and 2 contain only arrays, no integers. The shallowest integers appear at depth 3: 2, 3, 4, and 5. (The 6 is at depth 4.) 2 + 3 + 4 + 5 = 14."
+      }
+    ],
+    "constraints": [
+      "1 <= total number of integers and arrays <= 1000",
+      "Nesting depth is at most 50",
+      "Item weights are integers between -100 and 100",
+      "At least one integer is present"
+    ],
+    "functionName": "topLayerSum",
+    "solution": "const TOP_DEPTH = 1;\n\n// CONTRACT for findShallowestItemDepth(items, curDepth):\n//     when this call returns, the returned value equals the depth of\n//     the shallowest integer anywhere inside `items`, where the\n//     elements directly inside sit at depth `curDepth` (Infinity if\n//     there are no integers at all).\nconst findShallowestItemDepth = (items, curDepth) => {\n    let shallowestDepth = Infinity;\n\n    for (const element of items) {\n        // Base case: an integer sits at the current depth.\n        if (typeof element === 'number') {\n            shallowestDepth = Math.min(shallowestDepth, curDepth);\n            continue;\n        }\n\n        // Recurse on neighbors: dive one box deeper.\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, it hands back the depth of\n        // the shallowest integer inside this box. Trust it, do not trace\n        // it. The shallowest of the integers seen right here and each\n        // box's guaranteed answer = exactly this function's contract.\n        const depthInsideBox = findShallowestItemDepth(element, curDepth + 1);\n        shallowestDepth = Math.min(shallowestDepth, depthInsideBox);\n    }\n\n    return shallowestDepth;\n};\n\n// CONTRACT for sumItemsAtDepth(items, curDepth, targetDepth):\n//     when this call returns, the returned value equals the sum of\n//     every integer inside `items` that sits at exactly depth\n//     `targetDepth`, where the elements directly inside sit at depth\n//     `curDepth`.\nconst sumItemsAtDepth = (items, curDepth, targetDepth) => {\n    let itemSum = 0;\n\n    for (const element of items) {\n        // Base case: an integer only counts if it sits at the target depth.\n        if (typeof element === 'number') {\n            if (curDepth === targetDepth) itemSum += element;\n            continue;\n        }\n\n        // Recurse on neighbors\n        // The recursive leap of faith, one level down: same contract —\n        // this call hands back the sum of this box's integers at exactly\n        // `targetDepth`. Trust it, do not trace it. Integers counted here\n        // + each box's guaranteed sum = exactly this function's contract.\n        itemSum += sumItemsAtDepth(element, curDepth + 1, targetDepth);\n    }\n\n    return itemSum;\n};\n\nconst topLayerSum = (items) => {\n    // Pass 1: discover the shallowest depth that holds any integer.\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, `shallowestDepth` is the depth of the shallowest\n    // integer in the whole pile. We do not trace inside; we just use\n    // that depth as the target for pass 2.\n    const shallowestDepth = findShallowestItemDepth(items, TOP_DEPTH);\n\n    // Pass 2: sum only the integers sitting at that depth.\n    // The recursive leap of faith again: when this call returns, its\n    // value is the sum of every integer at that depth. We do not\n    // trace inside; we just return it.\n    return sumItemsAtDepth(items, TOP_DEPTH, shallowestDepth);\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              [
+                5,
+                6
+              ]
+            ],
+            7,
+            [
+              8
+            ]
+          ]
+        ],
+        "expected": 7
+      },
+      {
+        "args": [
+          [
+            [
+              [
+                2,
+                3
+              ]
+            ],
+            [
+              [
+                4
+              ],
+              [
+                5,
+                [
+                  6
+                ]
+              ]
+            ]
+          ]
+        ],
+        "expected": 14
+      },
+      {
+        "args": [
+          [
+            1,
+            2,
+            3
+          ]
+        ],
+        "expected": 6
+      },
+      {
+        "args": [
+          [
+            [],
+            [
+              10
+            ],
+            []
+          ]
+        ],
+        "expected": 10
+      },
+      {
+        "args": [
+          [
+            [
+              [
+                8
+              ]
+            ],
+            [
+              -3
+            ],
+            [
+              [
+                2,
+                2
+              ]
+            ]
+          ]
+        ],
+        "expected": -3
+      }
+    ]
+  },
+  {
+    "id": "gas-pocket-survey",
+    "title": "Gas Pocket Survey",
+    "category": "variant",
+    "parentId": "minesweeper",
+    "parentTitle": "Minesweeper",
+    "difficulty": "Medium",
+    "twist": "Classic Minesweeper reveal, but the neighborhood is 4-directional instead of 8: danger numbers only count gas pockets directly up, down, left, and right, and safe cells only spread the reveal in those 4 directions.",
+    "statement": "You are surveying a cave system shown as a grid. `cave[r][c]` is one of:\n\n- `\"U\"` — unexplored rock\n- `\"G\"` — a hidden gas pocket (dangerous!)\n\nYou drill into one cell, given by `row` and `col`. Gas seeps only through the four flat walls of a cell, so in this problem **only the 4 orthogonal neighbors matter** — up, down, left, and right. Diagonal cells are NOT neighbors.\n\nApply these rules, then return the updated grid:\n\n1. If you drill into a gas pocket (`\"G\"`), it ruptures: change that cell to `\"X\"` and stop.\n2. Otherwise, count the gas pockets among the cell's **4 orthogonal neighbors**.\n   - If the count is 1 or more, change the cell to that count as a digit character (`\"1\"`, `\"2\"`, `\"3\"`, or `\"4\"`) and stop expanding from this cell.\n   - If the count is 0, change the cell to `\"S\"` (safe) and automatically reveal **each of its 4 orthogonal neighbors** the same way (this can keep spreading).\n\nCells that are never revealed stay exactly as they were.\n\nWrite a function `surveyCave(cave, row, col)` that returns the final grid. The drilled cell is guaranteed to be `\"U\"` or `\"G\"`.",
+    "examples": [
+      {
+        "input": "cave = [[\"U\",\"U\",\"U\"],[\"U\",\"U\",\"U\"],[\"U\",\"G\",\"U\"]], row = 0, col = 0",
+        "output": "[[\"S\",\"S\",\"S\"],[\"S\",\"1\",\"S\"],[\"1\",\"G\",\"1\"]]",
+        "explanation": "The gas pocket is at (2,1). Cell (1,1) has it directly below, so it shows \"1\". Cells (2,0) and (2,2) have it directly beside them, so they show \"1\". Cells like (1,0) and (1,2) only touch the gas DIAGONALLY, which does not count in this problem, so they are safe \"S\" and keep spreading the reveal. The pocket itself is never drilled, so it stays \"G\"."
+      },
+      {
+        "input": "cave = [[\"G\",\"U\"],[\"U\",\"U\"]], row = 0, col = 0",
+        "output": "[[\"X\",\"U\"],[\"U\",\"U\"]]",
+        "explanation": "You drilled straight into the gas pocket. It becomes \"X\" and nothing else changes."
+      }
+    ],
+    "constraints": [
+      "1 <= number of rows, number of columns <= 50",
+      "cave[r][c] is \"U\" or \"G\"",
+      "0 <= row < number of rows, 0 <= col < number of columns",
+      "cave[row][col] is \"U\" or \"G\""
+    ],
+    "functionName": "surveyCave",
+    "solution": "const GAS_POCKET = 'G';\nconst RUPTURED = 'X';\nconst SAFE = 'S';\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\nconst countNeighborGasPockets = (cave, row, col) => {\n    // Gas only seeps through the four flat walls, so only the\n    // 4 orthogonal neighbors count (no diagonals!).\n    let gasCount = 0;\n\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        if (!isInBounds(cave, newRow, newCol)) continue;\n\n        if (cave[newRow][newCol] === GAS_POCKET) gasCount++;\n    }\n\n    return gasCount;\n};\n\n// CONTRACT for revealCell(cave, row, col, visited):\n//     when this call returns, (`row`, `col`) is revealed and in the\n//     visited set, and if it touches no gas the reveal has spread:\n//     every square reachable from it through gas-free squares is\n//     revealed too. Squares off the board or already in visited are\n//     left unchanged.\nconst revealCell = (cave, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(cave, row, col)) return;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return;\n\n    // Process node\n    visited.add(curPositionString);\n\n    const neighborGasCount = countNeighborGasPockets(cave, row, col);\n\n    // A cell next to gas shows its danger count and stops the spread.\n    if (neighborGasCount > 0) {\n        cave[row][col] = String(neighborGasCount);\n        return;\n    }\n\n    cave[row][col] = SAFE;\n\n    // Recurse on neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighboring square\n        // (and, if it is gas-free, everything reachable beyond it) is\n        // revealed and in visited. Trust it, do not trace it. This\n        // function already revealed (`row`, `col`); each direction's\n        // contract reveals the rest of the safe area — together, that is\n        // this function's full contract, kept.\n        revealCell(cave, newRow, newCol, visited);\n    }\n};\n\nconst surveyCave = (cave, row, col) => {\n    // Drilling straight into gas ruptures the pocket and nothing spreads.\n    if (cave[row][col] === GAS_POCKET) {\n        cave[row][col] = RUPTURED;\n        return cave;\n    }\n\n    const visited = new Set();\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, the drilled square and the whole safe area\n    // connected to it are revealed, with danger counts on the edge.\n    // We do not trace inside; we just return the updated cave.\n    revealCell(cave, row, col, visited);\n\n    return cave;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              "U",
+              "U",
+              "U"
+            ],
+            [
+              "U",
+              "U",
+              "U"
+            ],
+            [
+              "U",
+              "G",
+              "U"
+            ]
+          ],
+          0,
+          0
+        ],
+        "expected": [
+          [
+            "S",
+            "S",
+            "S"
+          ],
+          [
+            "S",
+            "1",
+            "S"
+          ],
+          [
+            "1",
+            "G",
+            "1"
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              "G",
+              "U"
+            ],
+            [
+              "U",
+              "U"
+            ]
+          ],
+          0,
+          0
+        ],
+        "expected": [
+          [
+            "X",
+            "U"
+          ],
+          [
+            "U",
+            "U"
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              "U",
+              "G"
+            ],
+            [
+              "U",
+              "U"
+            ]
+          ],
+          0,
+          0
+        ],
+        "expected": [
+          [
+            "1",
+            "G"
+          ],
+          [
+            "U",
+            "U"
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              "U"
+            ]
+          ],
+          0,
+          0
+        ],
+        "expected": [
+          [
+            "S"
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              "U",
+              "U",
+              "U",
+              "U"
+            ]
+          ],
+          0,
+          3
+        ],
+        "expected": [
+          [
+            "S",
+            "S",
+            "S",
+            "S"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "runes-on-the-castle-door",
+    "title": "Runes on the Castle Door",
+    "category": "variant",
+    "parentId": "letter-combinations-of-a-phone-number",
+    "parentTitle": "Letter Combinations of a Phone Number",
+    "difficulty": "Medium",
+    "twist": "Each position gets its own custom set of letters instead of a fixed phone keypad, and a new rule is added: two neighboring positions may never show the same letter.",
+    "statement": "A castle door is locked by a row of spinning dials. Dial `i` can be turned to show any one of the runes (lowercase letters) in the string `dials[i]`.\n\nTo try a code, you set every dial to one rune and read the runes from left to right to form a word. But the door's magic fizzles if two dials that sit **next to each other** show the **same** rune, so in a valid code, every pair of neighboring runes must be different.\n\nReturn a list of **all** valid codes you could set. You may return them in any order. If no valid code exists, return an empty list.",
+    "examples": [
+      {
+        "input": "dials = [\"ab\",\"b\",\"ac\"]",
+        "output": "[\"aba\",\"abc\"]",
+        "explanation": "Dial 0 can show a or b, dial 1 only b, dial 2 a or c. Starting with b is invalid because dial 1 is also b. Starting with a gives \"ab\", then dial 2 can be a or c (both differ from b), giving \"aba\" and \"abc\"."
+      },
+      {
+        "input": "dials = [\"xy\",\"x\"]",
+        "output": "[\"yx\"]",
+        "explanation": "\"xx\" is invalid because the two neighboring dials would match. \"yx\" is the only valid code."
+      }
+    ],
+    "constraints": [
+      "1 <= dials.length <= 6",
+      "1 <= dials[i].length <= 4",
+      "dials[i] contains only lowercase English letters, all different within one dial"
+    ],
+    "functionName": "allRuneCodes",
+    "solution": "// CONTRACT for generateCodes(dials, dialIndex, codeSoFar, allCodes):\n//     when this call returns, every valid full code that starts with\n//     `codeSoFar` and continues with runes from dial `dialIndex`\n//     onward has been appended to `allCodes`.\nconst generateCodes = (dials, dialIndex, codeSoFar, allCodes) => {\n    // Base case\n    if (dialIndex === dials.length) {\n        allCodes.push(codeSoFar);\n        return;\n    }\n\n    // Process node\n    const previousRune = codeSoFar[codeSoFar.length - 1];\n\n    // Traverse neighbors\n    const runes = dials[dialIndex];\n\n    for (const rune of runes) {\n        // Two neighboring dials may never show the same rune, so skip\n        // any rune that matches the dial to our left.\n        if (rune === previousRune) continue;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every valid code that\n        // starts with `codeSoFar` plus `rune` has been appended to\n        // `allCodes`. Trust it, do not trace it. Trying every allowed\n        // rune on this dial, each with its guaranteed completions, covers\n        // every valid code that starts with `codeSoFar` — exactly this\n        // function's contract, kept.\n        generateCodes(dials, dialIndex + 1, codeSoFar + rune, allCodes);\n    }\n};\n\nconst allRuneCodes = (dials) => {\n    const allCodes = [];\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, `allCodes` holds every valid code built from dial\n    // 0 onward — the complete answer. We do not trace inside; we just\n    // return the list.\n    generateCodes(dials, 0, '', allCodes);\n\n    return allCodes;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            "ab",
+            "b",
+            "ac"
+          ]
+        ],
+        "expected": [
+          "aba",
+          "abc"
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            "xy",
+            "x"
+          ]
+        ],
+        "expected": [
+          "yx"
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            "a",
+            "a"
+          ]
+        ],
+        "expected": [],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            "abc"
+          ]
+        ],
+        "expected": [
+          "a",
+          "b",
+          "c"
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            "ab",
+            "ab"
+          ]
+        ],
+        "expected": [
+          "ab",
+          "ba"
+        ],
+        "unordered": true
+      }
+    ]
+  }
+]

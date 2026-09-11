@@ -1,0 +1,1119 @@
+[
+  {
+    "id": "counting-constellations",
+    "title": "Counting Constellations",
+    "category": "variant",
+    "parentId": "number-of-islands",
+    "parentTitle": "Number of Islands",
+    "difficulty": "Easy",
+    "twist": "Same region-counting idea as Number of Islands, but connectivity is 8-directional: cells that touch diagonally belong to the same region too.",
+    "statement": "You are studying a photo of the night sky, stored as a grid of numbers. `sky[r][c]` is `1` if there is a star at that spot and `0` if that spot is empty.\n\nAstronomers in your club draw lines between stars that are **next to each other in any of the 8 directions**: up, down, left, right, or any of the 4 diagonals. A **constellation** is a group of stars where you can travel from any star to any other star by repeatedly stepping to a neighboring star (using those 8 directions). A single star with no neighbors is its own constellation.\n\nWrite a function `countConstellations(sky)` that returns the number of constellations in the photo.",
+    "examples": [
+      {
+        "input": "sky = [[1,0,0,1],[0,1,0,0],[0,0,0,0],[1,0,0,1]]",
+        "output": "4",
+        "explanation": "The stars at (0,0) and (1,1) touch diagonally, so they form ONE constellation together. The stars at (0,3), (3,0), and (3,3) each have no neighbors at all, so each is its own constellation. Total: 4."
+      },
+      {
+        "input": "sky = [[1,1,0],[0,0,1],[0,0,0]]",
+        "output": "1",
+        "explanation": "(0,0) and (0,1) are side by side. (0,1) and (1,2) touch diagonally. So all three stars are one single constellation."
+      }
+    ],
+    "constraints": [
+      "1 <= number of rows, number of columns <= 50",
+      "sky[r][c] is either 0 or 1"
+    ],
+    "functionName": "countConstellations",
+    "solution": "const STAR = 1;\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\n\n// Unlike most grid problems, diagonal neighbors count as connected here,\n// so we check all 8 directions instead of the usual 4.\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n    [1, 1],\n    [1, -1],\n    [-1, 1],\n    [-1, -1],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\n// CONTRACT for markConstellationAsVisited(sky, row, col, visited):\n//     when this call returns, the star at (`row`, `col`) and every\n//     star connected to it through any chain of 8-direction neighbors\n//     is in the visited set. If (`row`, `col`) is not a fresh star,\n//     nothing new goes in.\nconst markConstellationAsVisited = (sky, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(sky, row, col)) return;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return;\n\n    if (sky[row][col] !== STAR) return;\n\n    // Process node\n    visited.add(curPositionString);\n\n    // Recurse on potential neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighboring square and\n        // every star connected to it is in the visited set. Trust it, do\n        // not trace it. This function already put (`row`, `col`) into\n        // visited, and each direction's contract covers the rest of the\n        // constellation — together, that is this function's full contract, kept.\n        markConstellationAsVisited(sky, newRow, newCol, visited);\n    }\n};\n\nconst countConstellations = (sky) => {\n    const numRows = sky.length;\n    const numCols = sky[0].length;\n\n    let numberOfConstellations = 0;\n    const visited = new Set();\n\n    for (let row = 0; row < numRows; row++) {\n        for (let col = 0; col < numCols; col++) {\n            const curPositionString = getPositionString(row, col);\n\n            if (visited.has(curPositionString)) continue;\n\n            if (sky[row][col] !== STAR) continue;\n\n            numberOfConstellations++;\n            // The recursive leap of faith: trust the contract. When this\n            // call returns, this star and its whole constellation are in\n            // visited, so the loop can never count this constellation again.\n            // We do not trace inside; we just count it and move on.\n            markConstellationAsVisited(sky, row, col, visited);\n        }\n    }\n\n    return numberOfConstellations;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 4
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              1,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              0,
+              1,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 3
+      }
+    ]
+  },
+  {
+    "id": "one-color-metro-ride",
+    "title": "No Transfers, Please",
+    "category": "variant",
+    "parentId": "find-if-path-exists-in-graph",
+    "parentTitle": "Find if Path Exists in Graph",
+    "difficulty": "Medium",
+    "twist": "Every edge now has a color (red or blue), and the path must stick to a single color for the whole trip, so you check reachability once per color instead of once overall.",
+    "statement": "A city metro has `n` stations, numbered `0` to `n - 1`. The list `tracks` describes the tracks: `tracks[i] = [u, v]` is a two-way track between stations `u` and `v`, and `colors[i]` is either `\"red\"` or `\"blue\"`, telling you which line that track belongs to.\n\nYou hate transferring between lines. Your whole trip, from start to end, must use tracks of **one single color**: either every track you ride is red, or every track you ride is blue.\n\nReturn `true` if you can travel from station `source` to station `destination` this way, and `false` otherwise. If `source` and `destination` are the same station, return `true`.",
+    "examples": [
+      {
+        "input": "n = 4, tracks = [[0,1],[1,3],[0,2],[2,3]], colors = [\"red\",\"red\",\"blue\",\"red\"], source = 0, destination = 3",
+        "output": "true",
+        "explanation": "Using only red tracks, you can ride 0 -> 1 -> 3. So the trip works without ever touching a blue track."
+      },
+      {
+        "input": "n = 3, tracks = [[0,1],[1,2]], colors = [\"red\",\"blue\"], source = 0, destination = 2",
+        "output": "false",
+        "explanation": "Red tracks alone only reach stations 0 and 1. Blue tracks alone leave you stuck at station 0. Reaching station 2 would require mixing colors, which is not allowed."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 100",
+      "0 <= tracks.length <= 200",
+      "tracks.length == colors.length",
+      "0 <= u, v <= n - 1",
+      "colors[i] is either \"red\" or \"blue\"",
+      "0 <= source, destination <= n - 1"
+    ],
+    "functionName": "canRideOneColor",
+    "solution": "const TRACK_COLORS = ['red', 'blue'];\n\nconst buildGraphForColor = (tracks, colors, targetColor) => {\n    const graph = {};\n\n    for (let trackIndex = 0; trackIndex < tracks.length; trackIndex++) {\n        if (colors[trackIndex] !== targetColor) continue;\n\n        const [stationOne, stationTwo] = tracks[trackIndex];\n\n        const stationOneInGraph = graph.hasOwnProperty(stationOne);\n        const stationTwoInGraph = graph.hasOwnProperty(stationTwo);\n\n        if (!stationOneInGraph) graph[stationOne] = [];\n        if (!stationTwoInGraph) graph[stationTwo] = [];\n\n        graph[stationOne].push(stationTwo);\n        graph[stationTwo].push(stationOne);\n    }\n\n    return graph;\n};\n\n// CONTRACT for canReachStation(graph, curStation, destination, visited):\n//     when this call returns, it returns true if the search can get\n//     from `curStation` to `destination` along this graph's tracks,\n//     and false otherwise. Every station it explores goes into the\n//     visited set, so no station is ever explored twice.\n//     If `curStation` is already in the visited set it returns false —\n//     an earlier call is already exploring from there.\nconst canReachStation = (graph, curStation, destination, visited) => {\n    // Base cases\n    if (curStation === destination) return true;\n\n    if (visited.has(curStation)) return false;\n\n    // Process node\n    visited.add(curStation);\n\n    // Recurse on neighbors\n    const stationInGraph = graph.hasOwnProperty(curStation);\n    if (!stationInGraph) return false;\n\n    const neighbors = graph[curStation];\n\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, it tells us whether\n        // `destination` can be reached from `neighbor`. Trust it, do not\n        // trace it. If any neighbor's answer is true, a path through that\n        // neighbor exists, so returning true keeps this function's\n        // contract; if every answer is false, returning false keeps it too.\n        const reachable = canReachStation(graph, neighbor, destination, visited);\n\n        if (reachable) return true;\n    }\n\n    return false;\n};\n\nconst canRideOneColor = (n, tracks, colors, source, destination) => {\n    if (source === destination) return true;\n\n    // The whole trip must stay on one line, so we try each color as\n    // its own separate graph and check reachability inside it.\n    for (const color of TRACK_COLORS) {\n        const graph = buildGraphForColor(tracks, colors, color);\n        const visited = new Set();\n\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, `reachable` tells us whether `destination` can be\n        // reached from `source` using only this color's tracks. We do not\n        // trace inside; we just use the answer, then try the other color\n        // if needed.\n        const reachable = canReachStation(graph, source, destination, visited);\n\n        if (reachable) return true;\n    }\n\n    return false;\n};",
+    "tests": [
+      {
+        "args": [
+          4,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          [
+            "red",
+            "red",
+            "blue",
+            "red"
+          ],
+          0,
+          3
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          3,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          [
+            "red",
+            "blue"
+          ],
+          0,
+          2
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          1,
+          [],
+          [],
+          0,
+          0
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          3,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          [
+            "blue",
+            "blue"
+          ],
+          0,
+          2
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          2,
+          [],
+          [],
+          0,
+          1
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          5,
+          [
+            [
+              0,
+              4
+            ]
+          ],
+          [
+            "blue"
+          ],
+          4,
+          0
+        ],
+        "expected": true
+      }
+    ]
+  },
+  {
+    "id": "villages-without-wells",
+    "title": "Dig New Wells",
+    "category": "variant",
+    "parentId": "number-of-connected-components-in-an-undirected-graph",
+    "parentTitle": "Number of Connected Components in an Undirected Graph",
+    "difficulty": "Medium",
+    "twist": "You still find connected components from an edge list, but each component must be checked against a list of special nodes (wells): count only the components that contain none of them.",
+    "statement": "A valley has `n` villages, numbered `0` to `n - 1`. You are given a list `paths`, where each entry `[a, b]` is a two-way footpath between villages `a` and `b`. You are also given a list `wells` of village numbers that already have a water well.\n\nVillagers can fetch water from a well in their own village **or** in any village they can reach by walking along footpaths (through as many villages as needed).\n\nA group of villages that are all reachable from each other is called a **cluster**. If a cluster contains no well at all, the government must dig exactly **one** new well somewhere in that cluster.\n\nWrite a function `countWellsToDig(n, paths, wells)` that returns how many new wells must be dug so that every village can reach water.",
+    "examples": [
+      {
+        "input": "n = 6, paths = [[0,1],[1,2],[3,4]], wells = [1]",
+        "output": "2",
+        "explanation": "The clusters are {0,1,2}, {3,4}, and {5}. Cluster {0,1,2} contains the well at village 1, so it is fine. Clusters {3,4} and {5} have no well, so each needs one new well. Answer: 2."
+      },
+      {
+        "input": "n = 4, paths = [[0,1],[2,3]], wells = [0,3]",
+        "output": "0",
+        "explanation": "The clusters are {0,1} and {2,3}. The first contains the well at 0, the second contains the well at 3. Nobody needs a new well."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 100",
+      "0 <= paths.length <= 500",
+      "paths[i] = [a, b] with 0 <= a, b < n and a != b",
+      "0 <= wells.length <= n",
+      "All values in wells are distinct village numbers"
+    ],
+    "functionName": "countWellsToDig",
+    "solution": "const buildGraph = (edges) => {\n    const graph = {};\n\n    for (const edge of edges) {\n        const [nodeOne, nodeTwo] = edge;\n\n        const nodeOneInGraph = graph.hasOwnProperty(nodeOne);\n        const nodeTwoInGraph = graph.hasOwnProperty(nodeTwo);\n\n        if (!nodeOneInGraph) graph[nodeOne] = [];\n        if (!nodeTwoInGraph) graph[nodeTwo] = [];\n\n        graph[nodeOne].push(nodeTwo);\n        graph[nodeTwo].push(nodeOne);\n    }\n\n    return graph;\n};\n\n// CONTRACT for clusterContainsWell(graph, village, visited, villagesWithWells):\n//     when this call returns, `village` and every village reachable\n//     from it is in the visited set, and the returned value is true\n//     if any village in that group has a well, false otherwise.\nconst clusterContainsWell = (graph, village, visited, villagesWithWells) => {\n    // Base cases\n    if (visited.has(village)) return false;\n\n    // Process node\n    visited.add(village);\n\n    let foundWell = villagesWithWells.has(village);\n\n    // Recurse on neighbors\n    const villageInGraph = graph.hasOwnProperty(village);\n    if (!villageInGraph) return foundWell;\n\n    const neighbors = graph[village];\n\n    for (const neighbor of neighbors) {\n        // We keep walking even after finding a well so the whole\n        // cluster gets marked visited exactly once.\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `neighbor` and everything\n        // reachable from it is in visited, and it reports whether it found\n        // a well there. Trust it, do not trace it. This function already\n        // put `village` into visited and checked it for a well; each\n        // neighbor's guaranteed answer covers the rest of the cluster —\n        // exactly this function's contract, kept.\n        const wellInNeighborArea = clusterContainsWell(\n            graph,\n            neighbor,\n            visited,\n            villagesWithWells,\n        );\n\n        if (wellInNeighborArea) foundWell = true;\n    }\n\n    return foundWell;\n};\n\nconst countWellsToDig = (n, paths, wells) => {\n    const graph = buildGraph(paths);\n    const villagesWithWells = new Set(wells);\n\n    let wellsToDig = 0;\n    const visited = new Set();\n\n    for (let village = 0; village < n; village++) {\n        if (visited.has(village)) continue;\n\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, this entire cluster is in visited — the loop can\n        // never start here again — and `clusterHasWell` tells us if the\n        // cluster already has a well. We do not trace inside; we just use\n        // the answer to decide whether one new well is needed.\n        const clusterHasWell = clusterContainsWell(\n            graph,\n            village,\n            visited,\n            villagesWithWells,\n        );\n\n        if (clusterHasWell) continue;\n\n        wellsToDig++;\n    }\n\n    return wellsToDig;\n};",
+    "tests": [
+      {
+        "args": [
+          6,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          [
+            1
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          4,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          1,
+          [],
+          []
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          5,
+          [],
+          [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          3,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          [
+            2
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          4,
+          [],
+          []
+        ],
+        "expected": 4
+      }
+    ]
+  },
+  {
+    "id": "coins-on-level-k",
+    "title": "Coins on Level K",
+    "category": "variant",
+    "parentId": "nested-list-weight-sum",
+    "parentTitle": "Nested List Weight Sum",
+    "difficulty": "Easy",
+    "twist": "Instead of multiplying every integer by its depth and summing everything, you sum only the integers sitting at one exact target depth k.",
+    "statement": "A shipping company packs coins inside boxes, and boxes inside bigger boxes. This is written as a **nested array**: each element is either an integer (a coin's value) or another array (a smaller box).\n\nThe **depth** of an element works like this: elements sitting directly in the top-level array are at depth `1`. Every time you open a box and look inside, the depth goes up by `1`. For example, in `[3, [4, [5]]]`, the coin `3` is at depth 1, the coin `4` is at depth 2, and the coin `5` is at depth 3.\n\nCustoms only wants to tax the coins at one specific packing level.\n\nWrite a function `sumAtDepth(items, k)` that returns the **sum of all coin values at exactly depth `k`**. If there are no coins at depth `k`, return `0`.",
+    "examples": [
+      {
+        "input": "items = [[3,2],5,[[4]]], k = 2",
+        "output": "5",
+        "explanation": "The coins 3 and 2 are at depth 2 (inside one box). The coin 5 is at depth 1 and the coin 4 is at depth 3, so they are ignored. 3 + 2 = 5."
+      },
+      {
+        "input": "items = [1,[4,[6]]], k = 3",
+        "output": "6",
+        "explanation": "Only the coin 6 sits at depth 3. The coin 1 is at depth 1 and the coin 4 is at depth 2."
+      }
+    ],
+    "constraints": [
+      "1 <= total number of integers and arrays <= 1000",
+      "Nesting depth is at most 50",
+      "Coin values are integers between -100 and 100",
+      "1 <= k <= 50"
+    ],
+    "functionName": "sumAtDepth",
+    "solution": "const TOP_LEVEL_DEPTH = 1;\n\n// CONTRACT for sumCoinsAtDepth(boxContents, curDepth, targetDepth):\n//     when this call returns, the returned value equals the sum of\n//     every coin inside `boxContents` (however deeply packed) that\n//     sits at exactly depth `targetDepth`, where the items directly\n//     inside `boxContents` sit at depth `curDepth`.\nconst sumCoinsAtDepth = (boxContents, curDepth, targetDepth) => {\n    // Base case: once we are deeper than the target, every coin\n    // inside is too deep to count, so there is no reason to keep opening boxes.\n    if (curDepth > targetDepth) return 0;\n\n    // Process node\n    let coinSum = 0;\n\n    // Recurse on neighbors\n    for (const item of boxContents) {\n        const isSmallerBox = Array.isArray(item);\n\n        if (isSmallerBox) {\n            // The recursive leap of faith, one level down: this call has\n            // the SAME contract — when it returns, it hands back the sum of\n            // every coin at exactly depth `targetDepth` inside this smaller\n            // box. Trust it, do not trace it. The coins counted at this level\n            // + each smaller box's guaranteed sum = exactly this function's\n            // contract.\n            coinSum += sumCoinsAtDepth(item, curDepth + 1, targetDepth);\n            continue;\n        }\n\n        // The item is a coin. It only counts if it sits at exactly\n        // the depth customs cares about.\n        if (curDepth !== targetDepth) continue;\n\n        coinSum += item;\n    }\n\n    return coinSum;\n};\n\nconst sumAtDepth = (items, k) => {\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, its value is the sum of every coin at exactly\n    // depth `k` in the whole shipment. We do not trace inside; we\n    // just return that value.\n    return sumCoinsAtDepth(items, TOP_LEVEL_DEPTH, k);\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              3,
+              2
+            ],
+            5,
+            [
+              [
+                4
+              ]
+            ]
+          ],
+          2
+        ],
+        "expected": 5
+      },
+      {
+        "args": [
+          [
+            1,
+            [
+              4,
+              [
+                6
+              ]
+            ]
+          ],
+          3
+        ],
+        "expected": 6
+      },
+      {
+        "args": [
+          [
+            1,
+            [
+              4,
+              [
+                6
+              ]
+            ]
+          ],
+          1
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            1,
+            2,
+            3
+          ],
+          5
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              -1,
+              [
+                2
+              ]
+            ],
+            [
+              3
+            ]
+          ],
+          2
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              []
+            ]
+          ],
+          3
+        ],
+        "expected": 0
+      }
+    ]
+  },
+  {
+    "id": "museum-vault-keyring",
+    "title": "The Night Guard's Keyring",
+    "category": "variant",
+    "parentId": "keys-and-rooms",
+    "parentTitle": "Keys and Rooms",
+    "difficulty": "Easy",
+    "twist": "Instead of starting inside an unlocked room 0, you start outside with a whole keyring of starting keys, and instead of returning true/false for visiting ALL rooms, you return HOW MANY vaults you can open.",
+    "statement": "You are the night guard at a museum with `n` vaults, numbered `0` to `n - 1`. Vault `i` can only be opened with key number `i`.\n\nYou start your shift holding a small keyring: the list `startKeys` tells you which key numbers you already have. Inside each vault there may be more keys lying around: `vaults[i]` is the list of key numbers found inside vault `i`. The moment you open a vault, you pick up every key inside it and may use those keys right away.\n\nYou can walk between vaults freely and open them in any order, as long as you have the matching key.\n\nReturn the total number of **different** vaults you are able to open.",
+    "examples": [
+      {
+        "input": "vaults = [[1],[2],[],[0]], startKeys = [0]",
+        "output": "3",
+        "explanation": "You start with key 0, so you open vault 0 and find key 1. With key 1 you open vault 1 and find key 2. With key 2 you open vault 2, which is empty. Key 3 does not exist anywhere, so vault 3 stays shut. You opened vaults 0, 1, and 2, which is 3 vaults."
+      },
+      {
+        "input": "vaults = [[],[0],[],[]], startKeys = [3]",
+        "output": "1",
+        "explanation": "You start with key 3 and open vault 3, which is empty. Key 0 is locked inside vault 1, but you never find key 1, so you can never get it. Only 1 vault gets opened."
+      }
+    ],
+    "constraints": [
+      "n == vaults.length, 1 <= n <= 100",
+      "0 <= vaults[i].length <= n",
+      "0 <= vaults[i][j] <= n - 1, and all keys inside one vault are different",
+      "0 <= startKeys.length <= n, and all keys on the keyring are different"
+    ],
+    "functionName": "countOpenableVaults",
+    "solution": "// CONTRACT for openVault(vaults, vaultNumber, openedVaults):\n//     when this call returns, vault `vaultNumber` and every vault\n//     that can be opened by following the keys found inside it is in\n//     the openedVaults set.\nconst openVault = (vaults, vaultNumber, openedVaults) => {\n    // Base case\n    if (openedVaults.has(vaultNumber)) return;\n\n    // Process node\n    openedVaults.add(vaultNumber);\n\n    // Recurse on neighbors\n    // Every key inside this vault unlocks the vault with the same\n    // number, so keys are the edges of our graph.\n    const keysInside = vaults[vaultNumber];\n\n    for (const key of keysInside) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, vault `key` and every\n        // vault reachable from its keys is in the openedVaults set.\n        // Trust it, do not trace it. This function already put\n        // `vaultNumber` into openedVaults, and each key's contract\n        // covers everything reachable beyond it — together, that is\n        // this function's full contract, kept.\n        openVault(vaults, key, openedVaults);\n    }\n};\n\nconst countOpenableVaults = (vaults, startKeys) => {\n    const openedVaults = new Set();\n\n    for (const key of startKeys) {\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, every vault this starting key can lead to —\n        // directly or through keys picked up along the way — is in\n        // the openedVaults set. We do not trace inside; we just move\n        // on to the next starting key and count the set at the end.\n        openVault(vaults, key, openedVaults);\n    }\n\n    return openedVaults.size;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1
+            ],
+            [
+              2
+            ],
+            [],
+            [
+              0
+            ]
+          ],
+          [
+            0
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          [
+            [],
+            [
+              0
+            ],
+            [],
+            []
+          ],
+          [
+            3
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [],
+            [],
+            []
+          ],
+          []
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ],
+            [
+              0
+            ]
+          ],
+          [
+            0
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [],
+            [],
+            [],
+            []
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2,
+              3
+            ],
+            [],
+            [],
+            []
+          ],
+          [
+            0
+          ]
+        ],
+        "expected": 4
+      }
+    ]
+  },
+  {
+    "id": "save-the-date-phone-chain",
+    "title": "Save the Date",
+    "category": "variant",
+    "parentId": "time-needed-to-inform-all-employees",
+    "parentTitle": "Time Needed to Inform All Employees",
+    "difficulty": "Easy",
+    "twist": "Instead of returning the time when the LAST person hears the news, you are given a deadline and must COUNT how many people hear the news on or before that day.",
+    "statement": "A family of `n` people, numbered `0` to `n - 1`, is planning a reunion. Person `headId` starts spreading the news, so the head already knows on day `0`.\n\nThe news travels along a fixed phone chain shaped like a family tree: `caller[i]` is the person whose job is to call person `i`. For the head, `caller[headId] = -1`, because nobody calls the head. Every other person is called by exactly one person, and the chain never loops.\n\nPeople are a little slow. After person `p` hears the news, they wait `waitDays[p]` days and then call **everyone they are responsible for**, all on that same day. So person `i` hears the news on day `(day caller[i] heard) + waitDays[caller[i]]`.\n\nThe reunion is on day `deadline`. Return how many people know the news on or before day `deadline`. The head counts too.",
+    "examples": [
+      {
+        "input": "n = 6, headId = 0, caller = [-1,0,0,1,1,2], waitDays = [2,3,1,0,0,0], deadline = 4",
+        "output": "4",
+        "explanation": "Person 0 knows on day 0. Person 0 waits 2 days, so persons 1 and 2 hear on day 2. Person 1 waits 3 days, so persons 3 and 4 hear on day 5. Person 2 waits 1 day, so person 5 hears on day 3. By day 4, persons 0, 1, 2, and 5 know: that is 4 people."
+      },
+      {
+        "input": "n = 3, headId = 2, caller = [2,2,-1], waitDays = [0,0,5], deadline = 3",
+        "output": "1",
+        "explanation": "Person 2 knows on day 0 but waits 5 days, so persons 0 and 1 only hear on day 5. By day 3, only person 2 knows."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 100",
+      "0 <= headId <= n - 1",
+      "caller.length == waitDays.length == n",
+      "caller[headId] == -1, and every other person is called by exactly one person (the chain forms a tree)",
+      "0 <= waitDays[i] <= 100",
+      "0 <= deadline <= 10000"
+    ],
+    "functionName": "countInformedByDeadline",
+    "solution": "const NO_CALLER = -1;\nconst STARTING_DAY = 0;\n\nconst buildCallTree = (caller) => {\n    const callTree = {};\n\n    for (let person = 0; person < caller.length; person++) {\n        const personCaller = caller[person];\n\n        if (personCaller === NO_CALLER) continue;\n\n        const callerInTree = callTree.hasOwnProperty(personCaller);\n        if (!callerInTree) callTree[personCaller] = [];\n\n        callTree[personCaller].push(person);\n    }\n\n    return callTree;\n};\n\n// CONTRACT for countInformedInTime(callTree, waitDays, person, dayHeard, deadline):\n//     when this call returns, the returned value is how many people\n//     in `person`'s branch of the call tree (including `person`) hear\n//     the news on or before day `deadline`, given that `person` hears\n//     it on day `dayHeard`.\nconst countInformedInTime = (callTree, waitDays, person, dayHeard, deadline) => {\n    // Base case: wait times are never negative, so if this person is\n    // already past the deadline, everyone further down the chain is too.\n    if (dayHeard > deadline) return 0;\n\n    // Process node\n    let informedCount = 1;\n\n    // Recurse on neighbors\n    const personMakesCalls = callTree.hasOwnProperty(person);\n    if (!personMakesCalls) return informedCount;\n\n    const dayOfCalls = dayHeard + waitDays[person];\n    const listeners = callTree[person];\n\n    for (const listener of listeners) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, it hands back how many\n        // people in `listener`'s branch hear the news by the deadline.\n        // Trust it, do not trace it. The 1 counted for `person` + each\n        // listener's guaranteed count = exactly this function's contract.\n        informedCount += countInformedInTime(\n            callTree,\n            waitDays,\n            listener,\n            dayOfCalls,\n            deadline,\n        );\n    }\n\n    return informedCount;\n};\n\nconst countInformedByDeadline = (n, headId, caller, waitDays, deadline) => {\n    const callTree = buildCallTree(caller);\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, its value is how many people in the whole family\n    // hear the news on or before day `deadline`. We do not trace\n    // inside; we just return that number.\n    return countInformedInTime(callTree, waitDays, headId, STARTING_DAY, deadline);\n};",
+    "tests": [
+      {
+        "args": [
+          6,
+          0,
+          [
+            -1,
+            0,
+            0,
+            1,
+            1,
+            2
+          ],
+          [
+            2,
+            3,
+            1,
+            0,
+            0,
+            0
+          ],
+          4
+        ],
+        "expected": 4
+      },
+      {
+        "args": [
+          3,
+          2,
+          [
+            2,
+            2,
+            -1
+          ],
+          [
+            0,
+            0,
+            5
+          ],
+          3
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          1,
+          0,
+          [
+            -1
+          ],
+          [
+            0
+          ],
+          0
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          6,
+          0,
+          [
+            -1,
+            0,
+            0,
+            1,
+            1,
+            2
+          ],
+          [
+            2,
+            3,
+            1,
+            0,
+            0,
+            0
+          ],
+          100
+        ],
+        "expected": 6
+      },
+      {
+        "args": [
+          4,
+          1,
+          [
+            1,
+            -1,
+            1,
+            1
+          ],
+          [
+            5,
+            1,
+            5,
+            5
+          ],
+          0
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          4,
+          0,
+          [
+            -1,
+            0,
+            1,
+            2
+          ],
+          [
+            1,
+            1,
+            1,
+            1
+          ],
+          2
+        ],
+        "expected": 3
+      }
+    ]
+  },
+  {
+    "id": "biggest-study-group",
+    "title": "The Biggest Study Group",
+    "category": "variant",
+    "parentId": "number-of-provinces",
+    "parentTitle": "Number of Provinces",
+    "difficulty": "Medium",
+    "twist": "Same adjacency-matrix setup as Number of Provinces, but instead of counting the groups you must return the size of the largest group.",
+    "statement": "There are `n` students in a coding bootcamp, numbered `0` to `n - 1`. You are given an `n x n` matrix `worked`, where `worked[i][j] = 1` means student `i` and student `j` did a project together, and `worked[i][j] = 0` means they did not. The matrix is symmetric (`worked[i][j] = worked[j][i]`), and `worked[i][i]` is always `1`.\n\nStudents form **study groups** through chains of teammates: if `A` worked with `B`, and `B` worked with `C`, then `A`, `B`, and `C` all end up in the same study group — even if `A` and `C` never worked together directly.\n\nWrite a function `largestStudyGroup(worked)` that returns the number of students in the **largest** study group.",
+    "examples": [
+      {
+        "input": "worked = [[1,1,0],[1,1,0],[0,0,1]]",
+        "output": "2",
+        "explanation": "Students 0 and 1 worked together, forming a group of 2. Student 2 is alone in a group of 1. The largest group has 2 students."
+      },
+      {
+        "input": "worked = [[1,1,0,0],[1,1,1,0],[0,1,1,0],[0,0,0,1]]",
+        "output": "3",
+        "explanation": "Student 0 worked with 1, and 1 worked with 2, so {0, 1, 2} form one group of 3. Student 3 is alone. The largest group has 3 students."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 100",
+      "worked[i][j] is 0 or 1",
+      "worked[i][i] = 1",
+      "worked[i][j] = worked[j][i]"
+    ],
+    "functionName": "largestStudyGroup",
+    "solution": "const WORKED_TOGETHER = 1;\n\n// CONTRACT for getStudyGroupSize(worked, student, visited):\n//     when this call returns, `student` and every student connected\n//     to them through chains of teammates is in the visited set, and\n//     the returned value is how many students this call put into\n//     visited (the whole group's size when we start on a fresh student).\nconst getStudyGroupSize = (worked, student, visited) => {\n    // Base case\n    if (visited.has(student)) return 0;\n\n    // Process node\n    visited.add(student);\n    let groupSize = 1;\n\n    // Recurse on neighbors\n    for (let teammate = 0; teammate < worked.length; teammate++) {\n        const isTeammate = worked[student][teammate] === WORKED_TOGETHER;\n\n        if (!isTeammate) continue;\n\n        // Every student we reach through a chain of teammates joins\n        // this group, so we add their whole sub-count to our size.\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `teammate` and everyone\n        // reachable from them is in visited, and it hands back how many\n        // students it put there. Trust it, do not trace it. The 1 for\n        // `student` + each teammate call's guaranteed count = exactly\n        // this function's contract.\n        groupSize += getStudyGroupSize(worked, teammate, visited);\n    }\n\n    return groupSize;\n};\n\nconst largestStudyGroup = (worked) => {\n    const numStudents = worked.length;\n\n    let largestGroupSize = 0;\n    const visited = new Set();\n\n    for (let student = 0; student < numStudents; student++) {\n        if (visited.has(student)) continue;\n\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, this whole study group is in visited — the loop\n        // can never count it again — and `groupSize` is the number of\n        // students in it. We do not trace inside; we just compare it to\n        // the biggest size seen so far.\n        const groupSize = getStudyGroupSize(worked, student, visited);\n\n        largestGroupSize = Math.max(largestGroupSize, groupSize);\n    }\n\n    return largestGroupSize;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              1,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 2
+      }
+    ]
+  },
+  {
+    "id": "longest-freight-train",
+    "title": "Longest Freight Train",
+    "category": "variant",
+    "parentId": "battleships-in-a-board",
+    "parentTitle": "Battleships in a Board",
+    "difficulty": "Easy",
+    "twist": "Same board layout rules as Battleships (straight 1-wide lines, never touching each other), but instead of counting the ships you return the length of the longest one.",
+    "statement": "A rail yard is shown as a grid. `yard[r][c]` is `\"T\"` if a train car sits on that square and `\".\"` if the square is empty track.\n\nEach **train** is a straight line of one or more cars, laid out either **horizontally** (all in one row) or **vertically** (all in one column), and always exactly one square wide. You are guaranteed the yard is valid: **no two different trains touch each other**, not even at a corner — there is always at least one empty square between them.\n\nWrite a function `longestTrain(yard)` that returns the number of cars in the **longest** train. If the yard has no train cars at all, return `0`.",
+    "examples": [
+      {
+        "input": "yard = [[\"T\",\"T\",\"T\",\".\"],[\".\",\".\",\".\",\".\"],[\"T\",\".\",\".\",\"T\"],[\"T\",\".\",\".\",\".\"]]",
+        "output": "3",
+        "explanation": "There are three trains: a horizontal one with 3 cars in the top row, a vertical one with 2 cars on the left, and a single 1-car train at (2,3). The longest has 3 cars."
+      },
+      {
+        "input": "yard = [[\"T\",\".\"],[\".\",\".\"],[\"T\",\".\"]]",
+        "output": "1",
+        "explanation": "There are two separate trains, each with just 1 car (they do not touch, so they cannot be one train). The longest has 1 car."
+      }
+    ],
+    "constraints": [
+      "1 <= number of rows, number of columns <= 50",
+      "yard[r][c] is \"T\" or \".\"",
+      "Trains are straight horizontal or vertical lines, one square wide",
+      "No two trains are adjacent, even diagonally"
+    ],
+    "functionName": "longestTrain",
+    "solution": "const TRAIN_CAR = 'T';\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\n// CONTRACT for getTrainLength(yard, row, col, visited):\n//     when this call returns, every train car connected to\n//     (`row`, `col`) is in the visited set, and the returned value is\n//     how many cars this call put there. If (`row`, `col`) is not a\n//     fresh train car, it returns 0 and nothing new goes in.\nconst getTrainLength = (yard, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(yard, row, col)) return 0;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return 0;\n\n    if (yard[row][col] !== TRAIN_CAR) return 0;\n\n    // Process node\n    visited.add(curPositionString);\n    let trainLength = 1;\n\n    // Recurse on potential neighbors\n    // Because trains never touch each other, everything connected\n    // to this car belongs to the same train, so a plain flood fill\n    // counts exactly one train's cars.\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every car connected to the\n        // neighboring square is in visited, and it hands back how many it\n        // added. Trust it, do not trace it. The 1 for this car + each\n        // direction's guaranteed count = exactly this function's contract.\n        trainLength += getTrainLength(yard, newRow, newCol, visited);\n    }\n\n    return trainLength;\n};\n\nconst longestTrain = (yard) => {\n    const numRows = yard.length;\n    const numCols = yard[0].length;\n\n    let longestTrainLength = 0;\n    const visited = new Set();\n\n    for (let row = 0; row < numRows; row++) {\n        for (let col = 0; col < numCols; col++) {\n            const curPositionString = getPositionString(row, col);\n\n            if (visited.has(curPositionString)) continue;\n\n            if (yard[row][col] !== TRAIN_CAR) continue;\n\n            // The recursive leap of faith: trust the contract. When this\n            // call returns, this whole train is in visited — the loop can\n            // never count it again — and `trainLength` is its number of cars.\n            // We do not trace inside; we just compare it to the longest so far.\n            const trainLength = getTrainLength(yard, row, col, visited);\n\n            longestTrainLength = Math.max(longestTrainLength, trainLength);\n        }\n    }\n\n    return longestTrainLength;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              "T",
+              "T",
+              "T",
+              "."
+            ],
+            [
+              ".",
+              ".",
+              ".",
+              "."
+            ],
+            [
+              "T",
+              ".",
+              ".",
+              "T"
+            ],
+            [
+              "T",
+              ".",
+              ".",
+              "."
+            ]
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          [
+            [
+              "T",
+              "."
+            ],
+            [
+              ".",
+              "."
+            ],
+            [
+              "T",
+              "."
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              ".",
+              "."
+            ],
+            [
+              ".",
+              "."
+            ]
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              "T"
+            ],
+            [
+              "T"
+            ],
+            [
+              "T"
+            ],
+            [
+              "T"
+            ]
+          ]
+        ],
+        "expected": 4
+      },
+      {
+        "args": [
+          [
+            [
+              "T",
+              "T",
+              "T",
+              "T",
+              "T"
+            ]
+          ]
+        ],
+        "expected": 5
+      }
+    ]
+  }
+]

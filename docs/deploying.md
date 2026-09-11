@@ -14,3 +14,7 @@ No Netlify login or personal Netlify token is needed. Only people with GitHub wr
 Netlify uses `netlify.toml`: build command `node scripts/validate-visual-data.js`, publish directory `.`, and functions in `netlify/functions`. Keep secrets in Netlify environment variables, never in Git.
 
 Check deploy status: https://app.netlify.com/projects/sss-jonathan-attempt/deploys
+
+## Source lesson files
+
+`source/jonathan-study-site` contains the original problem data and published problem bank copied from the source repo on September 10, 2026. Build checks use this checked-in snapshot so a fresh clone needs no neighboring repository. When importing source changes, refresh these files from `/Users/shreshth/git-repos/jonathan-study-site` and regenerate and validate the lesson data.

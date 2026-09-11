@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 
-const sourceRoot = path.resolve(__dirname, "../../jonathan-study-site");
+const sourceRoot = path.resolve(__dirname, "../source/jonathan-study-site");
 const dataDir = path.join(sourceRoot, "data");
 const problemFiles = fs.readdirSync(dataDir)
   .filter(name => /^(originals-|variants-final-|new-final-).*\.json$/.test(name))

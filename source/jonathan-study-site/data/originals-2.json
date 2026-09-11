@@ -1,0 +1,1087 @@
+[
+  {
+    "id": "evaluate-division",
+    "title": "Evaluate Division",
+    "category": "original",
+    "section": "Working with paths",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/evaluate-division/",
+    "statement": "You are given a list of known division facts. Each fact is a pair of variable names `equations[i] = [A, B]` together with a number `values[i]`, which tells you that `A / B = values[i]`. For example, `[\"a\", \"b\"]` with the value `2.0` means `a / b = 2.0`.\n\nYou are also given a list of `queries`, where each query `[C, D]` asks: what is `C / D`?\n\nReturn an array with the answer to every query. If an answer cannot be figured out from the known facts (for example, one of the variables was never mentioned), answer `-1.0` for that query.\n\n**Note:** the input is always valid. You will never divide by zero, and the given facts never contradict each other.",
+    "examples": [
+      {
+        "input": "equations = [[\"a\",\"b\"],[\"b\",\"c\"]], values = [2.0,3.0], queries = [[\"a\",\"c\"],[\"b\",\"a\"],[\"a\",\"e\"],[\"a\",\"a\"],[\"x\",\"x\"]]",
+        "output": "[6.00000,0.50000,-1.00000,1.00000,-1.00000]",
+        "explanation": "We know a / b = 2.0 and b / c = 3.0. So a / c = (a / b) * (b / c) = 6.0, and b / a = 1 / 2.0 = 0.5. The variables e and x were never mentioned, so those queries (and any query involving them) answer -1.0. a / a = 1.0 because a is a known variable."
+      },
+      {
+        "input": "equations = [[\"a\",\"b\"],[\"b\",\"c\"],[\"bc\",\"cd\"]], values = [1.5,2.5,5.0], queries = [[\"a\",\"c\"],[\"c\",\"b\"],[\"bc\",\"cd\"],[\"cd\",\"bc\"]]",
+        "output": "[3.75000,0.40000,5.00000,0.20000]",
+        "explanation": "a / c = 1.5 * 2.5 = 3.75, c / b = 1 / 2.5 = 0.4, and cd / bc is the reciprocal of bc / cd."
+      },
+      {
+        "input": "equations = [[\"a\",\"b\"]], values = [0.5], queries = [[\"a\",\"b\"],[\"b\",\"a\"],[\"a\",\"c\"],[\"x\",\"y\"]]",
+        "output": "[0.50000,2.00000,-1.00000,-1.00000]",
+        "explanation": "There is no path from a to c, and neither x nor y is a known variable."
+      }
+    ],
+    "constraints": [
+      "1 <= equations.length <= 20",
+      "equations[i].length == 2",
+      "1 <= equations[i][0].length, equations[i][1].length <= 5",
+      "values.length == equations.length",
+      "0.0 < values[i] <= 20.0",
+      "1 <= queries.length <= 20",
+      "Variable names are strings of lowercase English letters and digits."
+    ],
+    "functionName": "calcEquation",
+    "solution": "const NO_ANSWER = -1;\n\nconst buildGraph = (equations, values) => {\n    const graph = {};\n\n    for (let i = 0; i < equations.length; i++) {\n        const [numeratorVariable, denominatorVariable] = equations[i];\n        const ratio = values[i];\n\n        const numeratorInGraph = graph.hasOwnProperty(numeratorVariable);\n        const denominatorInGraph = graph.hasOwnProperty(denominatorVariable);\n\n        if (!numeratorInGraph) graph[numeratorVariable] = [];\n        if (!denominatorInGraph) graph[denominatorVariable] = [];\n\n        // If a / b = 2, then walking the edge from a to b multiplies our\n        // running product by 2, and walking from b to a multiplies it by 1 / 2.\n        graph[numeratorVariable].push([denominatorVariable, ratio]);\n        graph[denominatorVariable].push([numeratorVariable, 1 / ratio]);\n    }\n\n    return graph;\n};\n\n// CONTRACT for getRatioToTarget(graph, curVariable, targetVariable, visited):\n//     returns the value of `curVariable` divided by `targetVariable`\n//     if a chain of known facts connects them (avoiding variables\n//     already in the visited set), and NO_ANSWER (-1) otherwise.\nconst getRatioToTarget = (graph, curVariable, targetVariable, visited) => {\n    // Base case\n    if (curVariable === targetVariable) return 1;\n\n    // Process node\n    visited.add(curVariable);\n\n    // Recurse on neighbors\n    const neighbors = graph[curVariable];\n\n    for (const neighbor of neighbors) {\n        const [neighborVariable, ratioToNeighbor] = neighbor;\n\n        if (visited.has(neighborVariable)) continue;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — it returns the neighbor divided by the\n        // target, or NO_ANSWER if no chain connects them. Trust it, do\n        // not trace it. Our known ratio to the neighbor times the\n        // neighbor's guaranteed ratio to the target is exactly this\n        // function's contract, kept.\n        const ratioFromNeighborToTarget = getRatioToTarget(\n            graph,\n            neighborVariable,\n            targetVariable,\n            visited,\n        );\n\n        if (ratioFromNeighborToTarget === NO_ANSWER) continue;\n\n        // Multiplying the ratios along the path gives the overall ratio:\n        // (a / b) * (b / c) = a / c.\n        return ratioToNeighbor * ratioFromNeighborToTarget;\n    }\n\n    return NO_ANSWER;\n};\n\nconst calcEquation = (equations, values, queries) => {\n    const graph = buildGraph(equations, values);\n\n    const answers = [];\n\n    for (const query of queries) {\n        const [startVariable, targetVariable] = query;\n\n        const startInGraph = graph.hasOwnProperty(startVariable);\n        const targetInGraph = graph.hasOwnProperty(targetVariable);\n\n        // A variable we have never seen has no known relationships.\n        if (!startInGraph || !targetInGraph) {\n            answers.push(NO_ANSWER);\n            continue;\n        }\n\n        const visited = new Set();\n\n        // The recursive leap of faith: trust the contract. This call\n        // returns the value of startVariable divided by\n        // targetVariable, or NO_ANSWER if the facts cannot connect\n        // them. We do not trace inside; we just push the answer.\n        answers.push(getRatioToTarget(graph, startVariable, targetVariable, visited));\n    }\n\n    return answers;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              "a",
+              "b"
+            ],
+            [
+              "b",
+              "c"
+            ]
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            [
+              "a",
+              "c"
+            ],
+            [
+              "b",
+              "a"
+            ],
+            [
+              "a",
+              "e"
+            ],
+            [
+              "a",
+              "a"
+            ],
+            [
+              "x",
+              "x"
+            ]
+          ]
+        ],
+        "expected": [
+          6,
+          0.5,
+          -1,
+          1,
+          -1
+        ],
+        "float": true
+      },
+      {
+        "args": [
+          [
+            [
+              "a",
+              "b"
+            ],
+            [
+              "b",
+              "c"
+            ],
+            [
+              "bc",
+              "cd"
+            ]
+          ],
+          [
+            1.5,
+            2.5,
+            5
+          ],
+          [
+            [
+              "a",
+              "c"
+            ],
+            [
+              "c",
+              "b"
+            ],
+            [
+              "bc",
+              "cd"
+            ],
+            [
+              "cd",
+              "bc"
+            ]
+          ]
+        ],
+        "expected": [
+          3.75,
+          0.4,
+          5,
+          0.2
+        ],
+        "float": true
+      },
+      {
+        "args": [
+          [
+            [
+              "a",
+              "b"
+            ]
+          ],
+          [
+            0.5
+          ],
+          [
+            [
+              "a",
+              "b"
+            ],
+            [
+              "b",
+              "a"
+            ],
+            [
+              "a",
+              "c"
+            ],
+            [
+              "x",
+              "y"
+            ]
+          ]
+        ],
+        "expected": [
+          0.5,
+          2,
+          -1,
+          -1
+        ],
+        "float": true
+      },
+      {
+        "args": [
+          [
+            [
+              "x1",
+              "x2"
+            ],
+            [
+              "x2",
+              "x3"
+            ],
+            [
+              "x3",
+              "x4"
+            ],
+            [
+              "x4",
+              "x5"
+            ]
+          ],
+          [
+            3,
+            4,
+            5,
+            6
+          ],
+          [
+            [
+              "x1",
+              "x5"
+            ],
+            [
+              "x5",
+              "x2"
+            ],
+            [
+              "x2",
+              "x4"
+            ],
+            [
+              "x2",
+              "x2"
+            ],
+            [
+              "x2",
+              "x9"
+            ],
+            [
+              "x9",
+              "x9"
+            ]
+          ]
+        ],
+        "expected": [
+          360,
+          0.008333333333333333,
+          20,
+          1,
+          -1,
+          -1
+        ],
+        "float": true
+      },
+      {
+        "args": [
+          [
+            [
+              "m",
+              "n"
+            ],
+            [
+              "m",
+              "p"
+            ],
+            [
+              "p",
+              "q"
+            ]
+          ],
+          [
+            2,
+            4,
+            5
+          ],
+          [
+            [
+              "n",
+              "q"
+            ],
+            [
+              "q",
+              "n"
+            ],
+            [
+              "p",
+              "n"
+            ],
+            [
+              "n",
+              "n"
+            ],
+            [
+              "z",
+              "m"
+            ]
+          ]
+        ],
+        "expected": [
+          10,
+          0.1,
+          0.5,
+          1,
+          -1
+        ],
+        "float": true
+      }
+    ],
+    "hint": "If you know `a / b` and `b / c`, how could you work out `a / c`?"
+  },
+  {
+    "id": "flatten-nested-list-iterator",
+    "title": "Flatten Nested List Iterator",
+    "category": "original",
+    "section": "DFS on arrays",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/flatten-nested-list-iterator/",
+    "statement": "You are given a nested list of integers called `nestedList`. Each element is either a plain integer or another list, whose elements can also be integers or even more lists. For example, `[[1, 1], 2, [1, 1]]` has two inner lists and one plain integer at the top level.\n\nYour job is to build an iterator class that hands the integers back one at a time, in left-to-right order, as if the whole structure were flattened into a single flat list.\n\nImplement the `NestedIterator` class:\n\n- `constructor(nestedList)` — sets up the iterator with the nested list.\n- `next()` — returns the next integer in the flattened order.\n- `hasNext()` — returns `true` if there are still integers left to return, and `false` otherwise.\n\nCode that uses your class will repeatedly call `hasNext()` and `next()` until every integer has been returned. For `[[1, 1], 2, [1, 1]]`, the integers should come back in the order `1, 1, 2, 1, 1`.\n\n**Note:** on LeetCode this problem uses a NestedInteger interface; here we use plain nested arrays to keep things simple. You can check whether an element is a list with `Array.isArray(element)`.",
+    "examples": [
+      {
+        "input": "nestedList = [[1,1],2,[1,1]]",
+        "output": "[1,1,2,1,1]",
+        "explanation": "Repeatedly calling hasNext and next returns the integers in flattened left-to-right order."
+      },
+      {
+        "input": "nestedList = [1,[4,[6]]]",
+        "output": "[1,4,6]",
+        "explanation": "The 1 sits at the top level, the 4 is one level down, and the 6 is two levels down, but flattening ignores depth and keeps left-to-right order."
+      }
+    ],
+    "constraints": [
+      "1 <= nestedList.length <= 500",
+      "Each integer value is between -10^6 and 10^6.",
+      "Elements can be nested arbitrarily deep."
+    ],
+    "functionName": "NestedIterator",
+    "solution": "// CONTRACT for flattenNestedList(nestedList, flattenedIntegers):\n//     when this call returns, every integer anywhere inside\n//     `nestedList` — no matter how deeply nested — has been pushed\n//     onto `flattenedIntegers` in left-to-right order.\nconst flattenNestedList = (nestedList, flattenedIntegers) => {\n    for (const element of nestedList) {\n        // Base case: a plain integer goes straight into the flattened list.\n        if (!Array.isArray(element)) {\n            flattenedIntegers.push(element);\n            continue;\n        }\n\n        // Recurse on the inner list\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every integer inside\n        // `element` has been pushed in left-to-right order. Trust it,\n        // do not trace it. The loop pushes plain integers itself, and\n        // each inner list's contract covers everything inside it —\n        // together, that is this function's full contract, kept.\n        flattenNestedList(element, flattenedIntegers);\n    }\n};\n\nclass NestedIterator {\n    constructor(nestedList) {\n        // Flattening everything up front keeps next and hasNext simple:\n        // they just walk an ordinary array with an index.\n        this.flattenedIntegers = [];\n        this.curIndex = 0;\n\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, this.flattenedIntegers holds every integer in\n        // the whole structure, flattened left to right. We do not\n        // trace inside; next and hasNext just walk this flat array.\n        flattenNestedList(nestedList, this.flattenedIntegers);\n    }\n\n    next() {\n        const nextInteger = this.flattenedIntegers[this.curIndex];\n\n        this.curIndex++;\n\n        return nextInteger;\n    }\n\n    hasNext() {\n        return this.curIndex < this.flattenedIntegers.length;\n    }\n}",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              1
+            ],
+            2,
+            [
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": [
+          1,
+          1,
+          2,
+          1,
+          1
+        ],
+        "harness": "iterator"
+      },
+      {
+        "args": [
+          [
+            1,
+            [
+              4,
+              [
+                6
+              ]
+            ]
+          ]
+        ],
+        "expected": [
+          1,
+          4,
+          6
+        ],
+        "harness": "iterator"
+      },
+      {
+        "args": [
+          [
+            [
+              [],
+              [
+                3
+              ]
+            ],
+            [],
+            5,
+            [
+              [
+                6,
+                [
+                  7
+                ]
+              ]
+            ]
+          ]
+        ],
+        "expected": [
+          3,
+          5,
+          6,
+          7
+        ],
+        "harness": "iterator"
+      },
+      {
+        "args": [
+          [
+            []
+          ]
+        ],
+        "expected": [],
+        "harness": "iterator"
+      },
+      {
+        "args": [
+          [
+            0,
+            [
+              -1,
+              [
+                2,
+                []
+              ]
+            ],
+            3,
+            [
+              [],
+              4
+            ]
+          ]
+        ],
+        "expected": [
+          0,
+          -1,
+          2,
+          3,
+          4
+        ],
+        "harness": "iterator"
+      }
+    ]
+  },
+  {
+    "id": "nested-list-weight-sum",
+    "title": "Nested List Weight Sum",
+    "category": "original",
+    "section": "DFS on arrays",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/nested-list-weight-sum/",
+    "statement": "You are given a nested list of integers called `nestedList`. Each element is either a plain integer or another list, whose elements can also be integers or more lists.\n\nEvery integer sits at some **depth**: integers in the top-level list have depth 1, integers one list deeper have depth 2, and so on. In `[[1, 1], 2, [1, 1]]`, the number `2` has depth 1 and the four `1`s have depth 2.\n\nReturn the sum of every integer multiplied by its depth.\n\n**Note:** on LeetCode this problem uses a NestedInteger interface; here we use plain nested arrays to keep things simple. You can check whether an element is a list with `Array.isArray(element)`.",
+    "examples": [
+      {
+        "input": "nestedList = [[1,1],2,[1,1]]",
+        "output": "10",
+        "explanation": "Four 1s at depth 2 and one 2 at depth 1: 4 * 1 * 2 + 1 * 2 * 1 = 10."
+      },
+      {
+        "input": "nestedList = [1,[4,[6]]]",
+        "output": "27",
+        "explanation": "One 1 at depth 1, one 4 at depth 2, and one 6 at depth 3: 1 * 1 + 4 * 2 + 6 * 3 = 27."
+      },
+      {
+        "input": "nestedList = [0]",
+        "output": "0"
+      }
+    ],
+    "constraints": [
+      "1 <= nestedList.length <= 50",
+      "Each integer value is between -100 and 100.",
+      "The maximum depth of any integer is at most 50."
+    ],
+    "functionName": "depthSum",
+    "solution": "const TOP_LEVEL_DEPTH = 1;\n\n// CONTRACT for getSumAtDepth(nestedList, depth):\n//     returns the sum of every integer inside `nestedList` times that\n//     integer's depth, where `nestedList` itself sits at level `depth`.\nconst getSumAtDepth = (nestedList, depth) => {\n    let totalSum = 0;\n\n    for (const element of nestedList) {\n        // Base case: a plain integer contributes its value times its depth.\n        if (!Array.isArray(element)) {\n            totalSum += element * depth;\n            continue;\n        }\n\n        // Recurse on the inner list, which sits one level deeper.\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — it returns the weighted sum of\n        // everything inside `element`, counted at depth + 1. Trust it,\n        // do not trace it. The integers this loop handles directly\n        // plus each inner list's guaranteed sum add up to exactly this\n        // function's contract, kept.\n        totalSum += getSumAtDepth(element, depth + 1);\n    }\n\n    return totalSum;\n};\n\n// The recursive leap of faith: trust the contract. This call returns\n// the depth-weighted sum of the entire structure, starting the top\n// level at depth 1. We do not trace inside; we just return its\n// answer.\nconst depthSum = (nestedList) => getSumAtDepth(nestedList, TOP_LEVEL_DEPTH);",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              1
+            ],
+            2,
+            [
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": 10
+      },
+      {
+        "args": [
+          [
+            1,
+            [
+              4,
+              [
+                6
+              ]
+            ]
+          ]
+        ],
+        "expected": 27
+      },
+      {
+        "args": [
+          [
+            0
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              [
+                [
+                  7
+                ]
+              ]
+            ],
+            1
+          ]
+        ],
+        "expected": 29
+      },
+      {
+        "args": [
+          [
+            2,
+            [
+              -1,
+              [
+                4
+              ]
+            ],
+            3
+          ]
+        ],
+        "expected": 15
+      }
+    ]
+  },
+  {
+    "id": "nested-list-weight-sum-ii",
+    "title": "Nested List Weight Sum II",
+    "category": "original",
+    "section": "DFS on arrays",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/nested-list-weight-sum-ii/",
+    "statement": "You are given a nested list of integers called `nestedList`. Each element is either a plain integer or another list, whose elements can also be integers or more lists.\n\nEvery integer sits at some **depth**: integers in the top-level list have depth 1, integers one list deeper have depth 2, and so on. Let `maxDepth` be the depth of the deepest integer anywhere in the structure.\n\nAn integer at depth `depth` has **weight** `maxDepth - depth + 1`. So the deepest integers get weight 1, and the integers at the top level get the biggest weight, `maxDepth`.\n\nReturn the sum of every integer multiplied by its weight.\n\n**Note:** on LeetCode this problem uses a NestedInteger interface; here we use plain nested arrays to keep things simple. You can check whether an element is a list with `Array.isArray(element)`.",
+    "examples": [
+      {
+        "input": "nestedList = [[1,1],2,[1,1]]",
+        "output": "8",
+        "explanation": "maxDepth is 2. The four 1s are at depth 2, so their weight is 2 - 2 + 1 = 1. The 2 is at depth 1, so its weight is 2 - 1 + 1 = 2. Total: 4 * 1 * 1 + 1 * 2 * 2 = 8."
+      },
+      {
+        "input": "nestedList = [1,[4,[6]]]",
+        "output": "17",
+        "explanation": "maxDepth is 3. The 1 has weight 3, the 4 has weight 2, and the 6 has weight 1: 1 * 3 + 4 * 2 + 6 * 1 = 17."
+      }
+    ],
+    "constraints": [
+      "1 <= nestedList.length <= 50",
+      "Each integer value is between -100 and 100.",
+      "The maximum depth of any integer is at most 50."
+    ],
+    "functionName": "depthSumInverse",
+    "solution": "const TOP_LEVEL_DEPTH = 1;\n\n// CONTRACT for getMaxDepth(nestedList, depth):\n//     returns the deepest LEVEL any list inside `nestedList` reaches,\n//     counting `nestedList` itself at `depth`.\nconst getMaxDepth = (nestedList, depth) => {\n    let maxDepth = depth;\n\n    for (const element of nestedList) {\n        // Only inner lists can push the nesting deeper.\n        if (!Array.isArray(element)) continue;\n\n        // The recursive leap of faith, one level down: trust it — this\n        // call returns the deepest level any list inside `element`\n        // reaches, counting `element` itself at `depth + 1`. Keeping\n        // the biggest of these keeps this function's own contract.\n        const maxDepthOfInnerList = getMaxDepth(element, depth + 1);\n\n        maxDepth = Math.max(maxDepth, maxDepthOfInnerList);\n    }\n\n    return maxDepth;\n};\n\n// CONTRACT for getWeightedSum(nestedList, depth, maxDepth):\n//     returns the sum of every integer inside `nestedList` times that\n//     integer's weight, where `nestedList` itself sits at level `depth`.\nconst getWeightedSum = (nestedList, depth, maxDepth) => {\n    let totalSum = 0;\n\n    for (const element of nestedList) {\n        // Base case: the weights are flipped, so integers at the deepest\n        // level get weight 1 and integers at the top get weight maxDepth.\n        if (!Array.isArray(element)) {\n            const weight = maxDepth - depth + 1;\n\n            totalSum += element * weight;\n            continue;\n        }\n\n        // Recurse on the inner list\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — it returns the weighted sum of\n        // everything inside `element`, one level deeper. Trust it, do\n        // not trace it. The integers this loop weighs directly plus\n        // each inner list's guaranteed sum add up to exactly this\n        // function's contract, kept.\n        totalSum += getWeightedSum(element, depth + 1, maxDepth);\n    }\n\n    return totalSum;\n};\n\nconst depthSumInverse = (nestedList) => {\n    // First DFS finds how deep the list goes, second DFS adds everything\n    // up with the flipped weights.\n    const maxDepth = getMaxDepth(nestedList, TOP_LEVEL_DEPTH);\n\n    // The recursive leap of faith: trust both contracts.\n    // getMaxDepth handed us the deepest level, and this call\n    // returns the full weighted sum of the structure. We do not\n    // trace inside either one; we just return the answer.\n    return getWeightedSum(nestedList, TOP_LEVEL_DEPTH, maxDepth);\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              1
+            ],
+            2,
+            [
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": 8
+      },
+      {
+        "args": [
+          [
+            1,
+            [
+              4,
+              [
+                6
+              ]
+            ]
+          ]
+        ],
+        "expected": 17
+      },
+      {
+        "args": [
+          [
+            1,
+            2,
+            3
+          ]
+        ],
+        "expected": 6
+      },
+      {
+        "args": [
+          [
+            [
+              3
+            ],
+            [
+              [
+                8
+              ]
+            ]
+          ]
+        ],
+        "expected": 14
+      },
+      {
+        "args": [
+          [
+            2,
+            [
+              -1,
+              [
+                4
+              ]
+            ],
+            3
+          ]
+        ],
+        "expected": 17
+      }
+    ]
+  },
+  {
+    "id": "minesweeper",
+    "title": "Minesweeper",
+    "category": "original",
+    "section": "Optional extra problems",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/minesweeper/",
+    "statement": "You are playing Minesweeper on a grid called `board`, where each square holds one character:\n\n- `'M'` — a hidden mine.\n- `'E'` — an empty square that has not been revealed yet.\n- `'B'` — a revealed blank square with **no** mines in any of its 8 surrounding squares.\n- `'1'` to `'8'` — a revealed square showing how many of its 8 surrounding squares contain mines.\n- `'X'` — a mine that was clicked (game over).\n\nYou are given the board and a `click` position `[clickRow, clickCol]`, which is guaranteed to be either `'M'` or `'E'`. Return the board after applying the click, using these rules:\n\n1. If the click lands on a mine (`'M'`), change it to `'X'` — the game is over.\n2. If the click lands on an unrevealed empty square (`'E'`) that has at least one mine around it, change it to a digit showing the number of surrounding mines. The reveal stops there.\n3. If the click lands on an `'E'` square with **no** mines around it, change it to `'B'` and automatically reveal all 8 of its neighbors the same way, spreading outward like clicking each of them. This is why one click on an open area clears out a whole region.\n\nOnly apply one click, then return the board.",
+    "examples": [
+      {
+        "input": "board = [[\"E\",\"E\",\"E\",\"E\",\"E\"],[\"E\",\"E\",\"M\",\"E\",\"E\"],[\"E\",\"E\",\"E\",\"E\",\"E\"],[\"E\",\"E\",\"E\",\"E\",\"E\"]], click = [3,0]",
+        "output": "[[\"B\",\"1\",\"E\",\"1\",\"B\"],[\"B\",\"1\",\"M\",\"1\",\"B\"],[\"B\",\"1\",\"1\",\"1\",\"B\"],[\"B\",\"B\",\"B\",\"B\",\"B\"]]",
+        "explanation": "The click lands on an empty square with no mines around it, so the reveal spreads outward. Squares touching the mine become \"1\" and stop the spread; the square directly above the mine stays \"E\" because the reveal never crosses the ring of numbered squares."
+      },
+      {
+        "input": "board = [[\"B\",\"1\",\"E\",\"1\",\"B\"],[\"B\",\"1\",\"M\",\"1\",\"B\"],[\"B\",\"1\",\"1\",\"1\",\"B\"],[\"B\",\"B\",\"B\",\"B\",\"B\"]], click = [1,2]",
+        "output": "[[\"B\",\"1\",\"E\",\"1\",\"B\"],[\"B\",\"1\",\"X\",\"1\",\"B\"],[\"B\",\"1\",\"1\",\"1\",\"B\"],[\"B\",\"B\",\"B\",\"B\",\"B\"]]",
+        "explanation": "The click lands directly on a mine, so it becomes \"X\" and nothing else changes."
+      },
+      {
+        "input": "board = [[\"E\",\"M\"]], click = [0,0]",
+        "output": "[[\"1\",\"M\"]]",
+        "explanation": "The clicked square touches one mine, so it shows \"1\"."
+      }
+    ],
+    "constraints": [
+      "1 <= number of rows, number of columns <= 50",
+      "board[i][j] is one of \"M\", \"E\", \"B\", \"X\", or a digit from \"1\" to \"8\".",
+      "click.length == 2, and the click position is inside the board.",
+      "The clicked square is always \"M\" or \"E\"."
+    ],
+    "functionName": "updateBoard",
+    "solution": "const MINE = 'M';\nconst UNREVEALED_EMPTY = 'E';\nconst REVEALED_BLANK = 'B';\nconst HIT_MINE = 'X';\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\n\n// Minesweeper counts all 8 surrounding squares, including diagonals.\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n    [1, 1],\n    [1, -1],\n    [-1, 1],\n    [-1, -1],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\nconst countAdjacentMines = (board, row, col) => {\n    let numAdjacentMines = 0;\n\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        if (!isInBounds(board, newRow, newCol)) continue;\n\n        if (board[newRow][newCol] === MINE) numAdjacentMines++;\n    }\n\n    return numAdjacentMines;\n};\n\n// CONTRACT for revealSquares(board, row, col, visited):\n//     when this call returns, if the square at `row`,`col` was an\n//     unrevealed empty square, it is now revealed — and if it touched\n//     no mines, the whole open region around it (plus its numbered\n//     border) is revealed too. Every square revealed this way goes\n//     into the visited set.\nconst revealSquares = (board, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(board, row, col)) return;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return;\n\n    if (board[row][col] !== UNREVEALED_EMPTY) return;\n\n    // Process node\n    visited.add(curPositionString);\n\n    const numAdjacentMines = countAdjacentMines(board, row, col);\n\n    // A square touching at least one mine shows its count, and the reveal\n    // stops here so we never uncover squares right next to mines.\n    if (numAdjacentMines > 0) {\n        board[row][col] = String(numAdjacentMines);\n        return;\n    }\n\n    board[row][col] = REVEALED_BLANK;\n\n    // Recurse on neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighbor square and\n        // any open region connected to it is revealed and in visited.\n        // Trust it, do not trace it. This function already revealed\n        // `row`,`col`, and each neighbor's contract covers the rest of\n        // the region — together, that is this function's full\n        // contract, kept.\n        revealSquares(board, newRow, newCol, visited);\n    }\n};\n\nconst updateBoard = (board, click) => {\n    const [clickRow, clickCol] = click;\n\n    // Clicking a mine ends the game immediately.\n    if (board[clickRow][clickCol] === MINE) {\n        board[clickRow][clickCol] = HIT_MINE;\n        return board;\n    }\n\n    const visited = new Set();\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, the clicked square — and, if it touched no\n    // mines, the whole open region around it — is revealed on the\n    // board. We do not trace inside; we just return the updated\n    // board.\n    revealSquares(board, clickRow, clickCol, visited);\n\n    return board;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              "E",
+              "E",
+              "E",
+              "E",
+              "E"
+            ],
+            [
+              "E",
+              "E",
+              "M",
+              "E",
+              "E"
+            ],
+            [
+              "E",
+              "E",
+              "E",
+              "E",
+              "E"
+            ],
+            [
+              "E",
+              "E",
+              "E",
+              "E",
+              "E"
+            ]
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        "expected": [
+          [
+            "B",
+            "1",
+            "E",
+            "1",
+            "B"
+          ],
+          [
+            "B",
+            "1",
+            "M",
+            "1",
+            "B"
+          ],
+          [
+            "B",
+            "1",
+            "1",
+            "1",
+            "B"
+          ],
+          [
+            "B",
+            "B",
+            "B",
+            "B",
+            "B"
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              "B",
+              "1",
+              "E",
+              "1",
+              "B"
+            ],
+            [
+              "B",
+              "1",
+              "M",
+              "1",
+              "B"
+            ],
+            [
+              "B",
+              "1",
+              "1",
+              "1",
+              "B"
+            ],
+            [
+              "B",
+              "B",
+              "B",
+              "B",
+              "B"
+            ]
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "expected": [
+          [
+            "B",
+            "1",
+            "E",
+            "1",
+            "B"
+          ],
+          [
+            "B",
+            "1",
+            "X",
+            "1",
+            "B"
+          ],
+          [
+            "B",
+            "1",
+            "1",
+            "1",
+            "B"
+          ],
+          [
+            "B",
+            "B",
+            "B",
+            "B",
+            "B"
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              "E",
+              "M"
+            ]
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "expected": [
+          [
+            "1",
+            "M"
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              "E",
+              "E"
+            ],
+            [
+              "E",
+              "E"
+            ]
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "expected": [
+          [
+            "B",
+            "B"
+          ],
+          [
+            "B",
+            "B"
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              "M",
+              "E",
+              "M"
+            ],
+            [
+              "E",
+              "E",
+              "E"
+            ],
+            [
+              "M",
+              "E",
+              "M"
+            ]
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "M",
+            "E",
+            "M"
+          ],
+          [
+            "E",
+            "4",
+            "E"
+          ],
+          [
+            "M",
+            "E",
+            "M"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "smallest-string-with-swaps",
+    "title": "Smallest String With Swaps",
+    "category": "original",
+    "section": "Optional extra problems",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/smallest-string-with-swaps/",
+    "statement": "You are given a string `s` and a list of index pairs called `pairs`, where each `pairs[i] = [a, b]` names two positions in the string (0-indexed).\n\nYou may swap the characters at the two positions of any pair, and you may do this **as many times as you like**, in any order, reusing pairs freely.\n\nReturn the lexicographically smallest string you can end up with. (\"Lexicographically smallest\" means the string that would come first in a dictionary.)",
+    "examples": [
+      {
+        "input": "s = \"dcab\", pairs = [[0,3],[1,2]]",
+        "output": "\"bacd\"",
+        "explanation": "Swap indexes 0 and 3 to get \"bcad\", then swap indexes 1 and 2 to get \"bacd\". Indexes {0, 3} form one group and {1, 2} form another, so the two groups sort their letters separately."
+      },
+      {
+        "input": "s = \"dcab\", pairs = [[0,3],[1,2],[0,2]]",
+        "output": "\"abcd\"",
+        "explanation": "The extra pair [0,2] links the two groups into one connected group {0, 1, 2, 3}, so all four letters can be fully sorted."
+      },
+      {
+        "input": "s = \"cba\", pairs = [[0,1],[1,2]]",
+        "output": "\"abc\"",
+        "explanation": "Indexes 0, 1, and 2 are all connected through chains of pairs, so the whole string can be sorted."
+      }
+    ],
+    "constraints": [
+      "1 <= s.length <= 10^5",
+      "0 <= pairs.length <= 10^5",
+      "pairs[i].length == 2",
+      "0 <= pairs[i][0], pairs[i][1] < s.length",
+      "s contains only lowercase English letters."
+    ],
+    "functionName": "smallestStringWithSwaps",
+    "solution": "const buildGraph = (edges) => {\n    const graph = {};\n\n    for (const edge of edges) {\n        const [nodeOne, nodeTwo] = edge;\n\n        const nodeOneInGraph = graph.hasOwnProperty(nodeOne);\n        const nodeTwoInGraph = graph.hasOwnProperty(nodeTwo);\n\n        if (!nodeOneInGraph) graph[nodeOne] = [];\n        if (!nodeTwoInGraph) graph[nodeTwo] = [];\n\n        graph[nodeOne].push(nodeTwo);\n        graph[nodeTwo].push(nodeOne);\n    }\n\n    return graph;\n};\n\n// CONTRACT for collectComponentIndices(graph, curIndex, visited, componentIndices):\n//     when this call returns, `curIndex` and every index connected to\n//     it through chains of pairs is in the visited set and has been\n//     added to `componentIndices`.\nconst collectComponentIndices = (graph, curIndex, visited, componentIndices) => {\n    // Base case\n    if (visited.has(curIndex)) return;\n\n    // Process node\n    visited.add(curIndex);\n    componentIndices.push(curIndex);\n\n    // Recurse on neighbors\n    const indexInGraph = graph.hasOwnProperty(curIndex);\n    if (!indexInGraph) return;\n\n    const neighbors = graph[curIndex];\n\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `neighbor` and every\n        // index connected to it is in visited and in the list. Trust\n        // it, do not trace it. This function already added `curIndex`,\n        // and each neighbor's contract covers the rest of the group —\n        // together, that is this function's full contract, kept.\n        collectComponentIndices(graph, neighbor, visited, componentIndices);\n    }\n};\n\nconst smallestStringWithSwaps = (s, pairs) => {\n    const graph = buildGraph(pairs);\n\n    const resultChars = s.split('');\n    const visited = new Set();\n\n    for (let startIndex = 0; startIndex < s.length; startIndex++) {\n        if (visited.has(startIndex)) continue;\n\n        const componentIndices = [];\n\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, componentIndices holds every index in this\n        // group, and they are all in visited. We do not trace inside;\n        // we just sort this group's letters into place.\n        collectComponentIndices(graph, startIndex, visited, componentIndices);\n\n        // Within one connected component we can swap letters into any\n        // arrangement, so we greedily place the smallest letters at the\n        // smallest indices.\n        componentIndices.sort((indexA, indexB) => indexA - indexB);\n\n        const componentChars = componentIndices.map((index) => s[index]);\n        componentChars.sort();\n\n        for (let i = 0; i < componentIndices.length; i++) {\n            resultChars[componentIndices[i]] = componentChars[i];\n        }\n    }\n\n    return resultChars.join('');\n};",
+    "tests": [
+      {
+        "args": [
+          "dcab",
+          [
+            [
+              0,
+              3
+            ],
+            [
+              1,
+              2
+            ]
+          ]
+        ],
+        "expected": "bacd"
+      },
+      {
+        "args": [
+          "dcab",
+          [
+            [
+              0,
+              3
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ]
+        ],
+        "expected": "abcd"
+      },
+      {
+        "args": [
+          "cba",
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ]
+        ],
+        "expected": "abc"
+      },
+      {
+        "args": [
+          "dcab",
+          []
+        ],
+        "expected": "dcab"
+      },
+      {
+        "args": [
+          "zyxw",
+          [
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              3
+            ]
+          ]
+        ],
+        "expected": "xwzy"
+      }
+    ],
+    "hint": "With pairs `[0,1]` and `[1,2]`, which arrangements of the letters at positions 0, 1, and 2 can you actually reach?"
+  },
+  {
+    "id": "water-and-jug-problem",
+    "title": "Water and Jug Problem",
+    "category": "original",
+    "section": "Optional extra problems",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/water-and-jug-problem/",
+    "statement": "You have two water jugs with capacities of `jug1Capacity` and `jug2Capacity` liters. There is an unlimited water supply, but the jugs have no measurement markings. Both jugs start empty.\n\nAt any point you may do one of these moves:\n\n- **Fill** either jug completely to the top.\n- **Empty** either jug completely.\n- **Pour** water from one jug into the other, until either the source jug is empty or the destination jug is full.\n\nReturn `true` if it is possible to reach a moment where the water you are holding measures exactly `targetCapacity` liters — either inside one jug, or as the combined total in both jugs. Otherwise return `false`.",
+    "examples": [
+      {
+        "input": "jug1Capacity = 3, jug2Capacity = 5, targetCapacity = 4",
+        "output": "true",
+        "explanation": "Fill the 5-liter jug, pour it into the 3-liter jug (leaving 2), empty the 3-liter jug, pour the 2 liters in, fill the 5-liter jug again, and top off the 3-liter jug. That pours off exactly 1 liter, leaving 4 liters in the 5-liter jug."
+      },
+      {
+        "input": "jug1Capacity = 2, jug2Capacity = 6, targetCapacity = 5",
+        "output": "false",
+        "explanation": "Every reachable amount is a multiple of 2, so 5 liters is impossible."
+      },
+      {
+        "input": "jug1Capacity = 1, jug2Capacity = 2, targetCapacity = 3",
+        "output": "true",
+        "explanation": "Fill both jugs; together they hold exactly 3 liters."
+      }
+    ],
+    "constraints": [
+      "1 <= jug1Capacity, jug2Capacity, targetCapacity <= 10^6"
+    ],
+    "functionName": "canMeasureWater",
+    "solution": "const getStateString = (amountInJug1, amountInJug2) => `${amountInJug1}, ${amountInJug2}`;\n\nconst getNextStates = (amountInJug1, amountInJug2, jug1Capacity, jug2Capacity) => {\n    // Pouring moves water until the source jug is empty or the\n    // destination jug is full, whichever happens first.\n    const amountPouredIntoJug2 = Math.min(amountInJug1, jug2Capacity - amountInJug2);\n    const amountPouredIntoJug1 = Math.min(amountInJug2, jug1Capacity - amountInJug1);\n\n    return [\n        [jug1Capacity, amountInJug2],\n        [amountInJug1, jug2Capacity],\n        [0, amountInJug2],\n        [amountInJug1, 0],\n        [amountInJug1 - amountPouredIntoJug2, amountInJug2 + amountPouredIntoJug2],\n        [amountInJug1 + amountPouredIntoJug1, amountInJug2 - amountPouredIntoJug1],\n    ];\n};\n\nconst canMeasureWater = (jug1Capacity, jug2Capacity, targetCapacity) => {\n    // The two jugs can never hold more water than their combined capacity.\n    if (targetCapacity > jug1Capacity + jug2Capacity) return false;\n\n    // This is DFS with an explicit stack instead of recursion, because large\n    // capacities create chains of states deep enough to overflow the call stack.\n    const visited = new Set();\n    const stack = [[0, 0]]; // <- leap of faith: we hand the whole sweep to the loop and just read its verdict.\n\n    // CONTRACT for this sweep: every state reachable from (0, 0) by\n    // legal moves gets popped and checked (repeat copies are discarded\n    // by the visited check). If any of them hits targetCapacity we\n    // return true; if the stack empties first, no reachable state ever\n    // could — so false.\n    while (stack.length > 0) {\n        const [amountInJug1, amountInJug2] = stack.pop();\n\n        // Base cases\n        if (amountInJug1 === targetCapacity) return true;\n        if (amountInJug2 === targetCapacity) return true;\n        if (amountInJug1 + amountInJug2 === targetCapacity) return true;\n\n        const curStateString = getStateString(amountInJug1, amountInJug2);\n        if (visited.has(curStateString)) continue;\n\n        // Process node\n        visited.add(curStateString);\n\n        // Traverse neighbors\n        const nextStates = getNextStates(\n            amountInJug1,\n            amountInJug2,\n            jug1Capacity,\n            jug2Capacity,\n        );\n\n        for (const nextState of nextStates) {\n            const [nextAmountInJug1, nextAmountInJug2] = nextState;\n\n            const nextStateString = getStateString(nextAmountInJug1, nextAmountInJug2);\n            if (visited.has(nextStateString)) continue;\n\n            // The leap of faith, one move down: pushing a state hands\n            // it the SAME contract — everything reachable from it will\n            // be swept too. Trust it, do not trace it.\n            stack.push(nextState);\n        }\n    }\n\n    return false;\n};",
+    "tests": [
+      {
+        "args": [
+          3,
+          5,
+          4
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          2,
+          6,
+          5
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          1,
+          2,
+          3
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          4,
+          6,
+          8
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          999,
+          1000,
+          1
+        ],
+        "expected": true
+      }
+    ],
+    "hint": "What pair of numbers completely describes your situation at any moment, and how does each move change it?"
+  }
+]

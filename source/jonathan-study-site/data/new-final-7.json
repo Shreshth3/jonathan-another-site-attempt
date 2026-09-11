@@ -1,0 +1,382 @@
+[
+  {
+    "id": "codewars-array-deep-count",
+    "title": "Array Deep Count",
+    "category": "new",
+    "sourceName": "Codewars",
+    "sourceLink": "https://www.codewars.com/kata/596f72bbe7cd7296d1000029",
+    "difficulty": "Easy",
+    "whyGoodFit": "Directly fills the under-represented DFS-on-nested-arrays slot: count every element at every level, where inner arrays count as elements too — the same nested-structure counting mechanic as the approved Busiest Shelf Level. Verified real 6-kyu kata ('Array Deep Count') via the Codewars API, JS available.",
+    "statement": "You're given an array that can hold numbers, strings, booleans — and other arrays, nested as deep as you like.\n\nCount how many elements the array holds **in total, at every level**. An inner array counts as one element itself, and then everything inside it gets counted as well.\n\nReturn the total count. An empty array holds 0 elements.\n\n**Function signature**\n\n```js\nfunction deepCount(arr) {\n  // arr: an array (possibly containing nested arrays)\n  // return a number\n}\n```",
+    "examples": [
+      {
+        "input": "deepCount([1, 2, [3, 4, [5]]])",
+        "output": "7",
+        "explanation": "The outer array holds 3 elements: 1, 2, and the array [3, 4, [5]]. That inner array holds 3 more: 3, 4, and [5]. And [5] holds 1 more: 5. Total: 3 + 3 + 1 = 7."
+      },
+      {
+        "input": "deepCount([\"x\", \"y\", [\"z\"]])",
+        "output": "4",
+        "explanation": "The outer array holds 3 elements: \"x\", \"y\", and [\"z\"]. The inner array [\"z\"] holds 1 element: \"z\". Total: 3 + 1 = 4."
+      }
+    ],
+    "constraints": [
+      "Elements are numbers, strings, booleans, or arrays of these",
+      "Total number of elements (all levels combined) <= 10,000",
+      "Nesting depth <= 100",
+      "deepCount([]) is 0"
+    ],
+    "functionName": "deepCount",
+    "solution": "// CONTRACT for countElementDeep(element):\n//     when this call returns, the returned value equals the count of\n//     `element` itself plus everything nested anywhere inside it\n//     (a plain non-array value counts as exactly 1).\nconst countElementDeep = (element) => {\n    // Base case: a non-array element (number, string, boolean) counts as one.\n    if (!Array.isArray(element)) return 1;\n\n    // Process node: an inner array counts as one element itself...\n    let totalCount = 1;\n\n    // Recurse on neighbors: ...and then everything inside it counts too.\n    for (const innerElement of element) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, its value counts\n        // `innerElement` plus everything nested inside it. Trust it,\n        // do not trace it. The 1 for this array + the guaranteed\n        // counts of its contents = exactly this function's contract.\n        totalCount += countElementDeep(innerElement);\n    }\n\n    return totalCount;\n};\n\nconst deepCount = (arr) => {\n    // The outermost array is the container we are counting inside of,\n    // so it contributes 0 on its own -- only its contents count.\n    let totalCount = 0;\n\n    for (const element of arr) {\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, its value is the complete count of `element`\n        // and everything nested inside it, however deep. We do not\n        // trace inside; we just add it to the running total.\n        totalCount += countElementDeep(element);\n    }\n\n    return totalCount;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            1,
+            2,
+            [
+              3,
+              4,
+              [
+                5
+              ]
+            ]
+          ]
+        ],
+        "expected": 7
+      },
+      {
+        "args": [
+          [
+            "x",
+            "y",
+            [
+              "z"
+            ]
+          ]
+        ],
+        "expected": 4
+      },
+      {
+        "args": [
+          []
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            []
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            true,
+            false,
+            [
+              "a",
+              [
+                1
+              ]
+            ]
+          ]
+        ],
+        "expected": 6
+      },
+      {
+        "args": [
+          [
+            [
+              [
+                [
+                  [
+                    1
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ],
+        "expected": 5
+      }
+    ]
+  },
+  {
+    "id": "usaco-fence-planning",
+    "title": "Fence Planning",
+    "category": "new",
+    "sourceName": "USACO",
+    "sourceLink": "https://usaco.org/index.php?page=viewproblem2&cpid=944",
+    "difficulty": "Medium",
+    "whyGoodFit": "Tutor-suggested lead, verified live at cpid=944 (note: usaco.org lists it as 2019 US Open SILVER problem 3, not bronze). Components over an explicit edge list + min of a per-component property (bounding-box perimeter) — precisely the approved Fish / Largest Component 'max-min of a region property' pattern, with a concrete farm story and direct input.",
+    "statement": "Farmer John's `N` cows are numbered `0` to `N - 1`, and cow `i` is standing at position `positions[i] = [x, y]` in the pasture (all positions are distinct).\n\nCows chat by mooing. `pairs[j] = [a, b]` means cows `a` and `b` moo back and forth with each other. Cows form **herds**: two cows belong to the same herd if they moo with each other directly, or are linked through a chain of mooing pairs. Every cow moos with at least one other cow.\n\nFarmer John wants to build **one** rectangular fence, with sides parallel to the x- and y-axes, that contains every cow of **at least one entire herd** (cows from other herds may happen to end up inside too — that's fine). A cow standing exactly on the fence line counts as inside, and the rectangle is allowed to have zero width or zero height. A fence spanning width `w` and height `h` has perimeter `2 * (w + h)`.\n\nReturn the smallest perimeter Farmer John can get away with.\n\n**Function signature**\n\n```js\nfunction minFencePerimeter(positions, pairs) {\n  // positions: array of [x, y] integer pairs\n  // pairs: array of [a, b] cow-number pairs\n  // return a number\n}\n```",
+    "examples": [
+      {
+        "input": "minFencePerimeter(\n  [[0, 0], [3, 1], [1, 2], [10, 10], [12, 11]],\n  [[0, 1], [1, 2], [3, 4]]\n)",
+        "output": "6",
+        "explanation": "Cows 0, 1, 2 form one herd (0 moos with 1, and 1 moos with 2). Cows 3 and 4 form another. Herd {0, 1, 2}: x runs 0 to 3 (width 3), y runs 0 to 2 (height 2), perimeter 2 * (3 + 2) = 10. Herd {3, 4}: x runs 10 to 12 (width 2), y runs 10 to 11 (height 1), perimeter 2 * (2 + 1) = 6. The smaller option is 6."
+      },
+      {
+        "input": "minFencePerimeter(\n  [[2, 5], [2, 9], [7, 5], [4, 4], [6, 6]],\n  [[0, 2], [1, 3], [3, 4]]\n)",
+        "output": "10",
+        "explanation": "The herds are {0, 2} and {1, 3, 4}. Herd {0, 2}: cows at [2, 5] and [7, 5], so width 5 and height 0 — a zero-height fence is allowed — perimeter 2 * (5 + 0) = 10. Herd {1, 3, 4}: x runs 2 to 6 (width 4), y runs 4 to 9 (height 5), perimeter 2 * (4 + 5) = 18. Answer: 10."
+      }
+    ],
+    "constraints": [
+      "2 <= N <= 5,000 cows; 1 <= number of pairs <= 5,000",
+      "0 <= x, y <= 1,000,000 (integers); all positions distinct",
+      "Each pair links two different cows; every cow appears in at least one pair"
+    ],
+    "functionName": "minFencePerimeter",
+    "solution": "const buildGraph = (edges) => {\n    const graph = {};\n\n    for (const edge of edges) {\n        const [nodeOne, nodeTwo] = edge;\n\n        const nodeOneInGraph = graph.hasOwnProperty(nodeOne);\n        const nodeTwoInGraph = graph.hasOwnProperty(nodeTwo);\n\n        if (!nodeOneInGraph) graph[nodeOne] = [];\n        if (!nodeTwoInGraph) graph[nodeTwo] = [];\n\n        graph[nodeOne].push(nodeTwo);\n        graph[nodeTwo].push(nodeOne);\n    }\n\n    return graph;\n};\n\n// CONTRACT for markHerdAsVisited(graph, cow, visited, herdCows):\n//     when this call returns, `cow` and every cow connected to her\n//     through any chain of friendships is in the visited set AND in\n//     the `herdCows` list.\nconst markHerdAsVisited = (graph, cow, visited, herdCows) => {\n    // Base case\n    if (visited.has(cow)) return;\n\n    // Process node\n    visited.add(cow);\n    herdCows.push(cow);\n\n    // Recurse on neighbors\n    const cowInGraph = graph.hasOwnProperty(cow);\n    if (!cowInGraph) return;\n\n    const neighbors = graph[cow];\n\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `neighbor` and every\n        // cow connected to `neighbor` is in visited and in `herdCows`.\n        // Trust it, do not trace it. This function already put `cow`\n        // into both, and each neighbor's contract covers the rest of\n        // the herd — together, that is this function's full contract,\n        // kept.\n        markHerdAsVisited(graph, neighbor, visited, herdCows);\n    }\n};\n\nconst getHerdFencePerimeter = (positions, herdCows) => {\n    let minX = Infinity;\n    let maxX = -Infinity;\n    let minY = Infinity;\n    let maxY = -Infinity;\n\n    for (const cow of herdCows) {\n        const [x, y] = positions[cow];\n\n        minX = Math.min(minX, x);\n        maxX = Math.max(maxX, x);\n        minY = Math.min(minY, y);\n        maxY = Math.max(maxY, y);\n    }\n\n    // A cow standing exactly on the fence line still counts as inside,\n    // so the tightest fence runs right through the outermost cows.\n    const width = maxX - minX;\n    const height = maxY - minY;\n\n    return 2 * (width + height);\n};\n\nconst minFencePerimeter = (positions, pairs) => {\n    const graph = buildGraph(pairs);\n    const numCows = positions.length;\n\n    let smallestPerimeter = Infinity;\n    const visited = new Set();\n\n    for (let cow = 0; cow < numCows; cow++) {\n        if (visited.has(cow)) continue;\n\n        // Every cow we have not seen yet starts a brand new herd.\n        const herdCows = [];\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, `herdCows` holds the complete herd around\n        // `cow`, and every one of those cows is in visited, so no\n        // herd is ever built twice. We do not trace inside; we just\n        // measure the finished herd's fence and keep the smallest.\n        markHerdAsVisited(graph, cow, visited, herdCows);\n\n        const herdPerimeter = getHerdFencePerimeter(positions, herdCows);\n        smallestPerimeter = Math.min(smallestPerimeter, herdPerimeter);\n    }\n\n    return smallestPerimeter;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              10,
+              10
+            ],
+            [
+              12,
+              11
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ]
+          ]
+        ],
+        "expected": 6
+      },
+      {
+        "args": [
+          [
+            [
+              2,
+              5
+            ],
+            [
+              2,
+              9
+            ],
+            [
+              7,
+              5
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              6,
+              6
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ]
+        ],
+        "expected": 10
+      },
+      {
+        "args": [
+          [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              8
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 10
+      },
+      {
+        "args": [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ]
+        ],
+        "expected": 20
+      },
+      {
+        "args": [
+          [
+            [
+              4,
+              7
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              10,
+              0
+            ]
+          ],
+          [
+            [
+              1,
+              2
+            ]
+          ]
+        ],
+        "expected": 0
+      }
+    ]
+  },
+  {
+    "id": "kattis-getting-gold",
+    "title": "Getting Gold",
+    "category": "new",
+    "sourceName": "Kattis",
+    "sourceLink": "https://open.kattis.com/problems/gold",
+    "difficulty": "Medium",
+    "whyGoodFit": "Region walk from a start square with one concretely stated stop condition (a 'draft' square ends forward movement) + count the gold picked up — the Count Sub Islands / Maximum Fish shape: simple aggregate plus a stated condition, concrete story, direct grid input. Fetched and hand-traced both official samples (outputs 1 and 4). Kattis difficulty 2.0 (Easy tier there; Medium on the LeetCode scale used here).",
+    "statement": "You're writing the scoring screen for a text-based treasure game. The dungeon map is a rectangular grid, given to you as an array of strings — one string per row. Each character is one of:\n\n- `P` — the explorer's starting square (exactly one on the map)\n- `G` — a piece of gold\n- `T` — a hidden trap\n- `#` — a wall\n- `.` — open floor\n\nThe outer border of the map is always solid wall.\n\nThe explorer moves one square at a time — up, down, left, or right, never diagonally, and never into a wall. She automatically picks up the gold on any square she stands on (including her starting square, if it had gold).\n\nShe can't see traps. But while standing on a square, she **feels a draft** if one or more traps sit directly next to her (up, down, left, or right). She plays it perfectly safe:\n\n- On a square with **no draft**, every neighboring non-wall square is guaranteed trap-free, so she can step onto any of them.\n- On a square **with a draft**, she can't tell which neighbor hides a trap, so she will never step onto a square she hasn't already stood on. She can only retrace her steps back the way she came.\n\nReturn the number of gold pieces she can collect while playing this cautiously.\n\n**Function signature**\n\n```js\nfunction collectSafeGold(grid) {\n  // grid: array of equal-length strings\n  // return a number\n}\n```",
+    "examples": [
+      {
+        "input": "collectSafeGold([\n  \"#######\",\n  \"#P.GTG#\",\n  \"#..TGG#\",\n  \"#######\"\n])",
+        "output": "1",
+        "explanation": "She starts at row 1, col 1 (no draft there). The floor at row 1, col 2 has no draft, so she can move through it to the gold at row 1, col 3. Standing on that gold she feels a draft (trap at row 1, col 4), so she takes it and backs out. The floor at row 2, col 2 has a draft too (trap at row 2, col 3), so she can stand there but go no further. All remaining gold lies past trap-guarded squares, so she collects just 1 piece."
+      },
+      {
+        "input": "collectSafeGold([\n  \"########\",\n  \"#...GTG#\",\n  \"#..PG.G#\",\n  \"#...G#G#\",\n  \"#..TG.G#\",\n  \"########\"\n])",
+        "output": "4",
+        "explanation": "From P at row 2, col 3 she steps onto the gold at row 2, col 4 (no draft) and continues to the gold at row 3, col 4 (also no draft). From those safe squares she can grab the gold at row 1, col 4 (draft — trap at row 1, col 5) and at row 4, col 4 (draft — trap at row 4, col 3), backing out each time. That's 4 pieces. The three gold pieces in the rightmost open column are only reachable through draft squares like row 2, col 5, so she can never get them."
+      }
+    ],
+    "constraints": [
+      "3 <= grid width, height <= 50",
+      "All rows have the same length, and the border is entirely `#`",
+      "Exactly one `P` on the map",
+      "Characters are only `P`, `G`, `T`, `#`, `.`"
+    ],
+    "functionName": "collectSafeGold",
+    "solution": "const GOLD = 'G';\nconst TRAP = 'T';\nconst WALL = '#';\nconst EXPLORER_START = 'P';\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\nconst findStartPosition = (grid) => {\n    for (let row = 0; row < grid.length; row++) {\n        for (let col = 0; col < grid[row].length; col++) {\n            if (grid[row][col] === EXPLORER_START) return [row, col];\n        }\n    }\n};\n\nconst feelsDraft = (grid, row, col) => {\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const neighborRow = row + rowChange;\n        const neighborCol = col + colChange;\n\n        if (!isInBounds(grid, neighborRow, neighborCol)) continue;\n\n        if (grid[neighborRow][neighborCol] === TRAP) return true;\n    }\n\n    return false;\n};\n\n// CONTRACT for countGoldFromPosition(grid, row, col, visited):\n//     when this call returns, every safe square the explorer can\n//     reach from (`row`, `col`) that was not already in the visited\n//     set is now in it, and the returned value equals the gold\n//     sitting on those newly added squares.\nconst countGoldFromPosition = (grid, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(grid, row, col)) return 0;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return 0;\n\n    if (grid[row][col] === WALL) return 0;\n\n    // Process node\n    visited.add(curPositionString);\n\n    let goldCollected = grid[row][col] === GOLD ? 1 : 0;\n\n    // A draft means a trap could hide on ANY neighbor she has not stood on,\n    // so she grabs this square's gold and only retraces her steps back out.\n    if (feelsDraft(grid, row, col)) return goldCollected;\n\n    // Recurse on neighbors\n    // No draft here means every non-wall neighbor is guaranteed trap-free.\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every new safe square\n        // reachable from this neighbor is in visited, and the call\n        // returns the gold on exactly those squares. Trust it, do not\n        // trace it. This square's own gold + each neighbor's guaranteed\n        // gold = exactly this function's contract.\n        goldCollected += countGoldFromPosition(grid, newRow, newCol, visited);\n    }\n\n    return goldCollected;\n};\n\nconst collectSafeGold = (grid) => {\n    const [startRow, startCol] = findStartPosition(grid);\n\n    const visited = new Set();\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, its value is ALL the gold the explorer can safely\n    // collect from her starting square. We do not trace inside; we\n    // just return that number as the answer.\n    return countGoldFromPosition(grid, startRow, startCol, visited);\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            "#######",
+            "#P.GTG#",
+            "#..TGG#",
+            "#######"
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            "########",
+            "#...GTG#",
+            "#..PG.G#",
+            "#...G#G#",
+            "#..TG.G#",
+            "########"
+          ]
+        ],
+        "expected": 4
+      },
+      {
+        "args": [
+          [
+            "#####",
+            "#PG.#",
+            "#####"
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            "######",
+            "#P.TG#",
+            "######"
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            "#####",
+            "#PT.#",
+            "#G..#",
+            "#####"
+          ]
+        ],
+        "expected": 0
+      }
+    ]
+  }
+]
