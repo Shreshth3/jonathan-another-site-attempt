@@ -1,0 +1,105 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const { chromium } = require('playwright');
+const base = process.env.GRAPH_BASE_URL || 'http://127.0.0.1:4185';
+(async () => {
+  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+    if (!process.env.GRAPH_BASE_URL) await page.route(/\/(villages-without-wells|busiest-shelf-level)\?/, route => route.fulfill({ contentType: 'text/html', body: fs.readFileSync('index.html') }));
+    await page.goto(base + '/villages-without-wells?section=6');
+    await page.locator('#coding-graph-disclosure summary').click();
+    const add = page.locator('#graph-add-node');
+    await add.waitFor();
+    const snapshot = () => page.evaluate(() => window.DFS_GRAPH.getSnapshot());
+    const node = id => page.locator('.scratch-node[data-node-id="' + id + '"]');
+    const undo = async (key = 'Meta+z') => { await page.keyboard.press(key); };
+    await page.evaluate(() => window.DFS_GRAPH.setSnapshot(null));
+    await add.click(); await add.click();
+    await undo(); assert.equal((await snapshot()).nodes.length, 1);
+    await undo('Control+z'); assert.equal((await snapshot()).nodes.length, 0);
+    await undo(); assert.equal((await snapshot()).nodes.length, 0);
+    console.log('PASS repeated Cmd/Ctrl undo from toolbar and canvas');
+
+    await add.click(); await add.click();
+    await node(0).focus(); await page.keyboard.press('Enter');
+    await node(1).focus(); await page.keyboard.press('Enter');
+    assert.equal((await snapshot()).edges.length, 1);
+    await undo(); assert.equal((await snapshot()).edges.length, 0);
+    await node(0).focus(); await page.keyboard.press('Enter');
+    await node(1).focus(); await page.keyboard.press('Enter');
+    await node(0).focus(); await page.keyboard.press('Delete');
+    assert.equal((await snapshot()).nodes.length, 1);
+    await undo(); assert.equal((await snapshot()).nodes.length, 2);
+    assert.equal((await snapshot()).edges.length, 1);
+    console.log('PASS edge creation and deleted node with its edges');
+
+    await node(0).focus();
+    const beforeMove = await snapshot();
+    await page.keyboard.press('ArrowRight'); await undo();
+    assert.deepEqual(await snapshot(), beforeMove);
+    const box = await node(0).boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 + 70, box.y + box.height / 2 + 30, { steps: 8 });
+    await page.mouse.up();
+    assert.notDeepEqual(await snapshot(), beforeMove);
+    await undo(); assert.deepEqual(await snapshot(), beforeMove);
+    console.log('PASS keyboard movement and whole drag undo');
+
+    await node(0).focus(); await page.keyboard.press('F2');
+    await page.locator('#graph-rename-input').fill('42');
+    await page.keyboard.press('Enter'); await undo();
+    assert.equal((await snapshot()).nodes[0].label, beforeMove.nodes[0].label);
+    await node(0).click({ button: 'right' });
+    await page.locator('#graph-color-menu button').filter({hasText:'Green'}).click();
+    await undo(); assert.equal((await snapshot()).nodes[0].color, beforeMove.nodes[0].color);
+    await page.locator('#graph-directed').click(); await undo();
+    assert.equal((await snapshot()).directed, beforeMove.directed);
+    await page.locator('.edge-width-control').evaluate(el => { el.hidden = false; });
+    await page.locator('#graph-edge-width').focus();
+    await page.keyboard.press('ArrowRight'); await undo();
+    assert.deepEqual((await snapshot()).edges, beforeMove.edges);
+    await page.locator('#graph-clear').click(); await page.locator('#graph-clear').click();
+    assert.equal((await snapshot()).nodes.length, 0);
+    await undo(); assert.deepEqual(await snapshot(), beforeMove);
+    console.log('PASS rename, color, direction, width, and clear');
+
+    const code = page.locator('#coding-editor');
+    await code.fill(''); await code.focus(); await page.keyboard.type('hello');
+    await undo(); assert.notEqual(await code.inputValue(), 'hello');
+    assert.deepEqual(await snapshot(), beforeMove);
+    await page.evaluate(() => document.querySelector('#graph-lab').classList.add('locked'));
+    await page.locator('#graph-board').focus(); await undo();
+    assert.deepEqual(await snapshot(), beforeMove);
+    await page.evaluate(() => document.querySelector('#graph-lab').classList.remove('locked'));
+    await page.evaluate(() => window.DFS_GRAPH.setContext('undo-other-task', 0));
+    await page.locator('#graph-board').focus(); await undo();
+    assert.equal((await snapshot()).nodes.length, 0);
+    console.log('PASS text undo, locked graph, and separate task history');
+    await page.reload();
+    assert.equal((await snapshot()).nodes.length, 2);
+    assert.equal((await snapshot()).edges.length, 1);
+    console.log('PASS undo result saved after reload');
+    for (const section of [1, 4]) {
+      await page.goto(base + '/villages-without-wells?section=' + section);
+      if (section === 4) await page.locator('#coding-graph-disclosure summary').click();
+      await page.evaluate(() => window.DFS_GRAPH.setSnapshot(null));
+      await add.click(); await undo('Control+z');
+      assert.equal((await snapshot()).nodes.length, 0);
+    }
+    console.log('PASS Steps 1 and 4');
+    await page.goto(base + '/busiest-shelf-level?section=6');
+    await page.locator('#coding-graph-disclosure summary').click();
+    await page.evaluate(() => window.DFS_GRAPH.setSnapshot(null));
+    await add.click();
+    await node(0).click({ button: 'right' });
+    await page.getByRole('button', { name: 'Number', exact: true }).click();
+    await page.locator('#graph-rename-input').fill('7');
+    await page.keyboard.press('Enter');
+    assert.equal((await snapshot()).nodes[0].label, '7');
+    await undo(); assert.equal((await snapshot()).nodes[0].label, 'Array');
+    await undo(); assert.equal((await snapshot()).nodes.length, 0);
+    console.log('PASS nested-array node type and value undo');
+  } finally { await browser.close(); }
+})().catch(error => { console.error(error); process.exitCode = 1; });

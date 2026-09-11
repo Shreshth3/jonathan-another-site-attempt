@@ -3871,6 +3871,14 @@
           <div id="coding-graph-examples" class="coding-graph-examples"></div>
         </div>
       </details>
+      <details id="coding-notes-disclosure" class="coding-graph-disclosure">
+        <summary><span>Notepad</span><small>Open your notes</small></summary>
+        <div class="coding-graph-disclosure-body">
+          <label class="counter-field" for="coding-notes"><span>Your notes</span><textarea id="coding-notes" rows="7" placeholder="Write your plan, questions, or reminders here." aria-describedby="coding-notes-help"></textarea></label>
+          <p id="coding-notes-help" class="coding-hint">Saved in this browser for this problem.</p>
+          <p id="coding-notes-warning" class="coding-error" role="status" hidden>Your browser could not save these notes. Copy them before leaving this page.</p>
+        </div>
+      </details>
       <label for="coding-editor" class="coding-editor-label">Your JavaScript</label>
       <p id="coding-editor-help" class="coding-hint">Keep the function name <code>${esc(lesson.functionName)}</code> and return your answer. Use <code>console.log</code> to inspect values. Tab indents; Shift+Tab unindents. Escape then Tab leaves the editor.</p>
       <div class="coding-editor-wrap"><pre id="coding-line-numbers" aria-hidden="true"></pre><div class="coding-editor-area"><pre id="coding-highlight" aria-hidden="true"></pre><textarea id="coding-editor" placeholder="${esc(lesson.starterCode)}" aria-describedby="coding-editor-help" rows="18" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">${esc(lesson.starterCode)}</textarea></div></div>
@@ -3907,9 +3915,9 @@
       if (graphSummary) graphSummary.textContent = `${codingGraphExamples.length} graph example${codingGraphExamples.length === 1 ? "" : "s"} saved for this problem.`;
       saveCodingGraphExamples();
     };
-    const switchGraphCase = index => {
+    const switchGraphCase = (index, saveCurrent = true) => {
       if (!codingGraphExamples[index]) return;
-      syncCurrentGraphInput();
+      if (saveCurrent) syncCurrentGraphInput();
       activeCodingGraphCase = Number(index);
       const entry = codingGraphExamples[activeCodingGraphCase];
       window.DFS_GRAPH?.setContext(graphContextKey(entry.id), 0);
@@ -3925,6 +3933,7 @@
     const deleteGraphCase = index => {
       const safeIndex = Number(index);
       if (!codingGraphExamples[safeIndex]) return;
+      syncCurrentGraphInput();
       const removed = codingGraphExamples.splice(safeIndex, 1)[0];
       try {
         localStorage.removeItem(`dfs-drawing:v1:${graphContextKey(removed.id)}:0`);
@@ -3936,7 +3945,7 @@
           codingGraphExamples[activeCodingGraphCase].input = "";
         }
       }
-      switchGraphCase(activeCodingGraphCase);
+      switchGraphCase(activeCodingGraphCase, false);
     };
     const newGraphCaseInputFallback = () => lesson.parameters.map((parameter, i) => `${parameter.name}: ${codingInputs()[i]?.raw || ""}`).join("\n");
     graphAddButton?.addEventListener("click", () => {
@@ -3945,7 +3954,7 @@
       codingGraphExamples.push({ id: newGraphCaseId(), input: nextInput.trim() ? nextInput : "" });
       activeCodingGraphCase = codingGraphExamples.length - 1;
       saveCodingGraphExamples();
-      switchGraphCase(activeCodingGraphCase);
+      switchGraphCase(activeCodingGraphCase, false);
     });
     graphSaveButton?.addEventListener("click", saveNewGraphInput);
     graphInputField?.addEventListener("input", () => syncCurrentGraphInput());
@@ -3964,12 +3973,23 @@
     });
     $("#coding-graph-slot").append($("#graph-lab"));
     activeCodingGraphCase = Math.min(Math.max(0, activeCodingGraphCase), codingGraphExamples.length - 1);
-    switchGraphCase(activeCodingGraphCase);
+    switchGraphCase(activeCodingGraphCase, false);
     window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? arrayDrawingOptions() : problem.graphRules?.nodeLabelFormat);
     $("#graph-lab").hidden = false;
     $("#graph-lab-title").textContent = "Scratch graph";
     graphDisclosure.addEventListener("toggle", () => {
       if (graphDisclosure.open) requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+    });
+    const notes = $("#coding-notes");
+    const notesKey = `dfs-coding-notes:v1:${problem.id}`;
+    try { notes.value = localStorage.getItem(notesKey) || ""; } catch {}
+    notes.addEventListener("input", event => {
+      // Notes do not change the code or interrupt a running solution.
+      event.stopPropagation();
+      try {
+        localStorage.setItem(notesKey, notes.value);
+        $("#coding-notes-warning").hidden = true;
+      } catch { $("#coding-notes-warning").hidden = false; }
     });
     restoreFormDraft("solution");
     const editor = $("#coding-editor");
@@ -4120,12 +4140,6 @@
     if (intro) intro.textContent = "Use only the problem statement and your compressed plan. Aim for a much faster implementation than your first attempt.";
     body?.querySelector(".coding-workflow-profile")?.remove();
     body?.querySelector(".coding-workflow")?.remove();
-    const disclosure = $("#coding-graph-disclosure");
-    if (disclosure) {
-      $(".activity-layout")?.append($("#graph-lab"));
-      $("#graph-lab").hidden = true;
-      disclosure.remove();
-    }
     const editorLabel = $(".coding-editor-label");
     editorLabel?.insertAdjacentHTML("beforebegin", referenceToggles({ graph: true, pseudocode: true, compression: true, compressionOpen: true }));
   }
@@ -4958,7 +4972,7 @@
     if (!draftKey || restoringDraft || section === 2) return;
     const fields = Object.fromEntries(
       $$("#challenge textarea[id], #challenge input[id], #challenge select[id]")
-        .filter(field => !field.id.startsWith("coding-graph-"))
+        .filter(field => field.id !== "coding-notes" && !field.id.startsWith("coding-graph-"))
         .map(field => [field.id, field.value])
     );
     const choices = $$('[data-choice-id][aria-pressed="true"]').map(button => `[data-choice-id="${button.dataset.choiceId}"]`);

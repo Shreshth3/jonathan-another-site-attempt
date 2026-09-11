@@ -16,6 +16,7 @@
   let nodeLabelRule = "nonnegative-integer";
   let contextKey = "";
   let drawing = blankDrawing();
+  const undoHistories = new Map();
   let selected = null;
   let interaction = null;
   let connectFrom = null;
@@ -45,6 +46,7 @@
   const clearButton = document.querySelector("#graph-clear");
   const status = document.querySelector("#graph-status");
   lab.hidden = false;
+  board.tabIndex = 0;
   widthInput.value = String(defaultWidth);
   updateWidthOutput();
 
@@ -65,17 +67,23 @@
   });
   directed.addEventListener("change", () => {
     if (isLocked()) return;
+    rememberDrawing();
     drawing.directed = directed.checked;
     saveDrawing();
     render();
     announce(drawing.directed ? "Directed arrows are on." : "Undirected edges are on.");
   });
+  let widthEditStarted = false;
+  widthInput.addEventListener("change", () => { widthEditStarted = false; });
   widthInput.addEventListener("input", () => {
     if (isLocked()) return;
+    if (!widthEditStarted) rememberDrawing();
+    widthEditStarted = true;
     defaultWidth = clamp(Number(widthInput.value), 2, 8);
     drawing.edges.forEach(edge => { edge.width = defaultWidth; });
     writeValue(widthStorageKey, String(defaultWidth));
     updateWidthOutput();
+    saveDrawing();
     render();
   });
   board.addEventListener("pointerdown", onPointerDown);
@@ -85,6 +93,7 @@
   board.addEventListener("dblclick", onDoubleClick);
   board.addEventListener("contextmenu", onContextMenu);
   board.addEventListener("keydown", onKeyDown);
+  lab.addEventListener("keydown", onUndoKeyDown);
   svg.addEventListener("focusin", event => {
     const nodeElement = event.target.closest?.("[data-node-id]");
     const edgeElement = event.target.closest?.("[data-edge-id]");
@@ -117,6 +126,7 @@
     clearTimeout(announce.timer);
     const nextKey = `${problemId}:${stepIndex}`;
     contextKey = nextKey;
+    widthEditStarted = false;
     try {
       const saved = JSON.parse(readValue(`dfs-drawing:v1:${contextKey}`, "null"));
       drawing = saved && Array.isArray(saved.nodes) && Array.isArray(saved.edges) ? saved : blankDrawing();
@@ -132,7 +142,9 @@
   }
 
   function setSnapshot(snapshot) {
-    drawing = snapshot ? cloneDrawing(snapshot) : blankDrawing();
+    const next = snapshot ? cloneDrawing(snapshot) : blankDrawing();
+    if (JSON.stringify(next) !== JSON.stringify(drawing)) undoHistories.delete(contextKey);
+    drawing = next;
     if (contextKey) writeValue(`dfs-drawing:v1:${contextKey}`, JSON.stringify(drawing));
     selected = null;
     interaction = null;
@@ -184,6 +196,7 @@
     const roomy = nodePositionPreset()[index];
     const fallbackCol = index % 4;
     const fallbackRow = Math.floor(index / 4) % 4;
+    rememberDrawing();
     const id = drawing.nextNodeId++;
     const label = nextNodeLabel(index);
     const x = roomy ? bounds.width * roomy[0] : 80 + fallbackCol * 150;
@@ -300,6 +313,7 @@
       clearTimer = setTimeout(resetClearButton, 2500);
       return;
     }
+    rememberDrawing();
     drawing = blankDrawing();
     drawing.directed = arrayNumberMode();
     selected = null;
@@ -362,6 +376,7 @@
     const point = svgPoint(event);
     const bounds = boardBounds();
     if (Math.hypot(point.x - interaction.startX, point.y - interaction.startY) < 3) return;
+    if (!interaction.moved) rememberDrawing();
     interaction.moved = true;
     const node = findNode(interaction.id);
     node.x = clamp(point.x - interaction.dx, node.r + 8, bounds.width - node.r - 8);
@@ -387,6 +402,7 @@
   }
 
   function cancelInteraction() {
+    if (interaction?.moved) saveDrawing();
     interaction = null;
     lastNodeClick = null;
     render();
@@ -399,6 +415,7 @@
       ? edge.from === fromId && edge.to === target.id
       : (edge.from === fromId && edge.to === target.id) || (edge.from === target.id && edge.to === fromId));
     if (duplicate) { render(); return announce("Those nodes are already connected."); }
+    rememberDrawing();
     const edge = { id: drawing.nextEdgeId++, from: fromId, to: target.id, label: "", color: colors[1].value, width: defaultWidth };
     drawing.edges.push(edge);
     saveDrawing();
@@ -473,6 +490,7 @@
       renameInput.focus();
       return;
     }
+    if (item.label !== normalized) rememberDrawing();
     item.label = normalized;
     saveDrawing();
     closeRename();
@@ -525,6 +543,7 @@
           closeColorMenu();
           if (kind !== "Array") openRename("node", id, true);
           else {
+            if (node.label !== "Array") rememberDrawing();
             node.label = "Array";
             saveDrawing();
             render();
@@ -556,6 +575,7 @@
         event.stopPropagation();
         const item = type === "node" ? findNode(id) : findEdge(id);
         if (!item) return;
+        if (item.color !== color.value) rememberDrawing();
         item.color = color.value;
         saveDrawing();
         closeColorMenu();
@@ -621,6 +641,7 @@
     }
     if (selected.type === "node" && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
       event.preventDefault();
+      rememberDrawing();
       const amount = event.shiftKey ? 10 : 2;
       if (event.key === "ArrowLeft") item.x -= amount;
       if (event.key === "ArrowRight") item.x += amount;
@@ -636,6 +657,7 @@
   }
 
   function deleteItem(type, id) {
+    rememberDrawing();
     if (type === "node") {
       const node = findNode(id);
       drawing.nodes = drawing.nodes.filter(item => item.id !== id);
@@ -862,6 +884,45 @@
     const bounds = boardBounds();
     node.x = clamp(node.x, node.r + 8, bounds.width - node.r - 8);
     node.y = clamp(node.y, node.r + 8, bounds.height - node.r - 8);
+  }
+
+  function rememberDrawing() {
+    if (!contextKey) return;
+    const history = undoHistories.get(contextKey) || [];
+    history.push({ drawing: cloneDrawing(drawing), width: defaultWidth });
+    if (history.length > 100) history.shift();
+    undoHistories.set(contextKey, history);
+  }
+
+  function onUndoKeyDown(event) {
+    if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey || event.key.toLowerCase() !== "z") return;
+    // Text fields keep their own browser undo history.
+    if (event.target.closest('textarea, [contenteditable]:not([contenteditable="false"])') ||
+        event.target.matches('input:not([type="range"]):not([type="checkbox"]):not([type="button"])')) return;
+    event.preventDefault();
+    if (isLocked()) return;
+    const previous = undoHistories.get(contextKey)?.pop();
+    if (!previous) return;
+    const pointerId = interaction?.pointerId;
+    interaction = null;
+    if (pointerId !== undefined && board.hasPointerCapture?.(pointerId)) board.releasePointerCapture(pointerId);
+    drawing = cloneDrawing(previous.drawing);
+    defaultWidth = previous.width;
+    widthInput.value = String(defaultWidth);
+    widthEditStarted = false;
+    writeValue(widthStorageKey, String(defaultWidth));
+    updateWidthOutput();
+    selected = null;
+    connectFrom = null;
+    lastNodeClick = null;
+    returnFocusTarget = null;
+    closeRename();
+    closeColorMenu();
+    resetClearButton();
+    render();
+    saveDrawing();
+    board.focus();
+    announce("Undid the last graph change.");
   }
 
   function saveDrawing() {
