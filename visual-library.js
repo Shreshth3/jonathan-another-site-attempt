@@ -6,6 +6,7 @@
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char]);
   let aiRequest = null;
+  let refreshWorkflowHelp = null;
   function clearAiHelp() {
     aiRequest?.abort();
     aiRequest = null;
@@ -19,6 +20,7 @@
     if (event.target.closest("#challenge")) {
       clearAiHelp();
       if (section === 6) queueMicrotask(refreshCodingHelp);
+      if (section === 2 || section === 5) queueMicrotask(() => refreshWorkflowHelp?.());
     }
   });
   document.addEventListener("click", event => {
@@ -490,6 +492,7 @@
     $("#challenge").onchange = null;
     window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? arrayDrawingOptions() : problem.graphRules?.nodeLabelFormat);
     draftKey = null;
+    refreshWorkflowHelp = null;
     pendingAdvance = null;
     $$("[data-section]").forEach(button => {
       if (Number(button.dataset.section) === section) button.setAttribute("aria-current", "step");
@@ -3355,8 +3358,8 @@
         step1Graph: loadStep1GraphReference()
       };
     });
+    refreshWorkflowHelp = refreshPlanHelp;
     refreshPlanHelp();
-    $("#challenge").oninput = () => queueMicrotask(refreshPlanHelp);
     $("#toggle-plan-direction").onclick = () => {
       draft = {
         mode: draft.mode === "forward" ? "backward" : "forward",
@@ -3490,8 +3493,8 @@
       step2PseudocodeInExecutionOrder: [...loadBackwardPlan().steps, loadBackwardPlan().returnValue],
       compressionDraft: $("#compression-plan")?.value || ""
     }));
+    refreshWorkflowHelp = refreshCompressionHelp;
     refreshCompressionHelp();
-    $("#challenge").oninput = () => queueMicrotask(refreshCompressionHelp);
     $("#compress-next").onclick = () => {
       compressedPlan = $("#compression-plan").value.trim();
       switchSection(6);
