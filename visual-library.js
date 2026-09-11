@@ -14,12 +14,12 @@
   }
   window.addEventListener("dfs-graph-change", () => {
     clearAiHelp();
-    if (section === 6) queueMicrotask(refreshCodingHelp);
+    if (section === 4 || section === 6) queueMicrotask(refreshCodingHelp);
   });
   document.addEventListener("input", event => {
     if (event.target.closest("#challenge")) {
       clearAiHelp();
-      if (section === 6) queueMicrotask(refreshCodingHelp);
+      if (section === 4 || section === 6) queueMicrotask(refreshCodingHelp);
       if (section === 2 || section === 5) queueMicrotask(() => refreshWorkflowHelp?.());
     }
   });
@@ -50,7 +50,7 @@
       let output = "";
       let completed = false;
       let timedOut = false;
-      const timeout = section === 6 ? setTimeout(() => { timedOut = true; controller.abort(); }, 45000) : null;
+      const timeout = section === 4 || section === 6 ? setTimeout(() => { timedOut = true; controller.abort(); }, 45000) : null;
       try {
         let currentAttempt = typeof attempt === "function" ? attempt() : attempt;
         let graphRules = problem.graphRules;
@@ -240,6 +240,8 @@
   let codingRunner = null;
   let codingRunVersion = 0;
   let codingResult = null;
+  let codingGraphExamples = [];
+  let activeCodingGraphCase = 0;
   let compressedPlan = "";
   let savedBackwardPlan = { mode: "backward", returnValue: "", steps: [] };
   const stepTimers = {};
@@ -3456,15 +3458,6 @@
 
   function renderCodingWithBackwardReference() {
     renderCodingLesson();
-    $$(".coding-workflow-profile, .coding-workflow").forEach(element => element.remove());
-    const graphDisclosure = $("#coding-graph-disclosure");
-    if (graphDisclosure) {
-      $(".activity-layout")?.append($("#graph-lab"));
-      $("#graph-lab").hidden = true;
-      graphDisclosure.remove();
-    }
-    const target = $(".coding-editor-label");
-    target?.insertAdjacentHTML("beforebegin", referenceToggles({ graph: true, graphOpen: true, pseudocode: true, pseudocodeOpen: true }));
   }
 
   function renderCounterexampleWithRevisionPrompt() {
@@ -3779,6 +3772,19 @@
   }
 
   function codingStorageKey() { return `dfs-coding:${problem.id}:v1`; }
+  function codingGraphStorageKey() { return `dfs-coding-graph-cases:${problem.id}:v1`; }
+  function newGraphCaseId() { return `case-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`; }
+  function loadCodingGraphExamples() {
+    try {
+      const value = JSON.parse(localStorage.getItem(codingGraphStorageKey()) || "[]");
+      return Array.isArray(value) ? value.filter(entry => entry && typeof entry.id === "string") : [];
+    } catch {
+      return [];
+    }
+  }
+  function saveCodingGraphExamples() {
+    try { localStorage.setItem(codingGraphStorageKey(), JSON.stringify(codingGraphExamples)); } catch {}
+  }
   function stopCodingRun() {
     codingRunVersion++;
     codingRunner?.cancel();
@@ -3831,7 +3837,11 @@
   function resetCoding() {
     if (!confirm(`Clear your Step ${sectionLabel(6)} code and inputs?`)) return;
     stopCodingRun();
-    try { localStorage.removeItem(codingStorageKey()); localStorage.removeItem(`dfs-form:v1:${problem.id}:6:solution:`); } catch {}
+    try {
+      localStorage.removeItem(codingStorageKey());
+      localStorage.removeItem(`dfs-form:v1:${problem.id}:6:solution:`);
+      localStorage.removeItem(codingGraphStorageKey());
+    } catch {}
     render();
   }
   function renderCodingLesson() {
@@ -3842,77 +3852,24 @@
     $("#facet-list").innerHTML = "";
     $('.tab[data-tab="examples"]').hidden = false;
     updateCodingProgress(0, lesson.tests.length);
-    const workflowProfile = codingWorkflowProfile(problem);
-    const workflowGuide =
-      problem.id === "busiest-shelf-level"
-        ? `<details class="coding-workflow">
-            <summary>Optional: workflow I use on this problem</summary>
-            <div class="coding-workflow-body">
-              <ol>
-                <li>Make graph + work through examples.</li>
-                <li>Write pseudocode by working backward.
-                  <ul>
-                    <li>Start at final return value, then ask: what inputs do I need to compute it?</li>
-                    <li>Repeat until you have the exact state contract from input to output.</li>
-                  </ul>
-                </li>
-                <li>Counterexample (optional):
-                  <ul>
-                    <li>Build one small failing case from a plausible bug you might make when writing quickly.</li>
-                    <li>Use the lesson's counterexample workflow for checking.</li>
-                  </ul>
-                </li>
-                <li>Compress the pseudocode into ~5 key ideas.
-                  <ul>
-                    <li>For this problem: <code>init counts by depth; walk nested items with DFS; increment at depth; return first depth with max count</code>.</li>
-                  </ul>
-                </li>
-                <li>Code from pseudocode and run your own input, then submit tests with timing.</li>
-              </ol>
-            </div>
-          </details>`
-        : problem.visualKind === "backtracking"
-          ? `<details class="coding-workflow">
-              <summary>Optional: adapted workflow for this backtracking problem</summary>
-              <div class="coding-workflow-body">
-                <ol>
-                  <li>Make graph/picture and work through examples.</li>
-                  <li>Work backward from the answer to the state tuple:
-                    <ul>
-                      <li>What is the recursion state? (path, visited, remaining choices, constraints)</li>
-                      <li>What is one valid base case?</li>
-                    </ul>
-                  </li>
-                  <li>Build one counterexample that checks one branch-pruning or duplicate-handling mistake.</li>
-                  <li>Compress the logic into 3-5 ideas:
-                    <ul>
-                      <li>base case, generate choices, apply choice, recurse, undo choice</li>
-                    </ul>
-                  </li>
-                  <li>Code from the compressed plan, then run inputs and submit tests with timing.</li>
-                </ol>
-              </div>
-            </details>`
-          : `<details class="coding-workflow">
-              <summary>Optional: your coding workflow (adapted)</summary>
-              <div class="coding-workflow-body">
-                <ol>
-                  <li>Build a small graph/picture and solve examples.</li>
-                  <li>Work backward with pseudocode from outputs to required state.</li>
-                  <li>Add a quick counterexample for a likely bug.</li>
-                  <li>Compress pseudocode to 3-5 core ideas and code from those.</li>
-                  <li>Run your input and submit tests; track time on successful runs.</li>
-                </ol>
-              </div>
-            </details>`;
-
     $("#challenge").innerHTML = `<div class="challenge-body coding-case">
       <h3>Write your solution.</h3><p>Write JavaScript, try your own input, then submit against ${lesson.tests.length} fresh tests.</p>
-      ${workflowProfile}
-      ${workflowGuide}
+      ${referenceToggles({ graph: true, pseudocode: true, graphOpen: true, pseudocodeOpen: true })}
       <details id="coding-graph-disclosure" class="coding-graph-disclosure">
-        <summary><span>Optional: draw the graph</span><small>Open a scratchpad</small></summary>
-        <div class="coding-graph-disclosure-body"><p class="coding-hint">Sketch the problem graph here if a picture helps. This drawing is private and is not graded.</p><div id="coding-graph-slot"></div></div>
+        <summary><span>Optional: draw more example graphs</span><small>Open a scratchpad</small></summary>
+        <div class="coding-graph-disclosure-body"><p class="coding-hint">Sketch the problem graph here if a picture helps. This drawing is private and is not graded.</p><div id="coding-graph-slot"></div>
+          <label class="counter-field coding-graph-input-block">
+            <span>Input that this graph is based on</span>
+            <textarea id="coding-graph-input" rows="2" placeholder="Paste one representative input value per line in a simple format, or copy your “Try your own input” fields." wrap="soft" spellcheck="false" aria-describedby="coding-graph-input-help"></textarea>
+            <small id="coding-graph-input-help">This note is optional and private. It helps you remember what each graph corresponds to.</small>
+          </label>
+          <div class="coding-actions coding-graph-actions">
+            <button id="coding-graph-save" class="ghost-btn" type="button">Save graph input</button>
+            <button id="coding-graph-add" class="ghost-btn" type="button">Add another graph</button>
+          </div>
+          <p id="coding-graph-summary" class="coding-hint"></p>
+          <div id="coding-graph-examples" class="coding-graph-examples"></div>
+        </div>
       </details>
       <label for="coding-editor" class="coding-editor-label">Your JavaScript</label>
       <p id="coding-editor-help" class="coding-hint">Keep the function name <code>${esc(lesson.functionName)}</code> and return your answer. Use <code>console.log</code> to inspect values. Tab indents; Shift+Tab unindents. Escape then Tab leaves the editor.</p>
@@ -3924,8 +3881,90 @@
       <div id="coding-results" role="status" aria-live="polite"></div><div id="feedback-slot" role="status" aria-live="polite"></div>
     </div>`;
     const graphDisclosure = $("#coding-graph-disclosure");
+    const graphExamplesHost = $("#coding-graph-examples");
+    const graphInputField = $("#coding-graph-input");
+    const graphSummary = $("#coding-graph-summary");
+    const graphAddButton = $("#coding-graph-add");
+    const graphSaveButton = $("#coding-graph-save");
+    codingGraphExamples = loadCodingGraphExamples();
+    if (!codingGraphExamples.length) codingGraphExamples = [{ id: newGraphCaseId(), input: "" }];
+    activeCodingGraphCase = Math.min(Math.max(0, activeCodingGraphCase), codingGraphExamples.length - 1);
+    const graphContextKey = id => `${problem.id}:coding:${id}${usesArrayNumberDrawing() ? ":array-number-v2" : ""}`;
+    const syncCurrentGraphInput = () => {
+      const current = codingGraphExamples[activeCodingGraphCase];
+      if (!current || !graphInputField) return;
+      current.input = graphInputField.value;
+    };
+    const renderGraphCaseList = () => {
+      if (!graphExamplesHost) return;
+      graphExamplesHost.innerHTML = codingGraphExamples.map((entry, index) => `
+        <div class="coding-graph-case${index === activeCodingGraphCase ? " active" : ""}">
+          <button type="button" class="ghost-btn coding-graph-switch" data-coding-graph-case="${index}" ${index === activeCodingGraphCase ? "disabled" : ""}>Graph ${index + 1}</button>
+          <button type="button" class="ghost-btn coding-graph-delete" data-coding-graph-case="${index}" aria-label="Delete graph ${index + 1}" ${codingGraphExamples.length === 1 ? "hidden" : ""}>Delete</button>
+          <span class="coding-graph-case-input">${esc(entry.input || "No example input yet")}</span>
+        </div>
+      `).join("");
+      if (graphSummary) graphSummary.textContent = `${codingGraphExamples.length} graph example${codingGraphExamples.length === 1 ? "" : "s"} saved for this problem.`;
+      saveCodingGraphExamples();
+    };
+    const switchGraphCase = index => {
+      if (!codingGraphExamples[index]) return;
+      syncCurrentGraphInput();
+      activeCodingGraphCase = Number(index);
+      const entry = codingGraphExamples[activeCodingGraphCase];
+      window.DFS_GRAPH?.setContext(graphContextKey(entry.id), 0);
+      if (graphInputField) graphInputField.value = entry.input || "";
+      renderGraphCaseList();
+    };
+    const saveNewGraphInput = () => {
+      syncCurrentGraphInput();
+      if (graphInputField && !graphInputField.value.trim()) return;
+      saveCodingGraphExamples();
+      renderGraphCaseList();
+    };
+    const deleteGraphCase = index => {
+      const safeIndex = Number(index);
+      if (!codingGraphExamples[safeIndex]) return;
+      const removed = codingGraphExamples.splice(safeIndex, 1)[0];
+      try {
+        localStorage.removeItem(`dfs-drawing:v1:${graphContextKey(removed.id)}:0`);
+      } catch {}
+      if (!codingGraphExamples.length) codingGraphExamples = [{ id: newGraphCaseId(), input: "" }];
+      if (activeCodingGraphCase >= codingGraphExamples.length) activeCodingGraphCase = codingGraphExamples.length - 1;
+      if (safeIndex === activeCodingGraphCase) {
+        if (!codingGraphExamples[activeCodingGraphCase].input) {
+          codingGraphExamples[activeCodingGraphCase].input = "";
+        }
+      }
+      switchGraphCase(activeCodingGraphCase);
+    };
+    const newGraphCaseInputFallback = () => lesson.parameters.map((parameter, i) => `${parameter.name}: ${codingInputs()[i]?.raw || ""}`).join("\n");
+    graphAddButton?.addEventListener("click", () => {
+      const nextInput = newGraphCaseInputFallback();
+      syncCurrentGraphInput();
+      codingGraphExamples.push({ id: newGraphCaseId(), input: nextInput.trim() ? nextInput : "" });
+      activeCodingGraphCase = codingGraphExamples.length - 1;
+      saveCodingGraphExamples();
+      switchGraphCase(activeCodingGraphCase);
+    });
+    graphSaveButton?.addEventListener("click", saveNewGraphInput);
+    graphInputField?.addEventListener("input", () => syncCurrentGraphInput());
+    graphExamplesHost?.addEventListener("click", event => {
+      const deleteButton = event.target.closest("[data-coding-graph-case].coding-graph-delete");
+      if (deleteButton) {
+        const index = Number(deleteButton.dataset.codingGraphCase);
+        if (Number.isInteger(index)) deleteGraphCase(index);
+        return;
+      }
+      const switchButton = event.target.closest("[data-coding-graph-case].coding-graph-switch");
+      if (switchButton) {
+        const index = Number(switchButton.dataset.codingGraphCase);
+        if (Number.isInteger(index)) switchGraphCase(index);
+      }
+    });
     $("#coding-graph-slot").append($("#graph-lab"));
-    window.DFS_GRAPH?.setContext(`${problem.id}:coding${usesArrayNumberDrawing() ? ":array-number-v2" : ""}`, 0);
+    activeCodingGraphCase = Math.min(Math.max(0, activeCodingGraphCase), codingGraphExamples.length - 1);
+    switchGraphCase(activeCodingGraphCase);
     window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? arrayDrawingOptions() : problem.graphRules?.nodeLabelFormat);
     $("#graph-lab").hidden = false;
     $("#graph-lab-title").textContent = "Scratch graph";
@@ -4031,7 +4070,7 @@
         if (mode === "run") {
           const result = await codingRunner.run({ code, functionName: lesson.functionName, args });
           const elapsed = performance.now() - runStart;
-          if (version !== codingRunVersion || section !== 6) return;
+          if (version !== codingRunVersion || (section !== 4 && section !== 6)) return;
           codingResult = { args, runResult: result, elapsed };
           results.innerHTML = `<section class="coding-run-result"><h4>Your input · ${formatDuration(elapsed)}</h4>${codingOutput(result)}</section>`;
         } else {
@@ -4041,7 +4080,7 @@
             const testStart = performance.now();
             const result = await codingRunner.run({ code, functionName: lesson.functionName, args: test.args });
             const elapsed = performance.now() - testStart;
-            if (version !== codingRunVersion || section !== 6) return;
+            if (version !== codingRunVersion || (section !== 4 && section !== 6)) return;
             const passed = result.ok && window.DFS_STEP5.equal(problem.id, result.value, test.expected);
             testResults.push({ id: test.id, label: test.label, args: test.args, expected: test.expected, elapsed, ...result, passed });
           }
@@ -4054,11 +4093,11 @@
           results.innerHTML = `<h4>${header}</h4>${testResults.map((test, i) => `<details class="coding-test ${test.passed ? "is-correct" : "needs-work"}"${test.passed ? "" : " open"}><summary>${test.passed ? "✓ Passed" : "✗ Failed"} · Test ${i + 1}: ${esc(test.label)} (${formatDuration(test.elapsed)})</summary><strong>Input</strong><pre>${esc(lesson.parameters.map((parameter, n) => `${parameter.name} = ${codingValue(test.args[n])}`).join("\n"))}</pre><strong>Expected</strong><pre>${esc(codingValue(test.expected))}</pre>${codingOutput(test)}</details>`).join("")}`;
         }
       } catch (error) {
-        if (version !== codingRunVersion || section !== 6) return;
+        if (version !== codingRunVersion || (section !== 4 && section !== 6)) return;
         codingResult = { runResult: { ok: false, error: { name: error.name, message: error.message } } };
         results.innerHTML = `<pre class="coding-error">${esc(codingError(codingResult.runResult.error))}</pre>`;
       } finally {
-        if (version === codingRunVersion && section === 6) { setBusy(false); refreshCodingHelp(); }
+        if (version === codingRunVersion && (section === 4 || section === 6)) { setBusy(false); refreshCodingHelp(); }
       }
     };
     $("#coding-run").onclick = () => execute("run");
@@ -4906,6 +4945,7 @@
     try {
       const draft = JSON.parse(localStorage.getItem(draftKey) || "{}");
       for (const [id, value] of Object.entries(draft.fields || {})) {
+        if (typeof id === "string" && id.startsWith("coding-graph-")) continue;
         const field = document.getElementById(id);
         if (field) { field.value = value; field.dispatchEvent(new Event("input", { bubbles: true })); }
       }
@@ -4916,14 +4956,18 @@
 
   function saveFormDraft() {
     if (!draftKey || restoringDraft || section === 2) return;
-    const fields = Object.fromEntries($$("#challenge textarea[id], #challenge input[id], #challenge select[id]").map(field => [field.id, field.value]));
+    const fields = Object.fromEntries(
+      $$("#challenge textarea[id], #challenge input[id], #challenge select[id]")
+        .filter(field => !field.id.startsWith("coding-graph-"))
+        .map(field => [field.id, field.value])
+    );
     const choices = $$('[data-choice-id][aria-pressed="true"]').map(button => `[data-choice-id="${button.dataset.choiceId}"]`);
     choices.push(...$$('[data-claim-index][aria-pressed="true"]').map(button => `[data-claim-index="${button.dataset.claimIndex}"][data-claim-value="${button.dataset.claimValue}"]`));
     try {
       localStorage.setItem(draftKey, JSON.stringify({ fields, choices }));
-      if (section === 6 && $("#coding-save-warning")) $("#coding-save-warning").hidden = true;
+      if ((section === 4 || section === 6) && $("#coding-save-warning")) $("#coding-save-warning").hidden = true;
     } catch {
-      const warning = section === 6 && $("#coding-save-warning");
+      const warning = (section === 4 || section === 6) && $("#coding-save-warning");
       if (warning) {
         warning.hidden = false;
         warning.textContent = "Your browser could not save this code. Copy it before leaving or refreshing this page.";
