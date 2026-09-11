@@ -1,0 +1,658 @@
+[
+  {
+    "id": "reachable-nodes-with-restrictions",
+    "title": "Reachable Nodes With Restrictions",
+    "category": "new",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/reachable-nodes-with-restrictions/",
+    "difficulty": "Medium",
+    "whyGoodFit": "Pure reachability counting, like Keys and Rooms with a blocked-nodes twist: build an adjacency list, put restricted nodes in a Set, and DFS from node 0 counting what you can visit. No new algorithm ideas at all.",
+    "statement": "You have an undirected tree with `n` nodes numbered `0` to `n - 1`, described by an array `edges` where each `edges[i] = [a, b]` means there is a two-way connection between nodes `a` and `b`. (There are exactly `n - 1` edges, so everything is connected with no cycles.)\n\nYou are also given an array `restricted` of forbidden nodes. You may NEVER step on a restricted node.\n\nStarting from node 0 (which is never restricted), count how many nodes you can reach by walking along edges without ever entering a restricted node. Node 0 itself counts.\n\nReturn that count.",
+    "examples": [
+      {
+        "input": "n = 7, edges = [[0,1],[1,2],[3,1],[4,0],[0,5],[5,6]], restricted = [4,5]",
+        "output": "4",
+        "explanation": "From 0 you can go to 1, then to 2 and 3. You cannot enter 4 or 5 (restricted), and 6 is only reachable through 5, so it is cut off too. Reachable nodes: {0, 1, 2, 3} — that's 4."
+      },
+      {
+        "input": "n = 7, edges = [[0,1],[0,2],[0,5],[0,4],[3,2],[6,5]], restricted = [4,2,1]",
+        "output": "3",
+        "explanation": "From 0 the only allowed neighbor is 5, and from 5 you can reach 6. Nodes 1, 2, 4 are restricted and 3 is hidden behind 2. Reachable: {0, 5, 6} — that's 3."
+      }
+    ],
+    "constraints": [
+      "2 <= n <= 1000",
+      "edges.length == n - 1, and the edges form a valid tree",
+      "1 <= restricted.length < n, and node 0 is never restricted"
+    ],
+    "functionName": "countReachableNodes",
+    "solution": "const START_NODE = 0;\n\nconst buildGraph = (edges) => {\n    const graph = {};\n\n    for (const edge of edges) {\n        const [nodeOne, nodeTwo] = edge;\n\n        const nodeOneInGraph = graph.hasOwnProperty(nodeOne);\n        const nodeTwoInGraph = graph.hasOwnProperty(nodeTwo);\n\n        if (!nodeOneInGraph) graph[nodeOne] = [];\n        if (!nodeTwoInGraph) graph[nodeTwo] = [];\n\n        graph[nodeOne].push(nodeTwo);\n        graph[nodeTwo].push(nodeOne);\n    }\n\n    return graph;\n};\n\n// CONTRACT for countNodesFromStart(graph, node, restrictedNodes, visited):\n//     when this call returns, `node` and every node reachable from\n//     it without stepping on a restricted node is in the visited\n//     set, and the returned value is the number of those nodes.\n//     Restricted and already-visited nodes return 0.\nconst countNodesFromStart = (graph, node, restrictedNodes, visited) => {\n    // Base cases\n    if (visited.has(node)) return 0;\n\n    // A restricted node acts like a wall: we never step on it,\n    // so anything hidden behind it stays unreachable too.\n    if (restrictedNodes.has(node)) return 0;\n\n    // Process node\n    visited.add(node);\n\n    let numReachableNodes = 1;\n\n    // Recurse on neighbors\n    const nodeInGraph = graph.hasOwnProperty(node);\n    if (!nodeInGraph) return numReachableNodes;\n\n    const neighbors = graph[node];\n\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `neighbor` and everything\n        // reachable from it (avoiding restricted nodes) is in the\n        // visited set, and its value is how many nodes that is. Trust\n        // it, do not trace it. This node's own 1 plus each neighbor's\n        // guaranteed count add up to exactly this function's contract.\n        numReachableNodes += countNodesFromStart(\n            graph,\n            neighbor,\n            restrictedNodes,\n            visited,\n        );\n    }\n\n    return numReachableNodes;\n};\n\nconst countReachableNodes = (n, edges, restricted) => {\n    const graph = buildGraph(edges);\n\n    // A Set makes \"is this node restricted?\" a fast lookup.\n    const restrictedNodes = new Set(restricted);\n    const visited = new Set();\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, its value is the number of nodes reachable from\n    // node 0 without touching a restricted node. We do not trace\n    // inside; we just return that count.\n    return countNodesFromStart(graph, START_NODE, restrictedNodes, visited);\n};",
+    "tests": [
+      {
+        "args": [
+          7,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              0,
+              5
+            ],
+            [
+              5,
+              6
+            ]
+          ],
+          [
+            4,
+            5
+          ]
+        ],
+        "expected": 4
+      },
+      {
+        "args": [
+          7,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              5
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              6,
+              5
+            ]
+          ],
+          [
+            4,
+            2,
+            1
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          2,
+          [
+            [
+              0,
+              1
+            ]
+          ],
+          [
+            1
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          3,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          [
+            2
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          5,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          [
+            1
+          ]
+        ],
+        "expected": 1
+      }
+    ]
+  },
+  {
+    "id": "hackerrank-connected-cells",
+    "title": "Connected Cells in a Grid",
+    "category": "new",
+    "sourceName": "HackerRank",
+    "sourceLink": "https://www.hackerrank.com/challenges/connected-cell-in-a-grid/problem",
+    "difficulty": "Medium",
+    "whyGoodFit": "Largest-region flood fill like Max Area of Island, but with 8-directional connectivity — a gentle variation that teaches the student to parameterize their \"neighbors\" loop instead of hard-coding 4 directions.",
+    "statement": "You are given a grid of 0s and 1s called `grid`.\n\nTwo cells containing 1 belong to the same \"region\" if they touch horizontally, vertically, OR diagonally.\n\nReturn the number of cells in the largest region of 1s. If there are no 1s, return 0.",
+    "examples": [
+      {
+        "input": "grid = [[1,1,0,0],[0,1,1,0],[0,0,1,0],[1,0,0,0]]",
+        "output": "5",
+        "explanation": "Cells (0,0), (0,1), (1,1), (1,2), (2,2) all connect into one region of size 5 (some touch diagonally). The lone 1 at (3,0) is a region of size 1. The largest is 5."
+      },
+      {
+        "input": "grid = [[1,0,1],[0,1,0],[1,0,1]]",
+        "output": "5",
+        "explanation": "The center cell (1,1) touches all four corner 1s diagonally, so all five 1s form one region of size 5."
+      }
+    ],
+    "constraints": [
+      "1 <= rows, cols <= 50",
+      "grid[i][j] is 0 or 1"
+    ],
+    "functionName": "maxRegion",
+    "solution": "const FILLED = 1;\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\n// Diagonal touches count in this problem, so every cell has up to\n// 8 neighbors instead of the usual 4.\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n    [1, 1],\n    [1, -1],\n    [-1, 1],\n    [-1, -1],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\n// CONTRACT for getRegionSize(grid, row, col, visited):\n//     when this call returns, every filled cell of the region\n//     containing (`row`, `col`) — including diagonal touches — is\n//     in the visited set, and the returned value is the number of\n//     cells in that region. Empty, out-of-bounds, and\n//     already-visited cells return 0.\nconst getRegionSize = (grid, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(grid, row, col)) return 0;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return 0;\n\n    if (grid[row][col] !== FILLED) return 0;\n\n    // Process node\n    visited.add(curPositionString);\n\n    let regionSize = 1;\n\n    // Recurse on potential neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighbor's side of\n        // the region is counted and its cells are in the visited set.\n        // Trust it, do not trace it. This cell's own 1 plus each\n        // neighbor's guaranteed count add up to exactly this function's\n        // contract: the whole region, counted once.\n        regionSize += getRegionSize(grid, newRow, newCol, visited);\n    }\n\n    return regionSize;\n};\n\nconst maxRegion = (grid) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    let largestRegionSize = 0;\n    const visited = new Set();\n\n    for (let row = 0; row < numRows; row++) {\n        for (let col = 0; col < numCols; col++) {\n            // Already-visited and empty cells return a size of 0,\n            // so they never change the running maximum.\n            // The recursive leap of faith: trust the contract. When this\n            // call returns, regionSize is the full size of the region at\n            // this cell and all of its cells are in the visited set, so no\n            // region is ever counted twice. We do not trace inside; we just\n            // compare it to the running maximum and move on.\n            const regionSize = getRegionSize(grid, row, col, visited);\n\n            largestRegionSize = Math.max(largestRegionSize, regionSize);\n        }\n    }\n\n    return largestRegionSize;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              0
+            ],
+            [
+              1,
+              0,
+              0,
+              0
+            ]
+          ]
+        ],
+        "expected": 5
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              1,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 5
+      },
+      {
+        "args": [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 5
+      }
+    ]
+  },
+  {
+    "id": "structy-largest-component",
+    "title": "Largest Component",
+    "category": "new",
+    "sourceName": "structy",
+    "sourceLink": "https://structy.net/problems/largest-component",
+    "difficulty": "Easy",
+    "whyGoodFit": "Adjacency-object components with a size twist: same visited-set DFS as Number of Connected Components, but the DFS returns a count. Structy's format (a plain JS object as the graph) is extra friendly for a JavaScript learner.",
+    "statement": "You are given an undirected graph as a plain object `graph`, where each key is a node and its value is an array of that node's neighbors. A node with no connections maps to an empty array.\n\nThe graph may be split into several disconnected \"components\" — groups of nodes that can reach each other.\n\nReturn the number of nodes in the LARGEST component. If the graph is empty, return 0.",
+    "examples": [
+      {
+        "input": "graph = { a: ['b'], b: ['a','c'], c: ['b'], d: ['e'], e: ['d'] }",
+        "output": "3",
+        "explanation": "There are two components: {a, b, c} with 3 nodes and {d, e} with 2 nodes. The largest has 3."
+      },
+      {
+        "input": "graph = { x: [], y: ['z'], z: ['y'] }",
+        "output": "2",
+        "explanation": "Node x is alone (component of size 1), and {y, z} form a component of size 2. The largest has 2."
+      }
+    ],
+    "constraints": [
+      "0 <= number of nodes <= 1000",
+      "The graph is undirected: if b appears in graph[a], then a appears in graph[b]",
+      "Isolated nodes appear as keys with an empty array"
+    ],
+    "functionName": "largestComponent",
+    "solution": "// CONTRACT for getComponentSize(graph, node, visited):\n//     when this call returns, `node` and every node reachable from\n//     it is in the visited set, and the returned value is the\n//     number of those nodes. An already-visited node returns 0.\nconst getComponentSize = (graph, node, visited) => {\n    // Object keys are always strings in JavaScript, so convert the node\n    // to a string to keep our visited checks consistent.\n    const nodeKey = String(node);\n\n    // Base case\n    if (visited.has(nodeKey)) return 0;\n\n    // Process node\n    visited.add(nodeKey);\n\n    let componentSize = 1;\n\n    // Recurse on neighbors\n    const neighbors = graph[nodeKey];\n\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `neighbor` and everything\n        // reachable from it is in the visited set, and its value is how\n        // many nodes that is. Trust it, do not trace it. This node's\n        // own 1 plus each neighbor's guaranteed count add up to exactly\n        // this function's contract: the whole component, counted once.\n        componentSize += getComponentSize(graph, neighbor, visited);\n    }\n\n    return componentSize;\n};\n\nconst largestComponent = (graph) => {\n    let largestComponentSize = 0;\n    const visited = new Set();\n\n    for (const node of Object.keys(graph)) {\n        if (visited.has(node)) continue;\n\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, componentSize is the size of the whole component\n        // holding `node`, and all of its nodes are in the visited set,\n        // so the loop can never count this component again. We do not\n        // trace inside; we just compare it to the running maximum and\n        // move on.\n        const componentSize = getComponentSize(graph, node, visited);\n\n        largestComponentSize = Math.max(largestComponentSize, componentSize);\n    }\n\n    return largestComponentSize;\n};",
+    "tests": [
+      {
+        "args": [
+          {
+            "a": [
+              "b"
+            ],
+            "b": [
+              "a",
+              "c"
+            ],
+            "c": [
+              "b"
+            ],
+            "d": [
+              "e"
+            ],
+            "e": [
+              "d"
+            ]
+          }
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          {
+            "x": [],
+            "y": [
+              "z"
+            ],
+            "z": [
+              "y"
+            ]
+          }
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          {}
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          {
+            "0": [
+              8,
+              1,
+              5
+            ],
+            "1": [
+              0
+            ],
+            "2": [
+              3,
+              4
+            ],
+            "3": [
+              2,
+              4
+            ],
+            "4": [
+              3,
+              2
+            ],
+            "5": [
+              0,
+              8
+            ],
+            "8": [
+              0,
+              5
+            ]
+          }
+        ],
+        "expected": 4
+      },
+      {
+        "args": [
+          {
+            "q": []
+          }
+        ],
+        "expected": 1
+      }
+    ]
+  },
+  {
+    "id": "gfg-grid-path-exists",
+    "title": "Check for Path in a 2D Grid with Obstacles",
+    "category": "new",
+    "sourceName": "GeeksforGeeks",
+    "sourceLink": "https://www.geeksforgeeks.org/problems/find-whether-path-exist5238/1",
+    "difficulty": "Easy",
+    "whyGoodFit": "The grid version of Find if Path Exists in Graph: locate the source, DFS through open cells, and report whether the destination is reachable. Pure yes/no reachability with no path reconstruction.",
+    "statement": "You are given a square grid `grid` of size n x n. Each cell holds one of four numbers:\n\n- `1` — the source (where you start); there is exactly one\n- `2` — the destination (where you want to go); there is exactly one\n- `3` — an open cell you may walk through\n- `0` — a wall you can never enter\n\nYou can move up, down, left, or right between non-wall cells.\n\nReturn `true` if there is any way to walk from the source to the destination, and `false` otherwise.",
+    "examples": [
+      {
+        "input": "grid = [[1,3,0],[0,3,0],[0,3,2]]",
+        "output": "true",
+        "explanation": "Start at (0,0). Walk right to (0,1), down to (1,1), down to (2,1), then right to the destination at (2,2)."
+      },
+      {
+        "input": "grid = [[1,0,3],[0,0,3],[3,3,2]]",
+        "output": "false",
+        "explanation": "The source at (0,0) is boxed in: its right neighbor (0,1) and lower neighbor (1,0) are both walls, so you can never leave the starting cell."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 200 (the grid is n x n)",
+      "Every cell is 0, 1, 2, or 3",
+      "There is exactly one source (1) and exactly one destination (2)"
+    ],
+    "functionName": "isPathPossible",
+    "solution": "const SOURCE = 1;\nconst DESTINATION = 2;\nconst WALL = 0;\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\nconst findSourcePosition = (grid) => {\n    for (let row = 0; row < grid.length; row++) {\n        for (let col = 0; col < grid[0].length; col++) {\n            if (grid[row][col] === SOURCE) return [row, col];\n        }\n    }\n\n    return null;\n};\n\n// CONTRACT for canReachDestination(grid, row, col, visited):\n//     when this call returns, the returned value is true exactly\n//     when a path of non-wall cells leads from (`row`, `col`) to\n//     the destination. Every open cell it explores goes into the\n//     visited set, so no cell is ever explored twice.\nconst canReachDestination = (grid, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(grid, row, col)) return false;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return false;\n\n    if (grid[row][col] === WALL) return false;\n\n    // Success! We only need to know a path exists, so we can stop\n    // exploring the moment we step onto the destination.\n    if (grid[row][col] === DESTINATION) return true;\n\n    // Process node\n    visited.add(curPositionString);\n\n    // Recurse on neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, its answer says whether\n        // the destination can be reached starting from that neighbor.\n        // Trust it, do not trace it. If any neighbor guarantees a path,\n        // this cell has a path too; if none does, no path goes through\n        // this cell — exactly this function's contract, kept.\n        if (canReachDestination(grid, newRow, newCol, visited)) return true;\n    }\n\n    return false;\n};\n\nconst isPathPossible = (grid) => {\n    const [sourceRow, sourceCol] = findSourcePosition(grid);\n    const visited = new Set();\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, its answer says whether a path of non-wall cells\n    // leads from the source to the destination. We do not trace\n    // inside; we just return that answer.\n    return canReachDestination(grid, sourceRow, sourceCol, visited);\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              2
+            ]
+          ]
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              0,
+              3
+            ],
+            [
+              0,
+              0,
+              3
+            ],
+            [
+              3,
+              3,
+              2
+            ]
+          ]
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              2
+            ]
+          ]
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          [
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              3,
+              1,
+              3
+            ],
+            [
+              3,
+              3,
+              2
+            ]
+          ]
+        ],
+        "expected": true
+      }
+    ]
+  },
+  {
+    "id": "usaco-milk-factory",
+    "title": "Milk Factory",
+    "category": "new",
+    "sourceName": "USACO",
+    "sourceLink": "https://usaco.org/index.php?page=viewproblem2&cpid=940",
+    "difficulty": "Medium",
+    "whyGoodFit": "Directed reachability at a beginner-friendly scale (n <= 100): just run a plain DFS from every station and check who reaches whom — the same one-way-edge thinking as Find if Path Exists, with brute force fully intended.",
+    "statement": "A milk factory has `n` processing stations, numbered `1` to `n`, connected by exactly `n - 1` conveyor belts. Each belt is ONE-WAY: `belts[i] = [a, b]` means a crate on station `a` can be sent to station `b` (never the other way). Ignoring direction, the belts connect all the stations.\n\nThe factory wants a single pickup station: a station that EVERY other station can send a crate to, possibly passing through several belts along the way. (A station can trivially reach itself.)\n\nReturn the smallest-numbered station that all other stations can reach. If no such station exists, return `-1`.",
+    "examples": [
+      {
+        "input": "n = 3, belts = [[1,2],[3,2]]",
+        "output": "2",
+        "explanation": "Station 1 reaches 2 directly, and station 3 reaches 2 directly. Every other station can reach station 2, so the answer is 2."
+      },
+      {
+        "input": "n = 3, belts = [[2,1],[2,3]]",
+        "output": "-1",
+        "explanation": "Station 1 can be reached from 2 but not from 3. Station 3 can be reached from 2 but not from 1. Station 2 cannot be reached from anyone. No station works, so the answer is -1."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 100",
+      "There are exactly n - 1 one-way belts",
+      "Ignoring direction, the belts connect all stations"
+    ],
+    "functionName": "findFactoryStation",
+    "solution": "const NO_STATION_FOUND = -1;\n\nconst buildDirectedGraph = (belts) => {\n    const graph = {};\n\n    for (const belt of belts) {\n        const [fromStation, toStation] = belt;\n\n        const fromStationInGraph = graph.hasOwnProperty(fromStation);\n        if (!fromStationInGraph) graph[fromStation] = [];\n\n        // The belts are one-way, so unlike an undirected graph we only\n        // add the edge in one direction.\n        graph[fromStation].push(toStation);\n    }\n\n    return graph;\n};\n\n// CONTRACT for markReachableStations(graph, station, visited):\n//     when this call returns, `station` and every station reachable\n//     from it by following one-way belts is in the visited set.\nconst markReachableStations = (graph, station, visited) => {\n    // Base case\n    if (visited.has(station)) return;\n\n    // Process node\n    visited.add(station);\n\n    // Recurse on neighbors\n    const stationInGraph = graph.hasOwnProperty(station);\n    if (!stationInGraph) return;\n\n    const neighbors = graph[station];\n\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `neighbor` and every\n        // station reachable from it is in the visited set. Trust it, do\n        // not trace it. This function already put `station` into\n        // visited, and each neighbor's contract covers the rest —\n        // together, that is this function's full contract, kept.\n        markReachableStations(graph, neighbor, visited);\n    }\n};\n\nconst findFactoryStation = (n, belts) => {\n    const graph = buildDirectedGraph(belts);\n\n    // numSendersToStation[station] counts how many stations can send\n    // a crate to it (every station trivially reaches itself).\n    const numSendersToStation = {};\n\n    for (let startStation = 1; startStation <= n; startStation++) {\n        const visited = new Set();\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, visited holds startStation and every station its\n        // crates can reach. We do not trace inside; we just walk through\n        // visited and give each reachable station one more sender.\n        markReachableStations(graph, startStation, visited);\n\n        for (const reachableStation of visited) {\n            const stationCounted =\n                numSendersToStation.hasOwnProperty(reachableStation);\n            if (!stationCounted) numSendersToStation[reachableStation] = 0;\n\n            numSendersToStation[reachableStation]++;\n        }\n    }\n\n    // Scanning stations in increasing order guarantees we return the\n    // smallest-numbered station that everyone can reach.\n    for (let station = 1; station <= n; station++) {\n        if (numSendersToStation[station] === n) return station;\n    }\n\n    return NO_STATION_FOUND;\n};",
+    "tests": [
+      {
+        "args": [
+          3,
+          [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              2
+            ]
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          3,
+          [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ]
+        ],
+        "expected": -1
+      },
+      {
+        "args": [
+          1,
+          []
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          4,
+          [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ]
+        ],
+        "expected": 4
+      },
+      {
+        "args": [
+          5,
+          [
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              5
+            ],
+            [
+              4,
+              5
+            ]
+          ]
+        ],
+        "expected": 5
+      }
+    ]
+  }
+]

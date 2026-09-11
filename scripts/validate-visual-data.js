@@ -119,12 +119,10 @@ const step4Slots = [];
 const allowedKinds = new Set(["grid", "directed-graph", "undirected-graph", "tree", "nested", "state", "backtracking"]);
 const allowedStep2Bugs = new Set(["strict-threshold", "first-start-only", "make-one-way", "make-two-way", "reverse-arrows", "add-diagonals", "remove-diagonals", "drop-last-edge", "skip-leaf-edges", "shallow-search", "first-branch", "last-branch", "wrong-start", "ignore-colors", "red-only"]);
 const allowedPresentations = new Set(["smallest-witness", "repair-case", "exact-difference", "predict-first"]);
-const sourceDataDir = path.resolve(__dirname, "../../jonathan-study-site/data");
-const sourceProblems = fs.existsSync(sourceDataDir)
-  ? fs.readdirSync(sourceDataDir)
-      .filter(name => /^(originals-|variants-final-|new-final-).*\.json$/.test(name))
-      .flatMap(name => JSON.parse(fs.readFileSync(path.join(sourceDataDir, name), "utf8")))
-  : problems;
+const sourceDataDir = path.resolve(__dirname, "../source/jonathan-study-site/data");
+const sourceProblems = fs.readdirSync(sourceDataDir)
+  .filter(name => /^(originals-|variants-final-|new-final-).*\.json$/.test(name))
+  .flatMap(name => JSON.parse(fs.readFileSync(path.join(sourceDataDir, name), "utf8")));
 const sourceIds = new Set(sourceProblems.map(problem => problem.id));
 
 function validateChoices(problem, taskLabel, choices, correct, min, max) {

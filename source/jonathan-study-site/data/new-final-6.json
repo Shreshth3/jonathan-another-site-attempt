@@ -1,0 +1,534 @@
+[
+  {
+    "id": "structy-tree-sum",
+    "title": "Tree Sum",
+    "category": "new",
+    "sourceName": "structy.net",
+    "sourceLink": "https://structy.net/problems/tree-sum",
+    "difficulty": "Easy",
+    "whyGoodFit": "Same shape as the approved pattern: one clean DFS mechanic over a directly-given nested structure ({val, left, right} objects), aggregated by a simple sum — the tree twin of Largest Component's per-region sum, with nothing stacked on top. Verified free (non-premium) via structy's API.",
+    "statement": "You're given a binary tree where every node holds a number. In this problem a tree node is just a plain JavaScript object:\n\n```js\n{ val: 3, left: <node or null>, right: <node or null> }\n```\n\nAdd up every `val` in the whole tree and return the total. If the tree is empty (`root` is `null`), return `0`.\n\n**Function signature**\n\n```js\nfunction treeSum(root) {\n  // root: a node object, or null\n  // return a number\n}\n```",
+    "examples": [
+      {
+        "input": "const root = {\n  val: 3,\n  left: {\n    val: 11,\n    left:  { val: 4,  left: null, right: null },\n    right: { val: -2, left: null, right: null }\n  },\n  right: {\n    val: 4,\n    left: null,\n    right: { val: 1, left: null, right: null }\n  }\n};\ntreeSum(root)",
+        "output": "21",
+        "explanation": "The tree looks like:\n\n```\n      3\n    /   \\\n  11     4\n  / \\     \\\n 4  -2     1\n```\n\nThe values are 3, 11, 4, -2, 4, 1. Running total: 3 + 11 = 14, 14 + 4 = 18, 18 + (-2) = 16, 16 + 4 = 20, 20 + 1 = 21."
+      },
+      {
+        "input": "const root = {\n  val: 1,\n  left:  { val: 6, left: null, right: null },\n  right: {\n    val: 0,\n    left:  { val: -4, left: null, right: null },\n    right: null\n  }\n};\ntreeSum(root)",
+        "output": "3",
+        "explanation": "The values are 1, 6, 0, -4. Running total: 1 + 6 = 7, 7 + 0 = 7, 7 + (-4) = 3."
+      }
+    ],
+    "constraints": [
+      "The tree has 0 to 1,000 nodes",
+      "-1,000 <= node value <= 1,000",
+      "root may be null (empty tree) — return 0 in that case"
+    ],
+    "functionName": "treeSum",
+    "solution": "// CONTRACT for treeSum(root):\n//     when this call returns, the returned value equals the total of\n//     every node value in the tree whose root is `root` (an empty\n//     tree returns 0).\nconst treeSum = (root) => {\n    // Base case: an empty tree adds nothing.\n    if (root === null) return 0;\n\n    // Process node\n    const currentNodeValue = root.val;\n\n    // Recurse on children\n    // The recursive leap of faith, one level down: this call has\n    // the SAME contract — when it returns, `leftSubtreeSum` equals\n    // the total of every node value in the left subtree. Trust it,\n    // do not trace it. Own value + the two guaranteed subtree totals\n    // = exactly this function's contract.\n    const leftSubtreeSum = treeSum(root.left);\n    // Same contract, one level down — trust it.\n    const rightSubtreeSum = treeSum(root.right);\n\n    return currentNodeValue + leftSubtreeSum + rightSubtreeSum;\n};\n",
+    "tests": [
+      {
+        "args": [
+          {
+            "val": 3,
+            "left": {
+              "val": 11,
+              "left": {
+                "val": 4,
+                "left": null,
+                "right": null
+              },
+              "right": {
+                "val": -2,
+                "left": null,
+                "right": null
+              }
+            },
+            "right": {
+              "val": 4,
+              "left": null,
+              "right": {
+                "val": 1,
+                "left": null,
+                "right": null
+              }
+            }
+          }
+        ],
+        "expected": 21
+      },
+      {
+        "args": [
+          {
+            "val": 1,
+            "left": {
+              "val": 6,
+              "left": null,
+              "right": null
+            },
+            "right": {
+              "val": 0,
+              "left": {
+                "val": -4,
+                "left": null,
+                "right": null
+              },
+              "right": null
+            }
+          }
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          null
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          {
+            "val": 5,
+            "left": null,
+            "right": null
+          }
+        ],
+        "expected": 5
+      },
+      {
+        "args": [
+          {
+            "val": -2,
+            "left": {
+              "val": -3,
+              "left": null,
+              "right": null
+            },
+            "right": null
+          }
+        ],
+        "expected": -5
+      }
+    ]
+  },
+  {
+    "id": "path-sum",
+    "title": "Path Sum",
+    "category": "new",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/path-sum/",
+    "difficulty": "Easy",
+    "whyGoodFit": "The cleanest boolean walk on the simplest possible graph (a tree): walk down adding values, check the total at the leaves. One mechanic, bool aggregate — exactly the approved walk-a-structure-and-aggregate-simply pattern, with a concrete target-number story.",
+    "statement": "You are given a binary tree and a whole number `targetSum`.\n\nThe tree arrives as `root`, a plain object: every node looks like `{val, left, right}`, where `val` is a number and `left` / `right` are the child nodes, or `null` if that child is missing. If the tree is empty, `root` itself is `null`.\n\nA **leaf** is a node with no children. A **root-to-leaf path** is the chain of nodes you pass through going from the top of the tree straight down to some leaf.\n\nReturn `true` if there is at least one root-to-leaf path whose values add up to exactly `targetSum`. Otherwise return `false`. (An empty tree has no paths, so the answer is `false`.)",
+    "examples": [
+      {
+        "input": "root = {val: 5, left: {val: 4, left: {val: 11, left: {val: 7}, right: {val: 2}}}, right: {val: 8, left: {val: 13}, right: {val: 4, right: {val: 1}}}} (children not shown are null), targetSum = 22",
+        "output": "true",
+        "explanation": "The four root-to-leaf paths are: 5 -> 4 -> 11 -> 7 (total 27), 5 -> 4 -> 11 -> 2 (total 22), 5 -> 8 -> 13 (total 26), and 5 -> 8 -> 4 -> 1 (total 18). The second path adds up to exactly 22, so the answer is true."
+      },
+      {
+        "input": "root = {val: 1, left: {val: 2}, right: {val: 3}}, targetSum = 5",
+        "output": "false",
+        "explanation": "There are two root-to-leaf paths: 1 -> 2 (total 3) and 1 -> 3 (total 4). Neither equals 5, so the answer is false."
+      }
+    ],
+    "constraints": [
+      "the number of nodes is in the range [0, 5000] (root may be null)",
+      "-1000 <= node value <= 1000",
+      "-1000 <= targetSum <= 1000",
+      "the tree is given as plain nested objects {val, left, right}; missing children are null"
+    ],
+    "functionName": "hasPathSum",
+    "solution": "// CONTRACT for hasPathSum(root, targetSum):\n//     when this call returns, the returned value is true exactly\n//     when some root-to-leaf path in the tree whose root is `root`\n//     adds up to `targetSum`, and false otherwise.\nconst hasPathSum = (root, targetSum) => {\n    // Base case: an empty tree has no root-to-leaf paths at all.\n    if (root === null) return false;\n\n    // Process node: this node uses up part of the target.\n    const remainingSum = targetSum - root.val;\n\n    // A path is only complete at a leaf, so only a leaf may declare success.\n    const isLeaf = root.left === null && root.right === null;\n    if (isLeaf) return remainingSum === 0;\n\n    // Recurse on children\n    // The recursive leap of faith, one level down: each of these two\n    // calls has the SAME contract — when it returns, its value is true\n    // exactly when that child's subtree has a root-to-leaf path adding\n    // up to `remainingSum`. Trust them, do not trace them. This node\n    // already used up its own value, so left-answer OR right-answer is\n    // exactly this function's contract.\n    return (\n        hasPathSum(root.left, remainingSum) ||\n        hasPathSum(root.right, remainingSum)\n    );\n};\n",
+    "tests": [
+      {
+        "args": [
+          {
+            "val": 5,
+            "left": {
+              "val": 4,
+              "left": {
+                "val": 11,
+                "left": {
+                  "val": 7,
+                  "left": null,
+                  "right": null
+                },
+                "right": {
+                  "val": 2,
+                  "left": null,
+                  "right": null
+                }
+              },
+              "right": null
+            },
+            "right": {
+              "val": 8,
+              "left": {
+                "val": 13,
+                "left": null,
+                "right": null
+              },
+              "right": {
+                "val": 4,
+                "left": null,
+                "right": {
+                  "val": 1,
+                  "left": null,
+                  "right": null
+                }
+              }
+            }
+          },
+          22
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          {
+            "val": 1,
+            "left": {
+              "val": 2,
+              "left": null,
+              "right": null
+            },
+            "right": {
+              "val": 3,
+              "left": null,
+              "right": null
+            }
+          },
+          5
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          null,
+          0
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          {
+            "val": 7,
+            "left": null,
+            "right": null
+          },
+          7
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          {
+            "val": -2,
+            "left": null,
+            "right": {
+              "val": -3,
+              "left": null,
+              "right": null
+            }
+          },
+          -5
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          {
+            "val": 1,
+            "left": {
+              "val": 2,
+              "left": null,
+              "right": null
+            },
+            "right": null
+          },
+          1
+        ],
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "structy-max-root-to-leaf-path-sum",
+    "title": "Max Root-to-Leaf Path Sum",
+    "category": "new",
+    "sourceName": "structy.net",
+    "sourceLink": "https://structy.net/problems/max-root-to-leaf-path-sum",
+    "difficulty": "Easy",
+    "whyGoodFit": "Walk + max aggregate: exactly the approved Fish / Largest Component 'max over simple sums' pattern, transplanted to a tree given as a plain nested object. Concrete, direct input, no inversion or memoization stacked. Verified free via structy's API.",
+    "statement": "You're given a non-empty binary tree where every node holds a number. Each node is a plain JavaScript object:\n\n```js\n{ val: 3, left: <node or null>, right: <node or null> }\n```\n\nA **root-to-leaf path** starts at the root and repeatedly steps to a child until it reaches a **leaf** — a node with no children (`left` and `right` both `null`). The path's sum is the total of all `val`s along it, including the root's and the leaf's.\n\nReturn the largest sum among all root-to-leaf paths. Watch out: values can be negative, and a path is only allowed to stop at a leaf.\n\n**Function signature**\n\n```js\nfunction maxPathSum(root) {\n  // root: a node object (never null)\n  // return a number\n}\n```",
+    "examples": [
+      {
+        "input": "const root = {\n  val: 3,\n  left: {\n    val: 11,\n    left:  { val: 4,  left: null, right: null },\n    right: { val: -2, left: null, right: null }\n  },\n  right: {\n    val: 4,\n    left: null,\n    right: { val: 1, left: null, right: null }\n  }\n};\nmaxPathSum(root)",
+        "output": "18",
+        "explanation": "The tree looks like:\n\n```\n      3\n    /   \\\n  11     4\n  / \\     \\\n 4  -2     1\n```\n\nEvery root-to-leaf path: 3 -> 11 -> 4 sums to 18, 3 -> 11 -> -2 sums to 12, 3 -> 4 -> 1 sums to 8. The biggest is 18."
+      },
+      {
+        "input": "const root = {\n  val: 2,\n  left: {\n    val: -1,\n    left:  { val: 4, left: null, right: null },\n    right: { val: 7, left: null, right: null }\n  },\n  right: { val: 10, left: null, right: null }\n};\nmaxPathSum(root)",
+        "output": "12",
+        "explanation": "The paths are 2 -> -1 -> 4 = 5, 2 -> -1 -> 7 = 8, and 2 -> 10 = 12. The node 10 has no children, so it is a leaf and the path may stop there. The biggest sum is 12."
+      }
+    ],
+    "constraints": [
+      "The tree has 1 to 1,000 nodes (it is never empty)",
+      "-1,000 <= node value <= 1,000 (negative values happen)",
+      "A path must end at a leaf — it cannot stop partway down"
+    ],
+    "functionName": "maxPathSum",
+    "solution": "// CONTRACT for maxPathSum(root):\n//     when this call returns, the returned value equals the largest\n//     possible total of node values on any path from `root` down to\n//     a leaf. `root` here means whatever node this call was handed —\n//     each recursive call gets its own.\nconst maxPathSum = (root) => {\n    // Base case: a path may only stop at a leaf, so a leaf's best path\n    // is simply its own value.\n    const isLeaf = root.left === null && root.right === null;\n    if (isLeaf) return root.val;\n\n    // Process node\n\n    // Recurse on children\n    // Values can be negative, so a missing child is skipped entirely\n    // rather than treated as a 0-valued path.\n    const childPathSums = [];\n\n    // The recursive leap of faith, one level down: this call has\n    // the SAME contract — when it returns, its value equals the best\n    // root-to-leaf total inside the left subtree. Trust it, do not\n    // trace it. Own value + the best of the children's guaranteed\n    // totals = exactly this function's contract.\n    if (root.left !== null) childPathSums.push(maxPathSum(root.left));\n    // Same contract, one level down — trust it.\n    if (root.right !== null) childPathSums.push(maxPathSum(root.right));\n\n    return root.val + Math.max(...childPathSums);\n};\n",
+    "tests": [
+      {
+        "args": [
+          {
+            "val": 3,
+            "left": {
+              "val": 11,
+              "left": {
+                "val": 4,
+                "left": null,
+                "right": null
+              },
+              "right": {
+                "val": -2,
+                "left": null,
+                "right": null
+              }
+            },
+            "right": {
+              "val": 4,
+              "left": null,
+              "right": {
+                "val": 1,
+                "left": null,
+                "right": null
+              }
+            }
+          }
+        ],
+        "expected": 18
+      },
+      {
+        "args": [
+          {
+            "val": 2,
+            "left": {
+              "val": -1,
+              "left": {
+                "val": 4,
+                "left": null,
+                "right": null
+              },
+              "right": {
+                "val": 7,
+                "left": null,
+                "right": null
+              }
+            },
+            "right": {
+              "val": 10,
+              "left": null,
+              "right": null
+            }
+          }
+        ],
+        "expected": 12
+      },
+      {
+        "args": [
+          {
+            "val": -7,
+            "left": null,
+            "right": null
+          }
+        ],
+        "expected": -7
+      },
+      {
+        "args": [
+          {
+            "val": 1,
+            "left": {
+              "val": -5,
+              "left": {
+                "val": 20,
+                "left": null,
+                "right": null
+              },
+              "right": null
+            },
+            "right": {
+              "val": 2,
+              "left": null,
+              "right": null
+            }
+          }
+        ],
+        "expected": 16
+      },
+      {
+        "args": [
+          {
+            "val": 2,
+            "left": null,
+            "right": {
+              "val": -1,
+              "left": null,
+              "right": {
+                "val": 3,
+                "left": null,
+                "right": null
+              }
+            }
+          }
+        ],
+        "expected": 4
+      }
+    ]
+  },
+  {
+    "id": "evaluate-boolean-binary-tree",
+    "title": "Evaluate Boolean Binary Tree",
+    "category": "new",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/evaluate-boolean-binary-tree/",
+    "difficulty": "Easy",
+    "whyGoodFit": "One clean combine rule on a tree: a childless node hands up its own true/false, a parent combines its two children with the AND/OR its value names. The statement itself tells the student exactly what each node does — bool aggregate, no hidden insight, concrete logic-circuit flavor.",
+    "statement": "You are given a special binary tree as `root` (plain objects `{val, left, right}`, with `null` for missing children). In this tree, every node has either exactly two children or none at all.\n\n- A node with **no children** holds `0` (meaning **false**) or `1` (meaning **true**).\n- A node with **two children** holds `2` (meaning **OR**) or `3` (meaning **AND**).\n\nEvery node has a true/false value:\n\n- A childless node's value is simply its own meaning: `0` is false, `1` is true.\n- An OR node (holding `2`) is true when **at least one** of its two children's values is true.\n- An AND node (holding `3`) is true only when **both** of its children's values are true.\n\nReturn the true/false value of the root node as a boolean.",
+    "examples": [
+      {
+        "input": "root = {val: 2, left: {val: 1}, right: {val: 3, left: {val: 0}, right: {val: 1}}}",
+        "output": "true",
+        "explanation": "The right child holds 3 (AND) and its children are 0 (false) and 1 (true): false AND true = false. The root holds 2 (OR) and its children's values are true (the left leaf holding 1) and false (the AND result): true OR false = true."
+      },
+      {
+        "input": "root = {val: 0}",
+        "output": "false",
+        "explanation": "The root has no children, so its value is its own meaning: 0 means false."
+      }
+    ],
+    "constraints": [
+      "the number of nodes is in the range [1, 1000]",
+      "every node has either 0 or 2 children",
+      "childless nodes hold 0 or 1; nodes with children hold 2 or 3",
+      "the tree is given as plain nested objects {val, left, right}; missing children are null"
+    ],
+    "functionName": "evaluateTree",
+    "solution": "const TRUE_NODE = 1;\nconst OR_NODE = 2;\nconst AND_NODE = 3;\n\n// CONTRACT for evaluateTree(root):\n//     when this call returns, the returned value is the single\n//     true/false answer that the whole tree under `root` boils\n//     down to. `root` here means whatever node this call was\n//     handed — each recursive call gets its own.\nconst evaluateTree = (root) => {\n    // Base case: a childless node's true/false value is its own meaning.\n    const isLeaf = root.left === null && root.right === null;\n    if (isLeaf) return root.val === TRUE_NODE;\n\n    // Process node: a parent's value names the operator it applies.\n    const isAndNode = root.val === AND_NODE;\n\n    // Recurse on children\n    // The recursive leap of faith, one level down: this call has\n    // the SAME contract — when it returns, `leftChildValue` is the\n    // true/false answer of the entire left subtree. Trust it, do not\n    // trace it. This node's operator applied to the two guaranteed\n    // child answers = exactly this function's contract.\n    const leftChildValue = evaluateTree(root.left);\n    // Same contract, one level down — trust it.\n    const rightChildValue = evaluateTree(root.right);\n\n    // An AND node needs both children true; an OR node needs at least one.\n    if (isAndNode) return leftChildValue && rightChildValue;\n\n    return leftChildValue || rightChildValue;\n};\n",
+    "tests": [
+      {
+        "args": [
+          {
+            "val": 2,
+            "left": {
+              "val": 1,
+              "left": null,
+              "right": null
+            },
+            "right": {
+              "val": 3,
+              "left": {
+                "val": 0,
+                "left": null,
+                "right": null
+              },
+              "right": {
+                "val": 1,
+                "left": null,
+                "right": null
+              }
+            }
+          }
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          {
+            "val": 0,
+            "left": null,
+            "right": null
+          }
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          {
+            "val": 1,
+            "left": null,
+            "right": null
+          }
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          {
+            "val": 3,
+            "left": {
+              "val": 1,
+              "left": null,
+              "right": null
+            },
+            "right": {
+              "val": 1,
+              "left": null,
+              "right": null
+            }
+          }
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          {
+            "val": 2,
+            "left": {
+              "val": 0,
+              "left": null,
+              "right": null
+            },
+            "right": {
+              "val": 0,
+              "left": null,
+              "right": null
+            }
+          }
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          {
+            "val": 3,
+            "left": {
+              "val": 2,
+              "left": {
+                "val": 0,
+                "left": null,
+                "right": null
+              },
+              "right": {
+                "val": 0,
+                "left": null,
+                "right": null
+              }
+            },
+            "right": {
+              "val": 1,
+              "left": null,
+              "right": null
+            }
+          }
+        ],
+        "expected": false
+      }
+    ]
+  }
+]

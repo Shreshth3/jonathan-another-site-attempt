@@ -45,3 +45,7 @@ For a quick static-file smoke check only (no route fallback), you can also run:
 1. `node scripts/validate-visual-data.js`
 2. `npx serve .` (or another static file server)
 3. Open the printed local URL on `/`.
+
+## Source lesson files
+
+`source/jonathan-study-site` contains the original problem data and published problem bank copied from the source repo on September 10, 2026. Build checks use this checked-in snapshot so a fresh clone needs no neighboring repository. When importing source changes, refresh these files from `/Users/shreshth/git-repos/jonathan-study-site` and regenerate and validate the lesson data.

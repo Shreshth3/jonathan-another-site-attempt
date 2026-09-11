@@ -1,0 +1,967 @@
+[
+  {
+    "id": "battleships-in-a-board",
+    "title": "Battleships in a Board",
+    "category": "original",
+    "section": "Traversing connected components",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/battleships-in-a-board/",
+    "statement": "You are given an `m x n` grid called `board` where every cell is one of two characters:\n\n- `'X'` — part of a battleship\n- `'.'` — empty water\n\nReturn the number of battleships on the board.\n\nEach battleship is a straight line of one or more `'X'` cells, placed either fully horizontally (all in one row) or fully vertically (all in one column). Ships never touch each other: between any two different battleships there is always at least one cell of empty water, even diagonally-adjacent ships never share an edge.",
+    "examples": [
+      {
+        "input": "board = [[\"X\",\".\",\".\",\"X\"],[\".\",\".\",\".\",\"X\"],[\".\",\".\",\".\",\"X\"]]",
+        "output": "2",
+        "explanation": "There is a 1-cell ship in the top-left corner and a vertical 3-cell ship in the last column."
+      },
+      {
+        "input": "board = [[\".\"]]",
+        "output": "0",
+        "explanation": "The board is all water, so there are no battleships."
+      }
+    ],
+    "constraints": [
+      "m == board.length",
+      "n == board[i].length",
+      "1 <= m, n <= 200",
+      "board[i][j] is either '.' or 'X'"
+    ],
+    "functionName": "countBattleships",
+    "solution": "const SHIP = 'X';\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (board, row, col) => {\n    const numRows = board.length;\n    const numCols = board[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\n// CONTRACT for markShipAsVisited(board, row, col, visited):\n//     when this call returns, if the cell at `row`,`col` is part of a\n//     ship, that cell and every connected cell of the same ship is in\n//     the visited set. (Water or out-of-bounds cells change nothing.)\nconst markShipAsVisited = (board, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(board, row, col)) return;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return;\n\n    if (board[row][col] !== SHIP) return;\n\n    // Process node\n    visited.add(curPositionString);\n\n    // Recurse on potential neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighbor cell (if it\n        // is part of the ship) and every ship cell connected to it is\n        // in visited. Trust it, do not trace it. This function already\n        // put `row`,`col` into visited, and each neighbor's contract\n        // covers the rest of the ship — together, that is this\n        // function's full contract, kept.\n        markShipAsVisited(board, newRow, newCol, visited);\n    }\n};\n\nconst countBattleships = (board) => {\n    const numRows = board.length;\n    const numCols = board[0].length;\n\n    let numBattleships = 0;\n    const visited = new Set();\n\n    for (let row = 0; row < numRows; row++) {\n        for (let col = 0; col < numCols; col++) {\n            const curPositionString = getPositionString(row, col);\n\n            if (visited.has(curPositionString)) continue;\n\n            const cellType = board[row][col];\n            if (cellType !== SHIP) continue;\n\n            // An unvisited 'X' cell must be the start of a brand new ship,\n            // because we already marked every cell of the ships we found.\n            numBattleships++;\n\n            // The recursive leap of faith: trust the contract. When this\n            // call returns, every cell of this newly found ship is in\n            // visited, so the loops can never count the same ship again.\n            // We do not trace inside; we just count the ship and move on.\n            markShipAsVisited(board, row, col, visited);\n        }\n    }\n\n    return numBattleships;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              "X",
+              ".",
+              ".",
+              "X"
+            ],
+            [
+              ".",
+              ".",
+              ".",
+              "X"
+            ],
+            [
+              ".",
+              ".",
+              ".",
+              "X"
+            ]
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              "."
+            ]
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              "X"
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              "X",
+              "X",
+              "X"
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              "X",
+              ".",
+              "X"
+            ],
+            [
+              ".",
+              ".",
+              "."
+            ],
+            [
+              "X",
+              ".",
+              "X"
+            ]
+          ]
+        ],
+        "expected": 4
+      }
+    ]
+  },
+  {
+    "id": "detonate-the-maximum-bombs",
+    "title": "Detonate the Maximum Bombs",
+    "category": "original",
+    "section": "Traversing connected components",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/detonate-the-maximum-bombs/",
+    "statement": "You are given a list of bombs sitting on a 2D plane. Each bomb has a position and a circular blast range: `bombs[i] = [xi, yi, ri]` means bomb `i` sits at the point `(xi, yi)` and its explosion reaches every point within distance `ri` of that point.\n\nWhen a bomb explodes, it sets off every other bomb whose **center** lies inside (or exactly on the edge of) its blast circle. Each bomb that gets set off then explodes with its **own** range, possibly triggering even more bombs — a chain reaction.\n\nYou are allowed to detonate **exactly one** bomb of your choice by hand. Return the largest total number of bombs that can end up exploding (including the one you detonate).",
+    "examples": [
+      {
+        "input": "bombs = [[2,1,3],[6,1,4]]",
+        "output": "2",
+        "explanation": "The bombs are 4 units apart. Bomb 0 (range 3) cannot reach bomb 1, but bomb 1 (range 4) reaches bomb 0. Detonating bomb 1 sets off both bombs."
+      },
+      {
+        "input": "bombs = [[1,1,5],[10,10,5]]",
+        "output": "1",
+        "explanation": "The two bombs are too far apart to reach each other, so detonating either one only explodes that single bomb."
+      },
+      {
+        "input": "bombs = [[1,2,3],[2,3,1],[3,4,2],[4,5,3],[5,6,4]]",
+        "output": "5",
+        "explanation": "Detonating bomb 0 sets off bombs 1 and 2. Bomb 2 sets off bomb 3, and bomb 3 sets off bomb 4, so all 5 bombs explode."
+      }
+    ],
+    "constraints": [
+      "1 <= bombs.length <= 100",
+      "bombs[i].length == 3",
+      "1 <= xi, yi, ri <= 10^5"
+    ],
+    "functionName": "maximumDetonation",
+    "solution": "const buildGraph = (bombs) => {\n    const graph = {};\n\n    for (let bomb = 0; bomb < bombs.length; bomb++) {\n        graph[bomb] = [];\n    }\n\n    for (let bomb = 0; bomb < bombs.length; bomb++) {\n        const [bombX, bombY, bombRadius] = bombs[bomb];\n\n        for (let otherBomb = 0; otherBomb < bombs.length; otherBomb++) {\n            if (otherBomb === bomb) continue;\n\n            const [otherBombX, otherBombY] = bombs[otherBomb];\n\n            const xDistance = bombX - otherBombX;\n            const yDistance = bombY - otherBombY;\n\n            // Compare squared distances so we never need a square root.\n            const squaredDistance = xDistance * xDistance + yDistance * yDistance;\n            const squaredRadius = bombRadius * bombRadius;\n\n            // This graph is DIRECTED: a bomb with a big radius can set off\n            // a bomb with a small radius without the reverse being true.\n            const canDetonateOtherBomb = squaredDistance <= squaredRadius;\n            if (!canDetonateOtherBomb) continue;\n\n            graph[bomb].push(otherBomb);\n        }\n    }\n\n    return graph;\n};\n\n// CONTRACT for markDetonatedBombs(graph, bomb, visited):\n//     when this call returns, `bomb` and every bomb reachable from\n//     `bomb` through the chain reaction is in the visited set.\nconst markDetonatedBombs = (graph, bomb, visited) => {\n    // Base case\n    if (visited.has(bomb)) return;\n\n    // Process node\n    visited.add(bomb);\n\n    // Recurse on neighbors\n    const neighbors = graph[bomb];\n\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `neighbor` and every\n        // bomb reachable from it is in visited. Trust it, do not trace\n        // it. This function already put `bomb` into visited, and each\n        // neighbor's contract covers every bomb its explosion can\n        // reach — together, that is this function's full contract,\n        // kept.\n        markDetonatedBombs(graph, neighbor, visited);\n    }\n};\n\nconst maximumDetonation = (bombs) => {\n    const graph = buildGraph(bombs);\n\n    let maxDetonatedBombs = 0;\n\n    for (let startBomb = 0; startBomb < bombs.length; startBomb++) {\n        // Each starting bomb gets a fresh visited set because we are\n        // measuring each chain reaction separately.\n        const visited = new Set();\n\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, `startBomb` and every bomb its chain reaction\n        // sets off is in visited. We do not trace inside; we just read\n        // visited.size to see how many bombs exploded.\n        markDetonatedBombs(graph, startBomb, visited);\n\n        maxDetonatedBombs = Math.max(maxDetonatedBombs, visited.size);\n    }\n\n    return maxDetonatedBombs;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              2,
+              1,
+              3
+            ],
+            [
+              6,
+              1,
+              4
+            ]
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              5
+            ],
+            [
+              10,
+              10,
+              5
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2,
+              3
+            ],
+            [
+              2,
+              3,
+              1
+            ],
+            [
+              3,
+              4,
+              2
+            ],
+            [
+              4,
+              5,
+              3
+            ],
+            [
+              5,
+              6,
+              4
+            ]
+          ]
+        ],
+        "expected": 5
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              2,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 3
+      }
+    ]
+  },
+  {
+    "id": "keys-and-rooms",
+    "title": "Keys and Rooms",
+    "category": "original",
+    "section": "Exploring a graph with DFS",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/keys-and-rooms/",
+    "statement": "You are given `n` rooms labeled from `0` to `n - 1`. Every room is locked except room `0`, which is where you start.\n\nInside each room there is a set of keys lying on the floor. `rooms[i]` is the list of keys found in room `i`, and each key is just a room number: a key with the number `j` on it lets you open room `j` whenever you want.\n\nYou can walk between rooms freely — the only thing stopping you is a locked door. When you enter a room, you pick up all of its keys and can then use them to open more rooms.\n\nReturn `true` if you can eventually enter every room, and `false` otherwise.",
+    "examples": [
+      {
+        "input": "rooms = [[1],[2],[3],[]]",
+        "output": "true",
+        "explanation": "Start in room 0 and grab the key to room 1. In room 1 grab the key to room 2, and in room 2 grab the key to room 3. Every room gets visited."
+      },
+      {
+        "input": "rooms = [[1,3],[3,0,1],[2],[0]]",
+        "output": "false",
+        "explanation": "The only key to room 2 is sitting inside room 2 itself, so we can never get in."
+      }
+    ],
+    "constraints": [
+      "n == rooms.length",
+      "2 <= n <= 1000",
+      "0 <= rooms[i].length <= 1000",
+      "1 <= sum(rooms[i].length) <= 3000",
+      "0 <= rooms[i][j] < n",
+      "All the values of rooms[i] are unique"
+    ],
+    "functionName": "canVisitAllRooms",
+    "solution": "const START_ROOM = 0;\n\n// CONTRACT for visitRooms(rooms, curRoom, visited):\n//     when this call returns, `curRoom` and every room whose door we\n//     can eventually open starting from `curRoom` is in the visited set.\nconst visitRooms = (rooms, curRoom, visited) => {\n    // Base case\n    // Two different rooms can hold keys to the same room, so we could\n    // see a room twice. We track visited rooms to avoid infinite loops.\n    if (visited.has(curRoom)) return;\n\n    // Process node\n    visited.add(curRoom);\n\n    // Recurse on neighbors\n    const keysInRoom = rooms[curRoom];\n\n    for (const key of keysInRoom) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the room this key opens\n        // and every room reachable from it is in visited. Trust it, do\n        // not trace it. This function already put `curRoom` into\n        // visited, and each key's contract covers all the rooms behind\n        // it — together, that is this function's full contract, kept.\n        visitRooms(rooms, key, visited);\n    }\n};\n\nconst canVisitAllRooms = (rooms) => {\n    const visited = new Set();\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, room 0 and every room we can possibly enter is\n    // in visited. We do not trace inside; we just compare\n    // visited.size to the total number of rooms.\n    visitRooms(rooms, START_ROOM, visited);\n\n    // We succeed only if every single room was reachable from room 0.\n    return visited.size === rooms.length;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1
+            ],
+            [
+              2
+            ],
+            [
+              3
+            ],
+            []
+          ]
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              3
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              2
+            ],
+            [
+              0
+            ]
+          ]
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          [
+            [
+              2
+            ],
+            [],
+            [
+              1
+            ]
+          ]
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              0
+            ],
+            [
+              0
+            ],
+            []
+          ]
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          [
+            [],
+            [
+              0
+            ]
+          ]
+        ],
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "time-needed-to-inform-all-employees",
+    "title": "Time Needed to Inform All Employees",
+    "category": "original",
+    "section": "Exploring a graph with DFS",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/time-needed-to-inform-all-employees/",
+    "statement": "A company has `n` employees, labeled from `0` to `n - 1`. The head of the company is employee `headID`.\n\nYou are given an array `manager` where `manager[i]` is the direct manager of employee `i`. The head has no manager, so `manager[headID] == -1`. These manager relationships form a tree with the head at the root.\n\nThe head wants to share an urgent piece of news with everyone. Spreading works like this: when employee `i` learns the news, it takes them `informTime[i]` minutes to tell **all** of their direct reports, and all of those reports hear it **at the same moment**. Employees with no reports have `informTime[i] == 0`.\n\nReturn the total number of minutes until every employee in the company has heard the news.",
+    "examples": [
+      {
+        "input": "n = 1, headID = 0, manager = [-1], informTime = [0]",
+        "output": "0",
+        "explanation": "The head is the only employee, so everyone already knows the news."
+      },
+      {
+        "input": "n = 6, headID = 2, manager = [2,2,-1,2,2,2], informTime = [0,0,1,0,0,0]",
+        "output": "1",
+        "explanation": "Employee 2 manages everyone else and needs 1 minute to inform them all at once."
+      },
+      {
+        "input": "n = 7, headID = 6, manager = [1,2,3,4,5,6,-1], informTime = [0,6,5,4,3,2,1]",
+        "output": "21",
+        "explanation": "The employees form a single chain, so the news travels one link at a time: 1 + 2 + 3 + 4 + 5 + 6 = 21 minutes."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 10^5",
+      "0 <= headID < n",
+      "manager.length == n",
+      "0 <= manager[i] < n",
+      "manager[headID] == -1",
+      "informTime.length == n",
+      "0 <= informTime[i] <= 1000",
+      "informTime[i] == 0 if employee i has no subordinates",
+      "It is guaranteed that all the employees can be informed"
+    ],
+    "functionName": "numOfMinutes",
+    "solution": "const NO_MANAGER = -1;\n\nconst buildGraph = (manager) => {\n    const graph = {};\n\n    for (let employee = 0; employee < manager.length; employee++) {\n        const employeeManager = manager[employee];\n\n        // The head of the company has no manager.\n        if (employeeManager === NO_MANAGER) continue;\n\n        const managerInGraph = graph.hasOwnProperty(employeeManager);\n        if (!managerInGraph) graph[employeeManager] = [];\n\n        graph[employeeManager].push(employee);\n    }\n\n    return graph;\n};\n\n// CONTRACT for getTimeToInformSubtree(graph, employee, informTime):\n//     returns the number of minutes between the moment `employee`\n//     hears the news and the moment every person below `employee`\n//     in the tree has heard it.\nconst getTimeToInformSubtree = (graph, employee, informTime) => {\n    // The hierarchy is a tree, so there are no cycles and we do not\n    // need a visited set.\n\n    // Base case\n    const employeeHasSubordinates = graph.hasOwnProperty(employee);\n    if (!employeeHasSubordinates) return 0;\n\n    // Process node\n    let maxTimeToInformSubordinateSubtree = 0;\n\n    // Recurse on neighbors\n    const subordinates = graph[employee];\n\n    for (const subordinate of subordinates) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — it returns how long the news takes to\n        // reach everyone below `subordinate`. Trust it, do not trace\n        // it. Our own inform time plus the slowest subordinate's\n        // guaranteed time is exactly this function's contract, kept.\n        const timeToInformSubordinateSubtree = getTimeToInformSubtree(\n            graph,\n            subordinate,\n            informTime,\n        );\n\n        // All subordinates hear the news at the same time (in parallel),\n        // so we only wait for the SLOWEST branch to finish.\n        maxTimeToInformSubordinateSubtree = Math.max(\n            maxTimeToInformSubordinateSubtree,\n            timeToInformSubordinateSubtree,\n        );\n    }\n\n    return informTime[employee] + maxTimeToInformSubordinateSubtree;\n};\n\nconst numOfMinutes = (n, headID, manager, informTime) => {\n    const graph = buildGraph(manager);\n\n    // The recursive leap of faith: trust the contract. This call\n    // returns the minutes needed for the news to travel from the\n    // head to every employee in the company. We do not trace\n    // inside; we just return that number.\n    return getTimeToInformSubtree(graph, headID, informTime);\n};\n",
+    "tests": [
+      {
+        "args": [
+          1,
+          0,
+          [
+            -1
+          ],
+          [
+            0
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          6,
+          2,
+          [
+            2,
+            2,
+            -1,
+            2,
+            2,
+            2
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          7,
+          6,
+          [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            -1
+          ],
+          [
+            0,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ]
+        ],
+        "expected": 21
+      },
+      {
+        "args": [
+          4,
+          0,
+          [
+            -1,
+            0,
+            0,
+            1
+          ],
+          [
+            1,
+            2,
+            0,
+            0
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          8,
+          0,
+          [
+            -1,
+            0,
+            0,
+            1,
+            1,
+            2,
+            2,
+            2
+          ],
+          [
+            4,
+            3,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "expected": 7
+      }
+    ]
+  },
+  {
+    "id": "kill-process",
+    "title": "Kill Process",
+    "category": "original",
+    "section": "Exploring a graph with DFS",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/kill-process/",
+    "statement": "Your computer is running `n` processes that form a tree. You are given two equal-length arrays: `pid[i]` is the ID of the `i`-th process, and `ppid[i]` is the ID of its **parent** process. Exactly one process is the root of the tree, and its parent ID is `0` (meaning it has no parent).\n\nWhen you kill a process, every one of its child processes gets killed too — and their children, and so on, all the way down the tree.\n\nGiven an integer `kill` (guaranteed to be one of the IDs in `pid`), return a list of the IDs of **all** processes that end up killed when you kill process `kill`. The IDs may be returned in any order.",
+    "examples": [
+      {
+        "input": "pid = [1,3,10,5], ppid = [3,0,5,3], kill = 5",
+        "output": "[5,10]",
+        "explanation": "Process 3 is the root with children 1 and 5, and process 5 has child 10. Killing 5 also kills 10."
+      },
+      {
+        "input": "pid = [1], ppid = [0], kill = 1",
+        "output": "[1]",
+        "explanation": "There is only one process, so killing it kills just itself."
+      }
+    ],
+    "constraints": [
+      "n == pid.length == ppid.length",
+      "1 <= n <= 5 * 10^4",
+      "1 <= pid[i] <= 5 * 10^4",
+      "0 <= ppid[i] <= 5 * 10^4",
+      "Only one process has ppid[i] == 0 (the root)",
+      "All the values of pid are unique",
+      "kill is guaranteed to be in pid"
+    ],
+    "functionName": "killProcess",
+    "solution": "const ROOT_PARENT_ID = 0;\n\nconst buildGraph = (pid, ppid) => {\n    const graph = {};\n\n    for (let index = 0; index < pid.length; index++) {\n        const curProcess = pid[index];\n        const parentProcess = ppid[index];\n\n        // The root process has no parent, so it is nobody's child.\n        if (parentProcess === ROOT_PARENT_ID) continue;\n\n        const parentInGraph = graph.hasOwnProperty(parentProcess);\n        if (!parentInGraph) graph[parentProcess] = [];\n\n        graph[parentProcess].push(curProcess);\n    }\n\n    return graph;\n};\n\n// CONTRACT for collectKilledProcesses(graph, curProcess, killedProcesses):\n//     when this call returns, `curProcess` and every process below it\n//     in the tree has been added to the `killedProcesses` list.\nconst collectKilledProcesses = (graph, curProcess, killedProcesses) => {\n    // The processes form a tree, so there are no cycles and we do not\n    // need a visited set.\n\n    // Process node\n    killedProcesses.push(curProcess);\n\n    // Recurse on neighbors\n    // Base case: a process with no children has nothing to recurse on.\n    const processHasChildren = graph.hasOwnProperty(curProcess);\n    if (!processHasChildren) return;\n\n    const childProcesses = graph[curProcess];\n\n    for (const childProcess of childProcesses) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `childProcess` and\n        // every process below it has been added to the list. Trust it,\n        // do not trace it. This function already added `curProcess`,\n        // and each child's contract covers its whole subtree —\n        // together, that is this function's full contract, kept.\n        collectKilledProcesses(graph, childProcess, killedProcesses);\n    }\n};\n\nconst killProcess = (pid, ppid, kill) => {\n    const graph = buildGraph(pid, ppid);\n\n    const killedProcesses = [];\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, `kill` and every process underneath it is in\n    // the killedProcesses list. We do not trace inside; we just\n    // return the list.\n    collectKilledProcesses(graph, kill, killedProcesses);\n\n    return killedProcesses;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            1,
+            3,
+            10,
+            5
+          ],
+          [
+            3,
+            0,
+            5,
+            3
+          ],
+          5
+        ],
+        "expected": [
+          5,
+          10
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            1
+          ],
+          [
+            0
+          ],
+          1
+        ],
+        "expected": [
+          1
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            1,
+            3,
+            10,
+            5
+          ],
+          [
+            3,
+            0,
+            5,
+            3
+          ],
+          3
+        ],
+        "expected": [
+          3,
+          1,
+          5,
+          10
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            2,
+            4,
+            6,
+            8,
+            10
+          ],
+          [
+            0,
+            2,
+            2,
+            4,
+            4
+          ],
+          4
+        ],
+        "expected": [
+          4,
+          8,
+          10
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            2,
+            4,
+            6,
+            8,
+            10
+          ],
+          [
+            0,
+            2,
+            2,
+            4,
+            4
+          ],
+          6
+        ],
+        "expected": [
+          6
+        ],
+        "unordered": true
+      }
+    ]
+  },
+  {
+    "id": "network-delay-time",
+    "title": "Network Delay Time",
+    "category": "original",
+    "section": "Exploring a graph with DFS",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/network-delay-time/",
+    "statement": "You have a network of `n` nodes, labeled from `1` to `n`. You are given a list `times`, where each entry `times[i] = [ui, vi, wi]` describes a **one-way** wire: a signal sent from node `ui` reaches node `vi` after `wi` units of time.\n\nAt time `0`, a signal is sent out from node `k`. The signal travels along every outgoing wire at once, and a node passes the signal along the moment it receives it.\n\nReturn the time at which **all** `n` nodes have received the signal. If some node can never receive it, return `-1`.",
+    "examples": [
+      {
+        "input": "times = [[2,1,1],[2,3,1],[3,4,1]], n = 4, k = 2",
+        "output": "2",
+        "explanation": "Nodes 1 and 3 hear the signal at time 1, and node 4 hears it at time 2 (through node 3). Everyone has it by time 2."
+      },
+      {
+        "input": "times = [[1,2,1]], n = 2, k = 1",
+        "output": "1",
+        "explanation": "The signal travels from node 1 to node 2 in 1 unit of time."
+      },
+      {
+        "input": "times = [[1,2,1]], n = 2, k = 2",
+        "output": "-1",
+        "explanation": "The only wire points INTO node 2, so a signal starting at node 2 can never reach node 1."
+      }
+    ],
+    "constraints": [
+      "1 <= k <= n <= 100",
+      "1 <= times.length <= 6000",
+      "times[i].length == 3",
+      "1 <= ui, vi <= n",
+      "ui != vi",
+      "0 <= wi <= 100",
+      "All the pairs (ui, vi) are unique (no duplicate wires)"
+    ],
+    "functionName": "networkDelayTime",
+    "solution": "const START_TIME = 0;\n\nconst buildGraph = (times) => {\n    const graph = {};\n\n    for (const time of times) {\n        const [sourceNode, targetNode, travelTime] = time;\n\n        const sourceInGraph = graph.hasOwnProperty(sourceNode);\n        if (!sourceInGraph) graph[sourceNode] = [];\n\n        graph[sourceNode].push([targetNode, travelTime]);\n    }\n\n    return graph;\n};\n\n// CONTRACT for recordArrivalTimes(graph, curNode, curArrivalTime, arrivalTimes):\n//     when this call returns, `curNode` and every node reachable from\n//     it has an entry in `arrivalTimes` at least as fast as any route\n//     that starts by reaching `curNode` at time `curArrivalTime`.\nconst recordArrivalTimes = (graph, curNode, curArrivalTime, arrivalTimes) => {\n    // Base case\n    // Instead of a plain visited set, we remember the best-known arrival\n    // time for each node. We only continue when we just arrived FASTER\n    // than every previous visit, so slower paths get pruned away.\n    const nodeHasArrivalTime = arrivalTimes.hasOwnProperty(curNode);\n    const bestKnownArrivalTime = nodeHasArrivalTime\n        ? arrivalTimes[curNode]\n        : Infinity;\n\n    if (curArrivalTime >= bestKnownArrivalTime) return;\n\n    // Process node\n    arrivalTimes[curNode] = curArrivalTime;\n\n    // Recurse on neighbors\n    const nodeInGraph = graph.hasOwnProperty(curNode);\n    if (!nodeInGraph) return;\n\n    const neighbors = graph[curNode];\n\n    for (const neighbor of neighbors) {\n        const [neighborNode, travelTime] = neighbor;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighbor and every\n        // node past it have arrival times at least as fast as this\n        // route offers. Trust it, do not trace it. This function\n        // already recorded `curNode`'s time, and each neighbor's\n        // contract covers the rest — together, that is this function's\n        // full contract, kept.\n        recordArrivalTimes(\n            graph,\n            neighborNode,\n            curArrivalTime + travelTime,\n            arrivalTimes,\n        );\n    }\n};\n\nconst networkDelayTime = (times, n, k) => {\n    const graph = buildGraph(times);\n\n    const arrivalTimes = {};\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, every node the signal can reach from node `k`\n    // has its fastest arrival time recorded in arrivalTimes. We do\n    // not trace inside; we just scan those times for the largest\n    // one.\n    recordArrivalTimes(graph, k, START_TIME, arrivalTimes);\n\n    // The whole network is covered once the LAST node hears the signal,\n    // so the answer is the largest arrival time.\n    let maxArrivalTime = 0;\n\n    for (let node = 1; node <= n; node++) {\n        const nodeWasReached = arrivalTimes.hasOwnProperty(node);\n        if (!nodeWasReached) return -1;\n\n        maxArrivalTime = Math.max(maxArrivalTime, arrivalTimes[node]);\n    }\n\n    return maxArrivalTime;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              2,
+              1,
+              1
+            ],
+            [
+              2,
+              3,
+              1
+            ],
+            [
+              3,
+              4,
+              1
+            ]
+          ],
+          4,
+          2
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2,
+              1
+            ]
+          ],
+          2,
+          1
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2,
+              1
+            ]
+          ],
+          2,
+          2
+        ],
+        "expected": -1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2,
+              10
+            ],
+            [
+              1,
+              3,
+              1
+            ],
+            [
+              3,
+              2,
+              1
+            ]
+          ],
+          3,
+          1
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2,
+              1
+            ],
+            [
+              2,
+              3,
+              2
+            ],
+            [
+              3,
+              1,
+              4
+            ],
+            [
+              3,
+              4,
+              1
+            ]
+          ],
+          4,
+          1
+        ],
+        "expected": 4
+      }
+    ]
+  },
+  {
+    "id": "find-if-path-exists-in-graph",
+    "title": "Find if Path Exists in Graph",
+    "category": "original",
+    "section": "Working with paths",
+    "difficulty": "Easy",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/find-if-path-exists-in-graph/",
+    "statement": "You are given a graph with `n` vertices labeled from `0` to `n - 1`. The graph is **undirected**: each entry `edges[i] = [ui, vi]` is a two-way connection between vertex `ui` and vertex `vi`. Every pair of vertices is connected by at most one edge, and no vertex has an edge to itself.\n\nYou are also given two vertices, `source` and `destination`.\n\nReturn `true` if there is any path from `source` to `destination` (a walk along edges that starts at `source` and ends at `destination`), and `false` otherwise. Note that a path of length zero counts: if `source` and `destination` are the same vertex, the answer is `true`.",
+    "examples": [
+      {
+        "input": "n = 3, edges = [[0,1],[1,2],[2,0]], source = 0, destination = 2",
+        "output": "true",
+        "explanation": "There are two ways to get from 0 to 2: go 0 -> 1 -> 2, or go 0 -> 2 directly."
+      },
+      {
+        "input": "n = 6, edges = [[0,1],[0,2],[3,5],[5,4],[4,3]], source = 0, destination = 5",
+        "output": "false",
+        "explanation": "The graph splits into two separate pieces: {0, 1, 2} and {3, 4, 5}. There is no way to cross between them."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 2 * 10^5",
+      "0 <= edges.length <= 2 * 10^5",
+      "edges[i].length == 2",
+      "0 <= ui, vi <= n - 1",
+      "ui != vi",
+      "0 <= source, destination <= n - 1",
+      "There are no duplicate edges and no self edges"
+    ],
+    "functionName": "validPath",
+    "solution": "const buildGraph = (edges) => {\n    const graph = {};\n\n    for (const edge of edges) {\n        const [nodeOne, nodeTwo] = edge;\n\n        const nodeOneInGraph = graph.hasOwnProperty(nodeOne);\n        const nodeTwoInGraph = graph.hasOwnProperty(nodeTwo);\n\n        if (!nodeOneInGraph) graph[nodeOne] = [];\n        if (!nodeTwoInGraph) graph[nodeTwo] = [];\n\n        graph[nodeOne].push(nodeTwo);\n        graph[nodeTwo].push(nodeOne);\n    }\n\n    return graph;\n};\n\n// CONTRACT for canReachDestination(graph, curNode, destination, visited):\n//     returns true if there is a path from `curNode` to `destination`\n//     that avoids the nodes already in the visited set, and false\n//     otherwise.\nconst canReachDestination = (graph, curNode, destination, visited) => {\n    // Base cases\n    if (curNode === destination) return true;\n\n    // This is an undirected graph, so it can have cycles. We track\n    // visited nodes so we never walk in circles forever.\n    if (visited.has(curNode)) return false;\n\n    // Process node\n    visited.add(curNode);\n\n    // Recurse on neighbors\n    const nodeInGraph = graph.hasOwnProperty(curNode);\n    if (!nodeInGraph) return false;\n\n    const neighbors = graph[curNode];\n\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — it returns true exactly when\n        // `destination` can be reached from this neighbor. Trust it,\n        // do not trace it. If any neighbor can reach the destination,\n        // then so can `curNode` — which is exactly this function's\n        // contract, kept.\n        const pathExistsThroughNeighbor = canReachDestination(\n            graph,\n            neighbor,\n            destination,\n            visited,\n        );\n\n        if (pathExistsThroughNeighbor) return true;\n    }\n\n    return false;\n};\n\nconst validPath = (n, edges, source, destination) => {\n    const graph = buildGraph(edges);\n\n    const visited = new Set();\n\n    // The recursive leap of faith: trust the contract. This call\n    // returns true exactly when some path leads from `source` to\n    // `destination`. We do not trace inside; we just return its\n    // answer.\n    return canReachDestination(graph, source, destination, visited);\n};\n",
+    "tests": [
+      {
+        "args": [
+          3,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              0
+            ]
+          ],
+          0,
+          2
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          6,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              3,
+              5
+            ],
+            [
+              5,
+              4
+            ],
+            [
+              4,
+              3
+            ]
+          ],
+          0,
+          5
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          1,
+          [],
+          0,
+          0
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          10,
+          [
+            [
+              0,
+              7
+            ],
+            [
+              0,
+              8
+            ],
+            [
+              6,
+              1
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              5,
+              8
+            ],
+            [
+              4,
+              7
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              3,
+              5
+            ],
+            [
+              6,
+              5
+            ]
+          ],
+          7,
+          5
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          4,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          0,
+          3
+        ],
+        "expected": false
+      }
+    ]
+  }
+]

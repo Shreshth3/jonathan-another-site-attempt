@@ -1,0 +1,699 @@
+[
+  {
+    "id": "perfect-size-campsites",
+    "title": "Perfect-Size Campsites",
+    "category": "variant",
+    "parentId": "number-of-islands",
+    "parentTitle": "Number of Islands",
+    "difficulty": "Easy",
+    "twist": "Instead of counting all regions, you measure the size of each region and count only the regions whose size is exactly k.",
+    "statement": "A national park gives you a map as a grid. `park[r][c]` is `1` if that square is open grass and `0` if it is forest (you cannot camp in forest).\n\nA **campsite** is a group of grass squares that are connected **up, down, left, or right** (diagonal squares are NOT connected). Every grass square belongs to exactly one campsite.\n\nA scout troop needs a campsite made of **exactly `k` grass squares** — no more, no less — so their tents fit snugly.\n\nWrite a function `countPerfectCampsites(park, k)` that returns how many campsites have exactly `k` squares.",
+    "examples": [
+      {
+        "input": "park = [[1,1,0,1],[0,1,0,1],[0,0,0,0],[1,1,0,0]], k = 2",
+        "output": "2",
+        "explanation": "There are three campsites: {(0,0),(0,1),(1,1)} with 3 squares, {(0,3),(1,3)} with 2 squares, and {(3,0),(3,1)} with 2 squares. Exactly two of them have size 2."
+      },
+      {
+        "input": "park = [[1,0,1],[0,0,0],[1,1,1]], k = 1",
+        "output": "2",
+        "explanation": "The campsites are {(0,0)} (size 1), {(0,2)} (size 1), and the bottom row {(2,0),(2,1),(2,2)} (size 3). Two campsites have exactly 1 square."
+      }
+    ],
+    "constraints": [
+      "1 <= number of rows, number of columns <= 50",
+      "park[r][c] is either 0 or 1",
+      "1 <= k <= 2500"
+    ],
+    "functionName": "countPerfectCampsites",
+    "solution": "const GRASS = 1;\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\n// CONTRACT for getCampsiteSize(park, row, col, visited):\n//     when this call returns, every grass square connected to\n//     (`row`, `col`) is in the visited set, and the returned value is\n//     how many squares this call put there. If (`row`, `col`) is not\n//     a fresh grass square, it returns 0 and nothing new goes in.\nconst getCampsiteSize = (park, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(park, row, col)) return 0;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return 0;\n\n    if (park[row][col] !== GRASS) return 0;\n\n    // Process node\n    visited.add(curPositionString);\n\n    // This square contributes 1 to the campsite, plus every connected\n    // grass square we discover from here.\n    let campsiteSize = 1;\n\n    // Recurse on potential neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every grass square\n        // connected to the neighboring square is in visited, and it hands\n        // back how many it added. Trust it, do not trace it. The 1 for\n        // this square + each direction's guaranteed count = exactly this\n        // function's contract.\n        campsiteSize += getCampsiteSize(park, newRow, newCol, visited);\n    }\n\n    return campsiteSize;\n};\n\nconst countPerfectCampsites = (park, k) => {\n    const numRows = park.length;\n    const numCols = park[0].length;\n\n    let numPerfectCampsites = 0;\n    const visited = new Set();\n\n    for (let row = 0; row < numRows; row++) {\n        for (let col = 0; col < numCols; col++) {\n            const curPositionString = getPositionString(row, col);\n\n            if (visited.has(curPositionString)) continue;\n\n            const terrainType = park[row][col];\n            if (terrainType !== GRASS) continue;\n\n            // One DFS measures this entire campsite, so we can compare\n            // its full size against k before moving on.\n            // The recursive leap of faith: trust the contract. When this\n            // call returns, this whole campsite is in visited — the loop can\n            // never count it again — and `campsiteSize` is its exact number\n            // of squares. We do not trace inside; we just compare it to k.\n            const campsiteSize = getCampsiteSize(park, row, col, visited);\n\n            if (campsiteSize === k) numPerfectCampsites++;\n        }\n    }\n\n    return numPerfectCampsites;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0,
+              0
+            ]
+          ],
+          2
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1
+            ]
+          ],
+          1
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          1
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ]
+          ],
+          1
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1
+            ]
+          ],
+          6
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          3
+        ],
+        "expected": 0
+      }
+    ]
+  },
+  {
+    "id": "office-rumor-reach",
+    "title": "Office Rumor",
+    "category": "variant",
+    "parentId": "number-of-connected-components-in-an-undirected-graph",
+    "parentTitle": "Number of Connected Components in an Undirected Graph",
+    "difficulty": "Easy",
+    "twist": "Same edge-list graph as the parent, but instead of counting all components you explore just one: return the size of the component containing a given start node.",
+    "statement": "An office has `n` employees, numbered `0` to `n - 1`. You are given a list `friendships`, where each entry `[a, b]` means employees `a` and `b` are friends (friendship goes both ways).\n\nOne morning, employee `start` hears a juicy rumor. Every employee who hears the rumor immediately tells **all of their friends**, who then tell all of *their* friends, and so on until no new person can hear it.\n\nWrite a function `countWhoHear(n, friendships, start)` that returns the total number of employees who end up hearing the rumor, **including** the employee who started it.",
+    "examples": [
+      {
+        "input": "n = 6, friendships = [[0,1],[1,2],[3,4]], start = 0",
+        "output": "3",
+        "explanation": "Employee 0 tells friend 1, and 1 tells friend 2. Employees 3, 4, and 5 are not connected to 0 by any chain of friends, so they never hear it. In total 3 people (0, 1, 2) hear the rumor."
+      },
+      {
+        "input": "n = 4, friendships = [[1,2]], start = 0",
+        "output": "1",
+        "explanation": "Employee 0 has no friends, so the rumor stops immediately. Only 1 person (employee 0) ever hears it."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 100",
+      "0 <= friendships.length <= 500",
+      "friendships[i] = [a, b] with 0 <= a, b < n and a != b",
+      "0 <= start < n",
+      "There is at most one friendship entry per pair"
+    ],
+    "functionName": "countWhoHear",
+    "solution": "const buildGraph = (edges) => {\n    const graph = {};\n\n    for (const edge of edges) {\n        const [nodeOne, nodeTwo] = edge;\n\n        const nodeOneInGraph = graph.hasOwnProperty(nodeOne);\n        const nodeTwoInGraph = graph.hasOwnProperty(nodeTwo);\n\n        if (!nodeOneInGraph) graph[nodeOne] = [];\n        if (!nodeTwoInGraph) graph[nodeTwo] = [];\n\n        graph[nodeOne].push(nodeTwo);\n        graph[nodeTwo].push(nodeOne);\n    }\n\n    return graph;\n};\n\n// CONTRACT for spreadRumor(graph, employee, visited):\n//     when this call returns, `employee` and every employee reachable\n//     from them through chains of friendships is in the visited set.\nconst spreadRumor = (graph, employee, visited) => {\n    // Base cases\n    if (visited.has(employee)) return;\n\n    // Process node\n    visited.add(employee);\n\n    // Recurse on neighbors\n    const employeeInGraph = graph.hasOwnProperty(employee);\n    if (!employeeInGraph) return;\n\n    const friends = graph[employee];\n\n    for (const friend of friends) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `friend` and everyone\n        // reachable from them is in the visited set. Trust it, do not\n        // trace it. This function already put `employee` into visited,\n        // and each friend's contract covers everyone reachable beyond\n        // them — together, that is this function's full contract, kept.\n        spreadRumor(graph, friend, visited);\n    }\n};\n\nconst countWhoHear = (n, friendships, start) => {\n    const graph = buildGraph(friendships);\n\n    // Everyone the DFS reaches hears the rumor, so the visited set ends\n    // up holding exactly the employees in start's chain of friends.\n    const visited = new Set();\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, `start` and everyone reachable from them is in\n    // the visited set. We do not trace inside; we just return the\n    // size of the set.\n    spreadRumor(graph, start, visited);\n\n    return visited.size;\n};",
+    "tests": [
+      {
+        "args": [
+          6,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          0
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          4,
+          [
+            [
+              1,
+              2
+            ]
+          ],
+          0
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          5,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          2
+        ],
+        "expected": 5
+      },
+      {
+        "args": [
+          1,
+          [],
+          0
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          7,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              5,
+              6
+            ]
+          ],
+          3
+        ],
+        "expected": 3
+      }
+    ]
+  },
+  {
+    "id": "busiest-shelf-level",
+    "title": "Busiest Shelf Level",
+    "category": "variant",
+    "parentId": "nested-list-weight-sum",
+    "parentTitle": "Nested List Weight Sum",
+    "difficulty": "Easy",
+    "twist": "Instead of a depth-weighted sum, you count how many integers live at each depth and return the depth that holds the most integers (smallest depth wins ties).",
+    "statement": "A warehouse inventory is written as a **nested array**: each element is either an integer (an item ID) or another array (a container holding more stuff).\n\nElements directly in the top-level array are at depth `1`; each layer of nesting adds `1` to the depth. For example, in `[[1,2],3]`, the item `3` is at depth 1 and the items `1` and `2` are at depth 2.\n\nThe manager wants to know which nesting level is the most crowded.\n\nWrite a function `busiestDepth(items)` that returns the depth that contains the **largest number of items** (integers). If two or more depths are tied for the most items, return the **smallest** of those depths. You are guaranteed the nested array contains at least one integer.",
+    "examples": [
+      {
+        "input": "items = [[1,2],[3,[4,5]],6]",
+        "output": "2",
+        "explanation": "Depth 1 holds one item (6). Depth 2 holds three items (1, 2, 3). Depth 3 holds two items (4, 5). Depth 2 is the busiest."
+      },
+      {
+        "input": "items = [[7],8]",
+        "output": "1",
+        "explanation": "Depth 1 holds one item (8) and depth 2 holds one item (7). It is a tie, so we return the smaller depth: 1."
+      }
+    ],
+    "constraints": [
+      "1 <= total number of integers and arrays <= 1000",
+      "Nesting depth is at most 50",
+      "Item IDs are integers between -1000 and 1000",
+      "At least one integer is present"
+    ],
+    "functionName": "busiestDepth",
+    "solution": "const TOP_LEVEL_DEPTH = 1;\n\n// CONTRACT for countItemsAtEachDepth(items, depth, itemCountsByDepth):\n//     when this call returns, every item inside `items` — however\n//     deeply nested — has been counted in `itemCountsByDepth` under\n//     its own depth, where the elements directly inside sit at depth\n//     `depth`.\nconst countItemsAtEachDepth = (items, depth, itemCountsByDepth) => {\n    // Base case: an empty container is handled automatically\n    // (the loop below never runs, so the recursion stops).\n\n    for (const element of items) {\n        const elementIsItem = !Array.isArray(element);\n\n        // Process node\n        if (elementIsItem) {\n            const depthHasCount = itemCountsByDepth.hasOwnProperty(depth);\n            if (!depthHasCount) itemCountsByDepth[depth] = 0;\n\n            itemCountsByDepth[depth]++;\n            continue;\n        }\n\n        // Recurse on neighbors\n        // Opening a container pushes everything inside one level deeper.\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every item inside this\n        // container has been counted under its correct depth. Trust it,\n        // do not trace it. Items counted directly here + each container's\n        // guaranteed counts = exactly this function's contract.\n        countItemsAtEachDepth(element, depth + 1, itemCountsByDepth);\n    }\n};\n\nconst busiestDepth = (items) => {\n    const itemCountsByDepth = {};\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, `itemCountsByDepth` holds a complete tally: how\n    // many items sit at every depth of the shelf. We do not trace\n    // inside; we just scan the tally for the busiest depth.\n    countItemsAtEachDepth(items, TOP_LEVEL_DEPTH, itemCountsByDepth);\n\n    const allDepths = Object.keys(itemCountsByDepth)\n        .map(Number)\n        .sort((depthA, depthB) => depthA - depthB);\n\n    let busiestDepthSoFar = 0;\n    let mostItemsSoFar = 0;\n\n    // Scanning depths from shallowest to deepest means a strict '>'\n    // comparison automatically breaks ties in favor of the smaller depth.\n    for (const depth of allDepths) {\n        const itemsAtDepth = itemCountsByDepth[depth];\n\n        if (itemsAtDepth > mostItemsSoFar) {\n            mostItemsSoFar = itemsAtDepth;\n            busiestDepthSoFar = depth;\n        }\n    }\n\n    return busiestDepthSoFar;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              [
+                4,
+                5
+              ]
+            ],
+            6
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              7
+            ],
+            8
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            5
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              [
+                1,
+                2,
+                3
+              ]
+            ]
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          [
+            1,
+            [
+              2
+            ],
+            [
+              3,
+              [
+                4
+              ]
+            ]
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ],
+            [
+              [
+                2
+              ]
+            ]
+          ]
+        ],
+        "expected": 2
+      }
+    ]
+  },
+  {
+    "id": "dungeon-gold-run",
+    "title": "Gold in the Locked Dungeon",
+    "category": "variant",
+    "parentId": "keys-and-rooms",
+    "parentTitle": "Keys and Rooms",
+    "difficulty": "Easy",
+    "twist": "Each room now also contains gold coins, and instead of asking whether you can visit every room, you must return the total gold collected from all the rooms you can actually reach.",
+    "statement": "You are exploring a dungeon with `n` rooms numbered `0` to `n - 1`. Every room is locked except room `0`, which is where you start.\n\n`rooms[i]` is the list of keys lying in room `i`. A key with number `k` opens room `k`. Room `i` also holds `gold[i]` gold coins. When you enter a room, you take **all** of its keys and **all** of its gold.\n\nYou may walk back and forth between rooms as much as you like, and you may enter any room whose key you are carrying.\n\nReturn the total number of gold coins you can collect.",
+    "examples": [
+      {
+        "input": "rooms = [[1],[2],[]], gold = [5,3,10]",
+        "output": "18",
+        "explanation": "Start in room 0 (5 coins) and grab key 1. Enter room 1 (3 coins) and grab key 2. Enter room 2 (10 coins). Total: 5 + 3 + 10 = 18."
+      },
+      {
+        "input": "rooms = [[1],[],[1]], gold = [2,7,50]",
+        "output": "9",
+        "explanation": "Start in room 0 (2 coins) and grab key 1. Enter room 1 (7 coins), which has no keys. No key 2 exists anywhere, so the 50 coins in room 2 are out of reach. Total: 2 + 7 = 9."
+      }
+    ],
+    "constraints": [
+      "n == rooms.length == gold.length, 1 <= n <= 100",
+      "0 <= rooms[i].length <= n",
+      "0 <= rooms[i][j] <= n - 1, and all keys in one room are different",
+      "0 <= gold[i] <= 1000"
+    ],
+    "functionName": "totalGoldCollected",
+    "solution": "const START_ROOM = 0;\n\n// CONTRACT for collectGold(rooms, gold, room, visited):\n//     when this call returns, `room` and every room reachable through\n//     keys from it is in the visited set, and the returned value is\n//     the total gold from the rooms this call put into visited.\nconst collectGold = (rooms, gold, room, visited) => {\n    // Base cases\n    if (visited.has(room)) return 0;\n\n    // Process node\n    // The visited set guarantees each room's gold is taken exactly once,\n    // even if several rooms hold a key to it.\n    visited.add(room);\n\n    let goldCollected = gold[room];\n\n    // Recurse on neighbors\n    const keysInRoom = rooms[room];\n\n    for (const key of keysInRoom) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, room `key` and everything\n        // reachable from it is in visited, and it hands back the gold it\n        // collected there. Trust it, do not trace it. This room's own\n        // gold + each key call's guaranteed haul = exactly this\n        // function's contract.\n        goldCollected += collectGold(rooms, gold, key, visited);\n    }\n\n    return goldCollected;\n};\n\nconst totalGoldCollected = (rooms, gold) => {\n    const visited = new Set();\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, its value is all the gold reachable from room 0.\n    // We do not trace inside; we just return that total.\n    return collectGold(rooms, gold, START_ROOM, visited);\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1
+            ],
+            [
+              2
+            ],
+            []
+          ],
+          [
+            5,
+            3,
+            10
+          ]
+        ],
+        "expected": 18
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ],
+            [],
+            [
+              1
+            ]
+          ],
+          [
+            2,
+            7,
+            50
+          ]
+        ],
+        "expected": 9
+      },
+      {
+        "args": [
+          [
+            []
+          ],
+          [
+            42
+          ]
+        ],
+        "expected": 42
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          [
+            1,
+            2,
+            3
+          ]
+        ],
+        "expected": 6
+      },
+      {
+        "args": [
+          [
+            [
+              0
+            ],
+            [
+              2
+            ],
+            [
+              1
+            ]
+          ],
+          [
+            9,
+            4,
+            4
+          ]
+        ],
+        "expected": 9
+      },
+      {
+        "args": [
+          [
+            [
+              2
+            ],
+            [
+              0
+            ],
+            []
+          ],
+          [
+            0,
+            5,
+            7
+          ]
+        ],
+        "expected": 7
+      }
+    ]
+  },
+  {
+    "id": "flooded-campsite-trails",
+    "title": "Hiking Around the Flood",
+    "category": "variant",
+    "parentId": "find-if-path-exists-in-graph",
+    "parentTitle": "Find if Path Exists in Graph",
+    "difficulty": "Easy",
+    "twist": "A list of blocked (flooded) nodes is added: the path must avoid them entirely, and if the start or finish itself is flooded the answer is immediately false.",
+    "statement": "A national park has `n` campsites, numbered `0` to `n - 1`, connected by two-way trails. `trails[i] = [a, b]` means you can hike directly between campsites `a` and `b`.\n\nA storm has flooded some campsites. The list `flooded` contains the numbers of the flooded campsites, and you cannot set foot in a flooded campsite at all, not even to pass through.\n\nReturn `true` if you can hike from campsite `start` to campsite `finish` while stepping only on dry campsites, and `false` otherwise. If `start` or `finish` is itself flooded, return `false`.",
+    "examples": [
+      {
+        "input": "n = 5, trails = [[0,1],[1,2],[2,4],[0,3],[3,4]], flooded = [2], start = 0, finish = 4",
+        "output": "true",
+        "explanation": "The route 0 -> 1 -> 2 -> 4 is blocked because campsite 2 is flooded, but the route 0 -> 3 -> 4 stays dry the whole way."
+      },
+      {
+        "input": "n = 4, trails = [[0,1],[1,3],[0,2],[2,3]], flooded = [1,2], start = 0, finish = 3",
+        "output": "false",
+        "explanation": "Every trail out of campsite 0 leads to a flooded campsite (1 or 2), so there is no dry route to campsite 3."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 100",
+      "0 <= trails.length <= 200",
+      "0 <= a, b <= n - 1",
+      "0 <= flooded.length <= n, and all values in flooded are different",
+      "0 <= start, finish <= n - 1"
+    ],
+    "functionName": "canReachFinish",
+    "solution": "const buildGraph = (edges) => {\n    const graph = {};\n\n    for (const edge of edges) {\n        const [nodeOne, nodeTwo] = edge;\n\n        const nodeOneInGraph = graph.hasOwnProperty(nodeOne);\n        const nodeTwoInGraph = graph.hasOwnProperty(nodeTwo);\n\n        if (!nodeOneInGraph) graph[nodeOne] = [];\n        if (!nodeTwoInGraph) graph[nodeTwo] = [];\n\n        graph[nodeOne].push(nodeTwo);\n        graph[nodeTwo].push(nodeOne);\n    }\n\n    return graph;\n};\n\n// CONTRACT for canReachTarget(graph, campsite, target, floodedSet, visited):\n//     when this call returns, it returns true if the search can walk\n//     from `campsite` to `target` without stepping into a flooded\n//     campsite, and false otherwise. Every campsite it explores goes\n//     into the visited set, so none is explored twice.\nconst canReachTarget = (graph, campsite, target, floodedSet, visited) => {\n    // Base cases\n    if (campsite === target) return true;\n\n    if (visited.has(campsite)) return false;\n\n    // Process node\n    visited.add(campsite);\n\n    // Recurse on neighbors\n    const campsiteInGraph = graph.hasOwnProperty(campsite);\n    if (!campsiteInGraph) return false;\n\n    const neighbors = graph[campsite];\n\n    for (const neighbor of neighbors) {\n        // A flooded campsite is off-limits even as a pass-through,\n        // so the DFS refuses to step into it at all.\n        if (floodedSet.has(neighbor)) continue;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, it tells us whether\n        // `target` can be reached from `neighbor` on dry trails. Trust\n        // it, do not trace it. If any neighbor's answer is true, a route\n        // through that neighbor exists, so returning true keeps this\n        // function's contract; if every answer is false, returning false\n        // keeps it too.\n        const foundTarget = canReachTarget(\n            graph,\n            neighbor,\n            target,\n            floodedSet,\n            visited,\n        );\n\n        if (foundTarget) return true;\n    }\n\n    return false;\n};\n\nconst canReachFinish = (n, trails, flooded, start, finish) => {\n    const floodedSet = new Set(flooded);\n\n    // A hike cannot begin or end underwater.\n    if (floodedSet.has(start)) return false;\n    if (floodedSet.has(finish)) return false;\n\n    const graph = buildGraph(trails);\n    const visited = new Set();\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, its value tells us whether `finish` can be\n    // reached from `start` while avoiding every flooded campsite. We\n    // do not trace inside; we just return the answer.\n    return canReachTarget(graph, start, finish, floodedSet, visited);\n};",
+    "tests": [
+      {
+        "args": [
+          5,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          [
+            2
+          ],
+          0,
+          4
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          4,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          [
+            1,
+            2
+          ],
+          0,
+          3
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          3,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          [
+            0
+          ],
+          0,
+          2
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          4,
+          [],
+          [
+            1
+          ],
+          2,
+          2
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          2,
+          [
+            [
+              0,
+              1
+            ]
+          ],
+          [
+            1
+          ],
+          1,
+          1
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          4,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          [],
+          0,
+          3
+        ],
+        "expected": false
+      }
+    ]
+  }
+]

@@ -1,0 +1,782 @@
+[
+  {
+    "id": "number-of-connected-components-in-an-undirected-graph",
+    "title": "Number of Connected Components in an Undirected Graph",
+    "category": "original",
+    "section": "Traversing connected components",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/",
+    "statement": "You are given an undirected graph with `n` nodes, labeled from `0` to `n - 1`. You are also given a list `edges`, where each entry `edges[i] = [a, b]` means there is an edge connecting node `a` and node `b` (you can travel across it in either direction).\n\nA **connected component** is a group of nodes where every node can reach every other node in the group by walking along edges. A node with no edges at all forms a connected component all by itself.\n\nReturn the number of connected components in the graph.",
+    "examples": [
+      {
+        "input": "n = 5, edges = [[0,1],[1,2],[3,4]]",
+        "output": "2",
+        "explanation": "Nodes 0, 1, and 2 are all linked together, forming one component. Nodes 3 and 4 form a second component."
+      },
+      {
+        "input": "n = 5, edges = [[0,1],[1,2],[2,3],[3,4]]",
+        "output": "1",
+        "explanation": "Every node can reach every other node through the chain 0-1-2-3-4, so the whole graph is one component."
+      },
+      {
+        "input": "n = 4, edges = []",
+        "output": "4",
+        "explanation": "There are no edges, so each of the 4 nodes is its own separate component."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 2000",
+      "0 <= edges.length <= 5000",
+      "edges[i].length == 2",
+      "0 <= a, b < n",
+      "a != b",
+      "There are no repeated edges."
+    ],
+    "functionName": "countComponents",
+    "solution": "const buildGraph = (edges) => {\n    const graph = {};\n\n    for (const edge of edges) {\n        const [nodeOne, nodeTwo] = edge;\n\n        const nodeOneInGraph = graph.hasOwnProperty(nodeOne);\n        const nodeTwoInGraph = graph.hasOwnProperty(nodeTwo);\n\n        if (!nodeOneInGraph) graph[nodeOne] = [];\n        if (!nodeTwoInGraph) graph[nodeTwo] = [];\n\n        graph[nodeOne].push(nodeTwo);\n        graph[nodeTwo].push(nodeOne);\n    }\n\n    return graph;\n};\n\n// CONTRACT for markComponentAsVisited(graph, node, visited):\n//     when this call returns, `node` and every node reachable\n//     from `node` is in the visited set.\nconst markComponentAsVisited = (graph, node, visited) => {\n    // Base cases\n    if (visited.has(node)) return;\n\n    // Process node\n    visited.add(node);\n\n    // Add neighbors\n    const nodeInGraph = graph.hasOwnProperty(node);\n    if (!nodeInGraph) return;\n\n    const neighbors = graph[node];\n\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `neighbor` and everything\n        // reachable from it is in visited. Trust it, do not trace it.\n        // This function already put `node` into visited, and each\n        // neighbor's contract puts everything reachable from that\n        // neighbor into visited — together, that is this function's\n        // full contract, kept.\n        markComponentAsVisited(graph, neighbor, visited);\n    }\n};\n\nconst countComponents = (numNodes, edges) => {\n    const graph = buildGraph(edges);\n\n    let numConnectedComponents = 0;\n    const visited = new Set();\n\n    for (let node = 0; node < numNodes; node++) {\n        if (visited.has(node)) continue;\n\n        numConnectedComponents++;\n\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, `node` and everything reachable from it — the\n        // entire brand-new component — is in visited, so the loop can\n        // never count this component again. We do not trace inside;\n        // we just count it and move on.\n        markComponentAsVisited(graph, node, visited);\n    }\n\n    return numConnectedComponents;\n};\n",
+    "tests": [
+      {
+        "args": [
+          5,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ]
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          5,
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          4,
+          []
+        ],
+        "expected": 4
+      },
+      {
+        "args": [
+          6,
+          [
+            [
+              0,
+              5
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ]
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          1,
+          []
+        ],
+        "expected": 1
+      }
+    ]
+  },
+  {
+    "id": "number-of-provinces",
+    "title": "Number of Provinces",
+    "category": "original",
+    "section": "Traversing connected components",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/number-of-provinces/",
+    "statement": "You are given `n` cities. Some pairs of cities are directly connected to each other, and connection is a two-way street: if city `a` is connected to city `b`, then city `b` is connected to city `a`. Cities can also be connected *indirectly* — if `a` connects to `b` and `b` connects to `c`, then `a` and `c` are in the same group even though they have no direct link.\n\nA **province** is a group of cities that are all connected to each other, directly or indirectly, with no connections to any city outside the group.\n\nThe connections are described by an `n x n` matrix `isConnected`, where `isConnected[i][j] = 1` means city `i` and city `j` are directly connected, and `isConnected[i][j] = 0` means they are not. Every city is considered connected to itself, so `isConnected[i][i]` is always `1`.\n\nReturn the total number of provinces.",
+    "examples": [
+      {
+        "input": "isConnected = [[1,1,0],[1,1,0],[0,0,1]]",
+        "output": "2",
+        "explanation": "Cities 0 and 1 are directly connected, so they form one province. City 2 is on its own, forming a second province."
+      },
+      {
+        "input": "isConnected = [[1,0,0],[0,1,0],[0,0,1]]",
+        "output": "3",
+        "explanation": "No city is connected to any other, so each of the 3 cities is its own province."
+      },
+      {
+        "input": "isConnected = [[1,0,0,1],[0,1,1,0],[0,1,1,1],[1,0,1,1]]",
+        "output": "1",
+        "explanation": "City 0 connects to city 3, city 3 connects to city 2, and city 2 connects to city 1 — so every city ends up in one big province."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 200",
+      "n == isConnected.length",
+      "n == isConnected[i].length",
+      "isConnected[i][j] is 1 or 0.",
+      "isConnected[i][i] == 1",
+      "isConnected[i][j] == isConnected[j][i]"
+    ],
+    "functionName": "findCircleNum",
+    "solution": "const CONNECTED = 1;\n\n// CONTRACT for markProvinceAsVisited(visited, city, isConnected):\n//     when this call returns, `city` and every city connected to it —\n//     directly or through chains of connections — is in the visited\n//     set.\nconst markProvinceAsVisited = (visited, city, isConnected) => {\n    // For this problem, our base case in automatically handled\n    // (our base case occurs when the current city has 0 unvisited\n    // neighbor cities).\n\n    // Process node\n    visited.add(city);\n\n    // Recurse on neighbors\n    for (\n        let potentialNeighborCity = 0;\n        potentialNeighborCity < isConnected.length;\n        potentialNeighborCity++\n    ) {\n        const isNeighbor =\n            isConnected[city][potentialNeighborCity] === CONNECTED;\n\n        if (!isNeighbor) continue;\n\n        // This is an undirected graph. If we can go from city 0 to city 1,\n        // then we can go from city 1 to city 0.\n        // Thus, this graph CAN have cycles (all undirected graphs can have cycles),\n        // so we must tracked visited nodes to prevent infinite loops.\n        if (visited.has(potentialNeighborCity)) continue;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighbor city and\n        // every city connected to it is in visited. Trust it, do not\n        // trace it. This function already put `city` into visited, and\n        // each neighbor's contract covers the rest of the province —\n        // together, that is this function's full contract, kept.\n        markProvinceAsVisited(visited, potentialNeighborCity, isConnected);\n    }\n};\n\nconst findCircleNum = (isConnected) => {\n    const numCities = isConnected.length;\n\n    let numProvinces = 0;\n    const visited = new Set();\n\n    for (let startCity = 0; startCity < numCities; startCity++) {\n        if (visited.has(startCity)) continue;\n\n        numProvinces++;\n\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, every city in this newly found province is in\n        // visited, so the loop can never count this province again. We\n        // do not trace inside; we just count it and move on.\n        markProvinceAsVisited(visited, startCity, isConnected);\n    }\n\n    return numProvinces;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              0,
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": 2
+      }
+    ]
+  },
+  {
+    "id": "number-of-islands",
+    "title": "Number of Islands",
+    "category": "original",
+    "section": "Traversing connected components",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/number-of-islands/",
+    "statement": "You are given a 2D grid of characters where `'1'` represents land and `'0'` represents water.\n\nAn **island** is a patch of land cells that are joined together up/down/left/right (diagonal touches do not count). You can assume everything beyond the edges of the grid is water, so islands are always fully surrounded by water.\n\nReturn how many islands are in the grid.",
+    "examples": [
+      {
+        "input": "grid = [[\"1\",\"1\",\"1\",\"1\",\"0\"],[\"1\",\"1\",\"0\",\"1\",\"0\"],[\"1\",\"1\",\"0\",\"0\",\"0\"],[\"0\",\"0\",\"0\",\"0\",\"0\"]]",
+        "output": "1",
+        "explanation": "All the land cells touch each other through their sides, so they form a single island."
+      },
+      {
+        "input": "grid = [[\"1\",\"1\",\"0\",\"0\",\"0\"],[\"1\",\"1\",\"0\",\"0\",\"0\"],[\"0\",\"0\",\"1\",\"0\",\"0\"],[\"0\",\"0\",\"0\",\"1\",\"1\"]]",
+        "output": "3",
+        "explanation": "There are three separate patches of land: the 2x2 block in the top-left, the single cell in the middle, and the pair of cells in the bottom-right."
+      },
+      {
+        "input": "grid = [[\"1\",\"0\",\"1\"],[\"0\",\"1\",\"0\"],[\"1\",\"0\",\"1\"]]",
+        "output": "5",
+        "explanation": "The five land cells only touch diagonally, and diagonals do not connect land — so each cell is its own island."
+      }
+    ],
+    "constraints": [
+      "m == grid.length",
+      "n == grid[i].length",
+      "1 <= m, n <= 300",
+      "grid[i][j] is '0' or '1'."
+    ],
+    "functionName": "numIslands",
+    "solution": "const LAND = '1';\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\n// CONTRACT for markIslandAsVisited(grid, row, col, visited):\n//     when this call returns, if the cell at `row`,`col` is land,\n//     that cell and every land cell of the same island is in the\n//     visited set. (Water or out-of-bounds cells change nothing.)\nconst markIslandAsVisited = (grid, row, col, visited) => {\n    // Base case\n    if (!isInBounds(grid, row, col)) return;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return;\n\n    if (grid[row][col] !== LAND) return;\n\n    // Process node\n    visited.add(curPositionString);\n\n    // Recurse on potential neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighbor cell (if\n        // it is land) and every land cell connected to it is in\n        // visited. Trust it, do not trace it. This function already\n        // put `row`,`col` into visited, and each neighbor's contract\n        // covers the rest of the island — together, that is this\n        // function's full contract, kept.\n        markIslandAsVisited(grid, newRow, newCol, visited);\n    }\n};\n\nconst numIslands = (grid) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    let numberOfIslands = 0;\n    const visited = new Set();\n\n    for (let row = 0; row < numRows; row++) {\n        for (let col = 0; col < numCols; col++) {\n            const curPositionString = getPositionString(row, col);\n\n            if (visited.has(curPositionString)) continue;\n\n            const terrainType = grid[row][col];\n            if (terrainType !== LAND) continue;\n\n            numberOfIslands++;\n\n            // The recursive leap of faith: trust the contract. When this\n            // call returns, every cell of this newly found island is in\n            // visited, so the loops can never count the same island again.\n            // We do not trace inside; we just count it and move on.\n            markIslandAsVisited(grid, row, col, visited);\n        }\n    }\n\n    return numberOfIslands;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              "1",
+              "1",
+              "1",
+              "1",
+              "0"
+            ],
+            [
+              "1",
+              "1",
+              "0",
+              "1",
+              "0"
+            ],
+            [
+              "1",
+              "1",
+              "0",
+              "0",
+              "0"
+            ],
+            [
+              "0",
+              "0",
+              "0",
+              "0",
+              "0"
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              "1",
+              "1",
+              "0",
+              "0",
+              "0"
+            ],
+            [
+              "1",
+              "1",
+              "0",
+              "0",
+              "0"
+            ],
+            [
+              "0",
+              "0",
+              "1",
+              "0",
+              "0"
+            ],
+            [
+              "0",
+              "0",
+              "0",
+              "1",
+              "1"
+            ]
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          [
+            [
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              "0",
+              "1",
+              "0"
+            ],
+            [
+              "1",
+              "0",
+              "1"
+            ]
+          ]
+        ],
+        "expected": 5
+      },
+      {
+        "args": [
+          [
+            [
+              "0",
+              "0"
+            ],
+            [
+              "0",
+              "0"
+            ]
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              "1"
+            ]
+          ]
+        ],
+        "expected": 1
+      }
+    ]
+  },
+  {
+    "id": "letter-combinations-of-a-phone-number",
+    "title": "Letter Combinations of a Phone Number",
+    "category": "original",
+    "section": "Exploring a graph with DFS",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/letter-combinations-of-a-phone-number/",
+    "statement": "You are given a string `digits` containing digits from `2` through `9`.\n\nOn an old-school phone keypad, each digit maps to a few letters:\n\n- `2` -> a, b, c\n- `3` -> d, e, f\n- `4` -> g, h, i\n- `5` -> j, k, l\n- `6` -> m, n, o\n- `7` -> p, q, r, s\n- `8` -> t, u, v\n- `9` -> w, x, y, z\n\nReturn every possible string you could spell by picking one letter for each digit, in order. You may return the answers in any order. If `digits` is empty, return an empty list.",
+    "examples": [
+      {
+        "input": "digits = \"23\"",
+        "output": "[\"ad\",\"ae\",\"af\",\"bd\",\"be\",\"bf\",\"cd\",\"ce\",\"cf\"]",
+        "explanation": "The first character comes from 2 (a, b, or c) and the second from 3 (d, e, or f). That gives 3 x 3 = 9 combinations."
+      },
+      {
+        "input": "digits = \"\"",
+        "output": "[]",
+        "explanation": "There are no digits, so there are no combinations to build."
+      },
+      {
+        "input": "digits = \"2\"",
+        "output": "[\"a\",\"b\",\"c\"]",
+        "explanation": "A single 2 can be any one of its three letters."
+      }
+    ],
+    "constraints": [
+      "0 <= digits.length <= 4",
+      "digits[i] is a digit in the range ['2', '9']."
+    ],
+    "functionName": "letterCombinations",
+    "solution": "const numberToLettersMap = {\n    1: [],\n    2: ['a', 'b', 'c'],\n    3: ['d', 'e', 'f'],\n    4: ['g', 'h', 'i'],\n    5: ['j', 'k', 'l'],\n    6: ['m', 'n', 'o'],\n    7: ['p', 'q', 'r', 's'],\n    8: ['t', 'u', 'v'],\n    9: ['w', 'x', 'y', 'z'],\n};\n\n// CONTRACT for generateCombinations(digits, location, stringSoFar, allCombinations):\n//     when this call returns, every full combination that begins with\n//     `stringSoFar` and continues with one letter for each digit from\n//     position `location` onward has been pushed onto\n//     `allCombinations`.\nconst generateCombinations = (digits, location, stringSoFar, allCombinations) => {\n    // Base case\n    if (location === digits.length) {\n        allCombinations.push(stringSoFar);\n        return;\n    }\n\n    // Process node\n\n    // Traverse neighbors\n    const curDigit = digits[location];\n    const chars = numberToLettersMap[curDigit];\n\n    for (const char of chars) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every combination that\n        // begins with `stringSoFar` + `char` and covers the remaining\n        // digits has been pushed. Trust it, do not trace it. Doing\n        // this once for each letter of the current digit covers every\n        // way to continue — exactly this function's contract, kept.\n        generateCombinations(digits, location + 1, stringSoFar + char, allCombinations);\n    }\n};\n\nconst letterCombinations = (digits) => {\n    if (digits.length === 0) return [];\n\n    const allCombinations = [];\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, allCombinations holds every string that picks\n    // one letter per digit, from the first digit to the last. We\n    // do not trace inside; we just return the finished list.\n    generateCombinations(digits, 0, '', allCombinations);\n\n    return allCombinations;\n};\n",
+    "tests": [
+      {
+        "args": [
+          "23"
+        ],
+        "expected": [
+          "ad",
+          "ae",
+          "af",
+          "bd",
+          "be",
+          "bf",
+          "cd",
+          "ce",
+          "cf"
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          ""
+        ],
+        "expected": [],
+        "unordered": true
+      },
+      {
+        "args": [
+          "2"
+        ],
+        "expected": [
+          "a",
+          "b",
+          "c"
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          "79"
+        ],
+        "expected": [
+          "pw",
+          "px",
+          "py",
+          "pz",
+          "qw",
+          "qx",
+          "qy",
+          "qz",
+          "rw",
+          "rx",
+          "ry",
+          "rz",
+          "sw",
+          "sx",
+          "sy",
+          "sz"
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          "234"
+        ],
+        "expected": [
+          "adg",
+          "adh",
+          "adi",
+          "aeg",
+          "aeh",
+          "aei",
+          "afg",
+          "afh",
+          "afi",
+          "bdg",
+          "bdh",
+          "bdi",
+          "beg",
+          "beh",
+          "bei",
+          "bfg",
+          "bfh",
+          "bfi",
+          "cdg",
+          "cdh",
+          "cdi",
+          "ceg",
+          "ceh",
+          "cei",
+          "cfg",
+          "cfh",
+          "cfi"
+        ],
+        "unordered": true
+      }
+    ]
+  },
+  {
+    "id": "all-paths-from-source-to-target",
+    "title": "All Paths From Source to Target",
+    "category": "original",
+    "section": "Working with paths",
+    "difficulty": "Medium",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/all-paths-from-source-to-target/",
+    "statement": "You are given a **directed acyclic graph** (a graph with one-way edges and no cycles) with `n` nodes labeled from `0` to `n - 1`.\n\nThe graph is given as an adjacency list: `graph[i]` is the list of nodes you can travel to directly from node `i` (an edge points from `i` to each node in `graph[i]`).\n\nFind **every possible path** that starts at node `0` and ends at node `n - 1`, and return them as a list of paths. Each path is the list of nodes it visits, in order. You may return the paths in any order.",
+    "examples": [
+      {
+        "input": "graph = [[1,2],[3],[3],[]]",
+        "output": "[[0,1,3],[0,2,3]]",
+        "explanation": "From node 0 you can go to node 1 or node 2, and both of those lead to node 3. So there are two paths: 0 -> 1 -> 3 and 0 -> 2 -> 3."
+      },
+      {
+        "input": "graph = [[4,3,1],[3,2,4],[3],[4],[]]",
+        "output": "[[0,4],[0,3,4],[0,1,3,4],[0,1,2,3,4],[0,1,4]]",
+        "explanation": "There are five different ways to travel from node 0 to node 4."
+      },
+      {
+        "input": "graph = [[1],[]]",
+        "output": "[[0,1]]",
+        "explanation": "The only path is the single edge from node 0 straight to node 1."
+      }
+    ],
+    "constraints": [
+      "n == graph.length",
+      "2 <= n <= 15",
+      "0 <= graph[i][j] < n",
+      "graph[i][j] != i (no self-loops)",
+      "All the elements of graph[i] are unique.",
+      "The input graph is guaranteed to be a DAG (it has no cycles)."
+    ],
+    "functionName": "allPathsSourceTarget",
+    "solution": "const START_NODE = 0;\n\n// CONTRACT for getPathsFromNodeToTarget(graph, curNode, targetNode):\n//     returns a list of every path from `curNode` to `targetNode`,\n//     where each path is the list of nodes it visits, in order.\nconst getPathsFromNodeToTarget = (graph, curNode, targetNode) => {\n    // Base cases\n    if (curNode === targetNode) return [[curNode]];\n\n    // Process node\n    const allPathsFromNodeToTarget = [];\n\n    // Recurse on neighbors\n    const neighbors = graph[curNode];\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — it returns every path from `neighbor` to\n        // the target. Trust it, do not trace it. Sticking `curNode` on\n        // the front of each neighbor's guaranteed paths, for every\n        // neighbor, builds every path from `curNode` — exactly this\n        // function's contract, kept.\n        const pathsFromNeighborToTarget = getPathsFromNodeToTarget(\n            graph,\n            neighbor,\n            targetNode,\n        );\n\n        for (const path of pathsFromNeighborToTarget) {\n            const pathFromCurToTarget = [curNode, ...path];\n\n            allPathsFromNodeToTarget.push(pathFromCurToTarget);\n        }\n    }\n\n    return allPathsFromNodeToTarget;\n};\n\nconst allPathsSourceTarget = (graph) => {\n    const targetNode = graph.length - 1;\n\n    // The recursive leap of faith: trust the contract. This call\n    // returns every path from node 0 to the target node. We do not\n    // trace inside; we just return that list.\n    return getPathsFromNodeToTarget(graph, START_NODE, targetNode);\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              3
+            ],
+            [
+              3
+            ],
+            []
+          ]
+        ],
+        "expected": [
+          [
+            0,
+            1,
+            3
+          ],
+          [
+            0,
+            2,
+            3
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              4,
+              3,
+              1
+            ],
+            [
+              3,
+              2,
+              4
+            ],
+            [
+              3
+            ],
+            [
+              4
+            ],
+            []
+          ]
+        ],
+        "expected": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            3,
+            4
+          ],
+          [
+            0,
+            1,
+            3,
+            4
+          ],
+          [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            0,
+            1,
+            4
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ],
+            []
+          ]
+        ],
+        "expected": [
+          [
+            0,
+            1
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              2
+            ],
+            [
+              3
+            ],
+            [
+              1,
+              3
+            ],
+            []
+          ]
+        ],
+        "expected": [
+          [
+            0,
+            2,
+            1,
+            3
+          ],
+          [
+            0,
+            2,
+            3
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2,
+              3
+            ],
+            [
+              4
+            ],
+            [
+              4
+            ],
+            [
+              5
+            ],
+            [
+              5
+            ],
+            []
+          ]
+        ],
+        "expected": [
+          [
+            0,
+            1,
+            4,
+            5
+          ],
+          [
+            0,
+            2,
+            4,
+            5
+          ],
+          [
+            0,
+            3,
+            5
+          ]
+        ],
+        "unordered": true
+      }
+    ]
+  }
+]

@@ -2,19 +2,10 @@ const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 
-const sourceRoot = path.resolve(__dirname, "../../jonathan-study-site");
+const sourceRoot = path.resolve(__dirname, "../source/jonathan-study-site");
 const sourceSandbox = { window: {} };
 const sourceProblemsFile = path.join(sourceRoot, "site/problems.js");
-if (fs.existsSync(sourceProblemsFile)) {
-  vm.runInNewContext(fs.readFileSync(sourceProblemsFile, "utf8"), sourceSandbox);
-} else {
-  vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, "../visual-data.js"), "utf8"), sourceSandbox);
-  sourceSandbox.window.PROBLEMS = sourceSandbox.window.DFS_VISUAL_DATA.problems.map(problem => ({
-    id: problem.id,
-    functionName: problem.codingLesson?.functionName,
-    solution: problem.codingLesson?.correctCode
-  }));
-}
+vm.runInNewContext(fs.readFileSync(sourceProblemsFile, "utf8"), sourceSandbox);
 const sourceProblems = new Map(sourceSandbox.window.PROBLEMS.map(problem => [problem.id, problem]));
 const specFiles = ["step4-specs-original.json", "step4-specs-variant.json", "step4-specs-new.json"];
 const specs = specFiles.flatMap(file => JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", file), "utf8")));
@@ -104,6 +95,7 @@ function sourceParameterNames(source) {
 for (const spec of specs) {
   const source = sourceProblems.get(spec.id);
   if (!source?.solution || !source.functionName) {
+    failures.push(`${spec.id}: source solution is missing`);
     continue;
   }
   for (const codeCase of spec.cases || []) {

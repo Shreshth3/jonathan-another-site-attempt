@@ -1,0 +1,683 @@
+[
+  {
+    "id": "routes-past-the-coffee-cart",
+    "title": "Detour for Coffee",
+    "category": "variant",
+    "parentId": "all-paths-from-source-to-target",
+    "parentTitle": "All Paths From Source to Target",
+    "difficulty": "Medium",
+    "twist": "A checkpoint node is added: you still list paths from source to target, but you only keep the paths that pass through the checkpoint.",
+    "statement": "A courier works in a city with `n` intersections, numbered `0` to `n - 1`. All streets are one-way: `graph[i]` is the list of intersections you can drive to directly from intersection `i`. The streets are laid out so you can never drive in a circle back to an intersection you already visited (there are no cycles).\n\nThe courier starts at the depot, intersection `0`, and must end at the customer, intersection `n - 1`. On the way, they insist on passing the coffee cart at intersection `checkpoint`.\n\nReturn a list of **all** routes from `0` to `n - 1` that pass through `checkpoint`. Each route is the list of intersections visited, in order. You may return the routes in any order. If no such route exists, return an empty list.",
+    "examples": [
+      {
+        "input": "graph = [[1,2],[3],[3],[]], checkpoint = 1",
+        "output": "[[0,1,3]]",
+        "explanation": "The two routes from 0 to 3 are [0,1,3] and [0,2,3]. Only [0,1,3] passes through intersection 1."
+      },
+      {
+        "input": "graph = [[1,2],[2,3],[3],[]], checkpoint = 2",
+        "output": "[[0,1,2,3],[0,2,3]]",
+        "explanation": "The routes from 0 to 3 are [0,1,2,3], [0,1,3], and [0,2,3]. The route [0,1,3] skips the coffee cart at 2, so only the other two count."
+      }
+    ],
+    "constraints": [
+      "n == graph.length, 2 <= n <= 10",
+      "0 <= graph[i].length <= n - 1",
+      "graph[i] never contains i, and all values in graph[i] are different",
+      "The streets never form a cycle",
+      "1 <= checkpoint <= n - 2 (the checkpoint is never the depot or the customer)"
+    ],
+    "functionName": "routesThroughCheckpoint",
+    "solution": "const START_NODE = 0;\n\n// CONTRACT for getPathsFromNodeToTarget(graph, curNode, targetNode):\n//     when this call returns, the returned list holds every possible\n//     path from `curNode` to `targetNode`, each written as the full\n//     list of intersections along the way.\nconst getPathsFromNodeToTarget = (graph, curNode, targetNode) => {\n    // Base cases\n    if (curNode === targetNode) return [[curNode]];\n\n    // Process node\n    const allPathsFromNodeToTarget = [];\n\n    // Recurse on neighbors\n    // The streets form a DAG (no cycles), so we can never drive back to\n    // an intersection already on our path — that is why no visited set\n    // is needed for this traversal.\n    const neighbors = graph[curNode];\n    for (const neighbor of neighbors) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, it hands back every path\n        // from `neighbor` to the target. Trust it, do not trace it. Every\n        // path from `curNode` starts by stepping to some neighbor, so\n        // putting `curNode` in front of each neighbor's guaranteed paths\n        // builds exactly this function's contract.\n        const pathsFromNeighborToTarget = getPathsFromNodeToTarget(\n            graph,\n            neighbor,\n            targetNode,\n        );\n\n        for (const path of pathsFromNeighborToTarget) {\n            const pathFromCurToTarget = [curNode, ...path];\n\n            allPathsFromNodeToTarget.push(pathFromCurToTarget);\n        }\n    }\n\n    return allPathsFromNodeToTarget;\n};\n\nconst routesThroughCheckpoint = (graph, checkpoint) => {\n    const targetNode = graph.length - 1;\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, `allRoutes` holds every route from the start to\n    // the last intersection. We do not trace inside; we just filter\n    // the routes for the ones passing the checkpoint.\n    const allRoutes = getPathsFromNodeToTarget(graph, START_NODE, targetNode);\n\n    // Keep only the routes that stop by the coffee cart.\n    return allRoutes.filter((route) => route.includes(checkpoint));\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              3
+            ],
+            [
+              3
+            ],
+            []
+          ],
+          1
+        ],
+        "expected": [
+          [
+            0,
+            1,
+            3
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3
+            ],
+            []
+          ],
+          2
+        ],
+        "expected": [
+          [
+            0,
+            1,
+            2,
+            3
+          ],
+          [
+            0,
+            2,
+            3
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              3
+            ],
+            [],
+            []
+          ],
+          2
+        ],
+        "expected": [],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ],
+            [
+              2
+            ],
+            [
+              3
+            ],
+            []
+          ],
+          2
+        ],
+        "expected": [
+          [
+            0,
+            1,
+            2,
+            3
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              3
+            ],
+            [
+              3
+            ],
+            [
+              4
+            ],
+            []
+          ],
+          3
+        ],
+        "expected": [
+          [
+            0,
+            1,
+            3,
+            4
+          ],
+          [
+            0,
+            2,
+            3,
+            4
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ],
+            [],
+            []
+          ],
+          1
+        ],
+        "expected": [],
+        "unordered": true
+      }
+    ]
+  },
+  {
+    "id": "trusted-courier-networks",
+    "title": "Trusted Courier Networks",
+    "category": "variant",
+    "parentId": "number-of-provinces",
+    "parentTitle": "Number of Provinces",
+    "difficulty": "Medium",
+    "twist": "The matrix holds trust scores (0-10) instead of just 0/1, and a direct link only exists when the score meets a threshold k. You count the groups that form under that rule.",
+    "statement": "A delivery company has `n` offices, numbered `0` to `n - 1`. You are given an `n x n` matrix `trust`, where `trust[i][j]` is a **trust score** between office `i` and office `j`, from `0` (strangers) to `10` (fully trusted). The matrix is symmetric (`trust[i][j] = trust[j][i]`), and `trust[i][i]` is always `10`.\n\nTwo offices open a **direct secure line** only if their trust score is **at least `k`**.\n\nOffices belong to the same **network** if you can get from one to the other through a chain of direct secure lines (possibly passing through other offices along the way). An office with no secure lines is a network all by itself.\n\nWrite a function `countSecureNetworks(trust, k)` that returns how many separate networks there are.",
+    "examples": [
+      {
+        "input": "trust = [[10,5,1],[5,10,7],[1,7,10]], k = 5",
+        "output": "1",
+        "explanation": "Offices 0 and 1 have score 5 (>= 5), so they link. Offices 1 and 2 have score 7 (>= 5), so they link. Offices 0 and 2 only score 1, but they are still in the same network through office 1. Everyone is connected: 1 network."
+      },
+      {
+        "input": "trust = [[10,5,1],[5,10,7],[1,7,10]], k = 8",
+        "output": "3",
+        "explanation": "With k = 8, no pair reaches a score of 8, so no secure lines exist at all. Each office is its own network: 3 networks."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 100",
+      "0 <= trust[i][j] <= 10",
+      "trust[i][i] = 10",
+      "trust[i][j] = trust[j][i]",
+      "1 <= k <= 10"
+    ],
+    "functionName": "countSecureNetworks",
+    "solution": "// CONTRACT for markNetworkAsVisited(visited, office, trust, minTrust):\n//     when this call returns, `office` and every office reachable\n//     from it through secure lines (trust scores of `minTrust` or\n//     more) is in the visited set.\nconst markNetworkAsVisited = (visited, office, trust, minTrust) => {\n    // For this problem, our base case is automatically handled\n    // (our base case occurs when the current office has 0 unvisited\n    // neighbor offices).\n\n    // Process node\n    visited.add(office);\n\n    // Recurse on neighbors\n    for (\n        let potentialNeighborOffice = 0;\n        potentialNeighborOffice < trust.length;\n        potentialNeighborOffice++\n    ) {\n        // A direct secure line only exists when the trust score reaches\n        // the threshold — a lower score means there is no edge at all.\n        const isNeighbor =\n            trust[office][potentialNeighborOffice] >= minTrust;\n\n        if (!isNeighbor) continue;\n\n        // Trust scores are symmetric, so this is an undirected graph.\n        // Undirected graphs can have cycles, so we must track visited\n        // offices to prevent infinite loops.\n        if (visited.has(potentialNeighborOffice)) continue;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, this neighbor office and\n        // everything reachable from it is in the visited set. Trust it,\n        // do not trace it. This function already put `office` into\n        // visited, and each neighbor's contract covers the offices beyond\n        // it — together, that is this function's full contract, kept.\n        markNetworkAsVisited(visited, potentialNeighborOffice, trust, minTrust);\n    }\n};\n\nconst countSecureNetworks = (trust, k) => {\n    const numOffices = trust.length;\n\n    let numNetworks = 0;\n    const visited = new Set();\n\n    for (let startOffice = 0; startOffice < numOffices; startOffice++) {\n        if (visited.has(startOffice)) continue;\n\n        numNetworks++;\n        // The recursive leap of faith: trust the contract. When this\n        // call returns, `startOffice` and its entire secure network are\n        // in visited, so the loop can never count this network again. We\n        // do not trace inside; we just count it and move on.\n        markNetworkAsVisited(visited, startOffice, trust, k);\n    }\n\n    return numNetworks;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              10,
+              5,
+              1
+            ],
+            [
+              5,
+              10,
+              7
+            ],
+            [
+              1,
+              7,
+              10
+            ]
+          ],
+          5
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              10,
+              5,
+              1
+            ],
+            [
+              5,
+              10,
+              7
+            ],
+            [
+              1,
+              7,
+              10
+            ]
+          ],
+          8
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          [
+            [
+              10
+            ]
+          ],
+          10
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              10,
+              9,
+              0,
+              0
+            ],
+            [
+              9,
+              10,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              10,
+              6
+            ],
+            [
+              0,
+              0,
+              6,
+              10
+            ]
+          ],
+          6
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              10,
+              4,
+              4
+            ],
+            [
+              4,
+              10,
+              4
+            ],
+            [
+              4,
+              4,
+              10
+            ]
+          ],
+          4
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              10,
+              3
+            ],
+            [
+              3,
+              10
+            ]
+          ],
+          4
+        ],
+        "expected": 2
+      }
+    ]
+  },
+  {
+    "id": "who-keeps-their-job",
+    "title": "After the Big Resignation",
+    "category": "variant",
+    "parentId": "kill-process",
+    "parentTitle": "Kill Process",
+    "difficulty": "Easy",
+    "twist": "The question is inverted: instead of listing everyone removed when a node and its whole subtree go away, you must list everyone who REMAINS, sorted in ascending order.",
+    "statement": "A company keeps its org chart as two lists of the same length. `ids[i]` is the ID of an employee, and `bosses[i]` is the ID of that employee's direct boss. Exactly one employee has `bosses[i] = 0`, meaning they have no boss (they run the company). Every other employee has exactly one boss, and the chart never loops, so it forms a tree. All IDs are unique positive numbers.\n\nEmployee `quitId` suddenly quits. Company tradition says that when someone quits, every employee below them also leaves: their direct reports, their reports' reports, and so on all the way down.\n\nReturn a list of the IDs of the employees who **still work** at the company, sorted from smallest to largest. If everyone leaves, return an empty list.",
+    "examples": [
+      {
+        "input": "ids = [1,3,10,5], bosses = [0,1,1,3], quitId = 3",
+        "output": "[1,10]",
+        "explanation": "Employee 1 runs the company and manages 3 and 10. Employee 3 manages 5. When 3 quits, 5 leaves too. Employees 1 and 10 remain, sorted: [1,10]."
+      },
+      {
+        "input": "ids = [7,2,9], bosses = [0,7,7], quitId = 7",
+        "output": "[]",
+        "explanation": "Employee 7 runs the company and manages 2 and 9. When 7 quits, everyone below leaves, so nobody remains."
+      }
+    ],
+    "constraints": [
+      "1 <= ids.length <= 100",
+      "ids.length == bosses.length",
+      "All IDs are unique integers between 1 and 10000",
+      "Exactly one employee has boss 0, and the chart forms a tree",
+      "quitId is guaranteed to be one of the IDs in ids"
+    ],
+    "functionName": "remainingEmployees",
+    "solution": "const NO_BOSS = 0;\n\nconst buildReportsGraph = (ids, bosses) => {\n    const reportsGraph = {};\n\n    for (let i = 0; i < ids.length; i++) {\n        const employeeId = ids[i];\n        const bossId = bosses[i];\n\n        if (bossId === NO_BOSS) continue;\n\n        const bossInGraph = reportsGraph.hasOwnProperty(bossId);\n        if (!bossInGraph) reportsGraph[bossId] = [];\n\n        reportsGraph[bossId].push(employeeId);\n    }\n\n    return reportsGraph;\n};\n\n// CONTRACT for markSubtreeAsLeaving(reportsGraph, employeeId, leaving):\n//     when this call returns, `employeeId` and every employee below\n//     them in the reporting tree — reports, reports of reports, and\n//     so on — is in the leaving set.\nconst markSubtreeAsLeaving = (reportsGraph, employeeId, leaving) => {\n    // Base cases\n    if (leaving.has(employeeId)) return;\n\n    // Process node\n    leaving.add(employeeId);\n\n    // Recurse on neighbors (the employee's direct reports)\n    const hasReports = reportsGraph.hasOwnProperty(employeeId);\n    if (!hasReports) return;\n\n    const reports = reportsGraph[employeeId];\n\n    for (const reportId of reports) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, `reportId` and everyone\n        // below them is in the leaving set. Trust it, do not trace it.\n        // This function already put `employeeId` into leaving, and each\n        // report's contract covers that report's whole branch — together,\n        // that is this function's full contract, kept.\n        markSubtreeAsLeaving(reportsGraph, reportId, leaving);\n    }\n};\n\nconst remainingEmployees = (ids, bosses, quitId) => {\n    const reportsGraph = buildReportsGraph(ids, bosses);\n\n    // Everyone in the quitter's subtree leaves; everyone else stays.\n    const leaving = new Set();\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, the quitter and everyone below them in the tree\n    // is in the leaving set. We do not trace inside; we just keep the\n    // employees who are not in the set.\n    markSubtreeAsLeaving(reportsGraph, quitId, leaving);\n\n    const remaining = ids.filter((employeeId) => !leaving.has(employeeId));\n\n    // Sort as numbers — the default sort would compare IDs as strings.\n    remaining.sort((idOne, idTwo) => idOne - idTwo);\n\n    return remaining;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            1,
+            3,
+            10,
+            5
+          ],
+          [
+            0,
+            1,
+            1,
+            3
+          ],
+          3
+        ],
+        "expected": [
+          1,
+          10
+        ]
+      },
+      {
+        "args": [
+          [
+            7,
+            2,
+            9
+          ],
+          [
+            0,
+            7,
+            7
+          ],
+          7
+        ],
+        "expected": []
+      },
+      {
+        "args": [
+          [
+            5
+          ],
+          [
+            0
+          ],
+          5
+        ],
+        "expected": []
+      },
+      {
+        "args": [
+          [
+            4,
+            8,
+            6
+          ],
+          [
+            0,
+            4,
+            4
+          ],
+          8
+        ],
+        "expected": [
+          4,
+          6
+        ]
+      },
+      {
+        "args": [
+          [
+            100,
+            20,
+            3
+          ],
+          [
+            0,
+            100,
+            100
+          ],
+          3
+        ],
+        "expected": [
+          20,
+          100
+        ]
+      },
+      {
+        "args": [
+          [
+            2,
+            4,
+            6,
+            8
+          ],
+          [
+            0,
+            2,
+            4,
+            6
+          ],
+          4
+        ],
+        "expected": [
+          2
+        ]
+      }
+    ]
+  },
+  {
+    "id": "counting-docked-boats",
+    "title": "Counting Docked Boats",
+    "category": "variant",
+    "parentId": "battleships-in-a-board",
+    "parentTitle": "Battleships in a Board",
+    "difficulty": "Medium",
+    "twist": "Same battleship-style layout, but you only count the boats that touch the border of the grid (docked), ignoring boats floating in the middle.",
+    "statement": "A marina is shown as a grid. `marina[r][c]` is `\"B\"` if a boat occupies that square and `\".\"` if it is open water.\n\nEach **boat** is a straight line of one or more squares, laid out either **horizontally** or **vertically**, exactly one square wide. The layout is guaranteed valid: **no two different boats touch each other**, not even diagonally.\n\nA boat is **docked** if at least one of its squares lies on the **border** of the grid — that is, in the first row, the last row, the first column, or the last column. Boats that touch no border square are anchored out in open water.\n\nWrite a function `countDockedBoats(marina)` that returns how many boats are docked.",
+    "examples": [
+      {
+        "input": "marina = [[\".\",\".\",\".\",\".\"],[\".\",\"B\",\"B\",\".\"],[\".\",\".\",\".\",\".\"],[\"B\",\".\",\".\",\".\"]]",
+        "output": "1",
+        "explanation": "There are two boats. The horizontal boat at (1,1)-(1,2) sits entirely in the middle, so it is not docked. The 1-square boat at (3,0) is in the last row (and first column), so it is docked. Answer: 1."
+      },
+      {
+        "input": "marina = [[\"B\",\"B\",\".\",\".\",\".\"],[\".\",\".\",\".\",\"B\",\".\"],[\".\",\".\",\".\",\"B\",\".\"],[\".\",\".\",\".\",\"B\",\".\"],[\"B\",\".\",\".\",\".\",\".\"]]",
+        "output": "2",
+        "explanation": "Three boats: the horizontal boat at (0,0)-(0,1) touches the top row (docked), the vertical boat at (1,3)-(3,3) touches no border row or column (not docked), and the 1-square boat at (4,0) is on the bottom row (docked). Answer: 2."
+      }
+    ],
+    "constraints": [
+      "1 <= number of rows, number of columns <= 50",
+      "marina[r][c] is \"B\" or \".\"",
+      "Boats are straight horizontal or vertical lines, one square wide",
+      "No two boats are adjacent, even diagonally"
+    ],
+    "functionName": "countDockedBoats",
+    "solution": "const BOAT = 'B';\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\nconst isOnBorder = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const onBorderRow = row === 0 || row === numRows - 1;\n    const onBorderCol = col === 0 || col === numCols - 1;\n\n    return onBorderRow || onBorderCol;\n};\n\n// CONTRACT for boatTouchesBorder(marina, row, col, visited):\n//     when this call returns, every boat square connected to\n//     (`row`, `col`) is in the visited set, and the returned value is\n//     true if any square of that boat sits on the border of the grid.\n//     If (`row`, `col`) is not a fresh boat square, it returns false\n//     and nothing new goes in.\nconst boatTouchesBorder = (marina, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(marina, row, col)) return false;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return false;\n\n    if (marina[row][col] !== BOAT) return false;\n\n    // Process node\n    visited.add(curPositionString);\n\n    let touchesBorder = isOnBorder(marina, row, col);\n\n    // Recurse on potential neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // Always recurse — even after finding a border square — so the\n        // whole boat gets marked as visited exactly once.\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, everything connected to\n        // the neighboring square is in visited, and it reports whether it\n        // found a border square. Trust it, do not trace it. This square's\n        // own border check + each direction's guaranteed answer = exactly\n        // this function's contract.\n        const neighborTouchesBorder = boatTouchesBorder(\n            marina,\n            newRow,\n            newCol,\n            visited,\n        );\n\n        if (neighborTouchesBorder) touchesBorder = true;\n    }\n\n    return touchesBorder;\n};\n\nconst countDockedBoats = (marina) => {\n    const numRows = marina.length;\n    const numCols = marina[0].length;\n\n    let numDockedBoats = 0;\n    const visited = new Set();\n\n    for (let row = 0; row < numRows; row++) {\n        for (let col = 0; col < numCols; col++) {\n            const curPositionString = getPositionString(row, col);\n            if (visited.has(curPositionString)) continue;\n\n            if (marina[row][col] !== BOAT) continue;\n\n            // Boats never touch each other (not even diagonally), so a\n            // 4-directional DFS from here covers exactly one boat.\n            // The recursive leap of faith: trust the contract. When this\n            // call returns, this whole boat is in visited — the loop can\n            // never see it again — and `isDocked` tells us whether the boat\n            // touches the border. We do not trace inside; we just count it if\n            // it is docked.\n            const isDocked = boatTouchesBorder(marina, row, col, visited);\n            if (isDocked) numDockedBoats++;\n        }\n    }\n\n    return numDockedBoats;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              ".",
+              ".",
+              ".",
+              "."
+            ],
+            [
+              ".",
+              "B",
+              "B",
+              "."
+            ],
+            [
+              ".",
+              ".",
+              ".",
+              "."
+            ],
+            [
+              "B",
+              ".",
+              ".",
+              "."
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              "B",
+              "B",
+              ".",
+              ".",
+              "."
+            ],
+            [
+              ".",
+              ".",
+              ".",
+              "B",
+              "."
+            ],
+            [
+              ".",
+              ".",
+              ".",
+              "B",
+              "."
+            ],
+            [
+              ".",
+              ".",
+              ".",
+              "B",
+              "."
+            ],
+            [
+              "B",
+              ".",
+              ".",
+              ".",
+              "."
+            ]
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              ".",
+              "."
+            ],
+            [
+              ".",
+              "."
+            ]
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              "B"
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              ".",
+              ".",
+              "."
+            ],
+            [
+              ".",
+              "B",
+              "."
+            ],
+            [
+              ".",
+              ".",
+              "."
+            ]
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              "B",
+              ".",
+              ".",
+              ".",
+              "B"
+            ],
+            [
+              "B",
+              ".",
+              ".",
+              ".",
+              "B"
+            ],
+            [
+              ".",
+              ".",
+              "B",
+              ".",
+              "."
+            ],
+            [
+              ".",
+              ".",
+              ".",
+              ".",
+              "."
+            ],
+            [
+              ".",
+              ".",
+              ".",
+              ".",
+              "."
+            ]
+          ]
+        ],
+        "expected": 2
+      }
+    ]
+  }
+]

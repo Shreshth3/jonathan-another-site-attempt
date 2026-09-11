@@ -1,0 +1,968 @@
+[
+  {
+    "id": "flood-fill",
+    "title": "Flood Fill",
+    "category": "new",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/flood-fill/",
+    "difficulty": "Easy",
+    "whyGoodFit": "The gentlest possible grid DFS: spread out from one cell and recolor everything connected, exactly the marking skill used in Number of Islands and Minesweeper. No counting, no tricks — a perfect warm-up.",
+    "statement": "You are given a picture as a grid of numbers called `image`, where `image[i][j]` is the color of one pixel.\n\nYou are also given a starting pixel at row `sr` and column `sc`, and a new color `color`.\n\nDo a \"paint bucket\" fill, just like in a drawing app:\n\n- Change the starting pixel to the new color.\n- Then keep spreading: any pixel that touches an already-filled pixel up, down, left, or right, AND originally had the same color as the starting pixel, also gets the new color.\n- Diagonal touching does NOT count.\n\nReturn the image after the fill is finished.",
+    "examples": [
+      {
+        "input": "image = [[1,1,1],[1,1,0],[1,0,1]], sr = 1, sc = 1, color = 2",
+        "output": "[[2,2,2],[2,2,0],[2,0,1]]",
+        "explanation": "Starting at the center (row 1, col 1), every 1 you can reach by up/down/left/right steps through 1s gets painted 2. The 1 in the bottom-right corner only touches the blob diagonally, so it stays 1."
+      },
+      {
+        "input": "image = [[0,0,0],[0,0,0]], sr = 0, sc = 0, color = 0",
+        "output": "[[0,0,0],[0,0,0]]",
+        "explanation": "The new color is the same as the starting pixel's color, so the image stays exactly the same."
+      }
+    ],
+    "constraints": [
+      "1 <= image.length, image[0].length <= 50",
+      "0 <= image[i][j], color <= 65535",
+      "0 <= sr < image.length and 0 <= sc < image[0].length"
+    ],
+    "functionName": "floodFill",
+    "solution": "const getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\n// CONTRACT for fillConnectedPixels(image, row, col, startingColor, newColor, visited):\n//     when this call returns, the pixel at (`row`, `col`) and every\n//     pixel connected to it that had `startingColor` is repainted to\n//     `newColor` and is in the visited set.\nconst fillConnectedPixels = (image, row, col, startingColor, newColor, visited) => {\n    // Base cases\n    if (!isInBounds(image, row, col)) return;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return;\n\n    // Only pixels that originally matched the starting pixel's color\n    // are part of the fill region.\n    if (image[row][col] !== startingColor) return;\n\n    // Process node\n    visited.add(curPositionString);\n    image[row][col] = newColor;\n\n    // Recurse on neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighbor pixel and\n        // everything connected to it that had `startingColor` is\n        // repainted and in the visited set. Trust it, do not trace it.\n        // This function already repainted (`row`, `col`) and put it into\n        // visited, and each neighbor's contract covers the rest —\n        // together, that is this function's full contract, kept.\n        fillConnectedPixels(image, newRow, newCol, startingColor, newColor, visited);\n    }\n};\n\nconst floodFill = (image, sr, sc, color) => {\n    const startingColor = image[sr][sc];\n\n    // If the new color equals the starting color, the fill changes nothing.\n    // Returning early also guards against re-visiting already-painted pixels.\n    if (startingColor === color) return image;\n\n    const visited = new Set();\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, the starting pixel and every pixel connected to it\n    // that had `startingColor` is repainted to the new color. We do not\n    // trace inside; we just return the finished image.\n    fillConnectedPixels(image, sr, sc, startingColor, color, visited);\n\n    return image;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              1,
+              0,
+              1
+            ]
+          ],
+          1,
+          1,
+          2
+        ],
+        "expected": [
+          [
+            2,
+            2,
+            2
+          ],
+          [
+            2,
+            2,
+            0
+          ],
+          [
+            2,
+            0,
+            1
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          0,
+          0,
+          0
+        ],
+        "expected": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              5
+            ]
+          ],
+          0,
+          0,
+          3
+        ],
+        "expected": [
+          [
+            3
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              0
+            ]
+          ],
+          0,
+          0,
+          7
+        ],
+        "expected": [
+          [
+            7,
+            1
+          ],
+          [
+            1,
+            0
+          ]
+        ]
+      },
+      {
+        "args": [
+          [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          1,
+          1,
+          9
+        ],
+        "expected": [
+          [
+            9,
+            9
+          ],
+          [
+            9,
+            9
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "max-area-of-island",
+    "title": "Max Area of Island",
+    "category": "new",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/max-area-of-island/",
+    "difficulty": "Medium",
+    "whyGoodFit": "One small step past Number of Islands: instead of counting islands, your DFS returns each island's size and you keep the biggest. Same flood-fill pattern, tiny new idea (making DFS return a number).",
+    "statement": "You are given a grid of 0s and 1s called `grid`. A `1` is land and a `0` is water.\n\nAn island is a group of land cells that are connected up, down, left, or right (not diagonally).\n\nThe area of an island is how many cells it contains.\n\nReturn the area of the biggest island in the grid. If there is no land at all, return 0.",
+    "examples": [
+      {
+        "input": "grid = [[0,1,0,0],[1,1,0,1],[0,0,0,1],[0,1,1,1]]",
+        "output": "5",
+        "explanation": "There are two islands. One is the 3-cell island in the top-left (cells (0,1), (1,0), (1,1)). The other has 5 cells: (1,3), (2,3), (3,3), (3,2), (3,1). The biggest area is 5."
+      },
+      {
+        "input": "grid = [[0,0],[0,0]]",
+        "output": "0",
+        "explanation": "There is no land anywhere, so the answer is 0."
+      }
+    ],
+    "constraints": [
+      "1 <= grid.length, grid[0].length <= 50",
+      "grid[i][j] is 0 or 1"
+    ],
+    "functionName": "maxAreaOfIsland",
+    "solution": "const LAND = 1;\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\n// CONTRACT for getIslandArea(grid, row, col, visited):\n//     when this call returns, every land cell of the island\n//     containing (`row`, `col`) is in the visited set, and the\n//     returned value is the number of cells in that island. Water,\n//     out-of-bounds, and already-visited cells return 0.\nconst getIslandArea = (grid, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(grid, row, col)) return 0;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return 0;\n\n    if (grid[row][col] !== LAND) return 0;\n\n    // Process node\n    visited.add(curPositionString);\n\n    // This cell contributes 1 to the island's area.\n    let islandArea = 1;\n\n    // Recurse on neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighbor's side of\n        // the island is counted and its cells are in the visited set.\n        // Trust it, do not trace it. This cell's own 1 plus each\n        // neighbor's guaranteed count add up to exactly this function's\n        // contract: the whole island, counted once.\n        islandArea += getIslandArea(grid, newRow, newCol, visited);\n    }\n\n    return islandArea;\n};\n\nconst maxAreaOfIsland = (grid) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    let maxIslandArea = 0;\n    const visited = new Set();\n\n    for (let row = 0; row < numRows; row++) {\n        for (let col = 0; col < numCols; col++) {\n            const curPositionString = getPositionString(row, col);\n\n            if (visited.has(curPositionString)) continue;\n\n            const terrainType = grid[row][col];\n            if (terrainType !== LAND) continue;\n\n            // The recursive leap of faith: trust the contract. When this\n            // call returns, islandArea is the full size of this island and\n            // all of its cells are in the visited set, so the loop can never\n            // count this island again. We do not trace inside; we just\n            // compare it to the running maximum and move on.\n            const islandArea = getIslandArea(grid, row, col, visited);\n            maxIslandArea = Math.max(maxIslandArea, islandArea);\n        }\n    }\n\n    return maxIslandArea;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": 5
+      },
+      {
+        "args": [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": 4
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": 4
+      }
+    ]
+  },
+  {
+    "id": "employee-importance",
+    "title": "Employee Importance",
+    "category": "new",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/employee-importance/",
+    "difficulty": "Easy",
+    "whyGoodFit": "Implicit-graph DFS over id references, the same skill as Kill Process and Nested List Weight Sum: build an id-to-employee map, then recursively add up values down the hierarchy. Very short and beginner-friendly.",
+    "statement": "A company stores its staff as an array `employees`. Each employee is an object with three fields:\n\n- `id`: the employee's unique id number\n- `importance`: that employee's importance score (it can be negative)\n- `subordinates`: an array of the ids of the people who report DIRECTLY to this employee\n\nYou are also given a number `id`.\n\nReturn the total importance of that employee PLUS everyone under them — their direct reports, their reports' reports, and so on all the way down.",
+    "examples": [
+      {
+        "input": "employees = [{id: 1, importance: 5, subordinates: [2, 3]}, {id: 2, importance: 3, subordinates: []}, {id: 3, importance: 3, subordinates: []}], id = 1",
+        "output": "11",
+        "explanation": "Employee 1 has importance 5 and two direct reports, employees 2 and 3, each with importance 3. Total: 5 + 3 + 3 = 11."
+      },
+      {
+        "input": "employees = [{id: 5, importance: -3, subordinates: [6]}, {id: 6, importance: 2, subordinates: []}], id = 5",
+        "output": "-1",
+        "explanation": "Employee 5 has importance -3 and one report (employee 6, importance 2). Total: -3 + 2 = -1."
+      }
+    ],
+    "constraints": [
+      "1 <= employees.length <= 2000",
+      "All employee ids are unique, and id is always a real employee's id",
+      "-100 <= importance <= 100",
+      "The reporting structure is a tree (nobody reports to their own subordinate)"
+    ],
+    "functionName": "getImportance",
+    "solution": "const buildEmployeeMap = (employees) => {\n    const employeeMap = {};\n\n    for (const employee of employees) {\n        employeeMap[employee.id] = employee;\n    }\n\n    return employeeMap;\n};\n\n// CONTRACT for getTotalImportance(employeeMap, employeeId, visited):\n//     when this call returns, the returned value is the importance\n//     of employee `employeeId` plus the importance of every employee\n//     below them (subordinates, their subordinates, and so on), and\n//     all of those ids are in the visited set.\n//     An id that is not in the map, or already in the visited set,\n//     returns 0.\nconst getTotalImportance = (employeeMap, employeeId, visited) => {\n    // Base cases\n    const employeeInMap = employeeMap.hasOwnProperty(employeeId);\n    if (!employeeInMap) return 0;\n\n    if (visited.has(employeeId)) return 0;\n\n    // Process node\n    visited.add(employeeId);\n\n    const employee = employeeMap[employeeId];\n    let totalImportance = employee.importance;\n\n    // Recurse on neighbors\n    // Each subordinate id is a \"neighbor\" of this employee in the\n    // reporting tree, so we add up their whole subtrees too.\n    for (const subordinateId of employee.subordinates) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, its value is the\n        // subordinate's importance plus everyone below them, and their\n        // ids are in the visited set. Trust it, do not trace it. This\n        // employee's own importance plus each subordinate's guaranteed\n        // total is exactly this function's contract, kept.\n        totalImportance += getTotalImportance(employeeMap, subordinateId, visited);\n    }\n\n    return totalImportance;\n};\n\nconst getImportance = (employees, id) => {\n    const employeeMap = buildEmployeeMap(employees);\n\n    // The hierarchy is a tree, but tracking visited ids keeps us safe\n    // even if the data accidentally contained a cycle.\n    const visited = new Set();\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, its value is the importance of employee `id` plus\n    // the importance of everyone below them in the hierarchy. We do\n    // not trace inside; we just return that total.\n    return getTotalImportance(employeeMap, id, visited);\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            {
+              "id": 1,
+              "importance": 5,
+              "subordinates": [
+                2,
+                3
+              ]
+            },
+            {
+              "id": 2,
+              "importance": 3,
+              "subordinates": []
+            },
+            {
+              "id": 3,
+              "importance": 3,
+              "subordinates": []
+            }
+          ],
+          1
+        ],
+        "expected": 11
+      },
+      {
+        "args": [
+          [
+            {
+              "id": 5,
+              "importance": -3,
+              "subordinates": [
+                6
+              ]
+            },
+            {
+              "id": 6,
+              "importance": 2,
+              "subordinates": []
+            }
+          ],
+          5
+        ],
+        "expected": -1
+      },
+      {
+        "args": [
+          [
+            {
+              "id": 1,
+              "importance": 10,
+              "subordinates": [
+                2
+              ]
+            },
+            {
+              "id": 2,
+              "importance": 5,
+              "subordinates": [
+                3
+              ]
+            },
+            {
+              "id": 3,
+              "importance": 2,
+              "subordinates": []
+            }
+          ],
+          1
+        ],
+        "expected": 17
+      },
+      {
+        "args": [
+          [
+            {
+              "id": 1,
+              "importance": 10,
+              "subordinates": [
+                2
+              ]
+            },
+            {
+              "id": 2,
+              "importance": 5,
+              "subordinates": [
+                3
+              ]
+            },
+            {
+              "id": 3,
+              "importance": 2,
+              "subordinates": []
+            }
+          ],
+          2
+        ],
+        "expected": 7
+      },
+      {
+        "args": [
+          [
+            {
+              "id": 7,
+              "importance": 42,
+              "subordinates": []
+            }
+          ],
+          7
+        ],
+        "expected": 42
+      }
+    ]
+  },
+  {
+    "id": "count-sub-islands",
+    "title": "Count Sub Islands",
+    "category": "new",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/count-sub-islands/",
+    "difficulty": "Medium",
+    "whyGoodFit": "Island counting (Number of Islands style) plus one condition checked during the flood fill: does every cell of this island also sit on land in the other grid? Great practice at carrying a true/false flag through a DFS.",
+    "statement": "You are given two grids of the same size, `grid1` and `grid2`. In both, `1` is land and `0` is water, and an island is a group of 1s connected up, down, left, or right.\n\nAn island in `grid2` is called a \"sub-island\" if EVERY one of its cells is also a land cell in `grid1` (at the same positions).\n\nReturn how many islands of `grid2` are sub-islands.",
+    "examples": [
+      {
+        "input": "grid1 = [[1,1,0],[0,1,1],[0,0,0]], grid2 = [[1,0,0],[0,1,1],[0,1,0]]",
+        "output": "1",
+        "explanation": "grid2 has two islands: {(0,0)} and {(1,1), (1,2), (2,1)}. The first one sits on land in grid1 (grid1[0][0] = 1), so it is a sub-island. The second fails because grid1[2][1] = 0. Answer: 1."
+      },
+      {
+        "input": "grid1 = [[1,1],[1,1]], grid2 = [[1,0],[0,1]]",
+        "output": "2",
+        "explanation": "grid2 has two single-cell islands, at (0,0) and (1,1). grid1 is all land, so both are sub-islands. Answer: 2."
+      }
+    ],
+    "constraints": [
+      "1 <= rows, cols <= 100",
+      "grid1 and grid2 have the same dimensions",
+      "Every cell is 0 or 1"
+    ],
+    "functionName": "countSubIslands",
+    "solution": "const LAND = 1;\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\n// Returns true if every cell of this grid2 island also sits on land in grid1.\n// CONTRACT for exploreIsland(grid1, grid2, row, col, visited):\n//     when this call returns, every cell of the grid2 island\n//     containing (`row`, `col`) is in the visited set, and the\n//     returned value is true only when every one of those cells\n//     also sits on land in grid1. Water, out-of-bounds, and\n//     already-visited cells return true because they break no rule.\nconst exploreIsland = (grid1, grid2, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(grid2, row, col)) return true;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return true;\n\n    if (grid2[row][col] !== LAND) return true;\n\n    // Process node\n    visited.add(curPositionString);\n\n    // The two grids are the same size, so we can check grid1 directly.\n    let islandIsSubIsland = grid1[row][col] === LAND;\n\n    // Recurse on neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighbor's side of\n        // the island is in the visited set, and its answer says whether\n        // that side passes the land-in-grid1 test. Trust it, do not\n        // trace it. This cell's own check plus each neighbor's\n        // guaranteed answer combine into exactly this function's\n        // contract, kept.\n        // Recurse BEFORE checking the flag so the whole island still gets\n        // marked as visited, even after we know it fails the sub-island test.\n        const neighborSideIsSubIsland = exploreIsland(grid1, grid2, newRow, newCol, visited);\n\n        if (!neighborSideIsSubIsland) islandIsSubIsland = false;\n    }\n\n    return islandIsSubIsland;\n};\n\nconst countSubIslands = (grid1, grid2) => {\n    const numRows = grid2.length;\n    const numCols = grid2[0].length;\n\n    let numSubIslands = 0;\n    const visited = new Set();\n\n    for (let row = 0; row < numRows; row++) {\n        for (let col = 0; col < numCols; col++) {\n            const curPositionString = getPositionString(row, col);\n\n            if (visited.has(curPositionString)) continue;\n\n            const terrainType = grid2[row][col];\n            if (terrainType !== LAND) continue;\n\n            // The recursive leap of faith: trust the contract. When this\n            // call returns, the whole island is in the visited set — so the\n            // loop never sees it again — and the answer tells us whether\n            // every cell of it sits on land in grid1. We do not trace\n            // inside; we just count the island if it passed.\n            const islandIsSubIsland = exploreIsland(grid1, grid2, row, col, visited);\n            if (islandIsSubIsland) numSubIslands++;\n        }\n    }\n\n    return numSubIslands;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              1
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 2
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0,
+              1,
+              1
+            ]
+          ],
+          [
+            [
+              1,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              1,
+              0,
+              1,
+              0
+            ]
+          ]
+        ],
+        "expected": 3
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              1
+            ]
+          ],
+          [
+            [
+              0
+            ]
+          ]
+        ],
+        "expected": 0
+      }
+    ]
+  },
+  {
+    "id": "maximum-number-of-fish-in-a-grid",
+    "title": "Maximum Number of Fish in a Grid",
+    "category": "new",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/maximum-number-of-fish-in-a-grid/",
+    "difficulty": "Medium",
+    "whyGoodFit": "Max Area of Island with values: DFS sums up a connected component and you keep the best total. Grids are at most 10 x 10, so it is very forgiving while drilling the same component-sum pattern.",
+    "statement": "You are given an `m x n` grid describing a pond. If `grid[i][j] == 0`, that cell is land and cannot be entered. If `grid[i][j] > 0`, that cell is water and currently holds exactly that many fish.\n\nA fisher chooses any water cell to start from. On each cell they visit, they catch **all** of its fish, and they may then move up, down, left, or right to a neighboring water cell and repeat.\n\nReturn the largest total number of fish the fisher can catch if they pick the best possible starting cell. If the grid has no water cells at all, return `0`.",
+    "examples": [
+      {
+        "input": "grid = [[0,2,1,0],[4,0,0,3],[1,0,0,4],[0,3,2,0]]",
+        "output": "7",
+        "explanation": "The best pool of connected water cells is on the right side: the cells holding 3 and 4 fish are vertically adjacent, giving 3 + 4 = 7. The other pools total 5 (4+1 on the left), 3 (2+1 on top), and 5 (3+2 on the bottom)."
+      },
+      {
+        "input": "grid = [[1,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,1]]",
+        "output": "1",
+        "explanation": "The only water cells are the two opposite corners. Each holds 1 fish and is not connected to any other water, so the best possible catch is 1."
+      }
+    ],
+    "constraints": [
+      "m == grid.length, n == grid[i].length, 1 <= m, n <= 10",
+      "0 <= grid[i][j] <= 10"
+    ],
+    "functionName": "findMaxFish",
+    "solution": "const LAND = 0;\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\n// CONTRACT for catchFishInPool(grid, row, col, visited):\n//     when this call returns, every water cell of the pool\n//     containing (`row`, `col`) is in the visited set, and the\n//     returned value is the total number of fish in that pool.\n//     Land, out-of-bounds, and already-visited cells return 0.\nconst catchFishInPool = (grid, row, col, visited) => {\n    // Base cases\n    if (!isInBounds(grid, row, col)) return 0;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return 0;\n\n    if (grid[row][col] === LAND) return 0;\n\n    // Process node\n    visited.add(curPositionString);\n\n    // Unlike a plain area count, each cell contributes its fish count.\n    let totalFishCaught = grid[row][col];\n\n    // Recurse on neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighbor's side of\n        // the pool is in the visited set and its fish are fully counted.\n        // Trust it, do not trace it. This cell's own fish plus each\n        // neighbor's guaranteed total add up to exactly this function's\n        // contract: every fish in the pool, counted once.\n        totalFishCaught += catchFishInPool(grid, newRow, newCol, visited);\n    }\n\n    return totalFishCaught;\n};\n\nconst findMaxFish = (grid) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    let maxFishCaught = 0;\n    const visited = new Set();\n\n    for (let row = 0; row < numRows; row++) {\n        for (let col = 0; col < numCols; col++) {\n            const curPositionString = getPositionString(row, col);\n\n            if (visited.has(curPositionString)) continue;\n\n            const terrainType = grid[row][col];\n            if (terrainType === LAND) continue;\n\n            // The recursive leap of faith: trust the contract. When this\n            // call returns, fishCaught is every fish in this pool and all of\n            // the pool's cells are in the visited set, so the loop can never\n            // count this pool again. We do not trace inside; we just compare\n            // it to the running maximum and move on.\n            const fishCaught = catchFishInPool(grid, row, col, visited);\n            maxFishCaught = Math.max(maxFishCaught, fishCaught);\n        }\n    }\n\n    return maxFishCaught;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              0,
+              2,
+              1,
+              0
+            ],
+            [
+              4,
+              0,
+              0,
+              3
+            ],
+            [
+              1,
+              0,
+              0,
+              4
+            ],
+            [
+              0,
+              3,
+              2,
+              0
+            ]
+          ]
+        ],
+        "expected": 7
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ]
+          ]
+        ],
+        "expected": 1
+      },
+      {
+        "args": [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        ],
+        "expected": 0
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ]
+          ]
+        ],
+        "expected": 10
+      },
+      {
+        "args": [
+          [
+            [
+              7
+            ]
+          ]
+        ],
+        "expected": 7
+      }
+    ]
+  },
+  {
+    "id": "find-all-groups-of-farmland",
+    "title": "Find All Groups of Farmland",
+    "category": "new",
+    "sourceName": "LeetCode",
+    "sourceLink": "https://leetcode.com/problems/find-all-groups-of-farmland/",
+    "difficulty": "Medium",
+    "whyGoodFit": "Connected-region DFS in the Number of Islands mold, but you track a bounding box (min/max row and column) instead of a count. The guarantee that every group is a rectangle keeps it gentle and beginner-friendly.",
+    "statement": "You are given an `m x n` binary grid `land` where `0` is forested land and `1` is farmland. The farmland comes in **groups**: connected patches of 1s that are guaranteed to form perfect axis-aligned rectangles. Different groups never touch each other up/down/left/right.\n\nFor each group, report a 4-number array `[r1, c1, r2, c2]`, where `(r1, c1)` is the group's top-left cell and `(r2, c2)` is its bottom-right cell. Return the list of arrays for all groups, in any order.",
+    "examples": [
+      {
+        "input": "land = [[1,0,0],[0,1,1],[0,1,1]]",
+        "output": "[[0,0,0,0],[1,1,2,2]]",
+        "explanation": "There are two rectangular groups: the single cell at (0,0), reported as [0,0,0,0], and the 2 x 2 patch whose top-left corner is (1,1) and bottom-right corner is (2,2), reported as [1,1,2,2]."
+      },
+      {
+        "input": "land = [[1,1],[1,1]]",
+        "output": "[[0,0,1,1]]",
+        "explanation": "The entire grid is one rectangular group of farmland, stretching from corner (0,0) to corner (1,1)."
+      }
+    ],
+    "constraints": [
+      "m == land.length, n == land[i].length, 1 <= m, n <= 300",
+      "land[i][j] is 0 or 1",
+      "Every group of farmland is rectangular, and no two different groups are adjacent"
+    ],
+    "functionName": "findFarmland",
+    "solution": "const FARMLAND = 1;\n\nconst getPositionString = (row, col) => `${row}, ${col}`;\nconst directions = [\n    [0, 1],\n    [1, 0],\n    [0, -1],\n    [-1, 0],\n];\n\nconst isInBounds = (grid, row, col) => {\n    const numRows = grid.length;\n    const numCols = grid[0].length;\n\n    const rowInBounds = row >= 0 && row < numRows;\n    const colInBounds = col >= 0 && col < numCols;\n\n    return rowInBounds && colInBounds;\n};\n\n// CONTRACT for exploreGroup(land, row, col, visited, boundingBox):\n//     when this call returns, every farmland cell of the group\n//     containing (`row`, `col`) is in the visited set, and\n//     `boundingBox` has been stretched to cover every one of\n//     those cells.\nconst exploreGroup = (land, row, col, visited, boundingBox) => {\n    // Base cases\n    if (!isInBounds(land, row, col)) return;\n\n    const curPositionString = getPositionString(row, col);\n    if (visited.has(curPositionString)) return;\n\n    if (land[row][col] !== FARMLAND) return;\n\n    // Process node\n    visited.add(curPositionString);\n\n    // Grow the bounding box so it covers this cell. Since each group is a\n    // perfect rectangle, the box's corners end up being the group's corners.\n    boundingBox.minRow = Math.min(boundingBox.minRow, row);\n    boundingBox.minCol = Math.min(boundingBox.minCol, col);\n    boundingBox.maxRow = Math.max(boundingBox.maxRow, row);\n    boundingBox.maxCol = Math.max(boundingBox.maxCol, col);\n\n    // Recurse on neighbors\n    for (const direction of directions) {\n        const [rowChange, colChange] = direction;\n\n        const newRow = row + rowChange;\n        const newCol = col + colChange;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, the neighbor's side of\n        // the group is in the visited set and the box covers it. Trust\n        // it, do not trace it. This function already put (`row`, `col`)\n        // into visited and stretched the box over it, and each\n        // neighbor's contract covers the rest — together, that is this\n        // function's full contract, kept.\n        exploreGroup(land, newRow, newCol, visited, boundingBox);\n    }\n};\n\nconst findFarmland = (land) => {\n    const numRows = land.length;\n    const numCols = land[0].length;\n\n    const allGroups = [];\n    const visited = new Set();\n\n    for (let row = 0; row < numRows; row++) {\n        for (let col = 0; col < numCols; col++) {\n            const curPositionString = getPositionString(row, col);\n\n            if (visited.has(curPositionString)) continue;\n\n            const terrainType = land[row][col];\n            if (terrainType !== FARMLAND) continue;\n\n            // Start the box as just this cell; the DFS stretches it out.\n            const boundingBox = {\n                minRow: row,\n                minCol: col,\n                maxRow: row,\n                maxCol: col,\n            };\n\n            // The recursive leap of faith: trust the contract. When this\n            // call returns, the whole group is in the visited set and\n            // boundingBox holds its exact corners. We do not trace inside;\n            // we just read the corners off the box and record them.\n            exploreGroup(land, row, col, visited, boundingBox);\n\n            allGroups.push([\n                boundingBox.minRow,\n                boundingBox.minCol,\n                boundingBox.maxRow,\n                boundingBox.maxCol,\n            ]);\n        }\n    }\n\n    return allGroups;\n};\n",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              1
+            ],
+            [
+              0,
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            2,
+            2
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            0,
+            0,
+            1,
+            1
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              0
+            ]
+          ]
+        ],
+        "expected": []
+      },
+      {
+        "args": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              0
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          [
+            1,
+            0,
+            1,
+            0
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            0,
+            0,
+            0,
+            2
+          ],
+          [
+            2,
+            0,
+            2,
+            2
+          ]
+        ],
+        "unordered": true
+      }
+    ]
+  }
+]
