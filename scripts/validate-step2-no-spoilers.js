@@ -62,7 +62,7 @@ const objective = 'Create a valid input where the mistaken search returns a diff
             await page.setViewportSize({ width: 1280, height: 720 });
           }
           const round = problem.counterexampleLesson.rounds[index];
-          if (round.bugs.includes('wrong-start')) assert.ok((await page.locator('.counter-drawing-rules').innerText()).includes(round.mistakenStartLabel), `${label}: missing required wrong start`);
+          if (round.bugs.includes('wrong-start')) assert.ok((await page.locator('.counter-drawing-rules').innerText()).includes(problem.category === "variant" && problem.counterexampleLesson.drawingEditor?.mode === "array-number" ? "first element of the outer Array" : round.mistakenStartLabel), `${label}: missing required wrong start`);
           if (questionCount === 3) transcripts.push({ id: problem.id, question: index + 1, text: await page.locator('#challenge').innerText(), placeholders: await page.locator('#challenge input, #challenge textarea').evaluateAll(fields => fields.map(field => ({ id: field.id, placeholder: field.getAttribute('placeholder'), value: field.value }))) });
           await page.locator('#next-question-btn').click();
         }

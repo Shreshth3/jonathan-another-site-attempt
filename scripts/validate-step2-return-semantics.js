@@ -155,7 +155,8 @@ for (const [id, expected] of Object.entries(EXPECTED_CONTRACT)) {
   if (["level-value-sum", "kth-visited-node-or-minus-one"].includes(implemented) && spec.input?.resultConfig?.valueMarker) {
     const config = spec.input.resultConfig, marker = semanticInput(spec.input, "markers", config.valueMarker);
     const field = semanticInput(spec.input, "fields", implemented === "level-value-sum" ? config.depthField : config.positionField);
-    if (!marker || marker.target !== "node" || !["number", "integer"].includes(marker.kind)) failures.push(`${id}: ${implemented} valueMarker must name a numeric node marker`);
+    const drawnNumbers = spec.drawingEditor?.mode === "array-number" && spec.input.fields?.some(item => item.id === spec.arrayInputField && item.kind === "json");
+    if (!drawnNumbers && (!marker || marker.target !== "node" || !["number", "integer"].includes(marker.kind))) failures.push(`${id}: ${implemented} valueMarker must name a numeric node marker`);
     if (!field || field.kind !== "integer") failures.push(`${id}: ${implemented} parameter selector must name an integer field`);
   }
   if (implemented === "exact-size-component-count") {

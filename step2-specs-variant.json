@@ -97,8 +97,33 @@
       "name": "outer shelf",
       "prompt": "Choose the outer shelf",
       "result": "widest-level-index",
-      "resultLabel": "smallest depth with the most items"
-    }
+      "resultLabel": "smallest depth with the most items",
+      "fields": [
+        {
+          "id": "items",
+          "kind": "json",
+          "label": "items",
+          "prompt": "Invent your nested array",
+          "required": true
+        }
+      ],
+      "markers": []
+    },
+    "drawingEditor": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -1000,
+      "max": 1000,
+      "ordered": true,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0. Each arrow adds 1 to the depth. Count only number nodes; ties go to the smaller depth.",
+        "For each Array, connect its children in the input\u2019s left-to-right order. Arrow numbers show the order you drew them, across the whole graph. To change that order, delete and reconnect arrows."
+      ],
+      "globalOrder": true
+    },
+    "arrayInputField": "items"
   },
   {
     "id": "coins-on-level-k",
@@ -155,6 +180,13 @@
       },
       "fields": [
         {
+          "id": "items",
+          "kind": "json",
+          "label": "items",
+          "prompt": "Invent your nested array",
+          "required": true
+        },
+        {
           "id": "k",
           "kind": "integer",
           "label": "packing level",
@@ -163,17 +195,23 @@
           "min": 1
         }
       ],
-      "markers": [
-        {
-          "id": "coinValue",
-          "target": "node",
-          "kind": "integer",
-          "label": "coin value",
-          "prompt": "Give each coin node its value; leave box nodes out",
-          "required": false
-        }
-      ]
-    }
+      "markers": []
+    },
+    "drawingEditor": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -100,
+      "max": 100,
+      "ordered": true,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0; each arrow adds 1. Add only the numbers at depth k. If there are none, return 0.",
+        "For each Array, connect its children in the input\u2019s left-to-right order. Arrow numbers show the order you drew them, across the whole graph. To change that order, delete and reconnect arrows."
+      ],
+      "globalOrder": true
+    },
+    "arrayInputField": "items"
   },
   {
     "id": "counting-constellations",
@@ -1081,7 +1119,7 @@
     ],
     "nodeLabels": {
       "rule": "partial-string",
-      "description": "Use ε for the empty root, then lowercase partial strings like a or ab."
+      "description": "Use \u03b5 for the empty root, then lowercase partial strings like a or ab."
     },
     "fixedStart": "start",
     "input": {
@@ -1342,6 +1380,13 @@
       },
       "fields": [
         {
+          "id": "playlist",
+          "kind": "json",
+          "label": "playlist",
+          "prompt": "Invent your nested array",
+          "required": true
+        },
+        {
           "id": "k",
           "kind": "integer",
           "label": "song position",
@@ -1350,17 +1395,23 @@
           "min": 1
         }
       ],
-      "markers": [
-        {
-          "id": "songId",
-          "target": "node",
-          "kind": "integer",
-          "label": "song ID",
-          "prompt": "Give each song node its ID; leave folder nodes out",
-          "required": false
-        }
-      ]
-    }
+      "markers": []
+    },
+    "drawingEditor": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": 0,
+      "max": 100000,
+      "ordered": true,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "Visit each Array\u2019s children in input order. Finish an inner Array before moving on. Count only numbers (songs), starting at 1. Return the k-th song, or \u22121 if it does not exist.",
+        "For each Array, connect its children in the input\u2019s left-to-right order. Arrow numbers show the order you drew them, across the whole graph. To change that order, delete and reconnect arrows."
+      ],
+      "globalOrder": true
+    },
+    "arrayInputField": "playlist"
   },
   {
     "id": "museum-vault-keyring",
@@ -1462,8 +1513,33 @@
       "resultLabel": "sum of items at the shallowest occupied depth",
       "resultConfig": {
         "mode": "shallowest"
-      }
-    }
+      },
+      "fields": [
+        {
+          "id": "items",
+          "kind": "json",
+          "label": "items",
+          "prompt": "Invent your nested array",
+          "required": true
+        }
+      ],
+      "markers": []
+    },
+    "drawingEditor": {
+      "mode": "array-number",
+      "valueKind": "integer",
+      "min": -100,
+      "max": 100,
+      "ordered": true,
+      "instructions": [
+        "Make one Array node for every array, including the outer array and empty arrays. Make one number node for each number. Repeated values need separate nodes.",
+        "Draw an arrow from each Array to every element directly inside it. An element can be another Array or a value.",
+        "The outer Array is depth 0; each arrow adds 1. Find the shallowest depth with any numbers and add those numbers. A sum of 0 still counts as an occupied depth.",
+        "For each Array, connect its children in the input\u2019s left-to-right order. Arrow numbers show the order you drew them, across the whole graph. To change that order, delete and reconnect arrows."
+      ],
+      "globalOrder": true
+    },
+    "arrayInputField": "items"
   },
   {
     "id": "trusted-courier-networks",

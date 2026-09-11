@@ -13,6 +13,7 @@
   ];
   const widthStorageKey = "dfs-graph-edge-width-v1";
   const svgNS = "http://www.w3.org/2000/svg";
+  let nodeLabelRule = "nonnegative-integer";
   let contextKey = "";
   let drawing = blankDrawing();
   let selected = null;
@@ -24,7 +25,6 @@
   let clearTimer = null;
   let defaultWidth = clamp(Number(readValue(widthStorageKey, "4")) || 4, 2, 8);
 
-  let nodeLabelRule = "nonnegative-integer";
   let nodeLabelFormat = {};
   const api = { enabled, setContext, setSnapshot, setNodeLabelRule, getSnapshot: () => cloneDrawing(drawing) };
   window.DFS_GRAPH = api;
@@ -104,7 +104,7 @@
   if (typeof ResizeObserver !== "undefined") new ResizeObserver(render).observe(board);
 
   function blankDrawing() {
-    return { nodes: [], edges: [], directed: false, nextNodeId: 0, nextEdgeId: 0 };
+    return { nodes: [], edges: [], directed: nodeLabelRule === "array-number", nextNodeId: 0, nextEdgeId: 0 };
   }
 
   function cloneDrawing(value) {
@@ -173,6 +173,7 @@
       drawing.directed = true;
       directed.checked = true;
     }
+    render();
   }
 
   function addNode() {
@@ -705,8 +706,8 @@
     const fromName = arrayNumberMode() ? `${from.label} (node ${from.id + 1})` : from.label;
     const toName = arrayNumberMode() ? `${to.label} (node ${to.id + 1})` : to.label;
     const relation = drawing.directed ? `Directed ${colorName} edge from ${fromName} to ${toName}` : `Two-way ${colorName} edge between ${fromName} and ${toName}`;
-    const siblingOrder = arrayNumberMode() && nodeLabelFormat.ordered;
-    const showsOrder = siblingOrder || /:(first-branch|last-branch|drop-last-edge)(?::|$)/.test(contextKey);
+    const siblingOrder = arrayNumberMode() && nodeLabelFormat.ordered && !nodeLabelFormat.globalOrder;
+    const showsOrder = siblingOrder || arrayNumberMode() && nodeLabelFormat.globalOrder || /:(first-branch|last-branch|drop-last-edge)(?::|$)/.test(contextKey);
     const orderNumber = siblingOrder ? drawing.edges.slice(0, index + 1).filter(item => item.from === edge.from).length : index + 1;
     const edgeLabel = `${edge.label ? `${relation}, labeled ${edge.label}` : relation}${showsOrder ? `, drawing order ${orderNumber}` : ""}`;
     const group = svgElement("g", { "data-edge-id": edge.id, class: selected?.type === "edge" && selected.id === edge.id ? "scratch-edge selected" : "scratch-edge", tabindex: isLocked() ? "-1" : "0", role: "button", "aria-disabled": isLocked(), "aria-label": `${edgeLabel}. Press F2 to rename or Delete to remove.` });

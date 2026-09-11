@@ -57,7 +57,8 @@
           graphRules = {
             nodes: "Every array is labeled Array. Each separate value has its own node. Repeated Array labels and repeated values are valid; node IDs distinguish occurrences.",
             edges: "An Array points to each element directly inside it.",
-            drawingEditor: problem.lesson.drawingEditor
+            drawingEditor: arrayDrawingOptions(),
+            privateIds: "Names like root[0] are internal IDs, never names students must type. Never show these IDs or ask students to rename nodes. Use Array, Number, and child positions. For drawing 2 apply the stated mistake, including reversed arrows or disconnected nodes."
           };
         }
         const context = JSON.stringify({
@@ -432,7 +433,7 @@
   function configureSectionShell() {
     $("#challenge").oninput = null;
     $("#challenge").onchange = null;
-    window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? problem.lesson.drawingEditor : problem.graphRules?.nodeLabelFormat);
+    window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? arrayDrawingOptions() : problem.graphRules?.nodeLabelFormat);
     draftKey = null;
     pendingAdvance = null;
     $$("[data-section]").forEach(button => {
@@ -576,7 +577,7 @@
     if (progress.index >= mainTasks().length) return renderComplete();
     const task = currentTask();
     window.DFS_GRAPH?.setContext(`${problem.id}:${task.id}:${progress.remedialFor || "main"}${usesArrayNumberDrawing() ? ":array-number-v1" : ""}`, 0);
-    window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? problem.lesson.drawingEditor : problem.graphRules?.nodeLabelFormat);
+    window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? arrayDrawingOptions() : problem.graphRules?.nodeLabelFormat);
     unlockCounterexampleEditor();
     $("#graph-lab").hidden = false;
     $("#graph-lab-title").textContent = task.kind === "build" ? "Draw the graph from the raw input" : "Optional: draw this input before answering";
@@ -612,14 +613,18 @@
   }
 
   function usesArrayNumberDrawing() {
-    return section === 1 && problem.lesson?.drawingEditor?.mode === "array-number";
+    return (section === 1 || [2, 6].includes(section) && problem.category === "variant") && problem.lesson?.drawingEditor?.mode === "array-number";
+  }
+
+  function arrayDrawingOptions() {
+    return section === 2 ? problem.counterexampleLesson.drawingEditor : problem.lesson.drawingEditor;
   }
 
   function renderNodeLabelGuide(task) {
     if (usesArrayNumberDrawing()) {
-      const guide = problem.lesson.drawingEditor;
+      const guide = arrayDrawingOptions();
       const valueName = guide.valueKind === "literal" ? "Value" : "Number";
-      return `<div class="node-label-guide shelf-drawing-guide"><b>Two kinds of nodes</b><div class="shelf-node-key"><span class="shelf-array-key">Array</span><span>an array, even <code>[]</code></span><span class="shelf-number-key">7</span><span>${guide.valueKind === "literal" ? 'a value: number, quoted text, true, or false' : 'a number from the input'}</span></div><ol>${guide.instructions.map(line => `<li>${esc(line)}</li>`).join("")}</ol><p class="shelf-quick-help"><b>Add node → right-click → Array or ${valueName}.</b><br>Choose ${valueName}, type its value, then press Enter. <b>Type / value</b> also opens the menu.<br>For an arrow: click the parent, then the child. Drag nodes to move them.${guide.ordered ? '' : ' Placement and child order are not graded.'}</p></div>`;
+      return `<div class="node-label-guide shelf-drawing-guide"><b>${section === 2 ? "Correct graph: two kinds of nodes" : "Two kinds of nodes"}</b><div class="shelf-node-key"><span class="shelf-array-key">Array</span><span>an array, even <code>[]</code></span><span class="shelf-number-key">7</span><span>${guide.valueKind === "literal" ? 'a value: number, quoted text, true, or false' : 'a number from the input'}</span></div><ol>${guide.instructions.map(line => `<li>${esc(line)}</li>`).join("")}</ol>${section === 2 ? "<p>For drawing 2, keep every node and apply the stated mistake. Arrows may change or leave nodes disconnected. If the mistake only changes the search, the two drawings stay the same.</p>" : ""}<p class="shelf-quick-help"><b>Add node → right-click → Array or ${valueName}.</b><br>Choose ${valueName}, type its value, then press Enter. <b>Type / value</b> also opens the menu.<br>For an arrow: click the parent, then the child. Drag nodes to move them.${guide.ordered ? '' : ' Placement and child order are not graded.'}</p></div>`;
     }
     const format = problem.graphRules?.nodeLabelFormat;
     const hasLabels = Boolean(task?.canvas?.edges?.some(edge => edge.label));
@@ -863,8 +868,8 @@
     counterDrawings = { correct: null, mistaken: null };
     counterDrawingMode = "correct";
     counterDuplicated = false;
-    window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? problem.lesson.drawingEditor : problem.graphRules?.nodeLabelFormat);
-    window.DFS_GRAPH?.setContext(`${problem.id}:counterexample:${done}:${round.bugs[0]}:correct`, 0);
+    window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? arrayDrawingOptions() : problem.graphRules?.nodeLabelFormat);
+    window.DFS_GRAPH?.setContext(`${problem.id}:counterexample:${done}:${round.bugs[0]}:correct${usesArrayNumberDrawing() ? ":array-number-v2" : ""}`, 0);
     unlockCounterexampleEditor();
     $("#graph-lab").hidden = false;
     $("#graph-lab-title").textContent = "Drawing 1 of 2: Correct graph";
@@ -873,9 +878,9 @@
         <div class="case-person"><span class="case-avatar" aria-hidden="true">${esc(name[0])}</span><div><h3>${esc(name)}'s broken search</h3></div></div>
         <div class="case-mistake">${descriptions.map(description => `<p>${esc(name)} ${esc(description)}.</p>`).join("")}</div>
         <p class="drawing-target-note counter-main-goal"><b>Your main goal:</b> ${esc(round.goal || `Expose ${name}'s mistake.`)} Draw two graphs: first the correct graph, then ${esc(name)}'s graph using the mistake.${problem.category === "variant" ? ` Predict the correct output and ${esc(name)}’s output.</p><p class="drawing-target-note counter-drawing-rules"><b>Drawing rules:</b> Both drawings must match your input and the rules above.` : ""}${coffeeProblem ? " Color the coffee-cart intersection <b>Amber</b> in both." : ""}${problem.id === "flooded-campsite-trails" ? " Color flooded campsite nodes <b>Blue</b> in both drawings; searches cannot enter them. Flooded neighbors are skipped before choosing a branch." : ""}${["first-branch", "last-branch", "drop-last-edge"].includes(round.bugs[0]) ? " The first edge you draw is #1; the last edge has the largest number." : ""}${round.bugs.includes("wrong-start") ? ` ${esc(name)} starts at ${esc(displayCounterNodeName(round.mistakenStartLabel))} instead.` : ""}${round.bugs.includes("make-one-way") ? ` In ${esc(name)}'s graph, each arrow goes from the node you clicked first to the node you clicked second; turn <b>Directed edges</b> on.` : ""}${round.bugs.includes("make-two-way") ? ` In ${esc(name)}'s graph, turn <b>Directed edges</b> off.` : ""}${round.bugs.includes("ignore-colors") ? " In drawing 2, color every edge <b>Slate</b> to show that its track color was erased." : ""}</p>
-        <div class="node-label-guide"><b>Required node-name format:</b> ${formatText(problem.graphRules?.nodeLabelFormat?.instruction || problem.counterexampleLesson?.nodeLabels?.description || "Use the same names as Step 1.")}</div>
+        ${usesArrayNumberDrawing() ? renderNodeLabelGuide() : `<div class="node-label-guide"><b>Required node-name format:</b> ${formatText(problem.graphRules?.nodeLabelFormat?.instruction || problem.counterexampleLesson?.nodeLabels?.description || "Use the same names as Step 1.")}</div>`}
         <div class="counter-predictions">
-          <label class="counter-field counter-input-field"><span>${esc(inputSpec.prompt)} <small>${esc(inputSpec.name)}${problem.counterexampleLesson.fixedStart ? `: ${esc(problem.counterexampleLesson.fixedStart)} (${problem.counterexampleLesson?.nodeLabels?.rule === "tree-path" ? "root index fixed; your value may differ" : "fixed"})` : ""}</small></span><input id="counter-start" autocomplete="off"${problem.counterexampleLesson.fixedStart ? ` value="${esc(problem.counterexampleLesson.fixedStart)}" readonly` : ` placeholder="Example: ${esc(problem.id === "museum-vault-keyring" ? "0, 2" : roundSuggestedStart(round))}"`}></label>
+          <label class="counter-field counter-input-field" ${usesArrayNumberDrawing() ? "hidden" : ""}><span>${esc(inputSpec.prompt)} <small>${esc(inputSpec.name)}${problem.counterexampleLesson.fixedStart ? `: ${esc(problem.counterexampleLesson.fixedStart)} (${problem.counterexampleLesson?.nodeLabels?.rule === "tree-path" ? "root index fixed; your value may differ" : "fixed"})` : ""}</small></span><input id="counter-start" autocomplete="off"${problem.counterexampleLesson.fixedStart ? ` value="${esc(problem.counterexampleLesson.fixedStart)}" readonly` : ` placeholder="Example: ${esc(problem.id === "museum-vault-keyring" ? "0, 2" : roundSuggestedStart(round))}"`}></label>
           ${["component-count", "border-component-count", "maximum-component-size", "minimum-component-size", "exact-size-component-count", "qualified-component-count", "components-without-source-count", "maximum-component-value-sum", "component-bounding-boxes", "minimum-component-bounding-perimeter"].includes(inputSpec.result) ? "<p class=\"counter-output-help\">This function scans all nodes in numeric name order, starting a new search at each still-unseen node. The chosen node is only for the reachability trace. Neighbors follow edge drawing order.</p>" : ""}
           ${inputSpec.markers?.some(marker => marker.target === "edge") || inputSpec.resultConfig?.waitMarker || inputSpec.resultConfig?.delayMarker ? "<p class=\"counter-output-help\">Label every drawn edge with its value too. For waiting times, use the sending node’s wait. Both drawings must agree with these fields.</p>" : ""}
           ${renderCounterSemanticInputs(inputSpec)}
@@ -892,6 +897,7 @@
         <div class="challenge-actions"><button id="counter-check" class="primary-btn" disabled>Check my graph <span>→</span></button></div>
       </div>`;
     $(".counter-predictions").before($("#graph-lab"));
+    if (usesArrayNumberDrawing()) $("#graph-lab").before($(".counter-semantic-inputs"));
     const predictionFields = [$("#counter-real-output"), $("#counter-bug-output")].filter(Boolean);
     const requiredFields = [$("#counter-start"), ...$$('[data-counter-semantic][data-required="true"]'), ...predictionFields].filter(Boolean);
     const updateButton = () => { $("#counter-check").disabled = requiredFields.some(field => !field.value.trim()); };
@@ -916,7 +922,7 @@
   }
 
   function counterDraftKey() {
-    return `dfs-step2-draft:${problem.id}:${counterProgress.index}:v2`;
+    return `dfs-step2-draft:${problem.id}:${counterProgress.index}:v2${usesArrayNumberDrawing() ? ":array-number-v2" : ""}`;
   }
 
   function counterDraftFields() {
@@ -947,7 +953,7 @@
       for (const field of counterDraftFields()) if (Object.hasOwn(draft.fields || {}, field.id)) field.value = draft.fields[field.id];
       counterDrawingMode = draft.mode === "mistaken" ? "mistaken" : "correct";
       const round = counterexampleRounds()[counterProgress.index];
-      window.DFS_GRAPH?.setContext(`${problem.id}:counterexample:${counterProgress.index}:${round.bugs[0]}:${counterDrawingMode}`, 0);
+      window.DFS_GRAPH?.setContext(`${problem.id}:counterexample:${counterProgress.index}:${round.bugs[0]}:${counterDrawingMode}${usesArrayNumberDrawing() ? ":array-number-v2" : ""}`, 0);
       window.DFS_GRAPH?.setSnapshot(counterDrawings[counterDrawingMode]);
     } catch { counterProgress.skills = [false, false, false, false]; }
   }
@@ -1081,6 +1087,7 @@
   }
 
   function displayCounterNodeName(label) {
+    if (usesArrayNumberDrawing()) return label === "root[0]" ? "the first element of the outer Array" : "the outer Array";
     const value = String(label || "");
     return /^root(?:\[\d+\])+$/.test(value) ? `${value}=value` : value;
   }
@@ -1097,6 +1104,7 @@
   }
 
   function counterStartTitle(round, mistaken) {
+    if (usesArrayNumberDrawing()) return mistaken && round.bugs.includes("wrong-start") ? "Start: first element of the outer Array" : "Start: outer Array";
     const subject = counterStartSubject();
     if (mistaken && round.bugs.includes("wrong-start")) return `Wrong ${subject.toLowerCase()}: ${displayCounterNodeName(round.mistakenStartLabel)}`;
     const start = chosenCounterStart(round);
@@ -1124,7 +1132,7 @@
         window.removeEventListener("dfs-graph-change", counterGraphChangeHandler);
         counterDrawingMode = nextMode;
         const round = counterexampleRounds()[roundIndex];
-        window.DFS_GRAPH?.setContext(`${problem.id}:counterexample:${roundIndex}:${round.bugs[0]}:${nextMode}`, 0);
+        window.DFS_GRAPH?.setContext(`${problem.id}:counterexample:${roundIndex}:${round.bugs[0]}:${nextMode}${usesArrayNumberDrawing() ? ":array-number-v2" : ""}`, 0);
         window.DFS_GRAPH?.setSnapshot(counterDrawings[nextMode]);
         const mistakenLabel = round.bugs.includes("wrong-start") ? "same graph · different start" : personDrawingChanges(round.bugs) ? "mistaken graph" : "graph (same structure)";
         $("#graph-lab-title").textContent = nextMode === "correct" ? `Drawing 1 of 2: Correct graph · ${counterStartTitle(round, false)}` : `Drawing 2 of 2: ${name}'s ${mistakenLabel} · ${counterStartTitle(round, true)}`;
@@ -1180,8 +1188,41 @@
     return String(round.startLabel);
   }
 
+  function parseArrayCounterDrawing(drawing, round) {
+    const options = arrayDrawingOptions();
+    if (!drawing?.nodes?.length || drawing.nodes.length > 24) throw new Error("Draw 1–24 nodes, including the outer Array.");
+    if (!drawing.directed) throw new Error("Use arrows from each Array to its children.");
+    if (drawing.edges.some(edge => String(edge.label || "").trim())) throw new Error("Leave arrow labels blank. Put each number on its Number node.");
+    if (arrayTreeSignature(drawing, node => String(node.label), true) === null) throw new Error("Use one outer Array. Every other node needs one parent. Number nodes cannot have children; loops and extra arrows are not allowed.");
+    const byId = new Map(drawing.nodes.map(node => [String(node.id), node]));
+    const children = new Map([...byId.keys()].map(id => [id, []]));
+    const childIds = new Set();
+    drawing.edges.forEach(edge => { children.get(String(edge.from)).push(String(edge.to)); childIds.add(String(edge.to)); });
+    const root = [...byId.keys()].find(id => !childIds.has(id));
+    const labels = new Map(), nodes = [];
+    function visit(id, path) {
+      const node = byId.get(id), isArray = node.label === "Array";
+      const number = Number(node.label);
+      if (!isArray && (!/^-?\d+$/.test(node.label) || !Number.isSafeInteger(number) || number < options.min || number > options.max)) throw new Error(`Number nodes need whole numbers from ${options.min} to ${options.max}.`);
+      const label = `${path}=${isArray ? "[]" : number}`;
+      labels.set(id, label); nodes.push(label);
+      return isArray ? children.get(id).map((child, index) => visit(child, `${path}[${index}]`)) : number;
+    }
+    const items = visit(root, "root");
+    if (problem.id === "busiest-shelf-level" && nodes.every(node => node.endsWith("=[]"))) throw new Error("Busiest Shelf Level needs at least one Number node.");
+    const graph = { directed: true, nodes, edges: drawing.edges.map(edge => [labels.get(String(edge.from)), labels.get(String(edge.to)), ""]), start: "root=[]", firstNode: "root=[]" };
+    parseCounterSemanticInputs(graph);
+    const typed = graph.fields[problem.counterexampleLesson.arrayInputField];
+    if (JSON.stringify(typed) !== JSON.stringify(items)) throw new Error("Your correct drawing must match your nested array. Check every Array, number, and child order.");
+    const marker = counterInputSpec().resultConfig?.valueMarker;
+    if (marker) graph.nodeMarkers[marker] = Object.fromEntries(nodes.filter(node => !node.endsWith("=[]")).map(node => [node, Number(node.split("=")[1])]));
+    if (round.bugs.includes("wrong-start") && !children.get(root).length) throw new Error("This mistaken search starts at the first element, so the outer Array needs an element.");
+    return graph;
+  }
+
   function parseCounterDrawing(drawing, round, chosenStart) {
     try {
+      if (usesArrayNumberDrawing()) return { graph: parseArrayCounterDrawing(drawing, round) };
       const maxCounterNodes = problem.id === "water-and-jug-problem" ? 40 : 24;
       if (!drawing || drawing.nodes.length < (problem.counterexampleLesson.minNodes || 1) || drawing.nodes.length > maxCounterNodes) throw new Error(problem.counterexampleLesson.minNodes ? `Draw at least ${problem.counterexampleLesson.minNodes} nodes.` : `Draw 1–${maxCounterNodes} nodes.`);
       const requiredDirection = counterexampleDirected();
@@ -1665,6 +1706,11 @@
   }
 
   function counterBoundaryExplanation(graph, bugs = [], startOverride = null) {
+    if (usesArrayNumberDrawing()) {
+      const reached = runSearch(graph, bugs, startOverride);
+      const numbers = reached.filter(node => /^root(?:\[\d+\])+=-?\d+$/.test(node));
+      return `The search reaches ${numbers.length} Number node${numbers.length === 1 ? "" : "s"}. ${bugs.includes("wrong-start") && problem.id === "coins-on-level-k" ? "For this mistaken search, the first element starts at depth 0; each arrow adds 1." : arrayDrawingOptions().instructions[2]} Returned output: ${formatCounterOutput(counterResult(graph, bugs, startOverride))}.`;
+    }
     const result = counterInputSpec().result;
     if (["component-count", "border-component-count", "maximum-component-size", "minimum-component-size", "exact-size-component-count", "qualified-component-count", "components-without-source-count", "maximum-component-value-sum", "component-bounding-boxes", "minimum-component-bounding-perimeter", "component-sorted-string"].includes(result)) {
       const groups = counterComponents(graph, bugs);
@@ -2254,8 +2300,9 @@
     const mistakenStart = round.bugs.includes("wrong-start")
       ? resolveCounterNode(parsed.graph?.nodes || [], mistakenStartLabel)
       : parsed.graph?.start;
-    const graphCheck = parsed.graph ? gradeCanvas(expectedCanvas(parsed.graph), correctDrawing) : { nodes: false, edges: false, direction: false, colors: false, labels: false };
-    const mistakenGraphCheck = parsed.graph && dualDrawings ? gradeCanvas(expectedCanvas(mistakenGraph(parsed.graph, round.bugs, mistakenStart)), mistakenDrawing) : null;
+    const gradeCounter = usesArrayNumberDrawing() ? (expected, drawing) => gradeArrayCounterCanvas(expected, drawing, arrayDrawingOptions()) : gradeCanvas;
+    const graphCheck = parsed.graph ? gradeCounter(expectedCanvas(parsed.graph), correctDrawing) : { nodes: false, edges: false, direction: false, colors: false, labels: false };
+    const mistakenGraphCheck = parsed.graph && dualDrawings ? gradeCounter(expectedCanvas(mistakenGraph(parsed.graph, round.bugs, mistakenStart)), mistakenDrawing) : null;
     const coffeeDrawingMatches = problem.id !== "routes-past-the-coffee-cart" || coffeeNodeLabel(mistakenDrawing) === parsed.graph?.checkpoint;
     const correctReachability = parsed.graph ? counterReachability(parsed.graph) : null;
     const buggyReachability = parsed.graph ? counterReachability(parsed.graph, round.bugs, mistakenStart) : null;
@@ -3461,8 +3508,8 @@
     </div>`;
     const graphDisclosure = $("#coding-graph-disclosure");
     $("#coding-graph-slot").append($("#graph-lab"));
-    window.DFS_GRAPH?.setContext(`${problem.id}:coding`, 0);
-    window.DFS_GRAPH?.setNodeLabelRule(problem.counterexampleLesson?.nodeLabels?.rule || "free", problem.graphRules?.nodeLabelFormat);
+    window.DFS_GRAPH?.setContext(`${problem.id}:coding${usesArrayNumberDrawing() ? ":array-number-v2" : ""}`, 0);
+    window.DFS_GRAPH?.setNodeLabelRule(usesArrayNumberDrawing() ? "array-number" : problem.counterexampleLesson?.nodeLabels?.rule || "free", usesArrayNumberDrawing() ? arrayDrawingOptions() : problem.graphRules?.nodeLabelFormat);
     $("#graph-lab").hidden = false;
     $("#graph-lab-title").textContent = "Scratch graph";
     graphDisclosure.addEventListener("toggle", () => {
@@ -3920,7 +3967,7 @@
       if (!value || typeof value !== "object") return;
       if (Array.isArray(value.nodes) && Array.isArray(value.edges)) {
         value.nodeLabelMode = "array-number";
-        value.nodes.forEach(node => { node.label = arrayNumberLabel(node); });
+        value.nodes.forEach(node => { if (node && typeof node === "object") node.label = arrayNumberLabel(node); });
         return;
       }
       Object.entries(value).forEach(([key, child]) => { if (key !== "studentGraph") adapt(child); });
@@ -3944,6 +3991,90 @@
     else if (!edges && options.ordered && arrayTreeSignature(drawing, actualLabel) === arrayTreeSignature(expected, arrayNumberLabel)) hint = "Your connections are right, but the arrow order is different. For each Array, draw arrows to its children in the input’s left-to-right order. Delete and reconnect those arrows to fix the order.";
     else if (!edges) hint = "Check which Array directly contains each child. Do not skip an Array, join siblings, or connect a child to two parents." + (options.ordered ? " For each Array, its numbered arrows must follow the input’s left-to-right order. Delete and reconnect arrows to fix their order." : "");
     else if (!labels) hint = "Leave arrows unlabeled. Put values on value nodes.";
+    return { nodes, edges: edges && labels, direction, colors: true, labels, hint };
+  }
+
+  // Step 2 also draws mistaken graphs: these may be forests or have reversed arrows.
+  // Match node roles and connections, not private path IDs or node creation order.
+  function gradeArrayCounterCanvas(expected, drawing, options = {}) {
+    const actualLabel = node => {
+      const label = String(node.label).trim();
+      if (label === "Array") return label;
+      try {
+        const value = JSON.parse(label);
+        return typeof value === "number" && Number.isFinite(value) ? JSON.stringify(value) : null;
+      } catch { return null; }
+    };
+    const wanted = expected.nodes.map(arrayNumberLabel).sort();
+    const actual = drawing.nodes.map(actualLabel).sort();
+    const nodes = !actual.includes(null) && JSON.stringify(wanted) === JSON.stringify(actual);
+    const direction = drawing.directed === expected.directed;
+    const labels = drawing.edges.every(edge => !String(edge.label || "").trim());
+
+    function matches(ordered) {
+      if (!nodes || expected.edges.length !== drawing.edges.length) return false;
+      function prepare(graph, labelOf) {
+        const ids = new Map(graph.nodes.map((node, index) => [String(node.id), index]));
+        if (ids.size !== graph.nodes.length) return null;
+        const outgoing = graph.nodes.map(() => []), incoming = graph.nodes.map(() => []);
+        const adjacency = graph.nodes.map(() => new Map());
+        for (const edge of graph.edges) {
+          const from = ids.get(String(edge.from)), to = ids.get(String(edge.to));
+          if (from === undefined || to === undefined) return null;
+          const rank = ordered ? outgoing[from].length : 0;
+          outgoing[from].push({ to, rank });
+          incoming[to].push({ to: from, rank });
+          if (!adjacency[from].has(to)) adjacency[from].set(to, []);
+          adjacency[from].get(to).push(rank);
+        }
+        return { outgoing, incoming, adjacency, colors: graph.nodes.map(node => labelOf(node)) };
+      }
+      const one = prepare(expected, arrayNumberLabel), two = prepare(drawing, actualLabel);
+      if (!one || !two) return false;
+      // Refine both graphs together so identical colors always mean identical structure.
+      for (let round = 0; round < expected.nodes.length; round++) {
+        const palette = new Map();
+        const previousCount = new Set([...one.colors, ...two.colors]).size;
+        const refined = [one, two].map(graph => graph.colors.map((color, index) => {
+          const neighbors = edges => edges.map(edge => JSON.stringify([edge.rank, graph.colors[edge.to]])).sort();
+          const key = JSON.stringify([color, neighbors(graph.outgoing[index]), neighbors(graph.incoming[index])]);
+          if (!palette.has(key)) palette.set(key, palette.size);
+          return palette.get(key);
+        }));
+        [one.colors, two.colors] = refined;
+        if (JSON.stringify([...one.colors].sort((a,b) => a-b)) !== JSON.stringify([...two.colors].sort((a,b) => a-b))) return false;
+        if (palette.size === previousCount) break;
+      }
+      const edgeKey = (graph, from, to) => JSON.stringify(graph.adjacency[from].get(to) || []);
+      const candidates = one.colors.map(color => two.colors.flatMap((other, index) => color === other ? [index] : []));
+      const order = one.colors.map((_, index) => index).sort((a,b) => candidates[a].length - candidates[b].length || one.outgoing[b].length + one.incoming[b].length - one.outgoing[a].length - one.incoming[a].length);
+      const mapping = new Map(), used = new Set();
+      function assign(position) {
+        if (position === order.length) return true;
+        const from = order[position];
+        for (const to of candidates[from]) {
+          if (used.has(to) || edgeKey(one, from, from) !== edgeKey(two, to, to)) continue;
+          let compatible = true;
+          for (const [otherFrom, otherTo] of mapping) {
+            if (edgeKey(one, from, otherFrom) !== edgeKey(two, to, otherTo) || edgeKey(one, otherFrom, from) !== edgeKey(two, otherTo, to)) { compatible = false; break; }
+          }
+          if (!compatible) continue;
+          mapping.set(from, to); used.add(to);
+          if (assign(position + 1)) return true;
+          mapping.delete(from); used.delete(to);
+        }
+        return false;
+      }
+      return assign(0);
+    }
+
+    const edges = matches(Boolean(options.ordered));
+    let hint = "";
+    if (!nodes) hint = "Check your Array nodes and number nodes. Each array needs its own Array node, and each number needs its own node—even repeated numbers.";
+    else if (!direction) hint = "Turn on Directed edges so your connections have arrows.";
+    else if (!edges && options.ordered && matches(false)) hint = "Your connections are right, but the arrow order is different. For each node, delete and reconnect its arrows in the required order.";
+    else if (!edges) hint = "Check each arrow against the rule for this drawing. Keep every input node, even when a mistaken rule leaves it disconnected.";
+    else if (!labels) hint = "Leave arrows unlabeled. Put numbers on number nodes.";
     return { nodes, edges: edges && labels, direction, colors: true, labels, hint };
   }
 

@@ -423,7 +423,8 @@ function validateCounterexampleLesson(problem) {
     const config = spec.input.resultConfig, marker = spec.input.markers?.find(item => item.id === config.valueMarker);
     const fieldId = spec.input.result === "level-value-sum" ? config.depthField : config.positionField;
     const field = spec.input.fields?.find(item => item.id === fieldId);
-    if (!marker || marker.target !== "node" || !["integer", "number"].includes(marker.kind)) errors.push(`${problem.id}/step2: ${spec.input.result} needs a numeric node value marker`);
+    const drawnNumbers = spec.drawingEditor?.mode === "array-number" && spec.input.fields?.some(item => item.id === spec.arrayInputField && item.kind === "json");
+    if (!drawnNumbers && (!marker || marker.target !== "node" || !["integer", "number"].includes(marker.kind))) errors.push(`${problem.id}/step2: ${spec.input.result} needs a numeric node value marker`);
     if (!field || field.kind !== "integer" || field.required === false || Number(field.min) < 1) errors.push(`${problem.id}/step2: ${spec.input.result} needs a required positive integer parameter field`);
   }
   if (spec.input?.result === "exact-size-component-count") {
