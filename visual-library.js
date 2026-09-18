@@ -507,6 +507,19 @@
     const activityLayout = $(".activity-layout");
     const graphLab = $("#graph-lab");
     if (activityLayout && graphLab && graphLab.parentElement !== activityLayout) activityLayout.append(graphLab);
+    // Keep one problem-wide notepad as the drawing tool moves between lessons.
+    graphLab.append($("#coding-notes-disclosure"));
+    const notes = $("#coding-notes");
+    const notesKey = `dfs-coding-notes:v1:${problem.id}`;
+    try { notes.value = localStorage.getItem(notesKey) || ""; } catch {}
+    notes.oninput = event => {
+      // Notes do not change the code or interrupt a running solution.
+      event.stopPropagation();
+      try {
+        localStorage.setItem(notesKey, notes.value);
+        $("#coding-notes-warning").hidden = true;
+      } catch { $("#coding-notes-warning").hidden = false; }
+    };
     const isWorkBackward = section === 2;
     const isCounterexample = section === 3;
     const isCoding = section === 4;
@@ -3871,14 +3884,6 @@
           <div id="coding-graph-examples" class="coding-graph-examples"></div>
         </div>
       </details>
-      <details id="coding-notes-disclosure" class="coding-graph-disclosure">
-        <summary><span>Notepad</span><small>Open your notes</small></summary>
-        <div class="coding-graph-disclosure-body">
-          <label class="counter-field" for="coding-notes"><span>Your notes</span><textarea id="coding-notes" rows="7" placeholder="Write your plan, questions, or reminders here." aria-describedby="coding-notes-help"></textarea></label>
-          <p id="coding-notes-help" class="coding-hint">Saved in this browser for this problem.</p>
-          <p id="coding-notes-warning" class="coding-error" role="status" hidden>Your browser could not save these notes. Copy them before leaving this page.</p>
-        </div>
-      </details>
       <label for="coding-editor" class="coding-editor-label">Your JavaScript</label>
       <p id="coding-editor-help" class="coding-hint">Keep the function name <code>${esc(lesson.functionName)}</code> and return your answer. Use <code>console.log</code> to inspect values. Tab indents; Shift+Tab unindents. Escape then Tab leaves the editor.</p>
       <div class="coding-editor-wrap"><pre id="coding-line-numbers" aria-hidden="true"></pre><div class="coding-editor-area"><pre id="coding-highlight" aria-hidden="true"></pre><textarea id="coding-editor" placeholder="${esc(lesson.starterCode)}" aria-describedby="coding-editor-help" rows="18" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">${esc(lesson.starterCode)}</textarea></div></div>
@@ -3889,6 +3894,7 @@
       <div id="coding-results" role="status" aria-live="polite"></div><div id="feedback-slot" role="status" aria-live="polite"></div>
     </div>`;
     const graphDisclosure = $("#coding-graph-disclosure");
+    graphDisclosure.after($("#coding-notes-disclosure"));
     const graphExamplesHost = $("#coding-graph-examples");
     const graphInputField = $("#coding-graph-input");
     const graphSummary = $("#coding-graph-summary");
@@ -3979,17 +3985,6 @@
     $("#graph-lab-title").textContent = "Scratch graph";
     graphDisclosure.addEventListener("toggle", () => {
       if (graphDisclosure.open) requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
-    });
-    const notes = $("#coding-notes");
-    const notesKey = `dfs-coding-notes:v1:${problem.id}`;
-    try { notes.value = localStorage.getItem(notesKey) || ""; } catch {}
-    notes.addEventListener("input", event => {
-      // Notes do not change the code or interrupt a running solution.
-      event.stopPropagation();
-      try {
-        localStorage.setItem(notesKey, notes.value);
-        $("#coding-notes-warning").hidden = true;
-      } catch { $("#coding-notes-warning").hidden = false; }
     });
     restoreFormDraft("solution");
     const editor = $("#coding-editor");

@@ -78,6 +78,14 @@
           <div id="graph-color-menu" class="graph-color-menu" role="group" aria-label="Color and delete options" hidden></div>
         </div>
         <p id="graph-status" class="graph-status" aria-live="polite"></p>
+        <details id="coding-notes-disclosure" class="coding-graph-disclosure">
+          <summary><span>Optional: notepad</span><small>Open your notes</small></summary>
+          <div class="coding-graph-disclosure-body">
+            <label class="counter-field" for="coding-notes"><span>Your notes</span><textarea id="coding-notes" rows="7" placeholder="Write your plan, questions, or reminders here." aria-describedby="coding-notes-help"></textarea></label>
+            <p id="coding-notes-help" class="coding-hint">Saved in this browser for this problem.</p>
+            <p id="coding-notes-warning" class="coding-error" role="status" hidden>Your browser could not save these notes. Copy them before leaving this page.</p>
+          </div>
+        </details>
         <div id="graph-lab-actions" class="graph-lab-actions" hidden></div>
         </section>
       </div>
@@ -91,6 +99,6 @@
 
   <script src="/visual-data.js?v=1c503e7349e2"></script>
   <script src="/graph.js?v=cbd711c4b957"></script>
-  <script src="/visual-library.js?v=c3650463601f"></script>
+  <script src="/visual-library.js?v=72382ccbbbbb"></script>
 </body>
 </html>
