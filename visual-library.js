@@ -126,6 +126,7 @@
     "one-color-metro-ride": "duplicate-station-by-color",
     "office-rumor-reach": "edge-as-node",
     "runes-on-the-castle-door": "leaves-only",
+    "the-balance-lock": "leaves-only",
     "shut-the-garden-valve": "pipe-as-node",
     "gold-and-silver-lights": "color-as-node",
     "museum-vault-keyring": "key-instance-as-node",
@@ -483,7 +484,8 @@
       tab.classList.toggle("active", active);
       tab.setAttribute("aria-pressed", String(active));
     });
-    let html = `<p>${formatText(problem.statement)}</p>`;
+    const followsUp = problem.followsUp && allProblems.find(item => item.id === problem.followsUp);
+    let html = `${followsUp ? `<p class="follow-up-note">Follow-up to <a href="/${esc(followsUp.id)}">${esc(followsUp.title)}</a>.</p>` : ""}<p>${formatText(problem.statement)}</p>`;
     if (name === "examples") html = problem.examples.map((example, index) => `<article class="example-card"><strong>Example ${index + 1}</strong><div class="io-row"><span>Input</span> ${esc(example.input)}</div><div class="io-row"><span>Output</span> ${esc(example.output)}</div><p>${formatText(example.explanation)}</p></article>`).join("");
     if (name === "constraints") html = `<ul class="constraint-list">${problem.constraints.map(item => `<li>${esc(item)}</li>`).join("")}</ul>${problem.sourceLink ? `<p><a class="source-link" href="${esc(problem.sourceLink)}" target="_blank" rel="noreferrer">Open original problem ↗</a></p>` : ""}`;
     $("#problem-content").innerHTML = html;
@@ -1474,6 +1476,7 @@
       const rootName = problem.id === "runes-on-the-castle-door" ? "start" : "empty prefix";
       if (!nodes.includes(rootName) || nodes.some(node => node !== rootName && !/^[a-z]+$/.test(node))) throw new Error(`Use ${rootName} for the empty root, then lowercase partial strings like a or ab.`);
     }
+    if (rule === "weight-prefix" && (!nodes.includes("start") || nodes.some(node => node !== "start" && !/^[1-9]\d*(?:,[1-9]\d*)*$/.test(node)))) throw new Error("Use start for the empty root, then comma-separated weights like 4 or 4,2.");
     const max = problem.counterexampleLesson?.nodeLabels?.max;
     if (max !== undefined && nodes.some(node => {
       if (["coordinate", "interior-coordinate", "state-pair"].includes(rule)) return coordinate(node).some(value => value > max);
@@ -1558,6 +1561,26 @@
       if (missing) throw new Error(`The dial choices also allow prefix ${missing}. Include every legal prefix, even incomplete dead ends.`);
       if (extra) throw new Error(`${extra} is not a legal prefix for these dials.`);
       exactEdges(pairs, "Extend by one rune from the next dial, without equal neighboring runes.");
+    }
+    if (problem.id === "the-balance-lock") {
+      const { dials, limit } = graph.fields;
+      if (!Number.isInteger(limit) || limit < 1 || limit > 300) throw new Error("Choose a whole-number limit from 1 to 300.");
+      if (!Array.isArray(dials) || dials.length < 1 || dials.length > 6 || dials.some(dial => !Array.isArray(dial) || dial.length < 1 || dial.length > 4 || dial.some(weight => !Number.isInteger(weight) || weight < 1 || weight > 50) || new Set(dial).size !== dial.length)) throw new Error("Give 1–6 dials. Each dial needs 1–4 different whole-number weights from 1 to 50.");
+      const nodes = ["start"], pairs = [];
+      const visit = (code, total, depth) => {
+        if (depth === dials.length) return;
+        for (const weight of dials[depth]) if (total + weight <= limit) {
+          const next = [...code, weight].join(",");
+          nodes.push(next); pairs.push([code.length ? code.join(",") : "start", next]);
+          if (nodes.length > 24) throw new Error("These dials make more than 24 nodes. Choose fewer weights or a smaller limit for a small counterexample.");
+          visit([...code, weight], total + weight, depth + 1);
+        }
+      };
+      visit([], 0, 0);
+      const missing = nodes.find(node => !graph.nodes.includes(node)), extra = graph.nodes.find(node => !nodes.includes(node));
+      if (missing) throw new Error(`These dials also allow the safe prefix ${missing}. Include every safe prefix, even dead ends.`);
+      if (extra) throw new Error(`${extra} is not a safe prefix for these dials and limit.`);
+      exactEdges(pairs, "Extend by one weight from the next dial, keeping the running total at most limit.");
     }
     const increasing = ["longest-increasing-path-in-a-matrix", "number-of-increasing-paths-in-a-grid"].includes(problem.id);
     if (increasing || problem.id === "counting-docked-boats") {
@@ -1732,6 +1755,15 @@
       const limit = problem.id === "runes-on-the-castle-door" ? 6 : 4;
       if (graph.nodes.some(node => node !== rootName && (node.length > limit || (problem.id === "runes-on-the-castle-door" && /(.)\1/.test(node))))) throw new Error(problem.id === "runes-on-the-castle-door" ? "Rune strings use at most 6 letters and cannot repeat a neighboring rune." : "Phone-number prefixes use at most 4 letters.");
     }
+    if (labelRule === "weight-prefix") {
+      const edgeKeys = new Set(graph.edges.map(([from, to]) => `${from}\u0000${to}`));
+      for (const node of graph.nodes) if (node !== "start") {
+        const directParent = node.includes(",") ? node.slice(0, node.lastIndexOf(",")) : "start";
+        if (!graph.nodes.includes(directParent)) throw new Error(`${node} needs its prefix ${directParent}.`);
+        if (!edgeKeys.has(`${directParent}\u0000${node}`)) throw new Error(`Connect ${directParent} directly to ${node}.`);
+      }
+      if (graph.nodes.some(node => node.split(",").length > 6)) throw new Error("Codes use at most 6 weights.");
+    }
     if (problem.counterexampleLesson?.startRule === "graph-root") {
       const incoming = Object.fromEntries(graph.nodes.map(node => [node, 0]));
       graph.edges.forEach(([, to]) => incoming[to]++);
@@ -1784,7 +1816,7 @@
   }
 
   function counterexampleRequiresTree() {
-    return new Set(["package-to-the-outpost", "reachable-nodes-with-restrictions", "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain", "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "path-sum", "structy-tree-sum", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "gold-and-silver-lights", "flatten-nested-list-iterator", "nested-list-weight-sum", "nested-list-weight-sum-ii", "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count", "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree", "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree", "binary-tree-level-order-traversal", "invert-binary-tree", "same-tree", "subtree-of-another-tree", "balanced-binary-tree", "maximum-depth-of-binary-tree", "merge-two-binary-trees", "binary-tree-right-side-view", "validate-binary-search-tree", "kth-smallest-element-in-a-bst", "construct-binary-tree-from-preorder-and-inorder-traversal", "serialize-and-deserialize-binary-tree", "all-paths-from-source-lead-to-destination", "employee-importance", "usaco-milk-factory"]).has(problem.id);
+    return new Set(["package-to-the-outpost", "reachable-nodes-with-restrictions", "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain", "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "path-sum", "structy-tree-sum", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "gold-and-silver-lights", "flatten-nested-list-iterator", "nested-list-weight-sum", "nested-list-weight-sum-ii", "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count", "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree", "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree", "binary-tree-level-order-traversal", "invert-binary-tree", "same-tree", "subtree-of-another-tree", "balanced-binary-tree", "maximum-depth-of-binary-tree", "merge-two-binary-trees", "binary-tree-right-side-view", "validate-binary-search-tree", "kth-smallest-element-in-a-bst", "construct-binary-tree-from-preorder-and-inorder-traversal", "serialize-and-deserialize-binary-tree", "all-paths-from-source-lead-to-destination", "employee-importance", "usaco-milk-factory"]).has(problem.id);
   }
 
   function expectedCanvas(graph) {
@@ -2142,6 +2174,7 @@
     const reached = new Set(runSearch(graph, bugs, startOverride));
     const outgoing = Object.fromEntries(changed.nodes.map(node => [node, 0]));
     changed.edges.forEach(([from]) => outgoing[from]++);
+    if (problem.id === "the-balance-lock") return changed.nodes.filter(node => reached.has(node) && node !== "start" && node.split(",").length === graph.fields.dials.length).map(node => node.split(",").map(Number));
     return changed.nodes.filter(node => reached.has(node) && (problem.id === "runes-on-the-castle-door" ? node.length === graph.fields.dials.length : outgoing[node] === 0) && node !== "start" && node !== "empty prefix").map(node => node === "ε" ? "" : node);
   }
 
@@ -2561,7 +2594,7 @@
     if (Array.isArray(expected) && expected.some(Array.isArray)) {
       try {
         const actual = parseLessonValue(String(value), "output", expected);
-        if (["enumerated-paths", "component-bounding-boxes"].includes(counterInputSpec().result)) {
+        if (["enumerated-paths", "component-bounding-boxes"].includes(counterInputSpec().result) || problem.id === "the-balance-lock") {
           const sortPaths = paths => [...paths].sort((one, two) => JSON.stringify(one).localeCompare(JSON.stringify(two), undefined, { numeric: true }));
           const normalize = item => Array.isArray(item) ? item.map(normalize) : /^-?\d+$/.test(String(item)) ? Number(item) : item;
           return JSON.stringify(sortPaths(normalize(actual))) === JSON.stringify(sortPaths(normalize(expected)));
@@ -2593,7 +2626,7 @@
         try { parsed = parseLessonValue(raw, "output", expected); }
         catch { parsed = typeof expected === "string" ? raw : null; }
       }
-      const unordered = new Set(["all-paths-from-source-to-target", "kill-process", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "find-all-groups-of-farmland"]);
+      const unordered = new Set(["all-paths-from-source-to-target", "kill-process", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "find-all-groups-of-farmland"]);
       const normalizePathIds = item => Array.isArray(item) ? item.map(normalizePathIds) : typeof item === "string" && /^\d+$/.test(item) ? Number(item) : item;
       const normalize = value => {
         const item = problem.id === "all-paths-from-source-to-target" ? normalizePathIds(value) : value;
@@ -2765,7 +2798,7 @@
       statement = "In this input, each key should become a node instead of each vault.";
     } else if (misconception === "model-obstacles-only") {
       statement = "In this input, only flooded campsites should become nodes.";
-    } else if (problem.id === "runes-on-the-castle-door" && misconception === "leaves-only") {
+    } else if (["runes-on-the-castle-door", "the-balance-lock"].includes(problem.id) && misconception === "leaves-only") {
       statement = "In this input, only complete-code leaves should become nodes.";
     } else if (problem.id === "path-sum" && misconception === "counts-only-leaf") {
       statement = "In this input, only leaf nodes should belong to the graph.";
@@ -3028,6 +3061,16 @@
       if (prefix) return {
         statement: `The dead-end prefix ${prefix.label} ${correct ? "is still incomplete" : "is a complete code"}.`, correct,
         feedback: `${prefix.label} has ${prefix.label.length} letters, but there are ${dials.length} dials. Reaching a dead end does not fill the remaining dials.`
+      };
+    }
+    if (problem.id === "the-balance-lock") {
+      const match = task.input.match(/dials\s*=\s*(\[\[.*?\]\])/);
+      const dials = match ? JSON.parse(match[1]) : [];
+      const outgoing = new Set(canvas.edges.map(edge => String(edge.from)));
+      const prefix = canvas.nodes.find(node => !outgoing.has(String(node.id)) && node.label !== "start" && node.label.split(",").length < dials.length);
+      if (prefix) return {
+        statement: `The dead-end prefix ${prefix.label} ${correct ? "is still incomplete" : "is a complete code"}.`, correct,
+        feedback: `${prefix.label} has ${prefix.label.split(",").length} weight${prefix.label.includes(",") ? "s" : ""}, but there are ${dials.length} dials. Every next weight busts, so this prefix never becomes a complete code.`
       };
     }
     if (problem.id === "counting-docked-boats") {
@@ -3625,6 +3668,8 @@
   }
 
   function debuggingInputExample(name) {
+    if (problem.id === "the-balance-lock" && name === "dials") return "[[3, 8], [2, 6]]";
+    if (problem.id === "the-balance-lock" && name === "limit") return "10";
     const examples = {
       sky: '[[0, 1], [0, 0]]', park: '[[0, 1], [0, 0]]', marina: '[[".", "B"], [".", "."]]', yard: '[[".", "T"], [".", "."]]',
       cave: '[["U", "G"], ["U", "U"]]', worked: '[[1, 0], [0, 1]]', trust: '[[10, 4], [4, 10]]',
@@ -3644,6 +3689,7 @@
       if (problem.id === 'gas-pocket-survey') return '[["U", "2"], ["G", "1"]]';
       if (problem.id === 'routes-past-the-coffee-cart') return '[[0, 3, 5], [0, 2, 5]]';
       if (problem.id === 'runes-on-the-castle-door') return '["xm", "yn"]';
+      if (problem.id === 'the-balance-lock') return '[[3, 2], [3, 6], [8, 2]]';
       return '[5, 9]';
     }
     return '"text"';

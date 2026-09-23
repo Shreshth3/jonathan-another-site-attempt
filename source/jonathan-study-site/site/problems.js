@@ -11142,5 +11142,97 @@ window.PROBLEMS = [
         "marina"
       ]
     }
+  },
+  {
+    "id": "the-balance-lock",
+    "title": "The Balance Lock",
+    "category": "variant",
+    "difficulty": "Medium",
+    "statement": "Past the rune door, the castle treasury is sealed by a balance lock: a row of dials. Dial `i` can be turned to show any one of the weights in `dials[i]`, a list of different positive whole numbers.\n\nTo try a code, you set every dial to one weight and read them from left to right. The lock works like a hand of blackjack: the weights add up, and if the total goes **over** `limit`, the lock busts. A code whose total is **at most** `limit` is safe.\n\nReturn a list of **all** safe codes. Each code is a list of the chosen weights, in dial order. You may return the codes in any order. If no code is safe, return an empty list.",
+    "examples": [
+      {
+        "input": "dials = [[4,9],[2,7],[5]], limit = 12",
+        "output": "[[4,2,5]]",
+        "explanation": "4+2+5 = 11 is safe. 4,7 totals 11 after two dials, but the last dial adds 5 for 16, which busts. 9,2,5 also reaches 16. 9,7 totals 16 after two dials, so that branch busts early and the last dial is never tried."
+      },
+      {
+        "input": "dials = [[3,8],[6,1]], limit = 9",
+        "output": "[[3,6],[3,1],[8,1]]",
+        "explanation": "3+6 = 9 and 8+1 = 9 land exactly on the limit, which is still safe. 3+1 = 4 is safe too. Only 8+6 = 14 goes over and busts."
+      }
+    ],
+    "constraints": [
+      "1 <= dials.length <= 6",
+      "1 <= dials[i].length <= 4",
+      "dials[i] contains different whole numbers from 1 to 50",
+      "1 <= limit <= 300"
+    ],
+    "functionName": "allSafeCodes",
+    "solution": "// CONTRACT for collectCodes(dials, limit, dialIndex, codeSoFar, totalSoFar, safeCodes):\n//     when this call returns, every safe full code that starts with\n//     `codeSoFar` (whose weights add up to `totalSoFar`) and continues\n//     with weights from dial `dialIndex` onward has been appended to\n//     `safeCodes`.\nconst collectCodes = (dials, limit, dialIndex, codeSoFar, totalSoFar, safeCodes) => {\n    // Base case\n    if (dialIndex === dials.length) {\n        safeCodes.push(codeSoFar);\n        return;\n    }\n\n    // Traverse neighbors\n    const weights = dials[dialIndex];\n\n    for (const weight of weights) {\n        // Like going over 21 in blackjack: a total over the limit busts.\n        // Every weight is positive, so later dials can only add more.\n        // Prune this branch now instead of finishing a doomed code.\n        const newTotal = totalSoFar + weight;\n        if (newTotal > limit) continue;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every safe code that\n        // starts with `codeSoFar` plus `weight` has been appended to\n        // `safeCodes`. Trust it, do not trace it. Trying every weight\n        // that does not bust, each with its guaranteed completions,\n        // covers every safe code that starts with `codeSoFar` —\n        // exactly this function's contract, kept.\n        collectCodes(dials, limit, dialIndex + 1, [...codeSoFar, weight], newTotal, safeCodes);\n    }\n};\n\nconst allSafeCodes = (dials, limit) => {\n    const safeCodes = [];\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, `safeCodes` holds every safe code built from dial\n    // 0 onward, starting from total 0 — the complete answer.\n    collectCodes(dials, limit, 0, [], 0, safeCodes);\n\n    return safeCodes;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            [
+              4,
+              9
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              5
+            ]
+          ],
+          12
+        ],
+        "expected": [
+          [
+            4,
+            2,
+            5
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            [
+              3,
+              8
+            ],
+            [
+              6,
+              1
+            ]
+          ],
+          9
+        ],
+        "expected": [
+          [
+            3,
+            6
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            8,
+            1
+          ]
+        ],
+        "unordered": true
+      }
+    ],
+    "runner": {
+      "kind": "function",
+      "parameterNames": [
+        "dials",
+        "limit"
+      ]
+    }
   }
 ];

@@ -231,13 +231,17 @@ const catalog = problems.map(problem => {
     counterexampleLesson: step2Specs.get(problem.id) || null,
     lesson: visualLessons.get(problem.id) || null,
     codeReasoning: step4Specs.get(problem.id) || null,
+    ...(problem.followsUp ? { followsUp: problem.followsUp } : {}),
     ...(problem.category === "variant" ? { parentId: problem.parentId, variantListOrder: variantListOrder.get(problem.id), debuggingLesson: step5Specs.get(problem.id), codingLesson: step6Specs.get(problem.id) } : {})
   };
 });
 
+// Problems added after answer slots and character names were balanced go last,
+// with their own slot pass below, so adding one never changes an existing lesson.
+const appendedProblemIds = new Set(["the-balance-lock"]);
 catalog.sort((a, b) => {
   const categoryOrder = { original: 0, variant: 1, new: 2 };
-  return categoryOrder[a.category] - categoryOrder[b.category] || a.title.localeCompare(b.title);
+  return appendedProblemIds.has(a.id) - appendedProblemIds.has(b.id) || categoryOrder[a.category] - categoryOrder[b.category] || a.title.localeCompare(b.title);
 });
 
 function stableHash(value) {
@@ -267,12 +271,19 @@ const lessonQuestionRefs = catalog.flatMap(problem => {
 });
 lessonQuestionRefs.sort((a, b) => stableHash(`v3:${a.problem.id}:${a.question.id || a.question.prompt}`) - stableHash(`v3:${b.problem.id}:${b.question.id || b.question.prompt}`));
 const lessonGroups = new Map();
+const appendedLessonGroups = new Map();
 lessonQuestionRefs.forEach(ref => {
-  const group = lessonGroups.get(ref.question.choices.length) || [];
+  const groups = appendedProblemIds.has(ref.problem.id) ? appendedLessonGroups : lessonGroups;
+  const group = groups.get(ref.question.choices.length) || [];
   group.push(ref);
-  lessonGroups.set(ref.question.choices.length, group);
+  groups.set(ref.question.choices.length, group);
 });
 for (const group of lessonGroups.values()) group.forEach(({ question }, index) => { question.answerSlot = index % question.choices.length; });
+// Appended questions continue each group's rotation after the existing questions.
+for (const [size, group] of appendedLessonGroups) {
+  const offset = lessonGroups.get(size)?.length || 0;
+  group.forEach(({ question }, index) => { question.answerSlot = (offset + index) % question.choices.length; });
+}
 
 const characterData = fs.readFileSync(path.resolve(__dirname, "../character-names.js"), "utf8");
 const step5Engine = fs.readFileSync(path.resolve(__dirname, "step5-engine.js"), "utf8");

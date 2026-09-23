@@ -54,6 +54,12 @@ const programs = {
   fixed('mark','  Change this cell to the digit for danger when danger > 0; otherwise change it to "S".'),
   choice('boundary','stop','  If danger = 0:\n    REVEAL each of the four up/down/left/right neighbors.','spread','  REVEAL each of the four up/down/left/right neighbors, even when danger > 0.','A numbered cell is the edge of the automatic reveal. Spreading beyond it uncovers rock the drill should leave unexplored. Show its number and stop that branch.'),
   fixed('end','End function\nREVEAL(row, col)\nReturn cave.')
+ ],
+ 'the-balance-lock': [
+  fixed('setup','codes ← empty list\nFunction BUILD(dialIndex, code, total):\n  If dialIndex = number of dials:\n    Add code to codes and return.'),
+  choice('choices','all','  For every weight in dials[dialIndex]:','first','  For only the first weight in dials[dialIndex]:','A dial can offer several weights. Trying only its first weight loses codes that use the others, and may miss every safe code when the first weight busts.'),
+  choice('bust','over','    If total + weight > limit, skip this weight.','atleast','    If total + weight ≥ limit, skip this weight.','A total equal to limit is safe, like 21 in blackjack. Skipping a weight when the total reaches limit removes codes that land exactly on the limit.'),
+  fixed('end','    BUILD(dialIndex + 1, code followed by weight, total + weight)\nEnd function\nBUILD(0, empty list, 0)\nReturn codes.')
  ]
 };
 
@@ -61,4 +67,8 @@ const runeRule = programs['runes-on-the-castle-door'].find(line => line.key === 
 runeRule.options.push({id:'allow',text:'    Allow this rune even when it matches the last rune in prefix.'});
 runeRule.buggy = ['anywhere', 'allow'];
 runeRule.feedback = {anywhere:runeRule.feedback,allow:'Each new rune sits next to the last rune already chosen. Skipping this check keeps branches with equal neighbors, so invalid completed words enter the answer.'};
+const bustRule = programs['the-balance-lock'].find(line => line.key === 'bust');
+bustRule.options.push({id:'weight',text:'    If weight > limit, skip this weight.'});
+bustRule.buggy = ['atleast', 'weight'];
+bustRule.feedback = {atleast:bustRule.feedback,weight:'The lock adds every chosen weight. Comparing one weight with limit lets a code whose running total goes over limit survive, so busted codes enter the answer.'};
 module.exports = programs;

@@ -27,7 +27,7 @@ Use that site and repo when checking or importing the original problem content.
 - Step 4 must grade the exact graph, the code's graph-level behavior, and the real problem's exact output. Its shown code and declared buggy output must always agree.
 - Step 4 feedback teaches `code rule → changed graph → reachable boundary → returned value`. Never make students trace every line.
 - Author Step 4 in `step4-specs-*.json`, then regenerate and validate `visual-data.js`.
-- The library must contain exactly 25 original, 25 variant, and 25 new problems.
+- The library must contain exactly 25 original, 26 variant, and 25 new problems. The 26th variant, `the-balance-lock` (a follow-up to Runes on the Castle Door), was added on 2026-09-23; `scripts/author-balance-lock.js` authors it.
 - Every lesson uses the metro-style v3 structure in `visual-lessons-*.json`: 4 exact scratch-graph builds, 5 visual checks, and a fresh remedial build after each missed visual check.
 - Every Step 1 visual check shows a blank, optional drawing tool after its raw input and before its question and answers. The scratch drawing is not graded.
 - Edit the authoritative `visual-specs-*.json` / lesson-authoring scripts, regenerate `visual-lessons-*.json`, then run `node scripts/build-visual-data.js` and `node scripts/validate-visual-data.js`.

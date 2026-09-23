@@ -119,6 +119,9 @@
       if (id === 'museum-vault-keyring') nodes('startKeys', graph.length);
       if (id === 'dungeon-gold-run') need(list('gold').length === graph.length && input.gold.every(v => integer(v, 0, 1000)), 'gold needs one whole number from 0–1000 per room.');
       if (id === 'routes-past-the-coffee-cart') num('checkpoint', 1, graph.length - 2);
+    } else if (id === 'the-balance-lock') {
+      const dials = list('dials'); need(dials.length >= 1 && dials.length <= 6 && dials.every(v => Array.isArray(v) && v.length >= 1 && v.length <= 4 && distinct(v) && v.every(w => integer(w, 1, 50))), 'Use 1–6 dials, each with 1–4 different whole numbers from 1 to 50.');
+      num('limit', 1, 300);
     } else if (id === 'runes-on-the-castle-door') {
       const dials = list('dials'); need(dials.length >= 1 && dials.length <= 6 && dials.every(v => typeof v === 'string' && /^[a-z]{1,4}$/.test(v) && distinct([...v])), 'Use 1–6 dials, each with 1–4 distinct lowercase letters.');
     } else {
@@ -260,6 +263,11 @@
       function walk(prefix,index){if(index===i.dials.length){result.push(prefix);return;}for(const char of(r.choices==='first'?i.dials[index].slice(0,1):i.dials[index])){if(r.repeat==='anywhere'?prefix.includes(char):r.repeat==='allow'?false:prefix.endsWith(char))continue;walk(prefix+char,index+1);}}
       walk('',0);return r.finish==='short'?result.map(word=>word.slice(0,-1)):result;
     }
+    if (id === 'the-balance-lock') {
+      const result=[];
+      function walk(code,total,index){if(index===i.dials.length){result.push(code);return;}for(const weight of(r.choices==='first'?i.dials[index].slice(0,1):i.dials[index])){if(r.bust==='atleast'?total+weight>=i.limit:r.bust==='weight'?weight>i.limit:total+weight>i.limit)continue;walk([...code,weight],total+weight,index+1);}}
+      walk([],0,0);return result;
+    }
     if (id === 'gas-pocket-survey') {
       const cave=i.cave, seen=new Set();
       const neighbors=(row,col,diagonal)=>{const result=[];for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)if((dr||dc)&&(diagonal||Math.abs(dr)+Math.abs(dc)===1)&&cave[row+dr]?.[col+dc]!==undefined)result.push([row+dr,col+dc]);return result;};
@@ -275,7 +283,7 @@
     return (typeof window==='object'?window.DFS_VISUAL_DATA?.problems:[])?.find(p=>p.id===id)?.debuggingLesson;
   }
   function equal(id, a, b) {
-    if (['routes-past-the-coffee-cart','runes-on-the-castle-door'].includes(id) && Array.isArray(a) && Array.isArray(b)) return JSON.stringify(a.map(v=>JSON.stringify(v)).sort())===JSON.stringify(b.map(v=>JSON.stringify(v)).sort());
+    if (['routes-past-the-coffee-cart','runes-on-the-castle-door','the-balance-lock'].includes(id) && Array.isArray(a) && Array.isArray(b)) return JSON.stringify(a.map(v=>JSON.stringify(v)).sort())===JSON.stringify(b.map(v=>JSON.stringify(v)).sort());
     return JSON.stringify(a)===JSON.stringify(b);
   }
   function getRules(challenge, selected) {

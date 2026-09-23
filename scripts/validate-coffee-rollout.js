@@ -9,10 +9,11 @@ const sandbox = { window: {} };
 vm.runInNewContext(fs.readFileSync("visual-data.js", "utf8"), sandbox);
 const problems = sandbox.window.DFS_VISUAL_DATA.problems;
 
-if (problems.length !== 75) failures.push(`expected 75 problems, found ${problems.length}`);
+const expectedCounts = { original: 25, variant: 26, new: 25 };
+if (problems.length !== 76) failures.push(`expected 76 problems, found ${problems.length}`);
 for (const category of ["original", "variant", "new"]) {
   const count = problems.filter(problem => problem.category === category).length;
-  if (count !== 25) failures.push(`expected 25 ${category} problems, found ${count}`);
+  if (count !== expectedCounts[category]) failures.push(`expected ${expectedCounts[category]} ${category} problems, found ${count}`);
 }
 
 for (const problem of problems) {
@@ -50,4 +51,4 @@ if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);
 }
-console.log("Validated the Coffee-style rollout across all 75 lessons.");
+console.log("Validated the Coffee-style rollout across all 76 lessons.");

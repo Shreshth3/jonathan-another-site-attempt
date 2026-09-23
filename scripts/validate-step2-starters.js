@@ -18,7 +18,7 @@ function requiresTree(problem) {
   return new Set([
     "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain",
     "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "structy-tree-sum",
-    "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "flatten-nested-list-iterator",
+    "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "flatten-nested-list-iterator",
     "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count",
     "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree",
     "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree",
@@ -187,15 +187,16 @@ function applyLabelRule(problem, graph) {
     const rename=Object.fromEntries(graph.nodes.map((node,index)=>[node,`node ${index}: ${index+1}`]));
     return {...graph,nodes:graph.nodes.map(node=>rename[node]),edges:graph.edges.map(([a,b,c])=>[rename[a],rename[b],c]),start:rename[graph.start]};
   }
-  if (["nested-path", "tree-path", "partial-string"].includes(rule)) {
+  if (["nested-path", "tree-path", "partial-string", "weight-prefix"].includes(rule)) {
     const outgoing = Object.fromEntries(graph.nodes.map(node => [node, []]));
     graph.edges.forEach(([from, to]) => outgoing[from].push(to));
     const root = graph.nodes.find(node => !graph.edges.some(([, to]) => to === node));
     if (!root) return graph;
-    const rename = { [root]: rule === "nested-path" || rule === "tree-path" ? "root" : "ε" };
+    const rename = { [root]: rule === "nested-path" || rule === "tree-path" ? "root" : rule === "weight-prefix" ? "start" : "ε" };
     const visit = node => outgoing[node].forEach((child, index) => {
       if (rule === "nested-path") rename[child] = `${rename[node]}[${index}]`;
       else if (rule === "tree-path") rename[child] = rename[node] === "root" ? ["L", "R"][index] : `${rename[node]}${["L", "R"][index]}`;
+      else if (rule === "weight-prefix") rename[child] = rename[node] === "start" ? String([5, 2, 3][index]) : `${rename[node]},${[5, 2, 3][index]}`;
       else {
         const parent = rename[node] === "ε" ? "" : rename[node];
         const letter = ["a", "b", "c"].filter(value => value !== parent.at(-1))[index];
@@ -327,7 +328,7 @@ function exactResult(problem,graph,bugs=[],wrongStart=null){
 }
 
 const roundCount = problems.reduce((total, problem) => total + problem.counterexampleLesson.rounds.length, 0);
-if (roundCount !== 225) failures.push(`Expected 225 single-mistake Step 2 starters; found ${roundCount}`);
+if (roundCount !== 228) failures.push(`Expected 228 single-mistake Step 2 starters; found ${roundCount}`);
 
 function resolveNode(nodes, requested) {
   if (nodes.includes(requested)) return requested;
@@ -357,4 +358,4 @@ for (const problem of problems) for (const [index, round] of problem.counterexam
 }
 
 if(failures.length){console.error(failures.join("\n"));process.exit(1);}
-console.log("Validated all 225 single-mistake Step 2 starters.");
+console.log("Validated all 228 single-mistake Step 2 starters.");

@@ -65,6 +65,28 @@ test("Rune missing legal branches rejected", () => {
   use("runes-on-the-castle-door"); const value = graph(["start", "a", "b", "ac"], [["start", "a"], ["start", "b"], ["a", "ac"]], { directed: true, start: "start", fields: { dials: ["ab", "c"] } });
   assert.throws(() => valid(value), /prefix bc/);
 });
+// Balance lock: dials [[2,6],[5]], limit 8. 2,5 totals 7 (safe); 6 is a dead end because 6+5 = 11 busts.
+const balance = (nodes, edges, fields = { dials: [[2, 6], [5]], limit: 8 }) => graph(nodes, edges, { directed: true, start: "start", fields });
+test("Balance lock dead ends are not complete codes", () => {
+  use("the-balance-lock"); const value = balance(["start", "2", "6", "2,5"], [["start", "2"], ["start", "6"], ["2", "2,5"]]);
+  valid(value); same(engine.result(value), [[2, 5]]); same(engine.result(value, ["last-branch"]), []); same(engine.result(value, ["shallow-search"]), []);
+});
+test("Balance lock keeps a total equal to the limit", () => {
+  use("the-balance-lock"); const value = balance(["start", "3", "3,5"], [["start", "3"], ["3", "3,5"]], { dials: [[3], [5]], limit: 8 });
+  valid(value); same(engine.result(value), [[3, 5]]);
+});
+test("Balance lock rejects a busted prefix", () => {
+  use("the-balance-lock"); assert.throws(() => valid(balance(["start", "2", "6", "2,5", "6,5"], [["start", "2"], ["start", "6"], ["2", "2,5"], ["6", "6,5"]])), /6,5 is not a safe prefix/);
+});
+test("Balance lock requires safe dead ends", () => {
+  use("the-balance-lock"); assert.throws(() => valid(balance(["start", "2", "2,5"], [["start", "2"], ["2", "2,5"]])), /safe prefix 6/);
+});
+test("Balance lock output order does not matter", () => {
+  use("the-balance-lock"); assert(engine.matches("[[3,1],[2,5]]", [[2, 5], [3, 1]])); assert(!engine.matches("[[2,5]]", [[2, 5], [3, 1]])); assert(engine.matches("[]", [])); assert(!engine.matches("[[2,5]]", []));
+});
+test("Balance lock dials accept one plain row per dial", () => {
+  use("the-balance-lock"); same(engine.semantic("3, 8\n2, 6", { id: "dials", kind: "json" }, "dials"), [[3, 8], [2, 6]]);
+});
 test("Playlist uses index order regardless of drawing order", () => {
   use("kth-song-in-playlist"); const value = graph(["root=[]", "root[0]=10", "root[1]=20"], [["root=[]", "root[1]=20"], ["root=[]", "root[0]=10"]], { directed: true, start: "root=[]", fields: { k: 1 }, nodeMarkers: { songId: { "root[0]=10": 10, "root[1]=20": 20 } } });
   valid(value); same(engine.result(value), 10); value.nodeMarkers.songId["root[0]=10"] = 100; assert.throws(() => valid(value), /shows 10/);
