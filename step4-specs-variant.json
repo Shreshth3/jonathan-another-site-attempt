@@ -7036,7 +7036,7 @@
           }
         ],
         "graphProof": {
-          "realGraph": "The safe prefixes are start→3→3,7. Prefix 5 is a dead end because 5+7 = 12 goes over 10.",
+          "realGraph": "The safe prefixes are start→5 and start→3→3,7. Prefix 5 is a dead end because 5+7 = 12 goes over 10.",
           "codeRule": "An extension is pruned when its new total is at least the limit.",
           "separatingFeature": "3+7 lands exactly on the limit 10.",
           "outputConsequence": "The only safe code is pruned, producing [] instead of [[3,7]].",
@@ -7196,7 +7196,7 @@
           "codeRule": "The first busting weight ends the loop over the whole dial.",
           "separatingFeature": "The busting weight 9 is listed before the safe weight 1.",
           "outputConsequence": "The loop stops at 9, producing [] instead of [[1,4]].",
-          "changedGraph": "Every edge after the first bust on a dial is removed."
+          "changedGraph": "At each prefix, weights listed after the first busting weight get no edge."
         }
       }
     ]

@@ -7906,6 +7906,44 @@
             3
           ]
         ]
+      },
+      {
+        "id": "the-balance-lock-test-10",
+        "label": "Reaching the limit early is not a finished code, and order matters",
+        "args": [
+          [
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              1,
+              4
+            ]
+          ],
+          6
+        ],
+        "expected": [
+          [
+            2,
+            3,
+            1
+          ],
+          [
+            2,
+            2,
+            1
+          ],
+          [
+            3,
+            2,
+            1
+          ]
+        ]
       }
     ],
     "source": "../jonathan-study-site/data/variants-final-5.json"

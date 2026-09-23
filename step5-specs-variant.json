@@ -43668,8 +43668,8 @@
         "id": "the-balance-lock-choices-first",
         "title": "Debug challenge 1",
         "misconception": "choices-first",
-        "feedback": "Every dial offers several weights. Trying only its first weight loses codes that use the others, and may miss every safe code when the first weight busts.",
-        "correctAnswer": "Every dial offers several weights. Trying only its first weight loses codes that use the others, and may miss every safe code when the first weight busts.\n\nThe corrected rule is:\n  For every weight in dials[dialIndex]:",
+        "feedback": "A dial can offer several weights. Trying only its first weight loses codes that use the others, and may miss every safe code when the first weight busts.",
+        "correctAnswer": "A dial can offer several weights. Trying only its first weight loses codes that use the others, and may miss every safe code when the first weight busts.\n\nThe corrected rule is:\n  For every weight in dials[dialIndex]:",
         "lines": [
           {
             "key": "setup",
@@ -43727,12 +43727,15 @@
         "witness": {
           "dials": [
             [
-              11,
-              16,
+              3,
+              8
+            ],
+            [
+              6,
               1
             ]
           ],
-          "limit": 10
+          "limit": 9
         }
       },
       {
@@ -43802,7 +43805,8 @@
               8
             ],
             [
-              6
+              6,
+              1
             ]
           ],
           "limit": 9
@@ -43920,7 +43924,8 @@
               8
             ],
             [
-              6
+              6,
+              1
             ]
           ],
           "limit": 9
@@ -43929,6 +43934,14 @@
           [
             3,
             6
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            8,
+            1
           ]
         ]
       },

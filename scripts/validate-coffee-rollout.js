@@ -51,4 +51,4 @@ if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);
 }
-console.log("Validated the Coffee-style rollout across all 75 lessons.");
+console.log("Validated the Coffee-style rollout across all 76 lessons.");

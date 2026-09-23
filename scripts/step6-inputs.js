@@ -241,7 +241,8 @@ module.exports = {
  C('A large limit keeps every code',[[1,2],[3,4],[5]],100),
  C('A bust does not end the rest of the dial',[[25,4,17],[6]],24),
  C('Six dials each add weight',[[1],[2],[3],[4],[5],[6,1]],20),
- C('The limit checks the running total, not one weight',[[9,4],[8,3]],12)]
+ C('The limit checks the running total, not one weight',[[9,4],[8,3]],12),
+ C('Reaching the limit early is not a finished code, and order matters',[[2,3],[3,2],[1,4]],6)]
 };
 // The zero-edge metro case still has a colors argument.
 module.exports['one-color-metro-ride'][3].args = [9,[],[],6,6];

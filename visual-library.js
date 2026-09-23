@@ -1564,6 +1564,7 @@
     }
     if (problem.id === "the-balance-lock") {
       const { dials, limit } = graph.fields;
+      if (!Number.isInteger(limit) || limit < 1 || limit > 300) throw new Error("Choose a whole-number limit from 1 to 300.");
       if (!Array.isArray(dials) || dials.length < 1 || dials.length > 6 || dials.some(dial => !Array.isArray(dial) || dial.length < 1 || dial.length > 4 || dial.some(weight => !Number.isInteger(weight) || weight < 1 || weight > 50) || new Set(dial).size !== dial.length)) throw new Error("Give 1–6 dials. Each dial needs 1–4 different whole-number weights from 1 to 50.");
       const nodes = ["start"], pairs = [];
       const visit = (code, total, depth) => {
@@ -3688,7 +3689,7 @@
       if (problem.id === 'gas-pocket-survey') return '[["U", "2"], ["G", "1"]]';
       if (problem.id === 'routes-past-the-coffee-cart') return '[[0, 3, 5], [0, 2, 5]]';
       if (problem.id === 'runes-on-the-castle-door') return '["xm", "yn"]';
-      if (problem.id === 'the-balance-lock') return '[[4, 1], [9, 5]]';
+      if (problem.id === 'the-balance-lock') return '[[3, 2], [3, 6], [8, 2]]';
       return '[5, 9]';
     }
     return '"text"';

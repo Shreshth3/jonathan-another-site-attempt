@@ -11156,9 +11156,9 @@ window.PROBLEMS = [
         "explanation": "4+2+5 = 11 is safe. 4,7 totals 11 after two dials, but the last dial adds 5 for 16, which busts. 9,2,5 also reaches 16. 9,7 totals 16 after two dials, so that branch busts early and the last dial is never tried."
       },
       {
-        "input": "dials = [[3,8],[6]], limit = 9",
-        "output": "[[3,6]]",
-        "explanation": "3+6 = 9 lands exactly on the limit, which is still safe. 8+6 = 14 goes over and busts."
+        "input": "dials = [[3,8],[6,1]], limit = 9",
+        "output": "[[3,6],[3,1],[8,1]]",
+        "explanation": "3+6 = 9 and 8+1 = 9 land exactly on the limit, which is still safe. 3+1 = 4 is safe too. Only 8+6 = 14 goes over and busts."
       }
     ],
     "constraints": [
@@ -11204,7 +11204,8 @@ window.PROBLEMS = [
               8
             ],
             [
-              6
+              6,
+              1
             ]
           ],
           9
@@ -11213,6 +11214,14 @@ window.PROBLEMS = [
           [
             3,
             6
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            8,
+            1
           ]
         ],
         "unordered": true

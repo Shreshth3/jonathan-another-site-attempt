@@ -3986,7 +3986,7 @@
           {
             "id": "four",
             "label": "`4`",
-            "feedback": "This counts the four safe partial codes 4, 2, 4,5, and 2,5 instead of completed three-weight codes.",
+            "feedback": "This counts the four safe partial codes `4`, `2`, `4,5`, and `2,5` instead of completed three-weight codes.",
             "misconception": "count-partial-prefixes"
           }
         ]
@@ -4005,7 +4005,7 @@
         {
           "id": "running-total",
           "label": "One node per running total, so codes with the same total share a node.",
-          "feedback": "Different codes can reach the same total, like 2,5 and 5,2. Each is its own answer, so each prefix needs its own node.",
+          "feedback": "Different codes can reach the same total, like `3,4` and `4,3` when both dials offer 3 and 4. Each is its own answer, so each prefix needs its own node.",
           "misconception": "merge-by-total"
         },
         {

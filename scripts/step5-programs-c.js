@@ -57,7 +57,7 @@ const programs = {
  ],
  'the-balance-lock': [
   fixed('setup','codes ← empty list\nFunction BUILD(dialIndex, code, total):\n  If dialIndex = number of dials:\n    Add code to codes and return.'),
-  choice('choices','all','  For every weight in dials[dialIndex]:','first','  For only the first weight in dials[dialIndex]:','Every dial offers several weights. Trying only its first weight loses codes that use the others, and may miss every safe code when the first weight busts.'),
+  choice('choices','all','  For every weight in dials[dialIndex]:','first','  For only the first weight in dials[dialIndex]:','A dial can offer several weights. Trying only its first weight loses codes that use the others, and may miss every safe code when the first weight busts.'),
   choice('bust','over','    If total + weight > limit, skip this weight.','atleast','    If total + weight ≥ limit, skip this weight.','A total equal to limit is safe, like 21 in blackjack. Skipping a weight when the total reaches limit removes codes that land exactly on the limit.'),
   fixed('end','    BUILD(dialIndex + 1, code followed by weight, total + weight)\nEnd function\nBUILD(0, empty list, 0)\nReturn codes.')
  ]

@@ -110,7 +110,7 @@ const nodeQuestion = {
   correct: "partial-code",
   choices: [
     { id: "partial-code", label: "A safe partial code: the weights chosen on the first few dials, with total at most limit. The root is the empty code.", feedback: "Correct. Each level records one more dial choice, and the total comes from the weights on the path.", misconception: null },
-    { id: "running-total", label: "One node per running total, so codes with the same total share a node.", feedback: "Different codes can reach the same total, like 2,5 and 5,2. Each is its own answer, so each prefix needs its own node.", misconception: "merge-by-total" },
+    { id: "running-total", label: "One node per running total, so codes with the same total share a node.", feedback: "Different codes can reach the same total, like `3,4` and `4,3` when both dials offer 3 and 4. Each is its own answer, so each prefix needs its own node.", misconception: "merge-by-total" },
     { id: "full-code", label: "Only a completed code using every dial.", feedback: "Completed codes are leaves. Partial-code nodes are needed to show the choices leading to them.", misconception: "leaves-only" },
     { id: "weight", label: "One node per weight value, no matter which dial offered it.", feedback: "The same weight on different dials, or after different prefixes, is a different state. A node must remember the whole prefix.", misconception: "forget-prefix" }
   ]
@@ -173,7 +173,7 @@ const countQuestion = {
     { id: "zero", label: "`0`", feedback: "Correct. The smallest possible total is 2+5+6 = 13, which is over 12.", misconception: null, value: "0" },
     { id: "six", label: "`6`", feedback: "Every single weight is at most 12, but the lock adds them. Every full total is at least 13, so every code busts.", misconception: "check-weight-not-total", mistake: "check-weight-not-total" },
     { id: "two", label: "`2`", feedback: "This accepts 4,5 and 2,5 as complete before the last dial adds its weight.", misconception: "finish-one-dial-early", mistake: "finish-one-dial-early" },
-    { id: "four", label: "`4`", feedback: "This counts the four safe partial codes 4, 2, 4,5, and 2,5 instead of completed three-weight codes.", misconception: "count-partial-prefixes", value: "4" }
+    { id: "four", label: "`4`", feedback: "This counts the four safe partial codes `4`, `2`, `4,5`, and `2,5` instead of completed three-weight codes.", misconception: "count-partial-prefixes", value: "4" }
   ]
 };
 checkChoices(countQuestion.dials, countQuestion.limit, countQuestion.choices, countQuestion.correct, count);
@@ -206,7 +206,7 @@ const lesson = {
       prompt: nodeQuestion.prompt, input: inputText([[2, 8], [5]], 9), shownModel: canvas([[2, 8], [5]], 9),
       choices: nodeQuestion.choices, correct: nodeQuestion.correct, why: nodeQuestion.choices[0].feedback,
       remedial: remedial("repair-2", "Protect entity identity", [[3, 4], [4, 3]], 10, "How many complete codes are returned?", "merge-by-total",
-        "3,4, 3,3, 4,4, and 4,3 are four different codes, even though 3,4 and 4,3 have the same total.", "This merges 3,4 and 4,3 because both total 7, losing a separate code.", count)
+        "`3,4`, `3,3`, `4,4`, and `4,3` are four different codes, even though `3,4` and `4,3` have the same total.", "This merges 3,4 and 4,3 because both total 7, losing a separate code.", count)
     },
     {
       id: "concept-relations", title: "Protect direct relations", facet: "safe one-weight extensions", kind: "choice",
@@ -264,7 +264,7 @@ const step2Spec = {
     name: "empty code", prompt: "Choose the empty code", result: "generated-terminal-strings", resultLabel: "all safe complete codes",
     fields: [
       { id: "dials", kind: "json", label: "dial weights as a list of weight lists", prompt: "Enter dial weights as a list of weight lists", required: true },
-      { id: "limit", kind: "integer", label: "limit", prompt: "Choose the limit", required: true, min: 1 }
+      { id: "limit", kind: "integer", label: "limit", prompt: "Choose the limit", required: true, min: 1, max: 300 }
     ]
   }
 };
@@ -316,7 +316,7 @@ const allSafeCodes = (dials, limit) => {
 
 const examples = [
   { dials: [[4, 9], [2, 7], [5]], limit: 12, explanation: "4+2+5 = 11 is safe. 4,7 totals 11 after two dials, but the last dial adds 5 for 16, which busts. 9,2,5 also reaches 16. 9,7 totals 16 after two dials, so that branch busts early and the last dial is never tried." },
-  { dials: [[3, 8], [6]], limit: 9, explanation: "3+6 = 9 lands exactly on the limit, which is still safe. 8+6 = 14 goes over and busts." }
+  { dials: [[3, 8], [6, 1]], limit: 9, explanation: "3+6 = 9 and 8+1 = 9 land exactly on the limit, which is still safe. 3+1 = 4 is safe too. Only 8+6 = 14 goes over and busts." }
 ];
 const sourceProblem = {
   id: ID,
@@ -338,7 +338,7 @@ const sourceProblem = {
   const allSafe = new Function(`${solution}\nreturn allSafeCodes;`)();
   for (const test of sourceProblem.tests) if (!sameList(allSafe(...test.args), test.expected)) throw Error("reference solution disagrees");
 }
-if (out(safeCodes([[4, 9], [2, 7], [5]], 12)) !== "[[4,2,5]]" || out(safeCodes([[3, 8], [6]], 9)) !== "[[3,6]]") throw Error("statement examples drifted");
+if (out(safeCodes([[4, 9], [2, 7], [5]], 12)) !== "[[4,2,5]]" || out(safeCodes([[3, 8], [6, 1]], 9)) !== "[[3,6],[3,1],[8,1]]") throw Error("statement examples drifted");
 
 // ---------- Step 4: three single-bug programs, outputs taken from running them ----------
 const step4Program = check => `function solve(input) {
@@ -374,7 +374,7 @@ const step4Spec = {
         { id: "no-running-total", label: "Claim about the code: it compares each weight with the limit instead of the running total.", feedback: "It adds total + weight before comparing, so it does use the running total." },
         { id: "accepts-prefix", label: "Claim about the code: the base case accepts a code before every dial has a weight.", feedback: "It accepts only when dialIndex equals the number of dials." }
       ], {
-        realGraph: "The safe prefixes are start→3→3,7. Prefix 5 is a dead end because 5+7 = 12 goes over 10.",
+        realGraph: "The safe prefixes are start→5 and start→3→3,7. Prefix 5 is a dead end because 5+7 = 12 goes over 10.",
         codeRule: "An extension is pruned when its new total is at least the limit.",
         separatingFeature: "3+7 lands exactly on the limit 10.",
         outputConsequence: "The only safe code is pruned, producing [] instead of [[3,7]].",
@@ -402,7 +402,7 @@ const step4Spec = {
         codeRule: "The first busting weight ends the loop over the whole dial.",
         separatingFeature: "The busting weight 9 is listed before the safe weight 1.",
         outputConsequence: "The loop stops at 9, producing [] instead of [[1,4]].",
-        changedGraph: "Every edge after the first bust on a dial is removed."
+        changedGraph: "At each prefix, weights listed after the first busting weight get no edge."
       })
   ]
 };
