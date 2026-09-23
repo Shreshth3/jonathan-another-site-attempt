@@ -43652,5 +43652,1284 @@
         ]
       }
     ]
+  },
+  {
+    "id": "the-balance-lock",
+    "inputHelp": "Use 1–6 dials; each has 1–4 different whole numbers from 1 to 50. limit is 1–300. Explore means visit each reachable item once unless the shown code says otherwise.",
+    "source": "../jonathan-study-site/data/variants-final-*.json",
+    "correctRules": {
+      "setup": "fixed",
+      "choices": "all",
+      "bust": "over",
+      "end": "fixed"
+    },
+    "cases": [
+      {
+        "id": "the-balance-lock-choices-first",
+        "title": "Debug challenge 1",
+        "misconception": "choices-first",
+        "feedback": "Every dial offers several weights. Trying only its first weight loses codes that use the others, and may miss every safe code when the first weight busts.",
+        "correctAnswer": "Every dial offers several weights. Trying only its first weight loses codes that use the others, and may miss every safe code when the first weight busts.\n\nThe corrected rule is:\n  For every weight in dials[dialIndex]:",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "codes ← empty list\nFunction BUILD(dialIndex, code, total):\n  If dialIndex = number of dials:\n    Add code to codes and return."
+              }
+            ]
+          },
+          {
+            "key": "choices",
+            "selected": "first",
+            "options": [
+              {
+                "id": "all",
+                "text": "  For every weight in dials[dialIndex]:"
+              },
+              {
+                "id": "first",
+                "text": "  For only the first weight in dials[dialIndex]:"
+              }
+            ]
+          },
+          {
+            "key": "bust",
+            "selected": "over",
+            "options": [
+              {
+                "id": "atleast",
+                "text": "    If total + weight ≥ limit, skip this weight."
+              },
+              {
+                "id": "over",
+                "text": "    If total + weight > limit, skip this weight."
+              },
+              {
+                "id": "weight",
+                "text": "    If weight > limit, skip this weight."
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    BUILD(dialIndex + 1, code followed by weight, total + weight)\nEnd function\nBUILD(0, empty list, 0)\nReturn codes."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "dials": [
+            [
+              11,
+              16,
+              1
+            ]
+          ],
+          "limit": 10
+        }
+      },
+      {
+        "id": "the-balance-lock-bust-atleast",
+        "title": "Debug challenge 2",
+        "misconception": "bust-atleast",
+        "feedback": "A total equal to limit is safe, like 21 in blackjack. Skipping a weight when the total reaches limit removes codes that land exactly on the limit.",
+        "correctAnswer": "A total equal to limit is safe, like 21 in blackjack. Skipping a weight when the total reaches limit removes codes that land exactly on the limit.\n\nThe corrected rule is:\n    If total + weight > limit, skip this weight.",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "codes ← empty list\nFunction BUILD(dialIndex, code, total):\n  If dialIndex = number of dials:\n    Add code to codes and return."
+              }
+            ]
+          },
+          {
+            "key": "choices",
+            "selected": "all",
+            "options": [
+              {
+                "id": "first",
+                "text": "  For only the first weight in dials[dialIndex]:"
+              },
+              {
+                "id": "all",
+                "text": "  For every weight in dials[dialIndex]:"
+              }
+            ]
+          },
+          {
+            "key": "bust",
+            "selected": "atleast",
+            "options": [
+              {
+                "id": "weight",
+                "text": "    If weight > limit, skip this weight."
+              },
+              {
+                "id": "atleast",
+                "text": "    If total + weight ≥ limit, skip this weight."
+              },
+              {
+                "id": "over",
+                "text": "    If total + weight > limit, skip this weight."
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    BUILD(dialIndex + 1, code followed by weight, total + weight)\nEnd function\nBUILD(0, empty list, 0)\nReturn codes."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "dials": [
+            [
+              3,
+              8
+            ],
+            [
+              6
+            ]
+          ],
+          "limit": 9
+        }
+      },
+      {
+        "id": "the-balance-lock-bust-weight",
+        "title": "Debug challenge 3",
+        "misconception": "bust-weight",
+        "feedback": "The lock adds every chosen weight. Comparing one weight with limit lets a code whose running total goes over limit survive, so busted codes enter the answer.",
+        "correctAnswer": "The lock adds every chosen weight. Comparing one weight with limit lets a code whose running total goes over limit survive, so busted codes enter the answer.\n\nThe corrected rule is:\n    If total + weight > limit, skip this weight.",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "codes ← empty list\nFunction BUILD(dialIndex, code, total):\n  If dialIndex = number of dials:\n    Add code to codes and return."
+              }
+            ]
+          },
+          {
+            "key": "choices",
+            "selected": "all",
+            "options": [
+              {
+                "id": "first",
+                "text": "  For only the first weight in dials[dialIndex]:"
+              },
+              {
+                "id": "all",
+                "text": "  For every weight in dials[dialIndex]:"
+              }
+            ]
+          },
+          {
+            "key": "bust",
+            "selected": "weight",
+            "options": [
+              {
+                "id": "weight",
+                "text": "    If weight > limit, skip this weight."
+              },
+              {
+                "id": "atleast",
+                "text": "    If total + weight ≥ limit, skip this weight."
+              },
+              {
+                "id": "over",
+                "text": "    If total + weight > limit, skip this weight."
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    BUILD(dialIndex + 1, code followed by weight, total + weight)\nEnd function\nBUILD(0, empty list, 0)\nReturn codes."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "dials": [
+            [
+              4,
+              9
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              5
+            ]
+          ],
+          "limit": 12
+        }
+      }
+    ],
+    "tests": [
+      {
+        "input": {
+          "dials": [
+            [
+              4,
+              9
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              5
+            ]
+          ],
+          "limit": 12
+        },
+        "expected": [
+          [
+            4,
+            2,
+            5
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              3,
+              8
+            ],
+            [
+              6
+            ]
+          ],
+          "limit": 9
+        },
+        "expected": [
+          [
+            3,
+            6
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              11,
+              16,
+              1
+            ]
+          ],
+          "limit": 10
+        },
+        "expected": [
+          [
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              5,
+              14,
+              11
+            ],
+            [
+              13
+            ],
+            [
+              3,
+              16
+            ]
+          ],
+          "limit": 25
+        },
+        "expected": [
+          [
+            5,
+            13,
+            3
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              16
+            ],
+            [
+              14,
+              15,
+              12
+            ]
+          ],
+          "limit": 43
+        },
+        "expected": [
+          [
+            16,
+            14
+          ],
+          [
+            16,
+            15
+          ],
+          [
+            16,
+            12
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              12
+            ],
+            [
+              2,
+              11
+            ]
+          ],
+          "limit": 6
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              11
+            ]
+          ],
+          "limit": 14
+        },
+        "expected": [
+          [
+            11
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              19,
+              8
+            ]
+          ],
+          "limit": 9
+        },
+        "expected": [
+          [
+            8
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              12,
+              9
+            ],
+            [
+              19,
+              20
+            ]
+          ],
+          "limit": 16
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              20,
+              9,
+              18
+            ],
+            [
+              8
+            ]
+          ],
+          "limit": 26
+        },
+        "expected": [
+          [
+            9,
+            8
+          ],
+          [
+            18,
+            8
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              16,
+              5
+            ],
+            [
+              19,
+              4,
+              9
+            ]
+          ],
+          "limit": 21
+        },
+        "expected": [
+          [
+            16,
+            4
+          ],
+          [
+            5,
+            4
+          ],
+          [
+            5,
+            9
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              9
+            ],
+            [
+              3,
+              16,
+              13
+            ],
+            [
+              11
+            ]
+          ],
+          "limit": 35
+        },
+        "expected": [
+          [
+            9,
+            3,
+            11
+          ],
+          [
+            9,
+            13,
+            11
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              11,
+              4,
+              9
+            ]
+          ],
+          "limit": 14
+        },
+        "expected": [
+          [
+            11
+          ],
+          [
+            4
+          ],
+          [
+            9
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              9
+            ],
+            [
+              15
+            ],
+            [
+              13
+            ]
+          ],
+          "limit": 29
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              5
+            ],
+            [
+              3
+            ],
+            [
+              5,
+              14,
+              15
+            ]
+          ],
+          "limit": 10
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              3,
+              20,
+              1
+            ]
+          ],
+          "limit": 40
+        },
+        "expected": [
+          [
+            3
+          ],
+          [
+            20
+          ],
+          [
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              13,
+              14,
+              15
+            ],
+            [
+              13,
+              10,
+              15
+            ],
+            [
+              5,
+              10
+            ]
+          ],
+          "limit": 27
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              2
+            ],
+            [
+              12,
+              1
+            ],
+            [
+              11,
+              12,
+              5
+            ],
+            [
+              15
+            ]
+          ],
+          "limit": 10
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              3
+            ]
+          ],
+          "limit": 6
+        },
+        "expected": [
+          [
+            3
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              11
+            ]
+          ],
+          "limit": 26
+        },
+        "expected": [
+          [
+            11
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              11,
+              16
+            ]
+          ],
+          "limit": 16
+        },
+        "expected": [
+          [
+            11
+          ],
+          [
+            16
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              20,
+              17,
+              6
+            ],
+            [
+              4
+            ]
+          ],
+          "limit": 9
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              12,
+              13
+            ],
+            [
+              7,
+              4
+            ]
+          ],
+          "limit": 42
+        },
+        "expected": [
+          [
+            12,
+            7
+          ],
+          [
+            12,
+            4
+          ],
+          [
+            13,
+            7
+          ],
+          [
+            13,
+            4
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              8
+            ],
+            [
+              2,
+              19
+            ]
+          ],
+          "limit": 21
+        },
+        "expected": [
+          [
+            8,
+            2
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              19,
+              4
+            ]
+          ],
+          "limit": 18
+        },
+        "expected": [
+          [
+            4
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              20,
+              1,
+              18
+            ],
+            [
+              12
+            ]
+          ],
+          "limit": 44
+        },
+        "expected": [
+          [
+            20,
+            12
+          ],
+          [
+            1,
+            12
+          ],
+          [
+            18,
+            12
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              20,
+              17,
+              14
+            ],
+            [
+              16
+            ]
+          ],
+          "limit": 30
+        },
+        "expected": [
+          [
+            14,
+            16
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              12
+            ],
+            [
+              14
+            ]
+          ],
+          "limit": 32
+        },
+        "expected": [
+          [
+            12,
+            14
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              6,
+              19
+            ],
+            [
+              5,
+              18
+            ],
+            [
+              20,
+              1
+            ],
+            [
+              3,
+              12,
+              5
+            ]
+          ],
+          "limit": 15
+        },
+        "expected": [
+          [
+            6,
+            5,
+            1,
+            3
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              5,
+              6,
+              15
+            ],
+            [
+              17
+            ],
+            [
+              7
+            ]
+          ],
+          "limit": 20
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              11,
+              16
+            ]
+          ],
+          "limit": 33
+        },
+        "expected": [
+          [
+            11
+          ],
+          [
+            16
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              12,
+              5
+            ],
+            [
+              15,
+              4,
+              9
+            ]
+          ],
+          "limit": 32
+        },
+        "expected": [
+          [
+            12,
+            15
+          ],
+          [
+            12,
+            4
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            5,
+            15
+          ],
+          [
+            5,
+            4
+          ],
+          [
+            5,
+            9
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              17,
+              10,
+              11
+            ],
+            [
+              5,
+              2
+            ],
+            [
+              8,
+              1
+            ]
+          ],
+          "limit": 39
+        },
+        "expected": [
+          [
+            17,
+            5,
+            8
+          ],
+          [
+            17,
+            5,
+            1
+          ],
+          [
+            17,
+            2,
+            8
+          ],
+          [
+            17,
+            2,
+            1
+          ],
+          [
+            10,
+            5,
+            8
+          ],
+          [
+            10,
+            5,
+            1
+          ],
+          [
+            10,
+            2,
+            8
+          ],
+          [
+            10,
+            2,
+            1
+          ],
+          [
+            11,
+            5,
+            8
+          ],
+          [
+            11,
+            5,
+            1
+          ],
+          [
+            11,
+            2,
+            8
+          ],
+          [
+            11,
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              9,
+              18,
+              3
+            ],
+            [
+              17
+            ],
+            [
+              3,
+              8,
+              17
+            ]
+          ],
+          "limit": 27
+        },
+        "expected": [
+          [
+            3,
+            17,
+            3
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              13
+            ],
+            [
+              7,
+              12
+            ],
+            [
+              2,
+              7
+            ]
+          ],
+          "limit": 45
+        },
+        "expected": [
+          [
+            13,
+            7,
+            2
+          ],
+          [
+            13,
+            7,
+            7
+          ],
+          [
+            13,
+            12,
+            2
+          ],
+          [
+            13,
+            12,
+            7
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              11,
+              8,
+              1
+            ]
+          ],
+          "limit": 29
+        },
+        "expected": [
+          [
+            11
+          ],
+          [
+            8
+          ],
+          [
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              1,
+              10,
+              3
+            ],
+            [
+              13
+            ],
+            [
+              15
+            ]
+          ],
+          "limit": 15
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              19,
+              20,
+              5
+            ]
+          ],
+          "limit": 25
+        },
+        "expected": [
+          [
+            19
+          ],
+          [
+            20
+          ],
+          [
+            5
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              5,
+              6
+            ],
+            [
+              12,
+              1,
+              18
+            ],
+            [
+              20
+            ]
+          ],
+          "limit": 35
+        },
+        "expected": [
+          [
+            5,
+            1,
+            20
+          ],
+          [
+            6,
+            1,
+            20
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              20
+            ],
+            [
+              18
+            ]
+          ],
+          "limit": 45
+        },
+        "expected": [
+          [
+            20,
+            18
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              2,
+              3,
+              12
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              5
+            ],
+            [
+              15
+            ]
+          ],
+          "limit": 34
+        },
+        "expected": [
+          [
+            2,
+            2,
+            5,
+            15
+          ],
+          [
+            2,
+            7,
+            5,
+            15
+          ],
+          [
+            3,
+            2,
+            5,
+            15
+          ],
+          [
+            3,
+            7,
+            5,
+            15
+          ],
+          [
+            12,
+            2,
+            5,
+            15
+          ]
+        ]
+      },
+      {
+        "input": {
+          "dials": [
+            [
+              15,
+              16
+            ]
+          ],
+          "limit": 42
+        },
+        "expected": [
+          [
+            15
+          ],
+          [
+            16
+          ]
+        ]
+      }
+    ]
   }
 ]

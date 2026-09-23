@@ -356,7 +356,7 @@ function validateCounterexampleLesson(problem) {
   const spec = problem.counterexampleLesson;
   if (!spec) return errors.push(`${problem.id}: missing authored Step 2 spec`);
   for (const field of ["nodeNames", "startNode", "edges", "correctSearch", "mistakenSearch"]) if (!String(spec.vocabulary?.[field] || "").trim()) errors.push(`${problem.id}/step2: missing vocabulary.${field}`);
-  const labelRules = new Set(["contiguous-zero", "contiguous-one", "positive-integer", "coordinate", "interior-coordinate", "state-pair", "identifier", "nested-path", "tree-path", "partial-string", "free"]);
+  const labelRules = new Set(["contiguous-zero", "contiguous-one", "positive-integer", "coordinate", "interior-coordinate", "state-pair", "identifier", "nested-path", "tree-path", "partial-string", "weight-prefix", "free"]);
   if (!labelRules.has(spec.nodeLabels?.rule) || !String(spec.nodeLabels?.description || "").trim()) errors.push(`${problem.id}/step2: missing or invalid nodeLabels rule`);
   if (spec.fixedStart && !String(spec.fixedStart).trim()) errors.push(`${problem.id}/step2: fixedStart must be a nonempty label`);
   if (spec.startRule && spec.startRule !== "graph-root") errors.push(`${problem.id}/step2: unsupported startRule ${spec.startRule}`);
@@ -548,8 +548,9 @@ for (const problem of problems) {
 const counterSemanticFixtures = JSON.parse(fs.readFileSync(path.resolve(__dirname, "fixtures/step2-semantic-inputs.json"), "utf8"));
 for (const fixture of counterSemanticFixtures) validateCounterSemanticInputs(`fixture/${fixture.id}`, fixture.input);
 
-if (problems.length !== 75) errors.push(`Expected 75 problems; found ${problems.length}`);
-for (const category of Object.keys(counts)) if (counts[category] !== 25) errors.push(`Expected 25 ${category}; found ${counts[category]}`);
+const expectedCounts = { original: 25, variant: 26, new: 25 };
+if (problems.length !== 76) errors.push(`Expected 76 problems; found ${problems.length}`);
+for (const category of Object.keys(counts)) if (counts[category] !== expectedCounts[category]) errors.push(`Expected ${expectedCounts[category]} ${category}; found ${counts[category]}`);
 for (const id of sourceIds) if (!ids.has(id)) errors.push(`Missing source problem: ${id}`);
 for (const id of ids) if (!sourceIds.has(id)) errors.push(`Unexpected problem: ${id}`);
 for (const [choiceCount, slots] of lessonAnswerSlots) if (Math.max(...slots) - Math.min(...slots) > 1) errors.push(`V3 answer positions for ${choiceCount}-choice questions are unbalanced: ${slots.join(", ")}`);
@@ -571,4 +572,4 @@ if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
-console.log(`Validated ${problems.length} visual lessons: 25 original, 25 variant, 25 new.`);
+console.log(`Validated ${problems.length} visual lessons: 25 original, 26 variant, 25 new.`);

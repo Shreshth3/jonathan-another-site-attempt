@@ -3922,5 +3922,160 @@
         4
       ]
     }
+  },
+  {
+    "id": "the-balance-lock",
+    "visualKind": "backtracking",
+    "pictureQuestions": [
+      {
+        "id": "one-safe-code",
+        "input": "dials = [[5,1],[4,7],[3]], limit = 9",
+        "prompt": "For dials `[5, 1]`, `[4, 7]`, `[3]` with limit `9`, which complete code list is safe?",
+        "correct": "one",
+        "choices": [
+          {
+            "id": "one",
+            "label": "Only code `[1, 4, 3]`",
+            "feedback": "Correct. 1+4+3 = 8 is the only total that stays at most 9.",
+            "misconception": null
+          },
+          {
+            "id": "all-four",
+            "label": "All four codes",
+            "feedback": "Every single weight is at most 9, but the lock adds them. Only 1+4+3 = 8 stays at most 9.",
+            "misconception": "check-weight-not-total"
+          },
+          {
+            "id": "partial",
+            "label": "Codes `[1, 4, 3]` and `[5, 4]`",
+            "feedback": "5+4 = 9 lands on the limit after two dials, but the code is not finished. The last dial adds 3, and 12 busts.",
+            "misconception": "stop-when-total-hits-limit"
+          },
+          {
+            "id": "three",
+            "label": "Codes `[1, 4, 3]`, `[1, 7, 3]`, and `[5, 4, 3]`",
+            "feedback": "These keep every code whose first two dials are safe. The last dial still adds 3: 1+7+3 = 11 and 5+4+3 = 12 both bust.",
+            "misconception": "skip-final-bust-check"
+          }
+        ]
+      },
+      {
+        "id": "no-safe-code",
+        "input": "dials = [[4,2],[5],[6,9,8]], limit = 12",
+        "prompt": "For dials `[4, 2]`, `[5]`, `[6, 9, 8]` with limit `12`, how many complete codes are safe?",
+        "correct": "zero",
+        "choices": [
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "Correct. The smallest possible total is 2+5+6 = 13, which is over 12.",
+            "misconception": null
+          },
+          {
+            "id": "six",
+            "label": "`6`",
+            "feedback": "Every single weight is at most 12, but the lock adds them. Every full total is at least 13, so every code busts.",
+            "misconception": "check-weight-not-total"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "This accepts 4,5 and 2,5 as complete before the last dial adds its weight.",
+            "misconception": "finish-one-dial-early"
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "This counts the four safe partial codes 4, 2, 4,5, and 2,5 instead of completed three-weight codes.",
+            "misconception": "count-partial-prefixes"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is a node in the code-building decision tree?",
+      "correct": "partial-code",
+      "choices": [
+        {
+          "id": "partial-code",
+          "label": "A safe partial code: the weights chosen on the first few dials, with total at most limit. The root is the empty code.",
+          "feedback": "Correct. Each level records one more dial choice, and the total comes from the weights on the path.",
+          "misconception": null
+        },
+        {
+          "id": "running-total",
+          "label": "One node per running total, so codes with the same total share a node.",
+          "feedback": "Different codes can reach the same total, like 2,5 and 5,2. Each is its own answer, so each prefix needs its own node.",
+          "misconception": "merge-by-total"
+        },
+        {
+          "id": "full-code",
+          "label": "Only a completed code using every dial.",
+          "feedback": "Completed codes are leaves. Partial-code nodes are needed to show the choices leading to them.",
+          "misconception": "leaves-only"
+        },
+        {
+          "id": "weight",
+          "label": "One node per weight value, no matter which dial offered it.",
+          "feedback": "The same weight on different dials, or after different prefixes, is a different state. A node must remember the whole prefix.",
+          "misconception": "forget-prefix"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When does a partial code have an edge to a longer code?",
+      "correct": "safe-next-weight",
+      "choices": [
+        {
+          "id": "safe-next-weight",
+          "label": "Choose one weight from the next dial whose new running total is still at most limit.",
+          "feedback": "Correct. The edge appends one next-dial weight that does not bust.",
+          "misconception": null
+        },
+        {
+          "id": "weight-only",
+          "label": "Choose any weight from the next dial that is at most limit by itself.",
+          "feedback": "The lock adds up every dial. A small weight can still push the running total over limit.",
+          "misconception": "check-weight-not-total"
+        },
+        {
+          "id": "strict",
+          "label": "Choose one weight from the next dial whose new running total is below limit.",
+          "feedback": "Landing exactly on limit is safe, like 21 in blackjack. Only going over busts.",
+          "misconception": "bust-at-limit"
+        },
+        {
+          "id": "skip-dial",
+          "label": "If every weight busts, skip to the following dial without adding a weight.",
+          "feedback": "A full code needs one weight from every dial. A prefix whose every choice busts has no child.",
+          "misconception": "skip-blocked-dial"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `start` for the empty root. After that, list the chosen weights in dial order, separated by commas. Example: `4,2`.",
+      "pattern": "^(?:start|[1-9]\\d*(?:,[1-9]\\d*)*)$",
+      "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "leaves-only",
+      "no": "only complete-code leaves should become nodes.",
+      "yes": "A safe unfinished code should have its own node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "two-dials",
+        "concept-nodes",
+        "early-bust",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   }
 ]

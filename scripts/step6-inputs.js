@@ -231,7 +231,17 @@ module.exports = {
  C('All six dials contribute',['m','n','o','p','q','r']),
  C('Unequal choices on first and last dials',['wxyz','a','bc']),
  C('A rune can repeat after a different middle rune',['ab','c','ab']),
- C('Matching neighboring singletons leave no valid code',['t','t','uv'])]
+ C('Matching neighboring singletons leave no valid code',['t','t','uv'])],
+'the-balance-lock':[
+ C('One dial keeps only weights within the limit',[[12,5,30,8]],10),
+ C('A total equal to the limit is safe',[[6,11],[4,9]],15),
+ C('An early bust prunes the whole branch',[[20,3],[5,14],[2,7]],18),
+ C('A branch can survive until the last dial and still bust',[[7],[6],[9,2]],16),
+ C('Every code busts',[[10,12],[9]],17),
+ C('A large limit keeps every code',[[1,2],[3,4],[5]],100),
+ C('A bust does not end the rest of the dial',[[25,4,17],[6]],24),
+ C('Six dials each add weight',[[1],[2],[3],[4],[5],[6,1]],20),
+ C('The limit checks the running total, not one weight',[[9,4],[8,3]],12)]
 };
 // The zero-edge metro case still has a colors argument.
 module.exports['one-color-metro-ride'][3].args = [9,[],[],6,6];

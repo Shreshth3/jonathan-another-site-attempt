@@ -30644,5 +30644,1208 @@
         4
       ]
     }
+  },
+  {
+    "id": "the-balance-lock",
+    "facets": [
+      "exact dial weights",
+      "prefix state identity",
+      "safe one-weight extensions",
+      "all safe codes"
+    ],
+    "buildTasks": [
+      {
+        "id": "two-dials",
+        "title": "Keep codes that land on the limit",
+        "facet": "all safe codes",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "dials=[[2,5],[3,6]], limit=8",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2,3",
+              "label": "2,3"
+            },
+            {
+              "id": "2,6",
+              "label": "2,6"
+            },
+            {
+              "id": "5",
+              "label": "5"
+            },
+            {
+              "id": "5,3",
+              "label": "5,3"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2,3"
+            },
+            {
+              "from": "2",
+              "to": "2,6"
+            },
+            {
+              "from": "start",
+              "to": "5"
+            },
+            {
+              "from": "5",
+              "to": "5,3"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which complete code list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[[2,3],[2,6],[5,3]]",
+              "feedback": "Correct. 2,6 and 5,3 total exactly 8, which is safe. Only 5,6 goes over.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[[2,3]]",
+              "feedback": "This busts when the total reaches 8. Landing exactly on the limit is safe; only going over busts.",
+              "misconception": "bust-at-limit"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "2,6 and 5,3 total exactly 8, which is safe. Only 5,6 goes over."
+      },
+      {
+        "id": "early-bust",
+        "title": "Prune a bust before the last dial",
+        "facet": "safe one-weight extensions",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "dials=[[9,3],[4],[1,6]], limit=12",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "9",
+              "label": "9"
+            },
+            {
+              "id": "3",
+              "label": "3"
+            },
+            {
+              "id": "3,4",
+              "label": "3,4"
+            },
+            {
+              "id": "3,4,1",
+              "label": "3,4,1"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "9"
+            },
+            {
+              "from": "start",
+              "to": "3"
+            },
+            {
+              "from": "3",
+              "to": "3,4"
+            },
+            {
+              "from": "3,4",
+              "to": "3,4,1"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which complete code list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[[3,4,1]]",
+              "feedback": "Correct. 9,4 already totals 13, so that branch stops. 3,4,6 totals 13 and busts too, leaving 3,4,1.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[[9,4,1],[9,4,6],[3,4,1],[3,4,6]]",
+              "feedback": "This compares each weight with 12 by itself. Every weight passes, but the lock adds them, so 9,4 busts at 13.",
+              "misconception": "check-weight-not-total"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "9,4 already totals 13, so that branch stops. 3,4,6 totals 13 and busts too, leaving 3,4,1."
+      },
+      {
+        "id": "all-bust",
+        "title": "Handle every code busting",
+        "facet": "exact dial weights",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "dials=[[7,10],[8]], limit=14",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "7",
+              "label": "7"
+            },
+            {
+              "id": "10",
+              "label": "10"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "7"
+            },
+            {
+              "from": "start",
+              "to": "10"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which complete code list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[]",
+              "feedback": "Correct. 7+8 = 15 and 10+8 = 18 both go over 14.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[[7,8],[10,8]]",
+              "feedback": "This checks the total before adding the new weight, so the last dial's weight is never checked.",
+              "misconception": "check-total-before-adding"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "7+8 = 15 and 10+8 = 18 both go over 14."
+      },
+      {
+        "id": "one-dial",
+        "title": "Check the first dial too",
+        "facet": "prefix state identity",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "dials=[[5,12,3]], limit=5",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "5",
+              "label": "5"
+            },
+            {
+              "id": "3",
+              "label": "3"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "5"
+            },
+            {
+              "from": "start",
+              "to": "3"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which complete code list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[[5],[3]]",
+              "feedback": "Correct. A one-dial code is just its weight. 5 lands on the limit and is safe; 12 busts.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[[5],[12],[3]]",
+              "feedback": "This checks only when an earlier weight exists, so it never checks the first dial and keeps 12.",
+              "misconception": "skip-check-on-first-dial"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "A one-dial code is just its weight. 5 lands on the limit and is safe; 12 busts."
+      }
+    ],
+    "conceptTasks": [
+      {
+        "id": "concept-picture",
+        "title": "Match every input detail",
+        "facet": "exact dial weights",
+        "kind": "visual-options",
+        "prompt": "Which picture exactly matches this raw input?",
+        "input": "dials=[[1,6],[2,5]], limit=7",
+        "choices": [
+          {
+            "id": "exact",
+            "label": "Picture A",
+            "feedback": "Correct. Every safe prefix, including dead end 6, and every one-weight extension appears exactly once.",
+            "misconception": null,
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "1",
+                  "label": "1"
+                },
+                {
+                  "id": "1,2",
+                  "label": "1,2"
+                },
+                {
+                  "id": "1,5",
+                  "label": "1,5"
+                },
+                {
+                  "id": "6",
+                  "label": "6"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "1"
+                },
+                {
+                  "from": "1",
+                  "to": "1,2"
+                },
+                {
+                  "from": "1",
+                  "to": "1,5"
+                },
+                {
+                  "from": "start",
+                  "to": "6"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-node",
+            "label": "Picture D",
+            "feedback": "Prefix 6 is missing. Its total 6 is safe, so it is a node even though every next weight busts.",
+            "misconception": "omit-dead-end-prefix",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "1",
+                  "label": "1"
+                },
+                {
+                  "id": "1,2",
+                  "label": "1,2"
+                },
+                {
+                  "id": "1,5",
+                  "label": "1,5"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "1"
+                },
+                {
+                  "from": "1",
+                  "to": "1,2"
+                },
+                {
+                  "from": "1",
+                  "to": "1,5"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-edge",
+            "label": "Picture B",
+            "feedback": "The direct extension 1→1,5 is missing.",
+            "misconception": "omit-direct-edge",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "1",
+                  "label": "1"
+                },
+                {
+                  "id": "1,2",
+                  "label": "1,2"
+                },
+                {
+                  "id": "1,5",
+                  "label": "1,5"
+                },
+                {
+                  "id": "6",
+                  "label": "6"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "1"
+                },
+                {
+                  "from": "1",
+                  "to": "1,2"
+                },
+                {
+                  "from": "start",
+                  "to": "6"
+                }
+              ]
+            }
+          },
+          {
+            "id": "busted-node",
+            "label": "Picture C",
+            "feedback": "6,2 totals 8, which is over limit 7. A busted prefix is pruned, so it gets no node.",
+            "misconception": "draw-busted-prefix",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "1",
+                  "label": "1"
+                },
+                {
+                  "id": "1,2",
+                  "label": "1,2"
+                },
+                {
+                  "id": "1,5",
+                  "label": "1,5"
+                },
+                {
+                  "id": "6",
+                  "label": "6"
+                },
+                {
+                  "id": "6,2",
+                  "label": "6,2"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "1"
+                },
+                {
+                  "from": "1",
+                  "to": "1,2"
+                },
+                {
+                  "from": "1",
+                  "to": "1,5"
+                },
+                {
+                  "from": "start",
+                  "to": "6"
+                },
+                {
+                  "from": "6",
+                  "to": "6,2"
+                }
+              ]
+            }
+          }
+        ],
+        "correct": "exact",
+        "why": "Every safe prefix and every one-weight extension appears exactly once.",
+        "remedial": {
+          "id": "repair-1",
+          "title": "Fresh proof · Match every input detail",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "dials=[[4],[3,9]], limit=10",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "4",
+                "label": "4"
+              },
+              {
+                "id": "4,3",
+                "label": "4,3"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "4"
+              },
+              {
+                "from": "4",
+                "to": "4,3"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which complete code list is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[[4,3]]",
+                "feedback": "Correct. 4+3 = 7 is safe; 4+9 = 13 busts.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[[4,3],[4,9]]",
+                "feedback": "This checks the total before adding the new weight, so it never checks the last dial and keeps 4,9.",
+                "misconception": "check-total-before-adding"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "4+3 = 7 is safe; 4+9 = 13 busts."
+        }
+      },
+      {
+        "id": "concept-nodes",
+        "title": "Protect entity identity",
+        "facet": "prefix state identity",
+        "kind": "choice",
+        "prompt": "What is a node in the code-building decision tree?",
+        "input": "dials=[[2,8],[5]], limit=9",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2,5",
+              "label": "2,5"
+            },
+            {
+              "id": "8",
+              "label": "8"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2,5"
+            },
+            {
+              "from": "start",
+              "to": "8"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "partial-code",
+            "label": "A safe partial code: the weights chosen on the first few dials, with total at most limit. The root is the empty code.",
+            "feedback": "Correct. Each level records one more dial choice, and the total comes from the weights on the path.",
+            "misconception": null
+          },
+          {
+            "id": "running-total",
+            "label": "One node per running total, so codes with the same total share a node.",
+            "feedback": "Different codes can reach the same total, like 2,5 and 5,2. Each is its own answer, so each prefix needs its own node.",
+            "misconception": "merge-by-total"
+          },
+          {
+            "id": "full-code",
+            "label": "Only a completed code using every dial.",
+            "feedback": "Completed codes are leaves. Partial-code nodes are needed to show the choices leading to them.",
+            "misconception": "leaves-only"
+          },
+          {
+            "id": "weight",
+            "label": "One node per weight value, no matter which dial offered it.",
+            "feedback": "The same weight on different dials, or after different prefixes, is a different state. A node must remember the whole prefix.",
+            "misconception": "forget-prefix"
+          }
+        ],
+        "correct": "partial-code",
+        "why": "Correct. Each level records one more dial choice, and the total comes from the weights on the path.",
+        "remedial": {
+          "id": "repair-2",
+          "title": "Fresh proof · Protect entity identity",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "dials=[[3,4],[4,3]], limit=10",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "3",
+                "label": "3"
+              },
+              {
+                "id": "3,4",
+                "label": "3,4"
+              },
+              {
+                "id": "3,3",
+                "label": "3,3"
+              },
+              {
+                "id": "4",
+                "label": "4"
+              },
+              {
+                "id": "4,4",
+                "label": "4,4"
+              },
+              {
+                "id": "4,3",
+                "label": "4,3"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "3"
+              },
+              {
+                "from": "3",
+                "to": "3,4"
+              },
+              {
+                "from": "3",
+                "to": "3,3"
+              },
+              {
+                "from": "start",
+                "to": "4"
+              },
+              {
+                "from": "4",
+                "to": "4,4"
+              },
+              {
+                "from": "4",
+                "to": "4,3"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "How many complete codes are returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "4",
+                "feedback": "Correct. 3,4, 3,3, 4,4, and 4,3 are four different codes, even though 3,4 and 4,3 have the same total.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "3",
+                "feedback": "This merges 3,4 and 4,3 because both total 7, losing a separate code.",
+                "misconception": "merge-by-total"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "3,4, 3,3, 4,4, and 4,3 are four different codes, even though 3,4 and 4,3 have the same total."
+        }
+      },
+      {
+        "id": "concept-relations",
+        "title": "Protect direct relations",
+        "facet": "safe one-weight extensions",
+        "kind": "choice",
+        "prompt": "When does a partial code have an edge to a longer code?",
+        "input": "dials=[[6],[5,2],[1]], limit=9",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "6",
+              "label": "6"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "6"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "safe-next-weight",
+            "label": "Choose one weight from the next dial whose new running total is still at most limit.",
+            "feedback": "Correct. The edge appends one next-dial weight that does not bust.",
+            "misconception": null
+          },
+          {
+            "id": "weight-only",
+            "label": "Choose any weight from the next dial that is at most limit by itself.",
+            "feedback": "The lock adds up every dial. A small weight can still push the running total over limit.",
+            "misconception": "check-weight-not-total"
+          },
+          {
+            "id": "strict",
+            "label": "Choose one weight from the next dial whose new running total is below limit.",
+            "feedback": "Landing exactly on limit is safe, like 21 in blackjack. Only going over busts.",
+            "misconception": "bust-at-limit"
+          },
+          {
+            "id": "skip-dial",
+            "label": "If every weight busts, skip to the following dial without adding a weight.",
+            "feedback": "A full code needs one weight from every dial. A prefix whose every choice busts has no child.",
+            "misconception": "skip-blocked-dial"
+          }
+        ],
+        "correct": "safe-next-weight",
+        "why": "Correct. The edge appends one next-dial weight that does not bust.",
+        "remedial": {
+          "id": "repair-3",
+          "title": "Fresh proof · Protect direct relations",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "dials=[[3],[8,4],[2]], limit=9",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "3",
+                "label": "3"
+              },
+              {
+                "id": "3,4",
+                "label": "3,4"
+              },
+              {
+                "id": "3,4,2",
+                "label": "3,4,2"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "3"
+              },
+              {
+                "from": "3",
+                "to": "3,4"
+              },
+              {
+                "from": "3,4",
+                "to": "3,4,2"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which complete codes are safe?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[[3,4,2]]",
+                "feedback": "Correct. 3+4+2 = 9 lands exactly on the limit, which is safe. 3+8 = 11 busts.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[]",
+                "feedback": "This busts when the total reaches 9. Only going over the limit busts.",
+                "misconception": "bust-at-limit"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "3+4+2 = 9 lands exactly on the limit, which is safe. 3+8 = 11 busts."
+        }
+      },
+      {
+        "id": "concept-output",
+        "title": "Predict from a fresh input",
+        "facet": "all safe codes",
+        "kind": "choice",
+        "prompt": "For dials `[5, 1]`, `[4, 7]`, `[3]` with limit `9`, which complete code list is safe?",
+        "input": "dials=[[5,1],[4,7],[3]], limit=9",
+        "choices": [
+          {
+            "id": "one",
+            "label": "Only code `[1, 4, 3]`",
+            "feedback": "Correct. 1+4+3 = 8 is the only total that stays at most 9.",
+            "misconception": null
+          },
+          {
+            "id": "all-four",
+            "label": "All four codes",
+            "feedback": "Every single weight is at most 9, but the lock adds them. Only 1+4+3 = 8 stays at most 9.",
+            "misconception": "check-weight-not-total"
+          },
+          {
+            "id": "partial",
+            "label": "Codes `[1, 4, 3]` and `[5, 4]`",
+            "feedback": "5+4 = 9 lands on the limit after two dials, but the code is not finished. The last dial adds 3, and 12 busts.",
+            "misconception": "stop-when-total-hits-limit"
+          },
+          {
+            "id": "three",
+            "label": "Codes `[1, 4, 3]`, `[1, 7, 3]`, and `[5, 4, 3]`",
+            "feedback": "These keep every code whose first two dials are safe. The last dial still adds 3: 1+7+3 = 11 and 5+4+3 = 12 both bust.",
+            "misconception": "skip-final-bust-check"
+          }
+        ],
+        "correct": "one",
+        "why": "Correct. 1+4+3 = 8 is the only total that stays at most 9.",
+        "remedial": {
+          "id": "repair-4",
+          "title": "Fresh proof · Predict from a fresh input",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "dials=[[2,9],[6]], limit=8",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "2",
+                "label": "2"
+              },
+              {
+                "id": "2,6",
+                "label": "2,6"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "2"
+              },
+              {
+                "from": "2",
+                "to": "2,6"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which complete codes are safe?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[[2,6]]",
+                "feedback": "Correct. 2+6 = 8 lands exactly on the limit, which is safe. 9 busts on the first dial.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[]",
+                "feedback": "This busts when the total reaches 8. Only going over the limit busts.",
+                "misconception": "bust-at-limit"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "2+6 = 8 lands exactly on the limit, which is safe. 9 busts on the first dial."
+        }
+      },
+      {
+        "id": "concept-bug",
+        "title": "Catch a near-miss implementation",
+        "facet": "all safe codes",
+        "kind": "choice",
+        "prompt": "For dials `[4, 2]`, `[5]`, `[6, 9, 8]` with limit `12`, how many complete codes are safe?",
+        "input": "dials=[[4,2],[5],[6,9,8]], limit=12",
+        "choices": [
+          {
+            "id": "zero",
+            "label": "`0`",
+            "feedback": "Correct. The smallest possible total is 2+5+6 = 13, which is over 12.",
+            "misconception": null
+          },
+          {
+            "id": "six",
+            "label": "`6`",
+            "feedback": "Every single weight is at most 12, but the lock adds them. Every full total is at least 13, so every code busts.",
+            "misconception": "check-weight-not-total"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "This accepts 4,5 and 2,5 as complete before the last dial adds its weight.",
+            "misconception": "finish-one-dial-early"
+          },
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "This counts the four safe partial codes 4, 2, 4,5, and 2,5 instead of completed three-weight codes.",
+            "misconception": "count-partial-prefixes"
+          }
+        ],
+        "correct": "zero",
+        "why": "Correct. The smallest possible total is 2+5+6 = 13, which is over 12.",
+        "remedial": {
+          "id": "repair-5",
+          "title": "Fresh proof · Catch a near-miss implementation",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "dials=[[8,3],[3]], limit=6",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "3",
+                "label": "3"
+              },
+              {
+                "id": "3,3",
+                "label": "3,3"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "3"
+              },
+              {
+                "from": "3",
+                "to": "3,3"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which complete code list is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[[3,3]]",
+                "feedback": "Correct. Different dials may offer the same weight. 3+3 = 6 is safe; 8 busts.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[]",
+                "feedback": "This refuses to reuse weight 3 on a later dial. The lock limits only the total, not repeated weights.",
+                "misconception": "no-repeat-weights"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "Different dials may offer the same weight. 3+3 = 6 is safe; 8 busts."
+        }
+      }
+    ],
+    "structureTasks": [
+      {
+        "id": "transfer-1",
+        "input": "dials=[[5,2],[4],[3]], limit=10",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "5",
+              "label": "5"
+            },
+            {
+              "id": "5,4",
+              "label": "5,4"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2,4",
+              "label": "2,4"
+            },
+            {
+              "id": "2,4,3",
+              "label": "2,4,3"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "5"
+            },
+            {
+              "from": "5",
+              "to": "5,4"
+            },
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2,4"
+            },
+            {
+              "from": "2,4",
+              "to": "2,4,3"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-2",
+        "input": "dials=[[1],[9,3],[2]], limit=6",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            },
+            {
+              "id": "1,3",
+              "label": "1,3"
+            },
+            {
+              "id": "1,3,2",
+              "label": "1,3,2"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "1"
+            },
+            {
+              "from": "1",
+              "to": "1,3"
+            },
+            {
+              "from": "1,3",
+              "to": "1,3,2"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-3",
+        "input": "dials=[[7,2,4],[5]], limit=9",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "7",
+              "label": "7"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2,5",
+              "label": "2,5"
+            },
+            {
+              "id": "4",
+              "label": "4"
+            },
+            {
+              "id": "4,5",
+              "label": "4,5"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "7"
+            },
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2,5"
+            },
+            {
+              "from": "start",
+              "to": "4"
+            },
+            {
+              "from": "4",
+              "to": "4,5"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-4",
+        "input": "dials=[[3],[3],[3]], limit=9",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "3",
+              "label": "3"
+            },
+            {
+              "id": "3,3",
+              "label": "3,3"
+            },
+            {
+              "id": "3,3,3",
+              "label": "3,3,3"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "3"
+            },
+            {
+              "from": "3",
+              "to": "3,3"
+            },
+            {
+              "from": "3,3",
+              "to": "3,3,3"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-5",
+        "input": "dials=[[6,1],[8]], limit=8",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "6",
+              "label": "6"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "6"
+            },
+            {
+              "from": "start",
+              "to": "1"
+            }
+          ]
+        }
+      }
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "two-dials",
+        "concept-nodes",
+        "early-bust",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   }
 ]

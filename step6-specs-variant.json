@@ -7605,5 +7605,309 @@
       }
     ],
     "source": "../jonathan-study-site/data/variants-final-4.json"
+  },
+  {
+    "id": "the-balance-lock",
+    "functionName": "allSafeCodes",
+    "parameters": [
+      {
+        "name": "dials",
+        "label": "dials",
+        "example": [
+          [
+            3,
+            8
+          ],
+          [
+            2,
+            6
+          ]
+        ],
+        "placeholder": "[[3, 8], [2, 6]]",
+        "description": "A list of dials. Each dial is a list of different positive whole-number weights.",
+        "help": "A list of dials. Each dial is a list of different positive whole-number weights."
+      },
+      {
+        "name": "limit",
+        "label": "limit",
+        "example": 10,
+        "placeholder": "10",
+        "description": "The largest safe total. A total over limit busts.",
+        "help": "The largest safe total. A total over limit busts."
+      }
+    ],
+    "starterCode": "function allSafeCodes(dials, limit) {\n  // Write your solution here.\n\n}\n",
+    "correctCode": "// CONTRACT for collectCodes(dials, limit, dialIndex, codeSoFar, totalSoFar, safeCodes):\n//     when this call returns, every safe full code that starts with\n//     `codeSoFar` (whose weights add up to `totalSoFar`) and continues\n//     with weights from dial `dialIndex` onward has been appended to\n//     `safeCodes`.\nconst collectCodes = (dials, limit, dialIndex, codeSoFar, totalSoFar, safeCodes) => {\n    // Base case\n    if (dialIndex === dials.length) {\n        safeCodes.push(codeSoFar);\n        return;\n    }\n\n    // Traverse neighbors\n    const weights = dials[dialIndex];\n\n    for (const weight of weights) {\n        // Like going over 21 in blackjack: a total over the limit busts.\n        // Every weight is positive, so later dials can only add more.\n        // Prune this branch now instead of finishing a doomed code.\n        const newTotal = totalSoFar + weight;\n        if (newTotal > limit) continue;\n\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every safe code that\n        // starts with `codeSoFar` plus `weight` has been appended to\n        // `safeCodes`. Trust it, do not trace it. Trying every weight\n        // that does not bust, each with its guaranteed completions,\n        // covers every safe code that starts with `codeSoFar` —\n        // exactly this function's contract, kept.\n        collectCodes(dials, limit, dialIndex + 1, [...codeSoFar, weight], newTotal, safeCodes);\n    }\n};\n\nconst allSafeCodes = (dials, limit) => {\n    const safeCodes = [];\n\n    // The recursive leap of faith: trust the contract. When this\n    // call returns, `safeCodes` holds every safe code built from dial\n    // 0 onward, starting from total 0 — the complete answer.\n    collectCodes(dials, limit, 0, [], 0, safeCodes);\n\n    return safeCodes;\n};",
+    "tests": [
+      {
+        "id": "the-balance-lock-test-1",
+        "label": "One dial keeps only weights within the limit",
+        "args": [
+          [
+            [
+              12,
+              5,
+              30,
+              8
+            ]
+          ],
+          10
+        ],
+        "expected": [
+          [
+            5
+          ],
+          [
+            8
+          ]
+        ]
+      },
+      {
+        "id": "the-balance-lock-test-2",
+        "label": "A total equal to the limit is safe",
+        "args": [
+          [
+            [
+              6,
+              11
+            ],
+            [
+              4,
+              9
+            ]
+          ],
+          15
+        ],
+        "expected": [
+          [
+            6,
+            4
+          ],
+          [
+            6,
+            9
+          ],
+          [
+            11,
+            4
+          ]
+        ]
+      },
+      {
+        "id": "the-balance-lock-test-3",
+        "label": "An early bust prunes the whole branch",
+        "args": [
+          [
+            [
+              20,
+              3
+            ],
+            [
+              5,
+              14
+            ],
+            [
+              2,
+              7
+            ]
+          ],
+          18
+        ],
+        "expected": [
+          [
+            3,
+            5,
+            2
+          ],
+          [
+            3,
+            5,
+            7
+          ]
+        ]
+      },
+      {
+        "id": "the-balance-lock-test-4",
+        "label": "A branch can survive until the last dial and still bust",
+        "args": [
+          [
+            [
+              7
+            ],
+            [
+              6
+            ],
+            [
+              9,
+              2
+            ]
+          ],
+          16
+        ],
+        "expected": [
+          [
+            7,
+            6,
+            2
+          ]
+        ]
+      },
+      {
+        "id": "the-balance-lock-test-5",
+        "label": "Every code busts",
+        "args": [
+          [
+            [
+              10,
+              12
+            ],
+            [
+              9
+            ]
+          ],
+          17
+        ],
+        "expected": []
+      },
+      {
+        "id": "the-balance-lock-test-6",
+        "label": "A large limit keeps every code",
+        "args": [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              5
+            ]
+          ],
+          100
+        ],
+        "expected": [
+          [
+            1,
+            3,
+            5
+          ],
+          [
+            1,
+            4,
+            5
+          ],
+          [
+            2,
+            3,
+            5
+          ],
+          [
+            2,
+            4,
+            5
+          ]
+        ]
+      },
+      {
+        "id": "the-balance-lock-test-7",
+        "label": "A bust does not end the rest of the dial",
+        "args": [
+          [
+            [
+              25,
+              4,
+              17
+            ],
+            [
+              6
+            ]
+          ],
+          24
+        ],
+        "expected": [
+          [
+            4,
+            6
+          ],
+          [
+            17,
+            6
+          ]
+        ]
+      },
+      {
+        "id": "the-balance-lock-test-8",
+        "label": "Six dials each add weight",
+        "args": [
+          [
+            [
+              1
+            ],
+            [
+              2
+            ],
+            [
+              3
+            ],
+            [
+              4
+            ],
+            [
+              5
+            ],
+            [
+              6,
+              1
+            ]
+          ],
+          20
+        ],
+        "expected": [
+          [
+            1,
+            2,
+            3,
+            4,
+            5,
+            1
+          ]
+        ]
+      },
+      {
+        "id": "the-balance-lock-test-9",
+        "label": "The limit checks the running total, not one weight",
+        "args": [
+          [
+            [
+              9,
+              4
+            ],
+            [
+              8,
+              3
+            ]
+          ],
+          12
+        ],
+        "expected": [
+          [
+            9,
+            3
+          ],
+          [
+            4,
+            8
+          ],
+          [
+            4,
+            3
+          ]
+        ]
+      }
+    ],
+    "source": "../jonathan-study-site/data/variants-final-5.json"
   }
 ]

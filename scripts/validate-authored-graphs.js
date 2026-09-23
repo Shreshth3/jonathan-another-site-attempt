@@ -134,11 +134,30 @@ function deriveRunes(dials) {
   return model;
 }
 
+// Balance lock: a node is a comma-joined prefix whose running total stays at most limit.
+function deriveBalanceLock(dials, limit) {
+  const model = graph(true);
+  addNode(model, 'start');
+  function extend(prefix, total, index) {
+    if (index === dials.length) return;
+    for (const weight of dials[index]) {
+      if (total + weight > limit) continue;
+      const next = prefix ? `${prefix},${weight}` : String(weight);
+      addNode(model, next);
+      addEdge(model, prefix || 'start', next);
+      extend(next, total + weight, index + 1);
+    }
+  }
+  extend('', 0, 0);
+  return model;
+}
+
 function deriveVariant(id, input) {
   if (input.sky || input.marina || input.yard || input.park || input.cave) {
     return deriveGrid(id, input);
   }
   if (input.items || input.playlist) return deriveNested(input.items || input.playlist);
+  if (id === 'the-balance-lock') return deriveBalanceLock(input.dials, input.limit);
   if (input.dials) return deriveRunes(input.dials);
   const model = graph();
 

@@ -1606,5 +1606,73 @@
         }
       ]
     }
+  },
+  {
+    "id": "the-balance-lock",
+    "vocabulary": {
+      "nodeNames": "safe partial codes",
+      "startNode": "empty code",
+      "edges": "one-weight extensions",
+      "correctSearch": "safe code prefixes reached",
+      "mistakenSearch": "prefixes the flawed lock search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Last weight only",
+        "presentation": "predict-first",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "Two-dial lock",
+        "presentation": "exact-difference",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Code starts halfway",
+        "presentation": "repair-case",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start",
+        "mistakenStartLabel": "5"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "weight-prefix",
+      "description": "Use start for the empty root, then comma-separated weights like 4 or 4,2."
+    },
+    "fixedStart": "start",
+    "input": {
+      "name": "empty code",
+      "prompt": "Choose the empty code",
+      "result": "generated-terminal-strings",
+      "resultLabel": "all safe complete codes",
+      "fields": [
+        {
+          "id": "dials",
+          "kind": "json",
+          "label": "dial weights as a list of weight lists",
+          "prompt": "Enter dial weights as a list of weight lists",
+          "required": true
+        },
+        {
+          "id": "limit",
+          "kind": "integer",
+          "label": "limit",
+          "prompt": "Choose the limit",
+          "required": true,
+          "min": 1
+        }
+      ]
+    }
   }
 ]
