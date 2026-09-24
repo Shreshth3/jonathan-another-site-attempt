@@ -112,7 +112,7 @@ const nodeQuestion = {
   choices: [
     { id: "combo", label: "A combination whose sum is at most limit. The root is the empty combination.", feedback: "Correct. Every node is a combination under the limit, so every node is part of the answer.", misconception: null },
     { id: "number", label: "One node per number in nums.", feedback: "One number can be in many combinations. A node must remember the whole combination chosen so far.", misconception: "number-as-state" },
-    { id: "sum", label: "One node per possible sum, so combinations with the same sum share a node.", feedback: "Different combinations can have the same sum, like `[1, 4]` and `[5]`. Each is its own answer, so each needs its own node.", misconception: "merge-by-sum" },
+    { id: "sum", label: "One node per possible sum, so combinations with the same sum share a node.", feedback: "Different combinations can have the same sum: with nums `[1, 4, 5]`, both `[1, 4]` and `[5]` sum to 5. Each is its own answer, so each needs its own node.", misconception: "merge-by-sum" },
     { id: "full", label: "Only combinations that cannot take another number.", feedback: "Combinations along the way count too. `[]` and `[2]` are answers even when longer combinations extend them.", misconception: "leaves-only" }
   ]
 };
@@ -174,7 +174,7 @@ const lesson = {
   buildTasks: [
     build("all-combos", "Keep a sum that lands on the limit", "every combination counts", [1, 2, 4], 5, "bust-at-limit",
       "1+4 = 5 lands exactly on the limit, which still counts. 2+4 = 6 and 1+2+4 = 7 go over.", "This leaves out sums equal to 5. A sum exactly at the limit still counts; only going over is left out."),
-    build("empty-counts", "Count the empty combination", "exact input numbers", [3, 6], 4, "skip-empty",
+    build("empty-counts", "Count the empty combination", "every combination counts", [3, 6], 4, "skip-empty",
       "The empty combination has sum 0, which is at most 4. 6 is over the limit.", "This leaves out the empty combination. Its sum is 0, so it always counts."),
     build("not-just-leaves", "Keep the combinations along the way", "combination state identity", [2, 3, 4], 5, "leaves-only",
       "Every node is an answer, not just the ones at the bottom. `[]`, `[2]`, `[2, 3]`, `[3]`, and `[4]` all fit.", "This records a combination only when no more numbers fit, so it loses `[]` and `[2]`."),
@@ -198,7 +198,7 @@ const lesson = {
     },
     {
       id: "concept-relations", title: "Protect direct relations", facet: "later-number extensions", kind: "choice",
-      prompt: edgeQuestion.prompt, input: inputText([4, 1, 2], 6), shownModel: canvas([4], 6),
+      prompt: edgeQuestion.prompt, input: inputText([4, 1, 2], 6), shownModel: canvas([4, 1, 2], 6),
       choices: edgeQuestion.choices, correct: edgeQuestion.correct, why: edgeQuestion.choices[0].feedback,
       remedial: remedial("repair-3", "Protect direct relations", [3, 1, 2], 5, "How many combinations are returned?", "reuse-earlier",
         "Each combination appears once: `[]`, `[3]`, `[3, 1]`, `[3, 2]`, `[1]`, `[1, 2]`, and `[2]`.", "This also adds earlier numbers, so it counts `[1, 3]`, `[2, 3]`, and `[2, 1]` again in a different order.", count)

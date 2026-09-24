@@ -4166,7 +4166,7 @@
         {
           "id": "sum",
           "label": "One node per possible sum, so combinations with the same sum share a node.",
-          "feedback": "Different combinations can have the same sum, like `[1, 4]` and `[5]`. Each is its own answer, so each needs its own node.",
+          "feedback": "Different combinations can have the same sum: with nums `[1, 4, 5]`, both `[1, 4]` and `[5]` sum to 5. Each is its own answer, so each needs its own node.",
           "misconception": "merge-by-sum"
         },
         {

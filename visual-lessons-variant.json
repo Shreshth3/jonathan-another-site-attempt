@@ -31937,7 +31937,7 @@
       {
         "id": "empty-counts",
         "title": "Count the empty combination",
-        "facet": "exact input numbers",
+        "facet": "every combination counts",
         "prompt": "Use the raw input to complete the challenge. Then choose the result.",
         "input": "nums=[3,6], limit=4",
         "canvas": {
@@ -32385,7 +32385,7 @@
           {
             "id": "sum",
             "label": "One node per possible sum, so combinations with the same sum share a node.",
-            "feedback": "Different combinations can have the same sum, like `[1, 4]` and `[5]`. Each is its own answer, so each needs its own node.",
+            "feedback": "Different combinations can have the same sum: with nums `[1, 4, 5]`, both `[1, 4]` and `[5]` sum to 5. Each is its own answer, so each needs its own node.",
             "misconception": "merge-by-sum"
           },
           {
@@ -32483,12 +32483,52 @@
             {
               "id": "4",
               "label": "4"
+            },
+            {
+              "id": "4,1",
+              "label": "4,1"
+            },
+            {
+              "id": "4,2",
+              "label": "4,2"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            },
+            {
+              "id": "1,2",
+              "label": "1,2"
+            },
+            {
+              "id": "2",
+              "label": "2"
             }
           ],
           "edges": [
             {
               "from": "start",
               "to": "4"
+            },
+            {
+              "from": "4",
+              "to": "4,1"
+            },
+            {
+              "from": "4",
+              "to": "4,2"
+            },
+            {
+              "from": "start",
+              "to": "1"
+            },
+            {
+              "from": "1",
+              "to": "1,2"
+            },
+            {
+              "from": "start",
+              "to": "2"
             }
           ]
         },
