@@ -18,7 +18,7 @@ function requiresTree(problem) {
   return new Set([
     "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain",
     "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "structy-tree-sum",
-    "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "flatten-nested-list-iterator",
+    "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "flatten-nested-list-iterator",
     "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count",
     "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree",
     "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree",
@@ -328,7 +328,7 @@ function exactResult(problem,graph,bugs=[],wrongStart=null){
 }
 
 const roundCount = problems.reduce((total, problem) => total + problem.counterexampleLesson.rounds.length, 0);
-if (roundCount !== 228) failures.push(`Expected 228 single-mistake Step 2 starters; found ${roundCount}`);
+if (roundCount !== 231) failures.push(`Expected 231 single-mistake Step 2 starters; found ${roundCount}`);
 
 function resolveNode(nodes, requested) {
   if (nodes.includes(requested)) return requested;
@@ -358,4 +358,4 @@ for (const problem of problems) for (const [index, round] of problem.counterexam
 }
 
 if(failures.length){console.error(failures.join("\n"));process.exit(1);}
-console.log("Validated all 228 single-mistake Step 2 starters.");
+console.log("Validated all 231 single-mistake Step 2 starters.");

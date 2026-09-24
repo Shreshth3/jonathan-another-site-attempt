@@ -7947,5 +7947,317 @@
       }
     ],
     "source": "../jonathan-study-site/data/variants-final-5.json"
+  },
+  {
+    "id": "under-the-limit",
+    "functionName": "combosUnderLimit",
+    "parameters": [
+      {
+        "name": "nums",
+        "label": "nums",
+        "example": [
+          1,
+          4,
+          6
+        ],
+        "placeholder": "1, 4, 6",
+        "description": "A list of different positive whole numbers.",
+        "help": "A list of different positive whole numbers."
+      },
+      {
+        "name": "limit",
+        "label": "limit",
+        "example": 5,
+        "placeholder": "5",
+        "description": "The largest allowed sum. A combination whose sum is over limit is left out.",
+        "help": "The largest allowed sum. A combination whose sum is over limit is left out."
+      }
+    ],
+    "starterCode": "function combosUnderLimit(nums, limit) {\n  // Write your solution here.\n\n}\n",
+    "correctCode": "// CONTRACT for collectCombos(nums, limit, startIndex, comboSoFar, sumSoFar, combos):\n//     when this call returns, `comboSoFar` and every longer combination\n//     that adds only numbers from index `startIndex` onward and keeps its\n//     sum at most `limit` have been appended to `combos`.\nconst collectCombos = (nums, limit, startIndex, comboSoFar, sumSoFar, combos) => {\n    // Process node: every combination we reach is under the limit, so it\n    // is an answer — including the empty combination at the root.\n    combos.push(comboSoFar);\n\n    // Traverse neighbors: add one later number at a time. There is no\n    // separate base case: when no later number fits, the loop adds nothing.\n    for (let i = startIndex; i < nums.length; i++) {\n        const newSum = sumSoFar + nums[i];\n        if (newSum > limit) continue;\n\n        // The recursive leap of faith, one level down: this call has the\n        // SAME contract — when it returns, the combination with nums[i]\n        // added and all of its longer combinations are in `combos`.\n        // Trust it, do not trace it. Only adding later numbers means each\n        // combination is built exactly once.\n        collectCombos(nums, limit, i + 1, [...comboSoFar, nums[i]], newSum, combos);\n    }\n};\n\nconst combosUnderLimit = (nums, limit) => {\n    const combos = [];\n\n    // The recursive leap of faith: trust the contract. Starting from the\n    // empty combination at index 0 collects every combination that fits.\n    collectCombos(nums, limit, 0, [], 0, combos);\n\n    return combos;\n};",
+    "tests": [
+      {
+        "id": "under-the-limit-test-1",
+        "label": "One number that fits",
+        "args": [
+          [
+            4
+          ],
+          9
+        ],
+        "expected": [
+          [],
+          [
+            4
+          ]
+        ]
+      },
+      {
+        "id": "under-the-limit-test-2",
+        "label": "A sum equal to the limit counts",
+        "args": [
+          [
+            3,
+            5,
+            8
+          ],
+          8
+        ],
+        "expected": [
+          [],
+          [
+            3
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            5
+          ],
+          [
+            8
+          ]
+        ]
+      },
+      {
+        "id": "under-the-limit-test-3",
+        "label": "The list is not sorted",
+        "args": [
+          [
+            9,
+            2,
+            4
+          ],
+          7
+        ],
+        "expected": [
+          [],
+          [
+            2
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            4
+          ]
+        ]
+      },
+      {
+        "id": "under-the-limit-test-4",
+        "label": "A large limit keeps every combination",
+        "args": [
+          [
+            1,
+            2,
+            3
+          ],
+          50
+        ],
+        "expected": [
+          [],
+          [
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3
+          ]
+        ]
+      },
+      {
+        "id": "under-the-limit-test-5",
+        "label": "Three numbers can fit together",
+        "args": [
+          [
+            1,
+            2,
+            3,
+            10
+          ],
+          6
+        ],
+        "expected": [
+          [],
+          [
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3
+          ]
+        ]
+      },
+      {
+        "id": "under-the-limit-test-6",
+        "label": "Only small groups fit",
+        "args": [
+          [
+            6,
+            4,
+            5,
+            3
+          ],
+          10
+        ],
+        "expected": [
+          [],
+          [
+            6
+          ],
+          [
+            6,
+            4
+          ],
+          [
+            6,
+            3
+          ],
+          [
+            4
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            5
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            3
+          ]
+        ]
+      },
+      {
+        "id": "under-the-limit-test-7",
+        "label": "Six numbers, small limit",
+        "args": [
+          [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          4
+        ],
+        "expected": [
+          [],
+          [
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            2
+          ],
+          [
+            3
+          ],
+          [
+            4
+          ]
+        ]
+      },
+      {
+        "id": "under-the-limit-test-8",
+        "label": "A bigger number first does not stop later numbers",
+        "args": [
+          [
+            5,
+            1,
+            4
+          ],
+          5
+        ],
+        "expected": [
+          [],
+          [
+            5
+          ],
+          [
+            1
+          ],
+          [
+            1,
+            4
+          ],
+          [
+            4
+          ]
+        ]
+      },
+      {
+        "id": "under-the-limit-test-9",
+        "label": "A limit smaller than every number leaves only the empty combination",
+        "args": [
+          [
+            7,
+            8,
+            9
+          ],
+          3
+        ],
+        "expected": [
+          []
+        ]
+      }
+    ],
+    "source": "../jonathan-study-site/data/variants-final-6.json"
   }
 ]

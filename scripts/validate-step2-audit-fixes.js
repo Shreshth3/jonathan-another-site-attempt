@@ -87,6 +87,21 @@ test("Balance lock output order does not matter", () => {
 test("Balance lock dials accept one plain row per dial", () => {
   use("the-balance-lock"); same(engine.semantic("3, 8\n2, 6", { id: "dials", kind: "json" }, "dials"), [[3, 8], [2, 6]]);
 });
+// Under the limit: nums [2,3,5], limit 6 → [], [2], [2,3], [3], [5]. Every combination is an answer.
+const under = (nodes, edges, fields = { nums: [2, 3, 5], limit: 6 }) => graph(nodes, edges, { directed: true, start: "start", fields });
+test("Under the limit returns every combination, including the empty one", () => {
+  use("under-the-limit"); const value = under(["start", "2", "2,3", "3", "5"], [["start", "2"], ["2", "2,3"], ["start", "3"], ["start", "5"]]);
+  valid(value); same(engine.result(value), [[], [2], [2, 3], [3], [5]]); same(engine.result(value, ["shallow-search"]), [[], [2], [3], [5]]); same(engine.result(value, ["last-branch"]), [[], [5]]);
+});
+test("Under the limit rejects a reordered duplicate and a missing combination", () => {
+  use("under-the-limit");
+  assert.throws(() => valid(under(["start", "2", "2,3", "3", "3,2", "5"], [["start", "2"], ["2", "2,3"], ["start", "3"], ["3", "3,2"], ["start", "5"]])), /3,2 is not a combination/);
+  assert.throws(() => valid(under(["start", "2", "3", "5"], [["start", "2"], ["start", "3"], ["start", "5"]])), /combination 2,3/);
+});
+test("Under the limit output ignores both orders but not repeats", () => {
+  use("under-the-limit"); const expected = [[], [2], [2, 3], [3], [5]];
+  assert(engine.matches("[[5],[3,2],[3],[2],[]]", expected)); assert(!engine.matches("[[5],[3,2],[2,3],[3],[2],[]]", expected)); assert(!engine.matches("[[2],[2,3],[3],[5]]", expected));
+});
 test("Playlist uses index order regardless of drawing order", () => {
   use("kth-song-in-playlist"); const value = graph(["root=[]", "root[0]=10", "root[1]=20"], [["root=[]", "root[1]=20"], ["root=[]", "root[0]=10"]], { directed: true, start: "root=[]", fields: { k: 1 }, nodeMarkers: { songId: { "root[0]=10": 10, "root[1]=20": 20 } } });
   valid(value); same(engine.result(value), 10); value.nodeMarkers.songId["root[0]=10"] = 100; assert.throws(() => valid(value), /shows 10/);

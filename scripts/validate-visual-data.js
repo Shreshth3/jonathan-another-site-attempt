@@ -548,8 +548,8 @@ for (const problem of problems) {
 const counterSemanticFixtures = JSON.parse(fs.readFileSync(path.resolve(__dirname, "fixtures/step2-semantic-inputs.json"), "utf8"));
 for (const fixture of counterSemanticFixtures) validateCounterSemanticInputs(`fixture/${fixture.id}`, fixture.input);
 
-const expectedCounts = { original: 25, variant: 26, new: 25 };
-if (problems.length !== 76) errors.push(`Expected 76 problems; found ${problems.length}`);
+const expectedCounts = { original: 25, variant: 27, new: 25 };
+if (problems.length !== 77) errors.push(`Expected 77 problems; found ${problems.length}`);
 for (const category of Object.keys(counts)) if (counts[category] !== expectedCounts[category]) errors.push(`Expected ${expectedCounts[category]} ${category}; found ${counts[category]}`);
 for (const id of sourceIds) if (!ids.has(id)) errors.push(`Missing source problem: ${id}`);
 for (const id of ids) if (!sourceIds.has(id)) errors.push(`Unexpected problem: ${id}`);
@@ -572,4 +572,4 @@ if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
-console.log(`Validated ${problems.length} visual lessons: 25 original, 26 variant, 25 new.`);
+console.log(`Validated ${problems.length} visual lessons: 25 original, 27 variant, 25 new.`);

@@ -53,6 +53,7 @@ const EXPECTED_CONTRACT = {
   "count-routes-to-summit": "path-count",
   "runes-on-the-castle-door": "generated-terminal-strings",
   "the-balance-lock": "generated-terminal-strings",
+  "under-the-limit": "generated-terminal-strings",
   "save-the-date-phone-chain": "deadline-reached-count",
   "shut-the-garden-valve": "reached-node-value-sum",
   "biggest-study-group": "maximum-component-size",

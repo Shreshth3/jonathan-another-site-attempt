@@ -67,6 +67,13 @@ const runeRule = programs['runes-on-the-castle-door'].find(line => line.key === 
 runeRule.options.push({id:'allow',text:'    Allow this rune even when it matches the last rune in prefix.'});
 runeRule.buggy = ['anywhere', 'allow'];
 runeRule.feedback = {anywhere:runeRule.feedback,allow:'Each new rune sits next to the last rune already chosen. Skipping this check keeps branches with equal neighbors, so invalid completed words enter the answer.'};
+programs['under-the-limit'] = [
+  fixed('setup','combos ← empty list\nFunction BUILD(start, combo, sum):'),
+  choice('record','always','  Add combo to combos.','nonempty','  If combo is not empty, add combo to combos.','The empty combination has sum 0, which is always at most limit, so it is an answer too. Saving only nonempty combinations loses [].'),
+  choice('loop','later','  For each index i from start to the end of nums:','all','  For each index i from 0 to the end of nums, skipping numbers already in combo:','Going back to index 0 lets a combination be built in more than one order, so [1, 2] and [2, 1] both appear. Only add numbers after the last one chosen.'),
+  choice('bust','over','    If sum + nums[i] > limit, skip this number.','atleast','    If sum + nums[i] ≥ limit, skip this number.','A sum exactly at limit still counts. Skipping a number when the sum reaches limit loses combinations that land exactly on it.'),
+  fixed('end','    BUILD(i + 1, combo followed by nums[i], sum + nums[i])\nEnd function\nBUILD(0, empty list, 0)\nReturn combos.')
+];
 const bustRule = programs['the-balance-lock'].find(line => line.key === 'bust');
 bustRule.options.push({id:'weight',text:'    If weight > limit, skip this weight.'});
 bustRule.buggy = ['atleast', 'weight'];

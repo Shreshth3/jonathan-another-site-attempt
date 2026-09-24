@@ -4077,5 +4077,160 @@
         4
       ]
     }
+  },
+  {
+    "id": "under-the-limit",
+    "visualKind": "backtracking",
+    "pictureQuestions": [
+      {
+        "id": "which-combinations",
+        "input": "nums = [1,2,6], limit = 3",
+        "prompt": "For nums `[1, 2, 6]` with limit `3`, which combinations are returned?",
+        "correct": "four",
+        "choices": [
+          {
+            "id": "four",
+            "feedback": "Correct. 1+2 = 3 lands exactly on the limit, and the empty combination has sum 0. 6 is over.",
+            "misconception": null,
+            "label": "`[]`, `[1]`, `[1, 2]`, and `[2]`"
+          },
+          {
+            "id": "no-empty",
+            "feedback": "The empty combination has sum 0, which is at most 3, so it counts too.",
+            "misconception": "skip-empty",
+            "label": "`[1]`, `[1, 2]`, and `[2]`"
+          },
+          {
+            "id": "strict",
+            "feedback": "1+2 = 3 is exactly the limit, which still counts. Only going over is left out.",
+            "misconception": "bust-at-limit",
+            "label": "`[]`, `[1]`, and `[2]`"
+          },
+          {
+            "id": "reordered",
+            "feedback": "`[2, 1]` is the same combination as `[1, 2]`. Only add later numbers so each combination appears once.",
+            "misconception": "reuse-earlier",
+            "label": "`[]`, `[1]`, `[1, 2]`, `[2]`, and `[2, 1]`"
+          }
+        ]
+      },
+      {
+        "id": "how-many",
+        "input": "nums = [5,1,3], limit = 4",
+        "prompt": "For nums `[5, 1, 3]` with limit `4`, how many combinations are returned?",
+        "correct": "four",
+        "choices": [
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "Correct. `[]`, `[1]`, `[1, 3]`, and `[3]` fit. 5 is over the limit.",
+            "misconception": null
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "This stops at 5, the first number that goes over. nums is not sorted, so 1 and 3 still fit.",
+            "misconception": "stop-at-first-bust"
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "This leaves out the empty combination. Its sum is 0, so it always counts.",
+            "misconception": "skip-empty"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "This counts only combinations that cannot take another number, missing `[]` and `[1]`.",
+            "misconception": "leaves-only"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is a node in the combination tree?",
+      "correct": "combo",
+      "choices": [
+        {
+          "id": "combo",
+          "label": "A combination whose sum is at most limit. The root is the empty combination.",
+          "feedback": "Correct. Every node is a combination under the limit, so every node is part of the answer.",
+          "misconception": null
+        },
+        {
+          "id": "number",
+          "label": "One node per number in nums.",
+          "feedback": "One number can be in many combinations. A node must remember the whole combination chosen so far.",
+          "misconception": "number-as-state"
+        },
+        {
+          "id": "sum",
+          "label": "One node per possible sum, so combinations with the same sum share a node.",
+          "feedback": "Different combinations can have the same sum: with nums `[1, 4, 5]`, both `[1, 4]` and `[5]` sum to 5. Each is its own answer, so each needs its own node.",
+          "misconception": "merge-by-sum"
+        },
+        {
+          "id": "full",
+          "label": "Only combinations that cannot take another number.",
+          "feedback": "Combinations along the way count too. `[]` and `[2]` are answers even when longer combinations extend them.",
+          "misconception": "leaves-only"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When does a combination have an edge to a longer combination?",
+      "correct": "later-number",
+      "choices": [
+        {
+          "id": "later-number",
+          "label": "Add one number that comes later in nums than every number already chosen, if the new sum is still at most limit.",
+          "feedback": "Correct. Only adding later numbers builds each combination exactly once.",
+          "misconception": null
+        },
+        {
+          "id": "any-unused",
+          "label": "Add any number not already in the combination, if the new sum is at most limit.",
+          "feedback": "Adding an earlier number builds both `[4, 1]` and `[1, 4]`, the same combination twice. Only add numbers that come later.",
+          "misconception": "reuse-earlier"
+        },
+        {
+          "id": "same-again",
+          "label": "Add any number, even one already chosen, if the new sum is at most limit.",
+          "feedback": "Each number can be used at most once. Adding 1 after 1 builds `[1, 1]`, which reuses a number.",
+          "misconception": "reuse-same"
+        },
+        {
+          "id": "strict",
+          "label": "Add one later number if the new sum is below limit.",
+          "feedback": "A sum exactly at the limit still counts. Only going over is left out.",
+          "misconception": "bust-at-limit"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `start` for the empty combination. After that, list the chosen numbers in the order they appear in nums, separated by commas. Example: `2,3`.",
+      "pattern": "^(?:start|[1-9]\\d*(?:,[1-9]\\d*)*)$",
+      "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "leaves-only",
+      "no": "only combinations that cannot take another number should become nodes.",
+      "yes": "Every combination under the limit should have its own node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "all-combos",
+        "concept-nodes",
+        "not-just-leaves",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   }
 ]

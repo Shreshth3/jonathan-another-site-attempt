@@ -6,6 +6,7 @@
     "parentId": "letter-combinations-of-a-phone-number",
     "parentTitle": "Letter Combinations of a Phone Number",
     "followsUp": "runes-on-the-castle-door",
+    "easierVersion": "under-the-limit",
     "difficulty": "Medium",
     "twist": "Builds on Runes on the Castle Door: each dial now offers numbered weights, and instead of checking only the previous choice, every code must keep a running total at or under a limit.",
     "statement": "Past the rune door, the castle treasury is sealed by a balance lock: a row of dials. Dial `i` can be turned to show any one of the weights in `dials[i]`, a list of different positive whole numbers.\n\nTo try a code, you set every dial to one weight and read them from left to right. The lock works like a hand of blackjack: the weights add up, and if the total goes **over** `limit`, the lock busts. A code whose total is **at most** `limit` is safe.\n\nReturn a list of **all** safe codes. Each code is a list of the chosen weights, in dial order. You may return the codes in any order. If no code is safe, return an empty list.",

@@ -1675,5 +1675,74 @@
         }
       ]
     }
+  },
+  {
+    "id": "under-the-limit",
+    "vocabulary": {
+      "nodeNames": "combinations",
+      "startNode": "empty combination",
+      "edges": "one-number extensions",
+      "correctSearch": "combinations reached",
+      "mistakenSearch": "combinations the flawed search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "One number at most",
+        "presentation": "exact-difference",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Last number only",
+        "presentation": "predict-first",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Starts mid-combination",
+        "presentation": "repair-case",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start",
+        "mistakenStartLabel": "2"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "weight-prefix",
+      "description": "Use start for the empty combination, then comma-separated numbers like 2 or 2,3."
+    },
+    "fixedStart": "start",
+    "input": {
+      "name": "empty combination",
+      "prompt": "Choose the empty combination",
+      "result": "generated-terminal-strings",
+      "resultLabel": "all combinations with sum at most limit",
+      "fields": [
+        {
+          "id": "nums",
+          "kind": "json",
+          "label": "list of different positive numbers",
+          "prompt": "Enter nums as a list of different positive numbers",
+          "required": true
+        },
+        {
+          "id": "limit",
+          "kind": "integer",
+          "label": "limit",
+          "prompt": "Choose the limit",
+          "required": true,
+          "min": 1,
+          "max": 300
+        }
+      ]
+    }
   }
 ]

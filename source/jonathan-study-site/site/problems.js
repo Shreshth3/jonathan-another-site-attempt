@@ -11234,5 +11234,107 @@ window.PROBLEMS = [
         "limit"
       ]
     }
+  },
+  {
+    "id": "under-the-limit",
+    "title": "Under the Limit",
+    "category": "variant",
+    "difficulty": "Easy",
+    "statement": "You are given a list `nums` of different positive whole numbers and a number `limit`.\n\nA **combination** is any group of numbers from `nums`, each used at most once. The empty combination `[]` counts too.\n\nReturn **all** combinations whose sum is **at most** `limit`. You may return the combinations in any order, and the numbers inside each combination in any order.",
+    "examples": [
+      {
+        "input": "nums = [2,3,5], limit = 6",
+        "output": "[[],[2],[2,3],[3],[5]]",
+        "explanation": "Each single number is at most 6, and so is 2+3 = 5. The empty combination has sum 0, so it counts too. 2+5 = 7, 3+5 = 8, and 2+3+5 = 10 go over."
+      },
+      {
+        "input": "nums = [4,1], limit = 5",
+        "output": "[[],[4],[4,1],[1]]",
+        "explanation": "4+1 = 5 lands exactly on the limit, which still counts."
+      },
+      {
+        "input": "nums = [7], limit = 3",
+        "output": "[[]]",
+        "explanation": "7 is over the limit, so only the empty combination is left."
+      }
+    ],
+    "constraints": [
+      "1 <= nums.length <= 6",
+      "nums contains different whole numbers from 1 to 50",
+      "1 <= limit <= 300"
+    ],
+    "functionName": "combosUnderLimit",
+    "solution": "// CONTRACT for collectCombos(nums, limit, startIndex, comboSoFar, sumSoFar, combos):\n//     when this call returns, `comboSoFar` and every longer combination\n//     that adds only numbers from index `startIndex` onward and keeps its\n//     sum at most `limit` have been appended to `combos`.\nconst collectCombos = (nums, limit, startIndex, comboSoFar, sumSoFar, combos) => {\n    // Process node: every combination we reach is under the limit, so it\n    // is an answer — including the empty combination at the root.\n    combos.push(comboSoFar);\n\n    // Traverse neighbors: add one later number at a time. There is no\n    // separate base case: when no later number fits, the loop adds nothing.\n    for (let i = startIndex; i < nums.length; i++) {\n        const newSum = sumSoFar + nums[i];\n        if (newSum > limit) continue;\n\n        // The recursive leap of faith, one level down: this call has the\n        // SAME contract — when it returns, the combination with nums[i]\n        // added and all of its longer combinations are in `combos`.\n        // Trust it, do not trace it. Only adding later numbers means each\n        // combination is built exactly once.\n        collectCombos(nums, limit, i + 1, [...comboSoFar, nums[i]], newSum, combos);\n    }\n};\n\nconst combosUnderLimit = (nums, limit) => {\n    const combos = [];\n\n    // The recursive leap of faith: trust the contract. Starting from the\n    // empty combination at index 0 collects every combination that fits.\n    collectCombos(nums, limit, 0, [], 0, combos);\n\n    return combos;\n};",
+    "tests": [
+      {
+        "args": [
+          [
+            2,
+            3,
+            5
+          ],
+          6
+        ],
+        "expected": [
+          [],
+          [
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3
+          ],
+          [
+            5
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            4,
+            1
+          ],
+          5
+        ],
+        "expected": [
+          [],
+          [
+            4
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            1
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          [
+            7
+          ],
+          3
+        ],
+        "expected": [
+          []
+        ],
+        "unordered": true
+      }
+    ],
+    "runner": {
+      "kind": "function",
+      "parameterNames": [
+        "nums",
+        "limit"
+      ]
+    }
   }
 ];
