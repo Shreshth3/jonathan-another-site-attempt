@@ -325,6 +325,7 @@ const sourceProblem = {
   parentId: "letter-combinations-of-a-phone-number",
   parentTitle: "Letter Combinations of a Phone Number",
   followsUp: "runes-on-the-castle-door",
+  easierVersion: "under-the-limit",
   difficulty: "Medium",
   twist: "Builds on Runes on the Castle Door: each dial now offers numbered weights, and instead of checking only the previous choice, every code must keep a running total at or under a limit.",
   statement: "Past the rune door, the castle treasury is sealed by a balance lock: a row of dials. Dial `i` can be turned to show any one of the weights in `dials[i]`, a list of different positive whole numbers.\n\nTo try a code, you set every dial to one weight and read them from left to right. The lock works like a hand of blackjack: the weights add up, and if the total goes **over** `limit`, the lock busts. A code whose total is **at most** `limit` is safe.\n\nReturn a list of **all** safe codes. Each code is a list of the chosen weights, in dial order. You may return the codes in any order. If no code is safe, return an empty list.",
@@ -408,44 +409,14 @@ const step4Spec = {
 };
 
 // ---------- Write every file ----------
-// Keep each file's existing style: some store non-ASCII text as \u escapes.
-function upsert(file, entry) {
-  const full = path.join(root, file);
-  const text = fs.readFileSync(full, "utf8");
-  const list = JSON.parse(text);
-  const index = list.findIndex(item => item.id === ID);
-  if (index >= 0) list[index] = entry; else list.push(entry);
-  let written = JSON.stringify(list, null, 2) + "\n";
-  if (/\\u[0-9a-f]{4}/.test(text)) written = written.replace(/[\u007f-\uffff]/g, char => "\\u" + char.charCodeAt(0).toString(16).padStart(4, "0"));
-  fs.writeFileSync(full, written);
-}
-const sourceFile = "source/jonathan-study-site/data/variants-final-5.json";
-fs.writeFileSync(path.join(root, sourceFile), JSON.stringify([sourceProblem], null, 2) + "\n");
-upsert("visual-specs-variant.json", visualSpec);
-upsert("visual-lessons-variant.json", lesson);
-upsert("step2-specs-variant.json", step2Spec);
-upsert("step4-specs-variant.json", step4Spec);
-
-// The published source bank supplies reference solutions to the Step 4 checks.
-{
-  const bankFile = path.join(root, "source/jonathan-study-site/site/problems.js");
-  const bankText = fs.readFileSync(bankFile, "utf8");
-  const { parentId, parentTitle, followsUp, twist, ...shared } = sourceProblem;
-  const published = { ...shared, runner: { kind: "function", parameterNames: ["dials", "limit"] } };
-  const block = JSON.stringify(published, null, 2).split("\n").map(line => `  ${line}`).join("\n");
-  const existing = new RegExp(`,\\n  \\{\\n    "id": "${ID}"[\\s\\S]*?\\n  \\}(?=\\n\\];\\n$)`);
-  const withoutOld = bankText.replace(existing, "");
-  if (!withoutOld.endsWith("\n  }\n];\n")) throw Error("Unexpected end of site/problems.js");
-  fs.writeFileSync(bankFile, `${withoutOld.slice(0, -"\n];\n".length)},\n${block}\n];\n`);
-}
-const orderFile = path.join(root, "variant-order.json");
-const orderText = fs.readFileSync(orderFile, "utf8");
-if (!JSON.parse(orderText).groups.some(group => group.variants.some(item => item.id === ID))) {
-  const runesLine = /\n(\s*)\{ "id": "runes-on-the-castle-door", "reason": "[^"]*" \}/;
-  if (!runesLine.test(orderText)) throw Error("Cannot find the runes entry in variant-order.json");
-  const reason = "Follow-up to the runes: carry a running total down each branch and prune a code once it busts.";
-  fs.writeFileSync(orderFile, orderText.replace(runesLine, (line, indent) => `${line},\n${indent}{ "id": "${ID}", "reason": "${reason}" }`));
-}
+const files = require("./author-variant-files");
+files.writeSource("variants-final-5.json", sourceProblem);
+files.upsert("visual-specs-variant.json", visualSpec);
+files.upsert("visual-lessons-variant.json", lesson);
+files.upsert("step2-specs-variant.json", step2Spec);
+files.upsert("step4-specs-variant.json", step4Spec);
+files.publish(sourceProblem, ["dials", "limit"]);
+files.placeInOrder(ID, "Follow-up to the runes: carry a running total down each branch and prune a code once it busts.", { after: "runes-on-the-castle-door" });
 // Step 5 oracle fixtures: the source examples plus seeded varied inputs.
 {
   let seed = 20260923;
@@ -460,10 +431,7 @@ if (!JSON.parse(orderText).groups.some(group => group.variants.some(item => item
     const limit = 5 + random(41);
     fixtures.push({ input: { dials, limit }, expected: safeCodes(dials, limit) });
   }
-  const fixtureFile = path.join(root, "scripts/step5-oracle-fixtures.json");
-  const text = fs.readFileSync(fixtureFile, "utf8"), all = JSON.parse(text);
-  all[ID] = fixtures;
-  fs.writeFileSync(fixtureFile, JSON.stringify(all) + (text.endsWith("\n") ? "\n" : ""));
+  files.setFixtures(ID, fixtures);
 }
 module.exports = { safeCodes };
 if (require.main === module) console.log(`Authored ${ID}: ${lesson.buildTasks.length} builds, ${lesson.conceptTasks.length} checks, ${lesson.structureTasks.length} structure graphs.`);

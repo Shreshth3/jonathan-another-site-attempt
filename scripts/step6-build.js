@@ -24,8 +24,8 @@ const formatExamples = {
  n:3, k:3, row:0, col:0, start:0, source:0, headId:0, hq:0, destination:2, finish:2, target:2, quitId:5, shutId:5, checkpoint:1, deadline:3
 };
 // Parameter names shared with another problem but holding a different shape.
-const problemFormatExamples = {'the-balance-lock':{dials:[[3,8],[2,6]], limit:10}};
-const problemDescriptions = {'the-balance-lock':{dials:'A list of dials. Each dial is a list of different positive whole-number weights.', limit:'The largest safe total. A total over limit busts.'}};
+const problemFormatExamples = {'the-balance-lock':{dials:[[3,8],[2,6]], limit:10}, 'under-the-limit':{nums:[1,4,6], limit:5}};
+const problemDescriptions = {'the-balance-lock':{dials:'A list of dials. Each dial is a list of different positive whole-number weights.', limit:'The largest safe total. A total over limit busts.'}, 'under-the-limit':{nums:'A list of different positive whole numbers.', limit:'The largest allowed sum. A combination whose sum is over limit is left out.'}};
 function formatPlaceholder(name, value) {
  const plain = item => typeof item === 'string' ? item : Array.isArray(item) ? '[' + item.map(plain).join(', ') + ']' : String(item);
  if (['sky','park','marina','yard','cave','worked','trust','scores'].includes(name)) return value.map(row => row.join(', ')).join('\n');
@@ -82,7 +82,7 @@ const output=sources.map(problem=>{
  if(missed.length)throw Error(problem.id+': tests miss known bugs: '+missed.join(', '));
  return {id:problem.id,functionName:problem.functionName,parameters:names.map(name=>({name,label:name,example:exampleInput[name],placeholder:formatPlaceholder(name,exampleInput[name]),description:name==='k'?kDescriptions[problem.id]:problemDescriptions[problem.id]?.[name]??descriptions[name],help:name==='k'?kDescriptions[problem.id]:problemDescriptions[problem.id]?.[name]??descriptions[name]})),starterCode:'function '+problem.functionName+'('+names.join(', ')+') {\n  // Write your solution here.\n\n}\n',correctCode:problem.solution,tests,source:'../jonathan-study-site/data/'+problem.sourceFile};
 });
-if(output.length!==26||Object.keys(inputs).length!==26)throw Error('Step 6 must cover exactly 26 variants');
+if(output.length!==27||Object.keys(inputs).length!==27)throw Error('Step 6 must cover exactly 27 variants');
 const generated=JSON.stringify(output,null,2)+'\n';
 const destination=path.join(root,'step6-specs-variant.json');
 if(process.argv.includes('--check')){if(!fs.existsSync(destination)||fs.readFileSync(destination,'utf8')!==generated)throw Error('Step 6 specs are stale. Run node scripts/step6-build.js.');}

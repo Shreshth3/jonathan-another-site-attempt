@@ -152,12 +152,30 @@ function deriveBalanceLock(dials, limit) {
   return model;
 }
 
+// Under the limit: a node is a combination, written in nums order, whose sum stays at most limit.
+function deriveUnderTheLimit(nums, limit) {
+  const model = graph(true);
+  addNode(model, 'start');
+  function extend(start, combo, sum) {
+    for (let i = start; i < nums.length; i++) {
+      if (sum + nums[i] > limit) continue;
+      const next = combo ? `${combo},${nums[i]}` : String(nums[i]);
+      addNode(model, next);
+      addEdge(model, combo || 'start', next);
+      extend(i + 1, next, sum + nums[i]);
+    }
+  }
+  extend(0, '', 0);
+  return model;
+}
+
 function deriveVariant(id, input) {
   if (input.sky || input.marina || input.yard || input.park || input.cave) {
     return deriveGrid(id, input);
   }
   if (input.items || input.playlist) return deriveNested(input.items || input.playlist);
   if (id === 'the-balance-lock') return deriveBalanceLock(input.dials, input.limit);
+  if (id === 'under-the-limit') return deriveUnderTheLimit(input.nums, input.limit);
   if (input.dials) return deriveRunes(input.dials);
   const model = graph();
 

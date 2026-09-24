@@ -44944,5 +44944,1765 @@
         ]
       }
     ]
+  },
+  {
+    "id": "under-the-limit",
+    "inputHelp": "nums has 1–6 different whole numbers from 1 to 50. limit is 1–300. Explore means visit each reachable item once unless the shown code says otherwise.",
+    "source": "../jonathan-study-site/data/variants-final-*.json",
+    "correctRules": {
+      "setup": "fixed",
+      "record": "always",
+      "loop": "later",
+      "bust": "over",
+      "end": "fixed"
+    },
+    "cases": [
+      {
+        "id": "under-the-limit-record-nonempty",
+        "title": "Debug challenge 1",
+        "misconception": "record-nonempty",
+        "feedback": "The empty combination has sum 0, which is always at most limit, so it is an answer too. Saving only nonempty combinations loses [].",
+        "correctAnswer": "The empty combination has sum 0, which is always at most limit, so it is an answer too. Saving only nonempty combinations loses [].\n\nThe corrected rule is:\n  Add combo to combos.",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "combos ← empty list\nFunction BUILD(start, combo, sum):"
+              }
+            ]
+          },
+          {
+            "key": "record",
+            "selected": "nonempty",
+            "options": [
+              {
+                "id": "nonempty",
+                "text": "  If combo is not empty, add combo to combos."
+              },
+              {
+                "id": "always",
+                "text": "  Add combo to combos."
+              }
+            ]
+          },
+          {
+            "key": "loop",
+            "selected": "later",
+            "options": [
+              {
+                "id": "all",
+                "text": "  For each index i from 0 to the end of nums, skipping numbers already in combo:"
+              },
+              {
+                "id": "later",
+                "text": "  For each index i from start to the end of nums:"
+              }
+            ]
+          },
+          {
+            "key": "bust",
+            "selected": "over",
+            "options": [
+              {
+                "id": "over",
+                "text": "    If sum + nums[i] > limit, skip this number."
+              },
+              {
+                "id": "atleast",
+                "text": "    If sum + nums[i] ≥ limit, skip this number."
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    BUILD(i + 1, combo followed by nums[i], sum + nums[i])\nEnd function\nBUILD(0, empty list, 0)\nReturn combos."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "nums": [
+            2,
+            3,
+            5
+          ],
+          "limit": 6
+        }
+      },
+      {
+        "id": "under-the-limit-loop-all",
+        "title": "Debug challenge 2",
+        "misconception": "loop-all",
+        "feedback": "Going back to index 0 lets a combination be built in more than one order, so [1, 2] and [2, 1] both appear. Only add numbers after the last one chosen.",
+        "correctAnswer": "Going back to index 0 lets a combination be built in more than one order, so [1, 2] and [2, 1] both appear. Only add numbers after the last one chosen.\n\nThe corrected rule is:\n  For each index i from start to the end of nums:",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "combos ← empty list\nFunction BUILD(start, combo, sum):"
+              }
+            ]
+          },
+          {
+            "key": "record",
+            "selected": "always",
+            "options": [
+              {
+                "id": "nonempty",
+                "text": "  If combo is not empty, add combo to combos."
+              },
+              {
+                "id": "always",
+                "text": "  Add combo to combos."
+              }
+            ]
+          },
+          {
+            "key": "loop",
+            "selected": "all",
+            "options": [
+              {
+                "id": "later",
+                "text": "  For each index i from start to the end of nums:"
+              },
+              {
+                "id": "all",
+                "text": "  For each index i from 0 to the end of nums, skipping numbers already in combo:"
+              }
+            ]
+          },
+          {
+            "key": "bust",
+            "selected": "over",
+            "options": [
+              {
+                "id": "atleast",
+                "text": "    If sum + nums[i] ≥ limit, skip this number."
+              },
+              {
+                "id": "over",
+                "text": "    If sum + nums[i] > limit, skip this number."
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    BUILD(i + 1, combo followed by nums[i], sum + nums[i])\nEnd function\nBUILD(0, empty list, 0)\nReturn combos."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "nums": [
+            2,
+            3,
+            5
+          ],
+          "limit": 6
+        }
+      },
+      {
+        "id": "under-the-limit-bust-atleast",
+        "title": "Debug challenge 3",
+        "misconception": "bust-atleast",
+        "feedback": "A sum exactly at limit still counts. Skipping a number when the sum reaches limit loses combinations that land exactly on it.",
+        "correctAnswer": "A sum exactly at limit still counts. Skipping a number when the sum reaches limit loses combinations that land exactly on it.\n\nThe corrected rule is:\n    If sum + nums[i] > limit, skip this number.",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "combos ← empty list\nFunction BUILD(start, combo, sum):"
+              }
+            ]
+          },
+          {
+            "key": "record",
+            "selected": "always",
+            "options": [
+              {
+                "id": "always",
+                "text": "  Add combo to combos."
+              },
+              {
+                "id": "nonempty",
+                "text": "  If combo is not empty, add combo to combos."
+              }
+            ]
+          },
+          {
+            "key": "loop",
+            "selected": "later",
+            "options": [
+              {
+                "id": "all",
+                "text": "  For each index i from 0 to the end of nums, skipping numbers already in combo:"
+              },
+              {
+                "id": "later",
+                "text": "  For each index i from start to the end of nums:"
+              }
+            ]
+          },
+          {
+            "key": "bust",
+            "selected": "atleast",
+            "options": [
+              {
+                "id": "atleast",
+                "text": "    If sum + nums[i] ≥ limit, skip this number."
+              },
+              {
+                "id": "over",
+                "text": "    If sum + nums[i] > limit, skip this number."
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    BUILD(i + 1, combo followed by nums[i], sum + nums[i])\nEnd function\nBUILD(0, empty list, 0)\nReturn combos."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "nums": [
+            4,
+            1
+          ],
+          "limit": 5
+        }
+      }
+    ],
+    "tests": [
+      {
+        "input": {
+          "nums": [
+            2,
+            3,
+            5
+          ],
+          "limit": 6
+        },
+        "expected": [
+          [],
+          [
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3
+          ],
+          [
+            5
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            4,
+            1
+          ],
+          "limit": 5
+        },
+        "expected": [
+          [],
+          [
+            4
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            7
+          ],
+          "limit": 3
+        },
+        "expected": [
+          []
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            8,
+            2,
+            3
+          ],
+          "limit": 26
+        },
+        "expected": [
+          [],
+          [
+            8
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            8,
+            2,
+            3
+          ],
+          [
+            8,
+            3
+          ],
+          [
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            2,
+            13,
+            1,
+            5,
+            15
+          ],
+          "limit": 26
+        },
+        "expected": [
+          [],
+          [
+            2
+          ],
+          [
+            2,
+            13
+          ],
+          [
+            2,
+            13,
+            1
+          ],
+          [
+            2,
+            13,
+            1,
+            5
+          ],
+          [
+            2,
+            13,
+            5
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            1,
+            5
+          ],
+          [
+            2,
+            1,
+            5,
+            15
+          ],
+          [
+            2,
+            1,
+            15
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            2,
+            5,
+            15
+          ],
+          [
+            2,
+            15
+          ],
+          [
+            13
+          ],
+          [
+            13,
+            1
+          ],
+          [
+            13,
+            1,
+            5
+          ],
+          [
+            13,
+            5
+          ],
+          [
+            1
+          ],
+          [
+            1,
+            5
+          ],
+          [
+            1,
+            5,
+            15
+          ],
+          [
+            1,
+            15
+          ],
+          [
+            5
+          ],
+          [
+            5,
+            15
+          ],
+          [
+            15
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            5,
+            6,
+            8,
+            4,
+            12
+          ],
+          "limit": 20
+        },
+        "expected": [
+          [],
+          [
+            5
+          ],
+          [
+            5,
+            6
+          ],
+          [
+            5,
+            6,
+            8
+          ],
+          [
+            5,
+            6,
+            4
+          ],
+          [
+            5,
+            8
+          ],
+          [
+            5,
+            8,
+            4
+          ],
+          [
+            5,
+            4
+          ],
+          [
+            5,
+            12
+          ],
+          [
+            6
+          ],
+          [
+            6,
+            8
+          ],
+          [
+            6,
+            8,
+            4
+          ],
+          [
+            6,
+            4
+          ],
+          [
+            6,
+            12
+          ],
+          [
+            8
+          ],
+          [
+            8,
+            4
+          ],
+          [
+            8,
+            12
+          ],
+          [
+            4
+          ],
+          [
+            4,
+            12
+          ],
+          [
+            12
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            12,
+            9
+          ],
+          "limit": 23
+        },
+        "expected": [
+          [],
+          [
+            12
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            9
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            11
+          ],
+          "limit": 9
+        },
+        "expected": [
+          []
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            13,
+            5
+          ],
+          "limit": 25
+        },
+        "expected": [
+          [],
+          [
+            13
+          ],
+          [
+            13,
+            5
+          ],
+          [
+            5
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            12,
+            10,
+            5
+          ],
+          "limit": 11
+        },
+        "expected": [
+          [],
+          [
+            10
+          ],
+          [
+            5
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            6,
+            2,
+            4,
+            7,
+            3
+          ],
+          "limit": 25
+        },
+        "expected": [
+          [],
+          [
+            6
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            6,
+            2,
+            4
+          ],
+          [
+            6,
+            2,
+            4,
+            7
+          ],
+          [
+            6,
+            2,
+            4,
+            7,
+            3
+          ],
+          [
+            6,
+            2,
+            4,
+            3
+          ],
+          [
+            6,
+            2,
+            7
+          ],
+          [
+            6,
+            2,
+            7,
+            3
+          ],
+          [
+            6,
+            2,
+            3
+          ],
+          [
+            6,
+            4
+          ],
+          [
+            6,
+            4,
+            7
+          ],
+          [
+            6,
+            4,
+            7,
+            3
+          ],
+          [
+            6,
+            4,
+            3
+          ],
+          [
+            6,
+            7
+          ],
+          [
+            6,
+            7,
+            3
+          ],
+          [
+            6,
+            3
+          ],
+          [
+            2
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            2,
+            4,
+            7
+          ],
+          [
+            2,
+            4,
+            7,
+            3
+          ],
+          [
+            2,
+            4,
+            3
+          ],
+          [
+            2,
+            7
+          ],
+          [
+            2,
+            7,
+            3
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            4
+          ],
+          [
+            4,
+            7
+          ],
+          [
+            4,
+            7,
+            3
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            7
+          ],
+          [
+            7,
+            3
+          ],
+          [
+            3
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            14
+          ],
+          "limit": 21
+        },
+        "expected": [
+          [],
+          [
+            14
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            15,
+            5,
+            8
+          ],
+          "limit": 15
+        },
+        "expected": [
+          [],
+          [
+            15
+          ],
+          [
+            5
+          ],
+          [
+            5,
+            8
+          ],
+          [
+            8
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            7,
+            11,
+            15
+          ],
+          "limit": 14
+        },
+        "expected": [
+          [],
+          [
+            7
+          ],
+          [
+            11
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            8,
+            9,
+            14
+          ],
+          "limit": 5
+        },
+        "expected": [
+          []
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            6
+          ],
+          "limit": 12
+        },
+        "expected": [
+          [],
+          [
+            6
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            2,
+            12,
+            5,
+            8
+          ],
+          "limit": 12
+        },
+        "expected": [
+          [],
+          [
+            2
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            2,
+            8
+          ],
+          [
+            12
+          ],
+          [
+            5
+          ],
+          [
+            8
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            9,
+            12
+          ],
+          "limit": 15
+        },
+        "expected": [
+          [],
+          [
+            9
+          ],
+          [
+            12
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            4,
+            11,
+            8,
+            6
+          ],
+          "limit": 23
+        },
+        "expected": [
+          [],
+          [
+            4
+          ],
+          [
+            4,
+            11
+          ],
+          [
+            4,
+            11,
+            8
+          ],
+          [
+            4,
+            11,
+            6
+          ],
+          [
+            4,
+            8
+          ],
+          [
+            4,
+            8,
+            6
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            11
+          ],
+          [
+            11,
+            8
+          ],
+          [
+            11,
+            6
+          ],
+          [
+            8
+          ],
+          [
+            8,
+            6
+          ],
+          [
+            6
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            1
+          ],
+          "limit": 26
+        },
+        "expected": [
+          [],
+          [
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            11,
+            9,
+            6,
+            15
+          ],
+          "limit": 5
+        },
+        "expected": [
+          []
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            13,
+            8,
+            5,
+            9,
+            6
+          ],
+          "limit": 23
+        },
+        "expected": [
+          [],
+          [
+            13
+          ],
+          [
+            13,
+            8
+          ],
+          [
+            13,
+            5
+          ],
+          [
+            13,
+            9
+          ],
+          [
+            13,
+            6
+          ],
+          [
+            8
+          ],
+          [
+            8,
+            5
+          ],
+          [
+            8,
+            5,
+            9
+          ],
+          [
+            8,
+            5,
+            6
+          ],
+          [
+            8,
+            9
+          ],
+          [
+            8,
+            9,
+            6
+          ],
+          [
+            8,
+            6
+          ],
+          [
+            5
+          ],
+          [
+            5,
+            9
+          ],
+          [
+            5,
+            9,
+            6
+          ],
+          [
+            5,
+            6
+          ],
+          [
+            9
+          ],
+          [
+            9,
+            6
+          ],
+          [
+            6
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            10,
+            12,
+            14,
+            2
+          ],
+          "limit": 27
+        },
+        "expected": [
+          [],
+          [
+            10
+          ],
+          [
+            10,
+            12
+          ],
+          [
+            10,
+            12,
+            2
+          ],
+          [
+            10,
+            14
+          ],
+          [
+            10,
+            14,
+            2
+          ],
+          [
+            10,
+            2
+          ],
+          [
+            12
+          ],
+          [
+            12,
+            14
+          ],
+          [
+            12,
+            2
+          ],
+          [
+            14
+          ],
+          [
+            14,
+            2
+          ],
+          [
+            2
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            14,
+            12,
+            10
+          ],
+          "limit": 23
+        },
+        "expected": [
+          [],
+          [
+            14
+          ],
+          [
+            12
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            10
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            10,
+            1
+          ],
+          "limit": 15
+        },
+        "expected": [
+          [],
+          [
+            10
+          ],
+          [
+            10,
+            1
+          ],
+          [
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            5,
+            12,
+            3,
+            7
+          ],
+          "limit": 5
+        },
+        "expected": [
+          [],
+          [
+            5
+          ],
+          [
+            3
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            8,
+            5,
+            9
+          ],
+          "limit": 9
+        },
+        "expected": [
+          [],
+          [
+            8
+          ],
+          [
+            5
+          ],
+          [
+            9
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            14,
+            4,
+            1,
+            5
+          ],
+          "limit": 18
+        },
+        "expected": [
+          [],
+          [
+            14
+          ],
+          [
+            14,
+            4
+          ],
+          [
+            14,
+            1
+          ],
+          [
+            4
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            1,
+            5
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            1
+          ],
+          [
+            1,
+            5
+          ],
+          [
+            5
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            8,
+            11
+          ],
+          "limit": 26
+        },
+        "expected": [
+          [],
+          [
+            8
+          ],
+          [
+            8,
+            11
+          ],
+          [
+            11
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            7,
+            12
+          ],
+          "limit": 10
+        },
+        "expected": [
+          [],
+          [
+            7
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            11,
+            6,
+            2
+          ],
+          "limit": 22
+        },
+        "expected": [
+          [],
+          [
+            11
+          ],
+          [
+            11,
+            6
+          ],
+          [
+            11,
+            6,
+            2
+          ],
+          [
+            11,
+            2
+          ],
+          [
+            6
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            2
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            11,
+            7
+          ],
+          "limit": 11
+        },
+        "expected": [
+          [],
+          [
+            11
+          ],
+          [
+            7
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            8,
+            13,
+            2,
+            1
+          ],
+          "limit": 6
+        },
+        "expected": [
+          [],
+          [
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            14,
+            7,
+            2,
+            6
+          ],
+          "limit": 20
+        },
+        "expected": [
+          [],
+          [
+            14
+          ],
+          [
+            14,
+            2
+          ],
+          [
+            14,
+            6
+          ],
+          [
+            7
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            7,
+            2,
+            6
+          ],
+          [
+            7,
+            6
+          ],
+          [
+            2
+          ],
+          [
+            2,
+            6
+          ],
+          [
+            6
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            8,
+            1,
+            9,
+            6,
+            12
+          ],
+          "limit": 22
+        },
+        "expected": [
+          [],
+          [
+            8
+          ],
+          [
+            8,
+            1
+          ],
+          [
+            8,
+            1,
+            9
+          ],
+          [
+            8,
+            1,
+            6
+          ],
+          [
+            8,
+            1,
+            12
+          ],
+          [
+            8,
+            9
+          ],
+          [
+            8,
+            6
+          ],
+          [
+            8,
+            12
+          ],
+          [
+            1
+          ],
+          [
+            1,
+            9
+          ],
+          [
+            1,
+            9,
+            6
+          ],
+          [
+            1,
+            9,
+            12
+          ],
+          [
+            1,
+            6
+          ],
+          [
+            1,
+            6,
+            12
+          ],
+          [
+            1,
+            12
+          ],
+          [
+            9
+          ],
+          [
+            9,
+            6
+          ],
+          [
+            9,
+            12
+          ],
+          [
+            6
+          ],
+          [
+            6,
+            12
+          ],
+          [
+            12
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            8,
+            9,
+            2,
+            13,
+            15
+          ],
+          "limit": 25
+        },
+        "expected": [
+          [],
+          [
+            8
+          ],
+          [
+            8,
+            9
+          ],
+          [
+            8,
+            9,
+            2
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            8,
+            2,
+            13
+          ],
+          [
+            8,
+            2,
+            15
+          ],
+          [
+            8,
+            13
+          ],
+          [
+            8,
+            15
+          ],
+          [
+            9
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            9,
+            2,
+            13
+          ],
+          [
+            9,
+            13
+          ],
+          [
+            9,
+            15
+          ],
+          [
+            2
+          ],
+          [
+            2,
+            13
+          ],
+          [
+            2,
+            15
+          ],
+          [
+            13
+          ],
+          [
+            15
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            15,
+            8
+          ],
+          "limit": 4
+        },
+        "expected": [
+          []
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            12,
+            2
+          ],
+          "limit": 7
+        },
+        "expected": [
+          [],
+          [
+            2
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            1
+          ],
+          "limit": 3
+        },
+        "expected": [
+          [],
+          [
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            14,
+            8,
+            15,
+            6
+          ],
+          "limit": 13
+        },
+        "expected": [
+          [],
+          [
+            8
+          ],
+          [
+            6
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            3,
+            13,
+            10,
+            5
+          ],
+          "limit": 9
+        },
+        "expected": [
+          [],
+          [
+            3
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            5
+          ]
+        ]
+      },
+      {
+        "input": {
+          "nums": [
+            5
+          ],
+          "limit": 11
+        },
+        "expected": [
+          [],
+          [
+            5
+          ]
+        ]
+      }
+    ]
   }
 ]

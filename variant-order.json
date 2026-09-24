@@ -79,6 +79,7 @@
     {
       "parentId": "letter-combinations-of-a-phone-number",
       "variants": [
+        { "id": "under-the-limit", "reason": "Warm-up that is only about recursion: list every combination whose sum stays at most a limit." },
         { "id": "runes-on-the-castle-door", "reason": "Build combinations while rejecting adjacent repeated characters." },
         { "id": "the-balance-lock", "reason": "Follow-up to the runes: carry a running total down each branch and prune a code once it busts." }
       ]

@@ -231,17 +231,18 @@ const catalog = problems.map(problem => {
     counterexampleLesson: step2Specs.get(problem.id) || null,
     lesson: visualLessons.get(problem.id) || null,
     codeReasoning: step4Specs.get(problem.id) || null,
-    ...(problem.followsUp ? { followsUp: problem.followsUp } : {}),
+    ...Object.fromEntries(["followsUp", "easierVersion", "harderVersion"].filter(key => problem[key]).map(key => [key, problem[key]])),
     ...(problem.category === "variant" ? { parentId: problem.parentId, variantListOrder: variantListOrder.get(problem.id), debuggingLesson: step5Specs.get(problem.id), codingLesson: step6Specs.get(problem.id) } : {})
   };
 });
 
 // Problems added after answer slots and character names were balanced go last,
 // with their own slot pass below, so adding one never changes an existing lesson.
-const appendedProblemIds = new Set(["the-balance-lock"]);
+// Listed in the order they were added; each new one goes at the end.
+const appendedProblemIds = ["the-balance-lock", "under-the-limit"];
 catalog.sort((a, b) => {
   const categoryOrder = { original: 0, variant: 1, new: 2 };
-  return appendedProblemIds.has(a.id) - appendedProblemIds.has(b.id) || categoryOrder[a.category] - categoryOrder[b.category] || a.title.localeCompare(b.title);
+  return appendedProblemIds.indexOf(a.id) - appendedProblemIds.indexOf(b.id) || categoryOrder[a.category] - categoryOrder[b.category] || a.title.localeCompare(b.title);
 });
 
 function stableHash(value) {
@@ -271,18 +272,18 @@ const lessonQuestionRefs = catalog.flatMap(problem => {
 });
 lessonQuestionRefs.sort((a, b) => stableHash(`v3:${a.problem.id}:${a.question.id || a.question.prompt}`) - stableHash(`v3:${b.problem.id}:${b.question.id || b.question.prompt}`));
 const lessonGroups = new Map();
-const appendedLessonGroups = new Map();
-lessonQuestionRefs.forEach(ref => {
-  const groups = appendedProblemIds.has(ref.problem.id) ? appendedLessonGroups : lessonGroups;
-  const group = groups.get(ref.question.choices.length) || [];
+lessonQuestionRefs.filter(ref => !appendedProblemIds.includes(ref.problem.id)).forEach(ref => {
+  const group = lessonGroups.get(ref.question.choices.length) || [];
   group.push(ref);
-  groups.set(ref.question.choices.length, group);
+  lessonGroups.set(ref.question.choices.length, group);
 });
 for (const group of lessonGroups.values()) group.forEach(({ question }, index) => { question.answerSlot = index % question.choices.length; });
-// Appended questions continue each group's rotation after the existing questions.
-for (const [size, group] of appendedLessonGroups) {
-  const offset = lessonGroups.get(size)?.length || 0;
-  group.forEach(({ question }, index) => { question.answerSlot = (offset + index) % question.choices.length; });
+// Each appended problem, in order, continues every group's rotation after the questions before it.
+const slotOffsets = new Map([...lessonGroups].map(([size, group]) => [size, group.length]));
+for (const id of appendedProblemIds) for (const { question } of lessonQuestionRefs.filter(ref => ref.problem.id === id)) {
+  const size = question.choices.length, offset = slotOffsets.get(size) || 0;
+  question.answerSlot = offset % size;
+  slotOffsets.set(size, offset + 1);
 }
 
 const characterData = fs.readFileSync(path.resolve(__dirname, "../character-names.js"), "utf8");

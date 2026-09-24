@@ -12,8 +12,8 @@ const specs = specFiles.flatMap(file => JSON.parse(fs.readFileSync(path.resolve(
 const failures = [];
 let checkedCases = 0;
 
-if (specs.length !== 76 || new Set(specs.map(spec => spec.id)).size !== 76) {
-  failures.push(`Expected 76 unique Step 4 problem specs; found ${specs.length} specs and ${new Set(specs.map(spec => spec.id)).size} unique IDs`);
+if (specs.length !== 77 || new Set(specs.map(spec => spec.id)).size !== 77) {
+  failures.push(`Expected 77 unique Step 4 problem specs; found ${specs.length} specs and ${new Set(specs.map(spec => spec.id)).size} unique IDs`);
 }
 
 function levelOrderTree(values) {

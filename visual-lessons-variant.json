@@ -31847,5 +31847,1144 @@
         4
       ]
     }
+  },
+  {
+    "id": "under-the-limit",
+    "facets": [
+      "exact input numbers",
+      "combination state identity",
+      "later-number extensions",
+      "every combination counts"
+    ],
+    "buildTasks": [
+      {
+        "id": "all-combos",
+        "title": "Keep a sum that lands on the limit",
+        "facet": "every combination counts",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "nums=[1,2,4], limit=5",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            },
+            {
+              "id": "1,2",
+              "label": "1,2"
+            },
+            {
+              "id": "1,4",
+              "label": "1,4"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "4",
+              "label": "4"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "1"
+            },
+            {
+              "from": "1",
+              "to": "1,2"
+            },
+            {
+              "from": "1",
+              "to": "1,4"
+            },
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "start",
+              "to": "4"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which combination list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[[],[1],[1,2],[1,4],[2],[4]]",
+              "feedback": "Correct. 1+4 = 5 lands exactly on the limit, which still counts. 2+4 = 6 and 1+2+4 = 7 go over.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[[],[1],[1,2],[2],[4]]",
+              "feedback": "This leaves out sums equal to 5. A sum exactly at the limit still counts; only going over is left out.",
+              "misconception": "bust-at-limit"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "1+4 = 5 lands exactly on the limit, which still counts. 2+4 = 6 and 1+2+4 = 7 go over."
+      },
+      {
+        "id": "empty-counts",
+        "title": "Count the empty combination",
+        "facet": "exact input numbers",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "nums=[3,6], limit=4",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "3",
+              "label": "3"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "3"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which combination list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[[],[3]]",
+              "feedback": "Correct. The empty combination has sum 0, which is at most 4. 6 is over the limit.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[[3]]",
+              "feedback": "This leaves out the empty combination. Its sum is 0, so it always counts.",
+              "misconception": "skip-empty"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "The empty combination has sum 0, which is at most 4. 6 is over the limit."
+      },
+      {
+        "id": "not-just-leaves",
+        "title": "Keep the combinations along the way",
+        "facet": "combination state identity",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "nums=[2,3,4], limit=5",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2,3",
+              "label": "2,3"
+            },
+            {
+              "id": "3",
+              "label": "3"
+            },
+            {
+              "id": "4",
+              "label": "4"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2,3"
+            },
+            {
+              "from": "start",
+              "to": "3"
+            },
+            {
+              "from": "start",
+              "to": "4"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which combination list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[[],[2],[2,3],[3],[4]]",
+              "feedback": "Correct. Every node is an answer, not just the ones at the bottom. `[]`, `[2]`, `[2, 3]`, `[3]`, and `[4]` all fit.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[[2,3],[3],[4]]",
+              "feedback": "This records a combination only when no more numbers fit, so it loses `[]` and `[2]`.",
+              "misconception": "leaves-only"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "Every node is an answer, not just the ones at the bottom. `[]`, `[2]`, `[2, 3]`, `[3]`, and `[4]` all fit."
+      },
+      {
+        "id": "unsorted-bust",
+        "title": "Keep trying after a number goes over",
+        "facet": "later-number extensions",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "nums=[6,1,2], limit=4",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            },
+            {
+              "id": "1,2",
+              "label": "1,2"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "1"
+            },
+            {
+              "from": "1",
+              "to": "1,2"
+            },
+            {
+              "from": "start",
+              "to": "2"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which combination list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[[],[1],[1,2],[2]]",
+              "feedback": "Correct. 6 is over 4, but 1 and 2 come after it and still fit.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[[]]",
+              "feedback": "This stops trying numbers as soon as one goes over. nums is not sorted, so 1 and 2 are never tried.",
+              "misconception": "stop-at-first-bust"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "6 is over 4, but 1 and 2 come after it and still fit."
+      }
+    ],
+    "conceptTasks": [
+      {
+        "id": "concept-picture",
+        "title": "Match every input detail",
+        "facet": "exact input numbers",
+        "kind": "visual-options",
+        "prompt": "Which picture exactly matches this raw input?",
+        "input": "nums=[1,3,5], limit=4",
+        "choices": [
+          {
+            "id": "exact",
+            "label": "Picture A",
+            "feedback": "Correct. Every combination under the limit and every one-number extension appears exactly once.",
+            "misconception": null,
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "1",
+                  "label": "1"
+                },
+                {
+                  "id": "1,3",
+                  "label": "1,3"
+                },
+                {
+                  "id": "3",
+                  "label": "3"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "1"
+                },
+                {
+                  "from": "1",
+                  "to": "1,3"
+                },
+                {
+                  "from": "start",
+                  "to": "3"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-node",
+            "label": "Picture D",
+            "feedback": "Combination `[3]` is missing. It is its own combination, even though `[1, 3]` also uses 3.",
+            "misconception": "omit-combination",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "1",
+                  "label": "1"
+                },
+                {
+                  "id": "1,3",
+                  "label": "1,3"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "1"
+                },
+                {
+                  "from": "1",
+                  "to": "1,3"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-edge",
+            "label": "Picture B",
+            "feedback": "The direct extension 1→1,3 is missing.",
+            "misconception": "omit-direct-edge",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "1",
+                  "label": "1"
+                },
+                {
+                  "id": "1,3",
+                  "label": "1,3"
+                },
+                {
+                  "id": "3",
+                  "label": "3"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "1"
+                },
+                {
+                  "from": "start",
+                  "to": "3"
+                }
+              ]
+            }
+          },
+          {
+            "id": "reordered",
+            "label": "Picture C",
+            "feedback": "3,1 is the same combination as 1,3. Only add numbers that come later in nums, so each combination appears once.",
+            "misconception": "reuse-earlier",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "1",
+                  "label": "1"
+                },
+                {
+                  "id": "1,3",
+                  "label": "1,3"
+                },
+                {
+                  "id": "3",
+                  "label": "3"
+                },
+                {
+                  "id": "3,1",
+                  "label": "3,1"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "1"
+                },
+                {
+                  "from": "1",
+                  "to": "1,3"
+                },
+                {
+                  "from": "start",
+                  "to": "3"
+                },
+                {
+                  "from": "3",
+                  "to": "3,1"
+                }
+              ]
+            }
+          }
+        ],
+        "correct": "exact",
+        "why": "Every combination under the limit and every one-number extension appears exactly once.",
+        "remedial": {
+          "id": "repair-1",
+          "title": "Fresh proof · Match every input detail",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "nums=[2,7], limit=5",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "2",
+                "label": "2"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "2"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which combination list is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[[],[2]]",
+                "feedback": "Correct. The empty combination has sum 0, so it counts. 7 is over 5.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[[2]]",
+                "feedback": "This leaves out the empty combination. Its sum is 0, so it always counts.",
+                "misconception": "skip-empty"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "The empty combination has sum 0, so it counts. 7 is over 5."
+        }
+      },
+      {
+        "id": "concept-nodes",
+        "title": "Protect entity identity",
+        "facet": "combination state identity",
+        "kind": "choice",
+        "prompt": "What is a node in the combination tree?",
+        "input": "nums=[2,4], limit=6",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2,4",
+              "label": "2,4"
+            },
+            {
+              "id": "4",
+              "label": "4"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2,4"
+            },
+            {
+              "from": "start",
+              "to": "4"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "combo",
+            "label": "A combination whose sum is at most limit. The root is the empty combination.",
+            "feedback": "Correct. Every node is a combination under the limit, so every node is part of the answer.",
+            "misconception": null
+          },
+          {
+            "id": "number",
+            "label": "One node per number in nums.",
+            "feedback": "One number can be in many combinations. A node must remember the whole combination chosen so far.",
+            "misconception": "number-as-state"
+          },
+          {
+            "id": "sum",
+            "label": "One node per possible sum, so combinations with the same sum share a node.",
+            "feedback": "Different combinations can have the same sum, like `[1, 4]` and `[5]`. Each is its own answer, so each needs its own node.",
+            "misconception": "merge-by-sum"
+          },
+          {
+            "id": "full",
+            "label": "Only combinations that cannot take another number.",
+            "feedback": "Combinations along the way count too. `[]` and `[2]` are answers even when longer combinations extend them.",
+            "misconception": "leaves-only"
+          }
+        ],
+        "correct": "combo",
+        "why": "Correct. Every node is a combination under the limit, so every node is part of the answer.",
+        "remedial": {
+          "id": "repair-2",
+          "title": "Fresh proof · Protect entity identity",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "nums=[1,4,5], limit=5",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "1",
+                "label": "1"
+              },
+              {
+                "id": "1,4",
+                "label": "1,4"
+              },
+              {
+                "id": "4",
+                "label": "4"
+              },
+              {
+                "id": "5",
+                "label": "5"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "1"
+              },
+              {
+                "from": "1",
+                "to": "1,4"
+              },
+              {
+                "from": "start",
+                "to": "4"
+              },
+              {
+                "from": "start",
+                "to": "5"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "How many combinations are returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "5",
+                "feedback": "Correct. `[]`, `[1]`, `[1, 4]`, `[4]`, and `[5]` are five different combinations, even though `[1, 4]` and `[5]` have the same sum.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "4",
+                "feedback": "This merges `[1, 4]` and `[5]` because both sum to 5.",
+                "misconception": "merge-by-sum"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "`[]`, `[1]`, `[1, 4]`, `[4]`, and `[5]` are five different combinations, even though `[1, 4]` and `[5]` have the same sum."
+        }
+      },
+      {
+        "id": "concept-relations",
+        "title": "Protect direct relations",
+        "facet": "later-number extensions",
+        "kind": "choice",
+        "prompt": "When does a combination have an edge to a longer combination?",
+        "input": "nums=[4,1,2], limit=6",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "4",
+              "label": "4"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "4"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "later-number",
+            "label": "Add one number that comes later in nums than every number already chosen, if the new sum is still at most limit.",
+            "feedback": "Correct. Only adding later numbers builds each combination exactly once.",
+            "misconception": null
+          },
+          {
+            "id": "any-unused",
+            "label": "Add any number not already in the combination, if the new sum is at most limit.",
+            "feedback": "Adding an earlier number builds both `[4, 1]` and `[1, 4]`, the same combination twice. Only add numbers that come later.",
+            "misconception": "reuse-earlier"
+          },
+          {
+            "id": "same-again",
+            "label": "Add any number, even one already chosen, if the new sum is at most limit.",
+            "feedback": "Each number can be used at most once. Adding 1 after 1 builds `[1, 1]`, which reuses a number.",
+            "misconception": "reuse-same"
+          },
+          {
+            "id": "strict",
+            "label": "Add one later number if the new sum is below limit.",
+            "feedback": "A sum exactly at the limit still counts. Only going over is left out.",
+            "misconception": "bust-at-limit"
+          }
+        ],
+        "correct": "later-number",
+        "why": "Correct. Only adding later numbers builds each combination exactly once.",
+        "remedial": {
+          "id": "repair-3",
+          "title": "Fresh proof · Protect direct relations",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "nums=[3,1,2], limit=5",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "3",
+                "label": "3"
+              },
+              {
+                "id": "3,1",
+                "label": "3,1"
+              },
+              {
+                "id": "3,2",
+                "label": "3,2"
+              },
+              {
+                "id": "1",
+                "label": "1"
+              },
+              {
+                "id": "1,2",
+                "label": "1,2"
+              },
+              {
+                "id": "2",
+                "label": "2"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "3"
+              },
+              {
+                "from": "3",
+                "to": "3,1"
+              },
+              {
+                "from": "3",
+                "to": "3,2"
+              },
+              {
+                "from": "start",
+                "to": "1"
+              },
+              {
+                "from": "1",
+                "to": "1,2"
+              },
+              {
+                "from": "start",
+                "to": "2"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "How many combinations are returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "7",
+                "feedback": "Correct. Each combination appears once: `[]`, `[3]`, `[3, 1]`, `[3, 2]`, `[1]`, `[1, 2]`, and `[2]`.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "10",
+                "feedback": "This also adds earlier numbers, so it counts `[1, 3]`, `[2, 3]`, and `[2, 1]` again in a different order.",
+                "misconception": "reuse-earlier"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "Each combination appears once: `[]`, `[3]`, `[3, 1]`, `[3, 2]`, `[1]`, `[1, 2]`, and `[2]`."
+        }
+      },
+      {
+        "id": "concept-output",
+        "title": "Predict from a fresh input",
+        "facet": "every combination counts",
+        "kind": "choice",
+        "prompt": "For nums `[1, 2, 6]` with limit `3`, which combinations are returned?",
+        "input": "nums=[1,2,6], limit=3",
+        "choices": [
+          {
+            "id": "four",
+            "feedback": "Correct. 1+2 = 3 lands exactly on the limit, and the empty combination has sum 0. 6 is over.",
+            "misconception": null,
+            "label": "`[]`, `[1]`, `[1, 2]`, and `[2]`"
+          },
+          {
+            "id": "no-empty",
+            "feedback": "The empty combination has sum 0, which is at most 3, so it counts too.",
+            "misconception": "skip-empty",
+            "label": "`[1]`, `[1, 2]`, and `[2]`"
+          },
+          {
+            "id": "strict",
+            "feedback": "1+2 = 3 is exactly the limit, which still counts. Only going over is left out.",
+            "misconception": "bust-at-limit",
+            "label": "`[]`, `[1]`, and `[2]`"
+          },
+          {
+            "id": "reordered",
+            "feedback": "`[2, 1]` is the same combination as `[1, 2]`. Only add later numbers so each combination appears once.",
+            "misconception": "reuse-earlier",
+            "label": "`[]`, `[1]`, `[1, 2]`, `[2]`, and `[2, 1]`"
+          }
+        ],
+        "correct": "four",
+        "why": "Correct. 1+2 = 3 lands exactly on the limit, and the empty combination has sum 0. 6 is over.",
+        "remedial": {
+          "id": "repair-4",
+          "title": "Fresh proof · Predict from a fresh input",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "nums=[2,4], limit=6",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "2",
+                "label": "2"
+              },
+              {
+                "id": "2,4",
+                "label": "2,4"
+              },
+              {
+                "id": "4",
+                "label": "4"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "2"
+              },
+              {
+                "from": "2",
+                "to": "2,4"
+              },
+              {
+                "from": "start",
+                "to": "4"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which combination list is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[[],[2],[2,4],[4]]",
+                "feedback": "Correct. 2+4 = 6 lands exactly on the limit, which still counts.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[[],[2],[4]]",
+                "feedback": "This leaves out sums equal to 6. Only going over the limit is left out.",
+                "misconception": "bust-at-limit"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "2+4 = 6 lands exactly on the limit, which still counts."
+        }
+      },
+      {
+        "id": "concept-bug",
+        "title": "Catch a near-miss implementation",
+        "facet": "every combination counts",
+        "kind": "choice",
+        "prompt": "For nums `[5, 1, 3]` with limit `4`, how many combinations are returned?",
+        "input": "nums=[5,1,3], limit=4",
+        "choices": [
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "Correct. `[]`, `[1]`, `[1, 3]`, and `[3]` fit. 5 is over the limit.",
+            "misconception": null
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "This stops at 5, the first number that goes over. nums is not sorted, so 1 and 3 still fit.",
+            "misconception": "stop-at-first-bust"
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "This leaves out the empty combination. Its sum is 0, so it always counts.",
+            "misconception": "skip-empty"
+          },
+          {
+            "id": "two",
+            "label": "`2`",
+            "feedback": "This counts only combinations that cannot take another number, missing `[]` and `[1]`.",
+            "misconception": "leaves-only"
+          }
+        ],
+        "correct": "four",
+        "why": "Correct. `[]`, `[1]`, `[1, 3]`, and `[3]` fit. 5 is over the limit.",
+        "remedial": {
+          "id": "repair-5",
+          "title": "Fresh proof · Catch a near-miss implementation",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "nums=[2,3], limit=6",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "2",
+                "label": "2"
+              },
+              {
+                "id": "2,3",
+                "label": "2,3"
+              },
+              {
+                "id": "3",
+                "label": "3"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "2"
+              },
+              {
+                "from": "2",
+                "to": "2,3"
+              },
+              {
+                "from": "start",
+                "to": "3"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "How many combinations are returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "4",
+                "feedback": "Correct. `[]`, `[2]`, `[2, 3]`, and `[3]` fit. Each number is used at most once.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "7",
+                "feedback": "This lets a number be chosen again, adding `[2, 2]`, `[2, 2, 2]`, and `[3, 3]`.",
+                "misconception": "reuse-same"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "`[]`, `[2]`, `[2, 3]`, and `[3]` fit. Each number is used at most once."
+        }
+      }
+    ],
+    "structureTasks": [
+      {
+        "id": "transfer-1",
+        "input": "nums=[1,2], limit=3",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            },
+            {
+              "id": "1,2",
+              "label": "1,2"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "1"
+            },
+            {
+              "from": "1",
+              "to": "1,2"
+            },
+            {
+              "from": "start",
+              "to": "2"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-2",
+        "input": "nums=[4,1], limit=4",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "4",
+              "label": "4"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "4"
+            },
+            {
+              "from": "start",
+              "to": "1"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-3",
+        "input": "nums=[2,5,1], limit=3",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2,1",
+              "label": "2,1"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2,1"
+            },
+            {
+              "from": "start",
+              "to": "1"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-4",
+        "input": "nums=[3,4], limit=10",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "3",
+              "label": "3"
+            },
+            {
+              "id": "3,4",
+              "label": "3,4"
+            },
+            {
+              "id": "4",
+              "label": "4"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "3"
+            },
+            {
+              "from": "3",
+              "to": "3,4"
+            },
+            {
+              "from": "start",
+              "to": "4"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-5",
+        "input": "nums=[9,1], limit=5",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "1"
+            }
+          ]
+        }
+      }
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "all-combos",
+        "concept-nodes",
+        "not-just-leaves",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   }
 ]
