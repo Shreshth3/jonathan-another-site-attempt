@@ -33026,5 +33026,1552 @@
         4
       ]
     }
+  },
+  {
+    "id": "balanced-brackets",
+    "facets": [
+      "exact n and maxDepth",
+      "prefix state identity",
+      "open and close rules",
+      "complete balanced strings"
+    ],
+    "buildTasks": [
+      {
+        "id": "depth-limit",
+        "title": "Respect maxDepth",
+        "facet": "open and close rules",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=2, maxDepth=1",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which string list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[\"()()\"]",
+              "feedback": "Correct. With maxDepth 1, the first `(` must close before the next one opens, so `(())` is never built.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[\"(())\",\"()()\"]",
+              "feedback": "This ignores maxDepth. `(())` has 2 brackets open at once, more than maxDepth 1.",
+              "misconception": "ignore-max-depth"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "With maxDepth 1, the first `(` must close before the next one opens, so `(())` is never built."
+      },
+      {
+        "id": "balanced-closes",
+        "title": "Close only an open bracket",
+        "facet": "open and close rules",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=1, maxDepth=1",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which string list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[\"()\"]",
+              "feedback": "Correct. A `)` must close a `(` that is still open, so `()` is the only string.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[\"()\",\")(\"]",
+              "feedback": "This adds `)` whenever fewer than n `)` are used. `)(` starts by closing a bracket that was never opened.",
+              "misconception": "close-up-to-n"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "A `)` must close a `(` that is still open, so `()` is the only string."
+      },
+      {
+        "id": "full-length",
+        "title": "Finish at 2n brackets",
+        "facet": "complete balanced strings",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=2, maxDepth=2",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "((",
+              "label": "(("
+            },
+            {
+              "id": "(()",
+              "label": "(()"
+            },
+            {
+              "id": "(())",
+              "label": "(())"
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "(("
+            },
+            {
+              "from": "((",
+              "to": "(()"
+            },
+            {
+              "from": "(()",
+              "to": "(())"
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which string list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[\"(())\",\"()()\"]",
+              "feedback": "Correct. A complete string has 2 `(` and 2 `)`, so only the 4-bracket leaves `(())` and `()()` are returned.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[\"((\",\"()\"]",
+              "feedback": "This returns a prefix as soon as it has n = 2 brackets. `((` and `()` are only halfway: a complete string has 2n = 4.",
+              "misconception": "stop-at-n"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "A complete string has 2 `(` and 2 `)`, so only the 4-bracket leaves `(())` and `()()` are returned."
+      },
+      {
+        "id": "open-cap",
+        "title": "Use exactly n opening brackets",
+        "facet": "exact n and maxDepth",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=1, maxDepth=2",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which string list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[\"()\"]",
+              "feedback": "Correct. n is 1, so only one `(` is allowed. maxDepth 2 would allow a second, but there is none to use.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[\"((\",\"()\"]",
+              "feedback": "This adds `(` whenever the depth allows it, so `((` uses two `(` when n is 1.",
+              "misconception": "no-open-cap"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "n is 1, so only one `(` is allowed. maxDepth 2 would allow a second, but there is none to use."
+      }
+    ],
+    "conceptTasks": [
+      {
+        "id": "concept-picture",
+        "title": "Match every input detail",
+        "facet": "exact n and maxDepth",
+        "kind": "visual-options",
+        "prompt": "Which picture exactly matches this raw input?",
+        "input": "n=2, maxDepth=3",
+        "choices": [
+          {
+            "id": "exact",
+            "label": "Picture A",
+            "feedback": "Correct. Every prefix and every one-bracket extension appears exactly once.",
+            "misconception": null,
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "(",
+                  "label": "("
+                },
+                {
+                  "id": "((",
+                  "label": "(("
+                },
+                {
+                  "id": "(()",
+                  "label": "(()"
+                },
+                {
+                  "id": "(())",
+                  "label": "(())"
+                },
+                {
+                  "id": "()",
+                  "label": "()"
+                },
+                {
+                  "id": "()(",
+                  "label": "()("
+                },
+                {
+                  "id": "()()",
+                  "label": "()()"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "("
+                },
+                {
+                  "from": "(",
+                  "to": "(("
+                },
+                {
+                  "from": "((",
+                  "to": "(()"
+                },
+                {
+                  "from": "(()",
+                  "to": "(())"
+                },
+                {
+                  "from": "(",
+                  "to": "()"
+                },
+                {
+                  "from": "()",
+                  "to": "()("
+                },
+                {
+                  "from": "()(",
+                  "to": "()()"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-node",
+            "label": "Picture D",
+            "feedback": "`(())` is missing. It is a complete balanced string, so it needs its own node.",
+            "misconception": "omit-complete-string",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "(",
+                  "label": "("
+                },
+                {
+                  "id": "((",
+                  "label": "(("
+                },
+                {
+                  "id": "(()",
+                  "label": "(()"
+                },
+                {
+                  "id": "()",
+                  "label": "()"
+                },
+                {
+                  "id": "()(",
+                  "label": "()("
+                },
+                {
+                  "id": "()()",
+                  "label": "()()"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "("
+                },
+                {
+                  "from": "(",
+                  "to": "(("
+                },
+                {
+                  "from": "((",
+                  "to": "(()"
+                },
+                {
+                  "from": "(",
+                  "to": "()"
+                },
+                {
+                  "from": "()",
+                  "to": "()("
+                },
+                {
+                  "from": "()(",
+                  "to": "()()"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-edge",
+            "label": "Picture B",
+            "feedback": "The direct extension from `(` to `()` is missing.",
+            "misconception": "omit-direct-edge",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "(",
+                  "label": "("
+                },
+                {
+                  "id": "((",
+                  "label": "(("
+                },
+                {
+                  "id": "(()",
+                  "label": "(()"
+                },
+                {
+                  "id": "(())",
+                  "label": "(())"
+                },
+                {
+                  "id": "()",
+                  "label": "()"
+                },
+                {
+                  "id": "()(",
+                  "label": "()("
+                },
+                {
+                  "id": "()()",
+                  "label": "()()"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "("
+                },
+                {
+                  "from": "(",
+                  "to": "(("
+                },
+                {
+                  "from": "((",
+                  "to": "(()"
+                },
+                {
+                  "from": "(()",
+                  "to": "(())"
+                },
+                {
+                  "from": "()",
+                  "to": "()("
+                },
+                {
+                  "from": "()(",
+                  "to": "()()"
+                }
+              ]
+            }
+          },
+          {
+            "id": "unbalanced",
+            "label": "Picture C",
+            "feedback": "After `()`, no bracket is open, so `())` closes a bracket that was never opened. A `)` is allowed only while a `(` is still open.",
+            "misconception": "close-up-to-n",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "(",
+                  "label": "("
+                },
+                {
+                  "id": "((",
+                  "label": "(("
+                },
+                {
+                  "id": "(()",
+                  "label": "(()"
+                },
+                {
+                  "id": "(())",
+                  "label": "(())"
+                },
+                {
+                  "id": "()",
+                  "label": "()"
+                },
+                {
+                  "id": "()(",
+                  "label": "()("
+                },
+                {
+                  "id": "()()",
+                  "label": "()()"
+                },
+                {
+                  "id": "())",
+                  "label": "())"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "("
+                },
+                {
+                  "from": "(",
+                  "to": "(("
+                },
+                {
+                  "from": "((",
+                  "to": "(()"
+                },
+                {
+                  "from": "(()",
+                  "to": "(())"
+                },
+                {
+                  "from": "(",
+                  "to": "()"
+                },
+                {
+                  "from": "()",
+                  "to": "()("
+                },
+                {
+                  "from": "()(",
+                  "to": "()()"
+                },
+                {
+                  "from": "()",
+                  "to": "())"
+                }
+              ]
+            }
+          }
+        ],
+        "correct": "exact",
+        "why": "Every prefix and every one-bracket extension appears exactly once.",
+        "remedial": {
+          "id": "repair-1",
+          "title": "Fresh proof · Match every input detail",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=1, maxDepth=4",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "(",
+                "label": "("
+              },
+              {
+                "id": "()",
+                "label": "()"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "("
+              },
+              {
+                "from": "(",
+                "to": "()"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which string list is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[\"()\"]",
+                "feedback": "Correct. A complete string has 2n = 2 brackets, so the answer is `()`.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[\"(\"]",
+                "feedback": "This returns `(` because it has n = 1 bracket. A complete string has 2n = 2 brackets.",
+                "misconception": "stop-at-n"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "A complete string has 2n = 2 brackets, so the answer is `()`."
+        }
+      },
+      {
+        "id": "concept-nodes",
+        "title": "Protect entity identity",
+        "facet": "prefix state identity",
+        "kind": "choice",
+        "prompt": "What is a node in the bracket decision tree?",
+        "input": "n=2, maxDepth=1",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "prefix",
+            "label": "A prefix: the brackets written so far, from left to right. The root `start` is the empty string.",
+            "feedback": "Correct. Each level adds one bracket, so a node remembers the whole string built so far.",
+            "misconception": null
+          },
+          {
+            "id": "depth",
+            "label": "One node per depth, so prefixes with the same number of open brackets share a node.",
+            "feedback": "Different prefixes can have the same depth: `(` and `(()` both have one bracket open. They lead to different strings, so each needs its own node.",
+            "misconception": "merge-by-depth"
+          },
+          {
+            "id": "full",
+            "label": "Only complete strings with 2n brackets.",
+            "feedback": "Complete strings are the leaves. The shorter prefixes are needed to show the choices that lead to them.",
+            "misconception": "leaves-only"
+          },
+          {
+            "id": "bracket",
+            "label": "Two nodes in total: one for `(` and one for `)`.",
+            "feedback": "The same bracket at a different place builds a different string. A node must remember the whole prefix, not just its last bracket.",
+            "misconception": "bracket-as-node"
+          }
+        ],
+        "correct": "prefix",
+        "why": "Correct. Each level adds one bracket, so a node remembers the whole string built so far.",
+        "remedial": {
+          "id": "repair-2",
+          "title": "Fresh proof · Protect entity identity",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=2, maxDepth=2",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "(",
+                "label": "("
+              },
+              {
+                "id": "((",
+                "label": "(("
+              },
+              {
+                "id": "(()",
+                "label": "(()"
+              },
+              {
+                "id": "(())",
+                "label": "(())"
+              },
+              {
+                "id": "()",
+                "label": "()"
+              },
+              {
+                "id": "()(",
+                "label": "()("
+              },
+              {
+                "id": "()()",
+                "label": "()()"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "("
+              },
+              {
+                "from": "(",
+                "to": "(("
+              },
+              {
+                "from": "((",
+                "to": "(()"
+              },
+              {
+                "from": "(()",
+                "to": "(())"
+              },
+              {
+                "from": "(",
+                "to": "()"
+              },
+              {
+                "from": "()",
+                "to": "()("
+              },
+              {
+                "from": "()(",
+                "to": "()()"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "How many strings are returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "2",
+                "feedback": "Correct. The tree has 8 prefixes, but only the 2 complete strings `(())` and `()()` are returned.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "8",
+                "feedback": "This returns every node, including the empty string at `start` and unfinished prefixes like `((`. Only complete strings with 2n brackets are answers.",
+                "misconception": "every-node"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "The tree has 8 prefixes, but only the 2 complete strings `(())` and `()()` are returned."
+        }
+      },
+      {
+        "id": "concept-relations",
+        "title": "Protect direct relations",
+        "facet": "open and close rules",
+        "kind": "choice",
+        "prompt": "When does a prefix have an edge to a longer prefix?",
+        "input": "n=2, maxDepth=2",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "((",
+              "label": "(("
+            },
+            {
+              "id": "(()",
+              "label": "(()"
+            },
+            {
+              "id": "(())",
+              "label": "(())"
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "(("
+            },
+            {
+              "from": "((",
+              "to": "(()"
+            },
+            {
+              "from": "(()",
+              "to": "(())"
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "two-rules",
+            "label": "Add `(` if fewer than n `(` are used and fewer than maxDepth brackets are open. Add `)` if fewer `)` than `(` are used so far.",
+            "feedback": "Correct. A new `(` keeps the depth at most maxDepth, and a new `)` always closes a bracket that is still open.",
+            "misconception": null
+          },
+          {
+            "id": "close-up-to-n",
+            "label": "Add `(` by the same rule. Add `)` whenever fewer than n `)` are used.",
+            "feedback": "Then `)` could come first, as in `)(`. That closes a bracket that was never opened, so the string is not balanced.",
+            "misconception": "close-up-to-n"
+          },
+          {
+            "id": "depth-at-most",
+            "label": "Add `(` if fewer than n `(` are used and at most maxDepth brackets are open. Add `)` if fewer `)` than `(` are used so far.",
+            "feedback": "If maxDepth brackets are already open, one more `(` makes the depth maxDepth + 1, which is too deep.",
+            "misconception": "depth-over-by-one"
+          },
+          {
+            "id": "no-cap",
+            "label": "Add `(` whenever fewer than maxDepth brackets are open. Add `)` if fewer `)` than `(` are used so far.",
+            "feedback": "Every answer has exactly n `(`. Without the n check, a string can use more `(` than `)`, like `((` when n is 1.",
+            "misconception": "no-open-cap"
+          }
+        ],
+        "correct": "two-rules",
+        "why": "Correct. A new `(` keeps the depth at most maxDepth, and a new `)` always closes a bracket that is still open.",
+        "remedial": {
+          "id": "repair-3",
+          "title": "Fresh proof · Protect direct relations",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=2, maxDepth=3",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "(",
+                "label": "("
+              },
+              {
+                "id": "((",
+                "label": "(("
+              },
+              {
+                "id": "(()",
+                "label": "(()"
+              },
+              {
+                "id": "(())",
+                "label": "(())"
+              },
+              {
+                "id": "()",
+                "label": "()"
+              },
+              {
+                "id": "()(",
+                "label": "()("
+              },
+              {
+                "id": "()()",
+                "label": "()()"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "("
+              },
+              {
+                "from": "(",
+                "to": "(("
+              },
+              {
+                "from": "((",
+                "to": "(()"
+              },
+              {
+                "from": "(()",
+                "to": "(())"
+              },
+              {
+                "from": "(",
+                "to": "()"
+              },
+              {
+                "from": "()",
+                "to": "()("
+              },
+              {
+                "from": "()(",
+                "to": "()()"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "How many strings are returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "2",
+                "feedback": "Correct. Only `(())` and `()()` are returned: every `)` closes a `(` that is still open.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "6",
+                "feedback": "This adds `)` whenever fewer than n `)` are used, so it also counts unbalanced strings like `)(()` and `())(`.",
+                "misconception": "close-up-to-n"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "Only `(())` and `()()` are returned: every `)` closes a `(` that is still open."
+        }
+      },
+      {
+        "id": "concept-output",
+        "title": "Predict from a fresh input",
+        "facet": "complete balanced strings",
+        "kind": "choice",
+        "prompt": "For n = `1` and maxDepth = `3`, which strings are returned?",
+        "input": "n=1, maxDepth=3",
+        "choices": [
+          {
+            "id": "one",
+            "feedback": "Correct. With one `(` and one `)`, the only balanced string is `()`. maxDepth 3 never matters, because at most one bracket can be open.",
+            "misconception": null,
+            "label": "`()`"
+          },
+          {
+            "id": "closes-first",
+            "feedback": "`)(` starts with a `)` that closes nothing. A `)` is allowed only while a `(` is still open.",
+            "misconception": "close-up-to-n",
+            "label": "`()` and `)(`"
+          },
+          {
+            "id": "half",
+            "feedback": "`(` is only half a string. A complete string has n `(` and n `)`, so it is 2n = 2 brackets long.",
+            "misconception": "stop-at-n",
+            "label": "`(`"
+          },
+          {
+            "id": "extra-open",
+            "feedback": "`((` uses two `(`, but n is 1. Every string has exactly n `(`, even when maxDepth would allow more.",
+            "misconception": "no-open-cap",
+            "label": "`((` and `()`"
+          }
+        ],
+        "correct": "one",
+        "why": "Correct. With one `(` and one `)`, the only balanced string is `()`. maxDepth 3 never matters, because at most one bracket can be open.",
+        "remedial": {
+          "id": "repair-4",
+          "title": "Fresh proof · Predict from a fresh input",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=1, maxDepth=2",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "(",
+                "label": "("
+              },
+              {
+                "id": "()",
+                "label": "()"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "("
+              },
+              {
+                "from": "(",
+                "to": "()"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which string list is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[\"()\"]",
+                "feedback": "Correct. Only `()` is balanced. A `)` must close a `(` that is still open.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[\"()\",\")(\"]",
+                "feedback": "This allows `)` first, building `)(`, which closes a bracket that was never opened.",
+                "misconception": "close-up-to-n"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "Only `()` is balanced. A `)` must close a `(` that is still open."
+        }
+      },
+      {
+        "id": "concept-bug",
+        "title": "Catch a near-miss implementation",
+        "facet": "open and close rules",
+        "kind": "choice",
+        "prompt": "For n = `4` and maxDepth = `2`, how many strings are returned?",
+        "input": "n=4, maxDepth=2",
+        "choices": [
+          {
+            "id": "eight",
+            "feedback": "Correct. Of the 14 balanced strings with four pairs, 8 never have more than 2 brackets open at once.",
+            "misconception": null,
+            "label": "`8`"
+          },
+          {
+            "id": "fourteen",
+            "feedback": "This counts every balanced string with four pairs. It ignores maxDepth, so strings like `((()))()` with 3 brackets open are counted too.",
+            "misconception": "ignore-max-depth",
+            "label": "`14`"
+          },
+          {
+            "id": "one",
+            "feedback": "This stops a `(` that would make 2 brackets open. maxDepth 2 allows exactly 2 open at once; only a third is too deep.",
+            "misconception": "depth-under-by-one",
+            "label": "`1`"
+          },
+          {
+            "id": "four",
+            "feedback": "This counts prefixes with 4 brackets. A complete string has n `(` and n `)`, so it is 2n = 8 brackets long.",
+            "misconception": "stop-at-n",
+            "label": "`4`"
+          }
+        ],
+        "correct": "eight",
+        "why": "Correct. Of the 14 balanced strings with four pairs, 8 never have more than 2 brackets open at once.",
+        "remedial": {
+          "id": "repair-5",
+          "title": "Fresh proof · Catch a near-miss implementation",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=2, maxDepth=2",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "(",
+                "label": "("
+              },
+              {
+                "id": "((",
+                "label": "(("
+              },
+              {
+                "id": "(()",
+                "label": "(()"
+              },
+              {
+                "id": "(())",
+                "label": "(())"
+              },
+              {
+                "id": "()",
+                "label": "()"
+              },
+              {
+                "id": "()(",
+                "label": "()("
+              },
+              {
+                "id": "()()",
+                "label": "()()"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "("
+              },
+              {
+                "from": "(",
+                "to": "(("
+              },
+              {
+                "from": "((",
+                "to": "(()"
+              },
+              {
+                "from": "(()",
+                "to": "(())"
+              },
+              {
+                "from": "(",
+                "to": "()"
+              },
+              {
+                "from": "()",
+                "to": "()("
+              },
+              {
+                "from": "()(",
+                "to": "()()"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which string list is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[\"(())\",\"()()\"]",
+                "feedback": "Correct. `(())` reaches depth 2, which maxDepth 2 allows. Only going deeper than maxDepth is left out.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[\"()()\"]",
+                "feedback": "This refuses a `(` that would make 2 brackets open, so it loses `(())`. maxDepth 2 allows exactly 2 open at once.",
+                "misconception": "depth-under-by-one"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "`(())` reaches depth 2, which maxDepth 2 allows. Only going deeper than maxDepth is left out."
+        }
+      }
+    ],
+    "structureTasks": [
+      {
+        "id": "transfer-1",
+        "input": "n=2, maxDepth=4",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "((",
+              "label": "(("
+            },
+            {
+              "id": "(()",
+              "label": "(()"
+            },
+            {
+              "id": "(())",
+              "label": "(())"
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "(("
+            },
+            {
+              "from": "((",
+              "to": "(()"
+            },
+            {
+              "from": "(()",
+              "to": "(())"
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-2",
+        "input": "n=3, maxDepth=1",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            },
+            {
+              "id": "()()(",
+              "label": "()()("
+            },
+            {
+              "id": "()()()",
+              "label": "()()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            },
+            {
+              "from": "()()",
+              "to": "()()("
+            },
+            {
+              "from": "()()(",
+              "to": "()()()"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-3",
+        "input": "n=1, maxDepth=5",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-4",
+        "input": "n=2, maxDepth=5",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "((",
+              "label": "(("
+            },
+            {
+              "id": "(()",
+              "label": "(()"
+            },
+            {
+              "id": "(())",
+              "label": "(())"
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "(("
+            },
+            {
+              "from": "((",
+              "to": "(()"
+            },
+            {
+              "from": "(()",
+              "to": "(())"
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-5",
+        "input": "n=4, maxDepth=1",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            },
+            {
+              "id": "()()(",
+              "label": "()()("
+            },
+            {
+              "id": "()()()",
+              "label": "()()()"
+            },
+            {
+              "id": "()()()(",
+              "label": "()()()("
+            },
+            {
+              "id": "()()()()",
+              "label": "()()()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            },
+            {
+              "from": "()()",
+              "to": "()()("
+            },
+            {
+              "from": "()()(",
+              "to": "()()()"
+            },
+            {
+              "from": "()()()",
+              "to": "()()()("
+            },
+            {
+              "from": "()()()(",
+              "to": "()()()()"
+            }
+          ]
+        }
+      }
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "depth-limit",
+        "concept-nodes",
+        "balanced-closes",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   }
 ]

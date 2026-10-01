@@ -171,7 +171,7 @@
     return /^-?\d+$/.test(value) && Number.isSafeInteger(number) && number >= format.min && number <= format.max ? String(number) : null;
   }
 
-  function renamePlaceholder(type = "node") { return type === "edge" ? "5" : arrayNumberMode() ? "7" : nodeLabelRule === "coordinate" ? "(0,2)" : nodeLabelRule === "nested-path" ? "root[0]=7" : nodeLabelRule === "partial-string" ? "ab" : nodeLabelRule === "weight-prefix" ? "4,2" : "2"; }
+  function renamePlaceholder(type = "node") { return type === "edge" ? "5" : arrayNumberMode() ? "7" : nodeLabelRule === "coordinate" ? "(0,2)" : nodeLabelRule === "nested-path" ? "root[0]=7" : nodeLabelRule === "partial-string" ? "ab" : nodeLabelRule === "weight-prefix" ? "4,2" : nodeLabelRule === "bracket-prefix" ? "(()" : "2"; }
 
   function setNodeLabelRule(rule, format = {}) {
     nodeLabelRule = String(rule || "nonnegative-integer");
@@ -220,6 +220,7 @@
     if (pattern === "^(?:empty prefix|[a-z]+)$") return !used.has("empty prefix") ? "empty prefix" : firstUnused(value => String.fromCharCode(97 + value));
     if (pattern === "^(?:start|[a-z]+)$") return !used.has("start") ? "start" : firstUnused(value => String.fromCharCode(97 + value));
     if (pattern === "^(?:start|[1-9]\\d*(?:,[1-9]\\d*)*)$") return !used.has("start") ? "start" : firstUnused(value => String(value + 1));
+    if (pattern === "^(?:start|[()]+)$") return !used.has("start") ? "start" : firstUnused(value => ["(", "((", "()", "(((", "(()", "()("][value] ?? "(".repeat(value - 2));
     if (pattern === "^\\d+:(?:true|false|AND|OR)$") return firstUnused(value => value === 0 ? "0:AND" : `${value}:false`);
     if (pattern === "^node \\d+: -?\\d+$") return firstUnused(value => `node ${value}: 0`);
     if (pattern === "^\\d+:[A-Za-z]$") return firstUnused(value => `${value}:a`);
@@ -485,7 +486,8 @@
     const value = renameInput.value.trim();
     if (!value && renameTarget.type === "node") { announce(arrayNumberMode() ? "Enter a value, or press Esc to cancel." : "A node name cannot be empty."); renameInput.focus(); return; }
     const normalized = arrayNumberMode() && renamedType === "node" ? normalizeArrayValue(value, nodeLabelFormat)
-      : nodeLabelRule === "weight-prefix" && renamedType === "node" ? value.replace(/\s*,\s*/g, ",") : value;
+      : nodeLabelRule === "weight-prefix" && renamedType === "node" ? value.replace(/\s*,\s*/g, ",")
+      : nodeLabelRule === "bracket-prefix" && renamedType === "node" && /^[()\s]+$/.test(value) ? value.replace(/\s+/g, "") : value;
     if (normalized === null) {
       renameInput.setAttribute("aria-invalid", "true");
       announce(literalValueMode() ? 'Enter a number, quoted text, true, or false.' : `Enter a whole number from ${nodeLabelFormat.min} to ${nodeLabelFormat.max}.`);

@@ -4232,5 +4232,160 @@
         4
       ]
     }
+  },
+  {
+    "id": "balanced-brackets",
+    "visualKind": "backtracking",
+    "pictureQuestions": [
+      {
+        "id": "which-strings",
+        "input": "n = 1, maxDepth = 3",
+        "prompt": "For n = `1` and maxDepth = `3`, which strings are returned?",
+        "correct": "one",
+        "choices": [
+          {
+            "id": "one",
+            "feedback": "Correct. With one `(` and one `)`, the only balanced string is `()`. maxDepth 3 never matters, because at most one bracket can be open.",
+            "misconception": null,
+            "label": "`()`"
+          },
+          {
+            "id": "closes-first",
+            "feedback": "`)(` starts with a `)` that closes nothing. A `)` is allowed only while a `(` is still open.",
+            "misconception": "close-up-to-n",
+            "label": "`()` and `)(`"
+          },
+          {
+            "id": "half",
+            "feedback": "`(` is only half a string. A complete string has n `(` and n `)`, so it is 2n = 2 brackets long.",
+            "misconception": "stop-at-n",
+            "label": "`(`"
+          },
+          {
+            "id": "extra-open",
+            "feedback": "`((` uses two `(`, but n is 1. Every string has exactly n `(`, even when maxDepth would allow more.",
+            "misconception": "no-open-cap",
+            "label": "`((` and `()`"
+          }
+        ]
+      },
+      {
+        "id": "how-many",
+        "input": "n = 4, maxDepth = 2",
+        "prompt": "For n = `4` and maxDepth = `2`, how many strings are returned?",
+        "correct": "eight",
+        "choices": [
+          {
+            "id": "eight",
+            "feedback": "Correct. Of the 14 balanced strings with four pairs, 8 never have more than 2 brackets open at once.",
+            "misconception": null,
+            "label": "`8`"
+          },
+          {
+            "id": "fourteen",
+            "feedback": "This counts every balanced string with four pairs. It ignores maxDepth, so strings like `((()))()` with 3 brackets open are counted too.",
+            "misconception": "ignore-max-depth",
+            "label": "`14`"
+          },
+          {
+            "id": "one",
+            "feedback": "This stops a `(` that would make 2 brackets open. maxDepth 2 allows exactly 2 open at once; only a third is too deep.",
+            "misconception": "depth-under-by-one",
+            "label": "`1`"
+          },
+          {
+            "id": "four",
+            "feedback": "This counts prefixes with 4 brackets. A complete string has n `(` and n `)`, so it is 2n = 8 brackets long.",
+            "misconception": "stop-at-n",
+            "label": "`4`"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is a node in the bracket decision tree?",
+      "correct": "prefix",
+      "choices": [
+        {
+          "id": "prefix",
+          "label": "A prefix: the brackets written so far, from left to right. The root `start` is the empty string.",
+          "feedback": "Correct. Each level adds one bracket, so a node remembers the whole string built so far.",
+          "misconception": null
+        },
+        {
+          "id": "depth",
+          "label": "One node per depth, so prefixes with the same number of open brackets share a node.",
+          "feedback": "Different prefixes can have the same depth: `(` and `(()` both have one bracket open. They lead to different strings, so each needs its own node.",
+          "misconception": "merge-by-depth"
+        },
+        {
+          "id": "full",
+          "label": "Only complete strings with 2n brackets.",
+          "feedback": "Complete strings are the leaves. The shorter prefixes are needed to show the choices that lead to them.",
+          "misconception": "leaves-only"
+        },
+        {
+          "id": "bracket",
+          "label": "Two nodes in total: one for `(` and one for `)`.",
+          "feedback": "The same bracket at a different place builds a different string. A node must remember the whole prefix, not just its last bracket.",
+          "misconception": "bracket-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When does a prefix have an edge to a longer prefix?",
+      "correct": "two-rules",
+      "choices": [
+        {
+          "id": "two-rules",
+          "label": "Add `(` if fewer than n `(` are used and fewer than maxDepth brackets are open. Add `)` if fewer `)` than `(` are used so far.",
+          "feedback": "Correct. A new `(` keeps the depth at most maxDepth, and a new `)` always closes a bracket that is still open.",
+          "misconception": null
+        },
+        {
+          "id": "close-up-to-n",
+          "label": "Add `(` by the same rule. Add `)` whenever fewer than n `)` are used.",
+          "feedback": "Then `)` could come first, as in `)(`. That closes a bracket that was never opened, so the string is not balanced.",
+          "misconception": "close-up-to-n"
+        },
+        {
+          "id": "depth-at-most",
+          "label": "Add `(` if fewer than n `(` are used and at most maxDepth brackets are open. Add `)` if fewer `)` than `(` are used so far.",
+          "feedback": "If maxDepth brackets are already open, one more `(` makes the depth maxDepth + 1, which is too deep.",
+          "misconception": "depth-over-by-one"
+        },
+        {
+          "id": "no-cap",
+          "label": "Add `(` whenever fewer than maxDepth brackets are open. Add `)` if fewer `)` than `(` are used so far.",
+          "feedback": "Every answer has exactly n `(`. Without the n check, a string can use more `(` than `)`, like `((` when n is 1.",
+          "misconception": "no-open-cap"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `start` for the empty string. After that, write the brackets chosen so far. Example: `(()`.",
+      "pattern": "^(?:start|[()]+)$",
+      "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "leaves-only",
+      "no": "only complete strings with 2n brackets should become nodes.",
+      "yes": "Every shorter prefix along the way should have its own node too."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "depth-limit",
+        "concept-nodes",
+        "balanced-closes",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   }
 ]

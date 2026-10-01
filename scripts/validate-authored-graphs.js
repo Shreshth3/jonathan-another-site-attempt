@@ -169,6 +169,25 @@ function deriveUnderTheLimit(nums, limit) {
   return model;
 }
 
+// Balanced brackets: a node is a prefix. Add "(" while fewer than n are used and
+// fewer than maxDepth are open; add ")" while it closes an open "(".
+function deriveBalancedBrackets(n, maxDepth) {
+  const model = graph(true);
+  addNode(model, 'start');
+  function extend(prefix) {
+    if (prefix.length === 2 * n) return;
+    const opens = [...prefix].filter(char => char === '(').length, closes = prefix.length - opens;
+    for (const [allowed, bracket] of [[opens < n && opens - closes < maxDepth, '('], [closes < opens, ')']]) {
+      if (!allowed) continue;
+      addNode(model, prefix + bracket);
+      addEdge(model, prefix || 'start', prefix + bracket);
+      extend(prefix + bracket);
+    }
+  }
+  extend('');
+  return model;
+}
+
 function deriveVariant(id, input) {
   if (input.sky || input.marina || input.yard || input.park || input.cave) {
     return deriveGrid(id, input);
@@ -176,6 +195,7 @@ function deriveVariant(id, input) {
   if (input.items || input.playlist) return deriveNested(input.items || input.playlist);
   if (id === 'the-balance-lock') return deriveBalanceLock(input.dials, input.limit);
   if (id === 'under-the-limit') return deriveUnderTheLimit(input.nums, input.limit);
+  if (id === 'balanced-brackets') return deriveBalancedBrackets(input.n, input.maxDepth);
   if (input.dials) return deriveRunes(input.dials);
   const model = graph();
 

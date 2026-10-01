@@ -78,4 +78,15 @@ const bustRule = programs['the-balance-lock'].find(line => line.key === 'bust');
 bustRule.options.push({id:'weight',text:'    If weight > limit, skip this weight.'});
 bustRule.buggy = ['atleast', 'weight'];
 bustRule.feedback = {atleast:bustRule.feedback,weight:'The lock adds every chosen weight. Comparing one weight with limit lets a code whose running total goes over limit survive, so busted codes enter the answer.'};
+programs['balanced-brackets'] = [
+  fixed('setup','strings ← empty list\nFunction BUILD(prefix, opens, closes):'),
+  choice('base','full','  If prefix has 2 × n brackets:\n    Add prefix to strings and return.','half','  If prefix has n brackets:\n    Add prefix to strings and return.','A complete string has n "(" and n ")", so it is 2 × n brackets long. Stopping at n brackets returns half-built prefixes instead of complete strings.'),
+  choice('open','depth','  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by "(", opens + 1, closes)','atmost','  If opens < n and opens − closes ≤ maxDepth:\n    BUILD(prefix followed by "(", opens + 1, closes)','opens − closes is how many brackets are open before the new "(". Allowing it when that already equals maxDepth makes the depth maxDepth + 1, so strings one level too deep enter the answer.'),
+  choice('close','opened','  If closes < opens:\n    BUILD(prefix followed by ")", opens, closes + 1)','any','  If closes < n:\n    BUILD(prefix followed by ")", opens, closes + 1)','A ")" must close a "(" that is still open. Allowing it whenever fewer than n ")" are used builds unbalanced strings such as ")(", which close a bracket that was never opened.'),
+  fixed('end','End function\nBUILD(empty text, 0, 0)\nReturn strings.')
+];
+const depthRule = programs['balanced-brackets'].find(line => line.key === 'open');
+depthRule.options.push({id:'nodepth',text:'  If opens < n:\n    BUILD(prefix followed by "(", opens + 1, closes)'});
+depthRule.buggy = ['atmost', 'nodepth'];
+depthRule.feedback = {atmost:depthRule.feedback,nodepth:'Without the depth check, a "(" is added however many brackets are already open, so strings deeper than maxDepth enter the answer.'};
 module.exports = programs;

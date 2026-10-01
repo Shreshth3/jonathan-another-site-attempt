@@ -7436,5 +7436,264 @@
         }
       }
     ]
+  },
+  {
+    "id": "balanced-brackets",
+    "cases": [
+      {
+        "id": "balanced-brackets",
+        "caseId": "authored-deep-case",
+        "bugTitle": "Closes a Bracket That Was Never Opened",
+        "misconception": "close-up-to-n",
+        "input": {
+          "n": 2,
+          "maxDepth": 2
+        },
+        "code": "function solve(input) {\n  const strings = [];\n  function build(prefix, opens, closes) {\n    if (prefix.length === 2 * input.n) {\n      strings.push(prefix);\n      return;\n    }\n    if (opens < input.n && opens - closes < input.maxDepth) {\n      build(prefix + \"(\", opens + 1, closes);\n    }\n    if (closes < input.n) {\n      build(prefix + \")\", opens, closes + 1);\n    }\n  }\n  build(\"\", 0, 0);\n  return strings;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "((",
+              "label": "(("
+            },
+            {
+              "id": "(()",
+              "label": "(()"
+            },
+            {
+              "id": "(())",
+              "label": "(())"
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "(("
+            },
+            {
+              "from": "((",
+              "to": "(()"
+            },
+            {
+              "from": "(()",
+              "to": "(())"
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        },
+        "outputFormat": "list of every balanced string no deeper than maxDepth",
+        "buggyOutput": "[\"(())\",\"()()\",\"())(\",\")(()\",\")()(\",\"))((\"]",
+        "correctOutput": "[\"(())\",\"()()\"]",
+        "correctDiagnosis": "closes-nothing",
+        "diagnoses": [
+          {
+            "id": "closes-nothing",
+            "label": "Claim about the code: it adds ) whenever fewer than n ) are used, so a string can start with ) and close a bracket that was never opened.",
+            "feedback": "Correct. A ) must close an open (, so the check is closes < opens."
+          },
+          {
+            "id": "too-deep",
+            "label": "Claim about the code: it lets more than maxDepth brackets be open at once.",
+            "feedback": "The ( check still requires opens - closes < maxDepth."
+          },
+          {
+            "id": "half-length",
+            "label": "Claim about the code: it saves strings before they have 2n brackets.",
+            "feedback": "It saves a string only when prefix.length === 2 * input.n."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "The tree is start→(, then (→((→(()→(()) and (→()→()(→()(). Every prefix can be completed.",
+          "codeRule": "A ) is added whenever fewer than n ) are used, even when no ( is open.",
+          "separatingFeature": "start and () have no open bracket, but the code still adds ) after them.",
+          "outputConsequence": "The code returns [\"(())\",\"()()\",\"())(\",\")(()\",\")()(\",\"))((\"] instead of [\"(())\",\"()()\"].",
+          "changedGraph": "Extra edges such as start→) and ()→()) build unbalanced strings."
+        }
+      },
+      {
+        "id": "balanced-brackets",
+        "caseId": "case-2",
+        "bugTitle": "Lets the Depth Go One Past maxDepth",
+        "misconception": "depth-over-by-one",
+        "input": {
+          "n": 2,
+          "maxDepth": 1
+        },
+        "code": "function solve(input) {\n  const strings = [];\n  function build(prefix, opens, closes) {\n    if (prefix.length === 2 * input.n) {\n      strings.push(prefix);\n      return;\n    }\n    if (opens < input.n && opens - closes <= input.maxDepth) {\n      build(prefix + \"(\", opens + 1, closes);\n    }\n    if (closes < opens) {\n      build(prefix + \")\", opens, closes + 1);\n    }\n  }\n  build(\"\", 0, 0);\n  return strings;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        },
+        "outputFormat": "list of every balanced string no deeper than maxDepth",
+        "buggyOutput": "[\"(())\",\"()()\"]",
+        "correctOutput": "[\"()()\"]",
+        "correctDiagnosis": "one-too-deep",
+        "diagnoses": [
+          {
+            "id": "one-too-deep",
+            "label": "Claim about the code: <= allows a ( while maxDepth brackets are already open, so (( reaches depth 2 when maxDepth is 1.",
+            "feedback": "Correct. Before adding (, fewer than maxDepth brackets must be open, so use < instead of <=."
+          },
+          {
+            "id": "closes-nothing",
+            "label": "Claim about the code: it adds ) even when no ( is open.",
+            "feedback": "It adds ) only when closes < opens."
+          },
+          {
+            "id": "extra-open",
+            "label": "Claim about the code: it can use more than n (.",
+            "feedback": "The ( check still requires opens < input.n."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "The tree is the chain start→(→()→()(→()(). With maxDepth 1, ( cannot follow (.",
+          "codeRule": "A ( is added while opens - closes is at most maxDepth, so the new depth can be maxDepth + 1.",
+          "separatingFeature": "At ( one bracket is open, which already equals maxDepth 1.",
+          "outputConsequence": "The code returns [\"(())\",\"()()\"] instead of [\"()()\"].",
+          "changedGraph": "An extra edge (→(( lets the deeper string (()) be built."
+        }
+      },
+      {
+        "id": "balanced-brackets",
+        "caseId": "case-3",
+        "bugTitle": "Forgets That a String Has Only n Opening Brackets",
+        "misconception": "no-open-cap",
+        "input": {
+          "n": 1,
+          "maxDepth": 4
+        },
+        "code": "function solve(input) {\n  const strings = [];\n  function build(prefix, opens, closes) {\n    if (prefix.length === 2 * input.n) {\n      strings.push(prefix);\n      return;\n    }\n    if (opens - closes < input.maxDepth) {\n      build(prefix + \"(\", opens + 1, closes);\n    }\n    if (closes < opens) {\n      build(prefix + \")\", opens, closes + 1);\n    }\n  }\n  build(\"\", 0, 0);\n  return strings;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            }
+          ]
+        },
+        "outputFormat": "list of every balanced string no deeper than maxDepth",
+        "buggyOutput": "[\"((\",\"()\"]",
+        "correctOutput": "[\"()\"]",
+        "correctDiagnosis": "extra-open",
+        "diagnoses": [
+          {
+            "id": "extra-open",
+            "label": "Claim about the code: the ( check never compares opens with n, so (( uses two ( when n is 1.",
+            "feedback": "Correct. Every string has exactly n (, so a ( needs opens < n as well as the depth check."
+          },
+          {
+            "id": "one-too-deep",
+            "label": "Claim about the code: it lets the depth go one past maxDepth.",
+            "feedback": "It uses opens - closes < maxDepth, so the depth stays at most maxDepth."
+          },
+          {
+            "id": "half-length",
+            "label": "Claim about the code: it saves strings before they have 2n brackets.",
+            "feedback": "It saves a string only when prefix.length === 2 * input.n."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "The tree is the chain start→(→(). Only one ( is allowed because n is 1.",
+          "codeRule": "A ( is added whenever the depth is below maxDepth, however many ( are already used.",
+          "separatingFeature": "maxDepth 4 leaves room for a second (, but n is 1.",
+          "outputConsequence": "The code returns [\"((\",\"()\"] instead of [\"()\"].",
+          "changedGraph": "An extra edge (→(( builds a 2-bracket string with no ) in it."
+        }
+      }
+    ]
   }
 ]

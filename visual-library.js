@@ -128,6 +128,7 @@
     "runes-on-the-castle-door": "leaves-only",
     "the-balance-lock": "leaves-only",
     "under-the-limit": "leaves-only",
+    "balanced-brackets": "leaves-only",
     "shut-the-garden-valve": "pipe-as-node",
     "gold-and-silver-lights": "color-as-node",
     "museum-vault-keyring": "key-instance-as-node",
@@ -1480,6 +1481,7 @@
       if (!nodes.includes(rootName) || nodes.some(node => node !== rootName && !/^[a-z]+$/.test(node))) throw new Error(`Use ${rootName} for the empty root, then lowercase partial strings like a or ab.`);
     }
     if (rule === "weight-prefix" && (!nodes.includes("start") || nodes.some(node => node !== "start" && !/^[1-9]\d*(?:,[1-9]\d*)*$/.test(node)))) throw new Error("Use start for the empty root, then comma-separated weights like 4 or 4,2.");
+    if (rule === "bracket-prefix" && (!nodes.includes("start") || nodes.some(node => node !== "start" && !/^[()]+$/.test(node)))) throw new Error("Use start for the empty string, then bracket prefixes like ( or (().");
     const max = problem.counterexampleLesson?.nodeLabels?.max;
     if (max !== undefined && nodes.some(node => {
       if (["coordinate", "interior-coordinate", "state-pair"].includes(rule)) return coordinate(node).some(value => value > max);
@@ -1583,6 +1585,28 @@
       if (missing) throw new Error(`These numbers also make the combination ${missing}. Include every combination whose sum is at most limit, written in nums order.`);
       if (extra) throw new Error(`${extra} is not a combination under the limit, written in nums order.`);
       exactEdges(pairs, "Add one later number from nums, keeping the sum at most limit.");
+    }
+    if (problem.id === "balanced-brackets") {
+      const { n, maxDepth } = graph.fields;
+      if (!Number.isInteger(n) || n < 1 || n > 5) throw new Error("Choose a whole number n from 1 to 5.");
+      if (!Number.isInteger(maxDepth) || maxDepth < 1 || maxDepth > 5) throw new Error("Choose a whole number maxDepth from 1 to 5.");
+      const nodes = ["start"], pairs = [];
+      const visit = (prefix, opens, closes) => {
+        if (prefix.length === 2 * n) return;
+        const next = [];
+        if (opens < n && opens - closes < maxDepth) next.push([prefix + "(", opens + 1, closes]);
+        if (closes < opens) next.push([prefix + ")", opens, closes + 1]);
+        for (const [child, childOpens, childCloses] of next) {
+          nodes.push(child); pairs.push([prefix || "start", child]);
+          if (nodes.length > 24) throw new Error("This n and maxDepth make more than 24 prefixes. Choose a smaller n or maxDepth for a small counterexample.");
+          visit(child, childOpens, childCloses);
+        }
+      };
+      visit("", 0, 0);
+      const missing = nodes.find(node => !graph.nodes.includes(node)), extra = graph.nodes.find(node => !nodes.includes(node));
+      if (missing) throw new Error(`This n and maxDepth also allow the prefix ${missing}. Include every prefix that stays balanced and no deeper than maxDepth.`);
+      if (extra) throw new Error(`${extra} is not an allowed prefix for this n and maxDepth.`);
+      exactEdges(pairs, "Add ( while fewer than n ( are used and fewer than maxDepth brackets are open; add ) while fewer ) than ( are used.");
     }
     if (problem.id === "the-balance-lock") {
       const { dials, limit } = graph.fields;
@@ -1786,6 +1810,15 @@
       }
       if (graph.nodes.some(node => node.split(",").length > 6)) throw new Error("Codes use at most 6 weights.");
     }
+    if (labelRule === "bracket-prefix") {
+      const edgeKeys = new Set(graph.edges.map(([from, to]) => `${from}\u0000${to}`));
+      for (const node of graph.nodes) if (node !== "start") {
+        const directParent = node.length === 1 ? "start" : node.slice(0, -1);
+        if (!graph.nodes.includes(directParent)) throw new Error(`${node} needs its prefix ${directParent}.`);
+        if (!edgeKeys.has(`${directParent}\u0000${node}`)) throw new Error(`Connect ${directParent} directly to ${node}.`);
+      }
+      if (graph.nodes.some(node => node.length > 10)) throw new Error("Bracket strings use at most 10 brackets.");
+    }
     if (problem.counterexampleLesson?.startRule === "graph-root") {
       const incoming = Object.fromEntries(graph.nodes.map(node => [node, 0]));
       graph.edges.forEach(([, to]) => incoming[to]++);
@@ -1838,7 +1871,7 @@
   }
 
   function counterexampleRequiresTree() {
-    return new Set(["package-to-the-outpost", "reachable-nodes-with-restrictions", "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain", "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "path-sum", "structy-tree-sum", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "gold-and-silver-lights", "flatten-nested-list-iterator", "nested-list-weight-sum", "nested-list-weight-sum-ii", "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count", "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree", "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree", "binary-tree-level-order-traversal", "invert-binary-tree", "same-tree", "subtree-of-another-tree", "balanced-binary-tree", "maximum-depth-of-binary-tree", "merge-two-binary-trees", "binary-tree-right-side-view", "validate-binary-search-tree", "kth-smallest-element-in-a-bst", "construct-binary-tree-from-preorder-and-inorder-traversal", "serialize-and-deserialize-binary-tree", "all-paths-from-source-lead-to-destination", "employee-importance", "usaco-milk-factory"]).has(problem.id);
+    return new Set(["package-to-the-outpost", "reachable-nodes-with-restrictions", "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain", "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "path-sum", "structy-tree-sum", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "balanced-brackets", "gold-and-silver-lights", "flatten-nested-list-iterator", "nested-list-weight-sum", "nested-list-weight-sum-ii", "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count", "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree", "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree", "binary-tree-level-order-traversal", "invert-binary-tree", "same-tree", "subtree-of-another-tree", "balanced-binary-tree", "maximum-depth-of-binary-tree", "merge-two-binary-trees", "binary-tree-right-side-view", "validate-binary-search-tree", "kth-smallest-element-in-a-bst", "construct-binary-tree-from-preorder-and-inorder-traversal", "serialize-and-deserialize-binary-tree", "all-paths-from-source-lead-to-destination", "employee-importance", "usaco-milk-factory"]).has(problem.id);
   }
 
   function expectedCanvas(graph) {
@@ -2198,6 +2231,7 @@
     changed.edges.forEach(([from]) => outgoing[from]++);
     if (problem.id === "under-the-limit") return changed.nodes.filter(node => reached.has(node)).map(node => node === "start" ? [] : node.split(",").map(Number));
     if (problem.id === "the-balance-lock") return changed.nodes.filter(node => reached.has(node) && node !== "start" && node.split(",").length === graph.fields.dials.length).map(node => node.split(",").map(Number));
+    if (problem.id === "balanced-brackets") return changed.nodes.filter(node => reached.has(node) && node !== "start" && node.length === 2 * graph.fields.n);
     return changed.nodes.filter(node => reached.has(node) && (problem.id === "runes-on-the-castle-door" ? node.length === graph.fields.dials.length : outgoing[node] === 0) && node !== "start" && node !== "empty prefix").map(node => node === "ε" ? "" : node);
   }
 
@@ -2651,7 +2685,7 @@
         try { parsed = parseLessonValue(raw, "output", expected); }
         catch { parsed = typeof expected === "string" ? raw : null; }
       }
-      const unordered = new Set(["all-paths-from-source-to-target", "kill-process", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "find-all-groups-of-farmland"]);
+      const unordered = new Set(["all-paths-from-source-to-target", "kill-process", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "balanced-brackets", "find-all-groups-of-farmland"]);
       const normalizePathIds = item => Array.isArray(item) ? item.map(normalizePathIds) : typeof item === "string" && /^\d+$/.test(item) ? Number(item) : item;
       const normalize = value => {
         const item = problem.id === "all-paths-from-source-to-target" ? normalizePathIds(value) : value;
@@ -2825,6 +2859,8 @@
       statement = "In this input, only flooded campsites should become nodes.";
     } else if (problem.id === "under-the-limit" && misconception === "leaves-only") {
       statement = "In this input, only combinations that cannot take another number should become nodes.";
+    } else if (problem.id === "balanced-brackets" && misconception === "leaves-only") {
+      statement = "In this input, only complete strings with 2n brackets should become nodes.";
     } else if (["runes-on-the-castle-door", "the-balance-lock"].includes(problem.id) && misconception === "leaves-only") {
       statement = "In this input, only complete-code leaves should become nodes.";
     } else if (problem.id === "path-sum" && misconception === "counts-only-leaf") {
@@ -3663,6 +3699,8 @@
       if (/^(true|false)$/i.test(source)) return textValues ? source : source.toLowerCase() === 'true';
       if (source === 'null') return null;
       if (textValues && /^[\w. -]+$/.test(source)) return source;
+      // Bracket strings read naturally without quotes, like (()), ()().
+      if (textValues && problem?.id === "balanced-brackets" && /^[()]+$/.test(source)) return source;
       throw new Error();
     };
     try {
@@ -3699,6 +3737,8 @@
     if (problem.id === "the-balance-lock" && name === "limit") return "10";
     if (problem.id === "under-the-limit" && name === "nums") return "[1, 4, 6]";
     if (problem.id === "under-the-limit" && name === "limit") return "5";
+    if (problem.id === "balanced-brackets" && name === "n") return "2";
+    if (problem.id === "balanced-brackets" && name === "maxDepth") return "2";
     const examples = {
       sky: '[[0, 1], [0, 0]]', park: '[[0, 1], [0, 0]]', marina: '[[".", "B"], [".", "."]]', yard: '[[".", "T"], [".", "."]]',
       cave: '[["U", "G"], ["U", "U"]]', worked: '[[1, 0], [0, 1]]', trust: '[[10, 4], [4, 10]]',
@@ -3720,6 +3760,7 @@
       if (problem.id === 'runes-on-the-castle-door') return '["xm", "yn"]';
       if (problem.id === 'the-balance-lock') return '[[3, 2], [3, 6], [8, 2]]';
       if (problem.id === 'under-the-limit') return '[[], [1], [1, 4], [4]]';
+      if (problem.id === 'balanced-brackets') return '["(())", "()()"]';
       return '[5, 9]';
     }
     return '"text"';

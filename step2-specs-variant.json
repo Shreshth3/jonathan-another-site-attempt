@@ -1744,5 +1744,76 @@
         }
       ]
     }
+  },
+  {
+    "id": "balanced-brackets",
+    "vocabulary": {
+      "nodeNames": "bracket prefixes",
+      "startNode": "empty string",
+      "edges": "one-bracket extensions",
+      "correctSearch": "prefixes reached",
+      "mistakenSearch": "prefixes the flawed search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "One bracket at most",
+        "presentation": "exact-difference",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Starts after ((",
+        "presentation": "repair-case",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start",
+        "mistakenStartLabel": "(("
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Last bracket only",
+        "presentation": "predict-first",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "bracket-prefix",
+      "description": "Use start for the empty string, then bracket prefixes like ( or (()."
+    },
+    "fixedStart": "start",
+    "input": {
+      "name": "empty string",
+      "prompt": "Choose the empty string",
+      "result": "generated-terminal-strings",
+      "resultLabel": "all balanced strings no deeper than maxDepth",
+      "fields": [
+        {
+          "id": "n",
+          "kind": "integer",
+          "label": "n",
+          "prompt": "Choose n, the number of ( in each string",
+          "required": true,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "id": "maxDepth",
+          "kind": "integer",
+          "label": "maxDepth",
+          "prompt": "Choose maxDepth, the most brackets open at once",
+          "required": true,
+          "min": 1,
+          "max": 5
+        }
+      ]
+    }
   }
 ]

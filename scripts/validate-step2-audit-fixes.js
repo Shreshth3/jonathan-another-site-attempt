@@ -102,6 +102,36 @@ test("Under the limit output ignores both orders but not repeats", () => {
   use("under-the-limit"); const expected = [[], [2], [2, 3], [3], [5]];
   assert(engine.matches("[[5],[3,2],[3],[2],[]]", expected)); assert(!engine.matches("[[5],[3,2],[2,3],[3],[2],[]]", expected)); assert(!engine.matches("[[2],[2,3],[3],[5]]", expected));
 });
+// Balanced brackets: n 2, maxDepth 2 → (()) and ()(). Every prefix can be completed; only 4-bracket strings are answers.
+const brackets = (nodes, edges, fields = { n: 2, maxDepth: 2 }) => graph(nodes, edges, { directed: true, start: "start", fields });
+const bracketNodes = ["start", "(", "((", "(()", "(())", "()", "()(", "()()"];
+const bracketEdges = [["start", "("], ["(", "(("], ["((", "(()"], ["(()", "(())"], ["(", "()"], ["()", "()("], ["()(", "()()"]];
+test("Balanced brackets returns only complete strings", () => {
+  use("balanced-brackets"); const value = brackets(bracketNodes, bracketEdges);
+  valid(value); same(engine.result(value), ["(())", "()()"]); same(engine.result(value, ["shallow-search"]), []); same(engine.result(value, ["last-branch"]), ["()()"]); same(engine.result(value, ["wrong-start"], "(("), ["(())"]);
+});
+test("Balanced brackets maxDepth 1 allows only one open bracket", () => {
+  use("balanced-brackets"); const fields = { n: 2, maxDepth: 1 };
+  const value = brackets(["start", "(", "()", "()(", "()()"], [["start", "("], ["(", "()"], ["()", "()("], ["()(", "()()"]], fields);
+  valid(value); same(engine.result(value), ["()()"]);
+  assert.throws(() => valid(brackets(bracketNodes, bracketEdges, fields)), /: \(\( is not an allowed prefix/);
+});
+test("Balanced brackets rejects an unbalanced prefix and a missing prefix", () => {
+  use("balanced-brackets");
+  assert.throws(() => valid(brackets([...bracketNodes, "())"], [...bracketEdges, ["()", "())"]])), /: \(\)\) is not an allowed prefix/);
+  assert.throws(() => valid(brackets(bracketNodes.filter(node => node !== "()("), bracketEdges.filter(([, to]) => to !== "()("))), /prefix \(\)\(\. /);
+  assert.throws(() => engine.shape(brackets(["start", "(", "(()"], [["start", "("], ["(", "(()"]])), /: \(\(\) needs its prefix \(\(\./);
+});
+test("Balanced brackets output ignores order but not repeats, with or without quotes", () => {
+  use("balanced-brackets"); const expected = ["(())", "()()"];
+  assert(engine.matches('["()()","(())"]', expected)); assert(engine.matches("[()(), (())]", expected)); assert(engine.matches("(()), ()()", expected));
+  assert(!engine.matches('["(())","(())","()()"]', expected)); assert(!engine.matches('["(())"]', expected)); assert(!engine.matches('["(())","()()",")("]', expected));
+  assert(engine.matches("[]", [])); same(engine.format(expected), '["(())","()()"]');
+});
+test("Balanced brackets reads n and maxDepth as bounded whole numbers", () => {
+  use("balanced-brackets"); const n = { id: "n", kind: "integer", min: 1, max: 5 };
+  same(engine.semantic(" 3 ", n, "n"), 3); assert.throws(() => engine.semantic("6", n, "n"), /at most 5/); assert.throws(() => engine.semantic("0", n, "n"), /at least 1/); assert.throws(() => engine.semantic("1.5", n, "n"), /whole number/);
+});
 test("Playlist uses index order regardless of drawing order", () => {
   use("kth-song-in-playlist"); const value = graph(["root=[]", "root[0]=10", "root[1]=20"], [["root=[]", "root[1]=20"], ["root=[]", "root[0]=10"]], { directed: true, start: "root=[]", fields: { k: 1 }, nodeMarkers: { songId: { "root[0]=10": 10, "root[1]=20": 20 } } });
   valid(value); same(engine.result(value), 10); value.nodeMarkers.songId["root[0]=10"] = 100; assert.throws(() => valid(value), /shows 10/);

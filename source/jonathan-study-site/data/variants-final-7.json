@@ -1,0 +1,75 @@
+[
+  {
+    "id": "balanced-brackets",
+    "title": "Balanced Brackets",
+    "category": "variant",
+    "parentId": "letter-combinations-of-a-phone-number",
+    "parentTitle": "Letter Combinations of a Phone Number",
+    "followsUp": "runes-on-the-castle-door",
+    "difficulty": "Medium",
+    "twist": "Builds on Runes on the Castle Door: every position offers the same two brackets, but which one may come next depends on the whole prefix so far: how many brackets are used and how many are still open.",
+    "statement": "You are given two whole numbers, `n` and `maxDepth`.\n\nReturn **every** string made of exactly `n` `(` and `n` `)` that is **balanced** and never more than `maxDepth` deep.\n\nA string is **balanced** when, reading from left to right, the number of `)` never exceeds the number of `(` so far. The **depth** at any point is the number of `(` so far minus the number of `)` so far: how many brackets are open at once. The depth must never be more than `maxDepth`.\n\nYou may return the strings in any order.",
+    "examples": [
+      {
+        "input": "n = 3, maxDepth = 2",
+        "output": "[\"(()())\",\"(())()\",\"()(())\",\"()()()\"]",
+        "explanation": "These are the balanced strings with three pairs that never have more than 2 brackets open. `((()))` is left out: after its third `(`, 3 brackets are open at once."
+      },
+      {
+        "input": "n = 3, maxDepth = 3",
+        "output": "[\"((()))\",\"(()())\",\"(())()\",\"()(())\",\"()()()\"]",
+        "explanation": "A string with three `(` can never have more than 3 brackets open, so maxDepth rules nothing out. All five balanced strings count."
+      },
+      {
+        "input": "n = 3, maxDepth = 1",
+        "output": "[\"()()()\"]",
+        "explanation": "With maxDepth 1, each `(` must close before the next one opens, so only one string is left."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 5",
+      "1 <= maxDepth <= 5"
+    ],
+    "functionName": "balancedStrings",
+    "solution": "// CONTRACT for collectStrings(n, maxDepth, prefix, opens, closes, strings):\n//     when this call returns, every complete string that starts with\n//     `prefix` (which uses `opens` \"(\" and `closes` \")\"), stays\n//     balanced, and never has more than `maxDepth` brackets open has\n//     been appended to `strings`.\nconst collectStrings = (n, maxDepth, prefix, opens, closes, strings) => {\n    // Base case\n    if (prefix.length === 2 * n) {\n        strings.push(prefix);\n        return;\n    }\n\n    // Traverse neighbors\n    // Open: a string has only n \"(\" to use, and the new \"(\" must\n    // leave at most maxDepth brackets open.\n    if (opens < n && opens - closes < maxDepth) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every complete string\n        // that starts with `prefix` plus \"(\" is in `strings`.\n        // Trust it, do not trace it.\n        collectStrings(n, maxDepth, prefix + \"(\", opens + 1, closes, strings);\n    }\n\n    // Close: a \")\" must close a \"(\" that is still open. This keeps\n    // the string balanced, and it means no prefix is a dead end:\n    // while any bracket is open, closing it is always allowed.\n    if (closes < opens) {\n        // The recursive leap of faith again: trust the contract for\n        // `prefix` plus \")\". The two calls together cover every\n        // complete string that starts with `prefix` — exactly this\n        // function's contract, kept.\n        collectStrings(n, maxDepth, prefix + \")\", opens, closes + 1, strings);\n    }\n};\n\nconst balancedStrings = (n, maxDepth) => {\n    const strings = [];\n\n    // The recursive leap of faith: trust the contract. Starting from\n    // the empty string collects every answer.\n    collectStrings(n, maxDepth, \"\", 0, 0, strings);\n\n    return strings;\n};",
+    "tests": [
+      {
+        "args": [
+          3,
+          2
+        ],
+        "expected": [
+          "(()())",
+          "(())()",
+          "()(())",
+          "()()()"
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          3,
+          3
+        ],
+        "expected": [
+          "((()))",
+          "(()())",
+          "(())()",
+          "()(())",
+          "()()()"
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          3,
+          1
+        ],
+        "expected": [
+          "()()()"
+        ],
+        "unordered": true
+      }
+    ]
+  }
+]

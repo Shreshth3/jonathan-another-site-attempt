@@ -46704,5 +46704,567 @@
         ]
       }
     ]
+  },
+  {
+    "id": "balanced-brackets",
+    "inputHelp": "n is 1–5 and maxDepth is 1–5. Explore means visit each reachable item once unless the shown code says otherwise.",
+    "source": "../jonathan-study-site/data/variants-final-*.json",
+    "correctRules": {
+      "setup": "fixed",
+      "base": "full",
+      "open": "depth",
+      "close": "opened",
+      "end": "fixed"
+    },
+    "cases": [
+      {
+        "id": "balanced-brackets-base-half",
+        "title": "Debug challenge 1",
+        "misconception": "base-half",
+        "feedback": "A complete string has n \"(\" and n \")\", so it is 2 × n brackets long. Stopping at n brackets returns half-built prefixes instead of complete strings.",
+        "correctAnswer": "A complete string has n \"(\" and n \")\", so it is 2 × n brackets long. Stopping at n brackets returns half-built prefixes instead of complete strings.\n\nThe corrected rule is:\n  If prefix has 2 × n brackets:\n    Add prefix to strings and return.",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "strings ← empty list\nFunction BUILD(prefix, opens, closes):"
+              }
+            ]
+          },
+          {
+            "key": "base",
+            "selected": "half",
+            "options": [
+              {
+                "id": "half",
+                "text": "  If prefix has n brackets:\n    Add prefix to strings and return."
+              },
+              {
+                "id": "full",
+                "text": "  If prefix has 2 × n brackets:\n    Add prefix to strings and return."
+              }
+            ]
+          },
+          {
+            "key": "open",
+            "selected": "depth",
+            "options": [
+              {
+                "id": "depth",
+                "text": "  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "nodepth",
+                "text": "  If opens < n:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "atmost",
+                "text": "  If opens < n and opens − closes ≤ maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              }
+            ]
+          },
+          {
+            "key": "close",
+            "selected": "opened",
+            "options": [
+              {
+                "id": "any",
+                "text": "  If closes < n:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              },
+              {
+                "id": "opened",
+                "text": "  If closes < opens:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "End function\nBUILD(empty text, 0, 0)\nReturn strings."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 3,
+          "maxDepth": 2
+        }
+      },
+      {
+        "id": "balanced-brackets-open-atmost",
+        "title": "Debug challenge 2",
+        "misconception": "open-atmost",
+        "feedback": "opens − closes is how many brackets are open before the new \"(\". Allowing it when that already equals maxDepth makes the depth maxDepth + 1, so strings one level too deep enter the answer.",
+        "correctAnswer": "opens − closes is how many brackets are open before the new \"(\". Allowing it when that already equals maxDepth makes the depth maxDepth + 1, so strings one level too deep enter the answer.\n\nThe corrected rule is:\n  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "strings ← empty list\nFunction BUILD(prefix, opens, closes):"
+              }
+            ]
+          },
+          {
+            "key": "base",
+            "selected": "full",
+            "options": [
+              {
+                "id": "full",
+                "text": "  If prefix has 2 × n brackets:\n    Add prefix to strings and return."
+              },
+              {
+                "id": "half",
+                "text": "  If prefix has n brackets:\n    Add prefix to strings and return."
+              }
+            ]
+          },
+          {
+            "key": "open",
+            "selected": "atmost",
+            "options": [
+              {
+                "id": "atmost",
+                "text": "  If opens < n and opens − closes ≤ maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "depth",
+                "text": "  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "nodepth",
+                "text": "  If opens < n:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              }
+            ]
+          },
+          {
+            "key": "close",
+            "selected": "opened",
+            "options": [
+              {
+                "id": "any",
+                "text": "  If closes < n:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              },
+              {
+                "id": "opened",
+                "text": "  If closes < opens:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "End function\nBUILD(empty text, 0, 0)\nReturn strings."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 3,
+          "maxDepth": 2
+        }
+      },
+      {
+        "id": "balanced-brackets-open-nodepth",
+        "title": "Debug challenge 3",
+        "misconception": "open-nodepth",
+        "feedback": "Without the depth check, a \"(\" is added however many brackets are already open, so strings deeper than maxDepth enter the answer.",
+        "correctAnswer": "Without the depth check, a \"(\" is added however many brackets are already open, so strings deeper than maxDepth enter the answer.\n\nThe corrected rule is:\n  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "strings ← empty list\nFunction BUILD(prefix, opens, closes):"
+              }
+            ]
+          },
+          {
+            "key": "base",
+            "selected": "full",
+            "options": [
+              {
+                "id": "full",
+                "text": "  If prefix has 2 × n brackets:\n    Add prefix to strings and return."
+              },
+              {
+                "id": "half",
+                "text": "  If prefix has n brackets:\n    Add prefix to strings and return."
+              }
+            ]
+          },
+          {
+            "key": "open",
+            "selected": "nodepth",
+            "options": [
+              {
+                "id": "atmost",
+                "text": "  If opens < n and opens − closes ≤ maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "depth",
+                "text": "  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "nodepth",
+                "text": "  If opens < n:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              }
+            ]
+          },
+          {
+            "key": "close",
+            "selected": "opened",
+            "options": [
+              {
+                "id": "any",
+                "text": "  If closes < n:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              },
+              {
+                "id": "opened",
+                "text": "  If closes < opens:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "End function\nBUILD(empty text, 0, 0)\nReturn strings."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 3,
+          "maxDepth": 2
+        }
+      },
+      {
+        "id": "balanced-brackets-close-any",
+        "title": "Debug challenge 4",
+        "misconception": "close-any",
+        "feedback": "A \")\" must close a \"(\" that is still open. Allowing it whenever fewer than n \")\" are used builds unbalanced strings such as \")(\", which close a bracket that was never opened.",
+        "correctAnswer": "A \")\" must close a \"(\" that is still open. Allowing it whenever fewer than n \")\" are used builds unbalanced strings such as \")(\", which close a bracket that was never opened.\n\nThe corrected rule is:\n  If closes < opens:\n    BUILD(prefix followed by \")\", opens, closes + 1)",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "strings ← empty list\nFunction BUILD(prefix, opens, closes):"
+              }
+            ]
+          },
+          {
+            "key": "base",
+            "selected": "full",
+            "options": [
+              {
+                "id": "half",
+                "text": "  If prefix has n brackets:\n    Add prefix to strings and return."
+              },
+              {
+                "id": "full",
+                "text": "  If prefix has 2 × n brackets:\n    Add prefix to strings and return."
+              }
+            ]
+          },
+          {
+            "key": "open",
+            "selected": "depth",
+            "options": [
+              {
+                "id": "nodepth",
+                "text": "  If opens < n:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "atmost",
+                "text": "  If opens < n and opens − closes ≤ maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "depth",
+                "text": "  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              }
+            ]
+          },
+          {
+            "key": "close",
+            "selected": "any",
+            "options": [
+              {
+                "id": "opened",
+                "text": "  If closes < opens:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              },
+              {
+                "id": "any",
+                "text": "  If closes < n:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "End function\nBUILD(empty text, 0, 0)\nReturn strings."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 3,
+          "maxDepth": 2
+        }
+      }
+    ],
+    "tests": [
+      {
+        "input": {
+          "n": 3,
+          "maxDepth": 2
+        },
+        "expected": [
+          "(()())",
+          "(())()",
+          "()(())",
+          "()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 3,
+          "maxDepth": 3
+        },
+        "expected": [
+          "((()))",
+          "(()())",
+          "(())()",
+          "()(())",
+          "()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 3,
+          "maxDepth": 1
+        },
+        "expected": [
+          "()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 1,
+          "maxDepth": 1
+        },
+        "expected": [
+          "()"
+        ]
+      },
+      {
+        "input": {
+          "n": 1,
+          "maxDepth": 2
+        },
+        "expected": [
+          "()"
+        ]
+      },
+      {
+        "input": {
+          "n": 1,
+          "maxDepth": 3
+        },
+        "expected": [
+          "()"
+        ]
+      },
+      {
+        "input": {
+          "n": 1,
+          "maxDepth": 4
+        },
+        "expected": [
+          "()"
+        ]
+      },
+      {
+        "input": {
+          "n": 1,
+          "maxDepth": 5
+        },
+        "expected": [
+          "()"
+        ]
+      },
+      {
+        "input": {
+          "n": 2,
+          "maxDepth": 1
+        },
+        "expected": [
+          "()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 2,
+          "maxDepth": 2
+        },
+        "expected": [
+          "(())",
+          "()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 2,
+          "maxDepth": 3
+        },
+        "expected": [
+          "(())",
+          "()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 2,
+          "maxDepth": 4
+        },
+        "expected": [
+          "(())",
+          "()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 2,
+          "maxDepth": 5
+        },
+        "expected": [
+          "(())",
+          "()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 3,
+          "maxDepth": 4
+        },
+        "expected": [
+          "((()))",
+          "(()())",
+          "(())()",
+          "()(())",
+          "()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 4,
+          "maxDepth": 1
+        },
+        "expected": [
+          "()()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 4,
+          "maxDepth": 2
+        },
+        "expected": [
+          "(()()())",
+          "(()())()",
+          "(())(())",
+          "(())()()",
+          "()(()())",
+          "()(())()",
+          "()()(())",
+          "()()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 4,
+          "maxDepth": 5
+        },
+        "expected": [
+          "(((())))",
+          "((()()))",
+          "((())())",
+          "((()))()",
+          "(()(()))",
+          "(()()())",
+          "(()())()",
+          "(())(())",
+          "(())()()",
+          "()((()))",
+          "()(()())",
+          "()(())()",
+          "()()(())",
+          "()()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 5,
+          "maxDepth": 3
+        },
+        "expected": [
+          "((()()()))",
+          "((()())())",
+          "((()()))()",
+          "((())(()))",
+          "((())()())",
+          "((())())()",
+          "((()))(())",
+          "((()))()()",
+          "(()(()()))",
+          "(()(())())",
+          "(()(()))()",
+          "(()()(()))",
+          "(()()()())",
+          "(()()())()",
+          "(()())(())",
+          "(()())()()",
+          "(())((()))",
+          "(())(()())",
+          "(())(())()",
+          "(())()(())",
+          "(())()()()",
+          "()((()()))",
+          "()((())())",
+          "()((()))()",
+          "()(()(()))",
+          "()(()()())",
+          "()(()())()",
+          "()(())(())",
+          "()(())()()",
+          "()()((()))",
+          "()()(()())",
+          "()()(())()",
+          "()()()(())",
+          "()()()()()"
+        ]
+      }
+    ]
   }
 ]

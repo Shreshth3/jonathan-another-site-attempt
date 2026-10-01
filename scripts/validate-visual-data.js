@@ -356,7 +356,7 @@ function validateCounterexampleLesson(problem) {
   const spec = problem.counterexampleLesson;
   if (!spec) return errors.push(`${problem.id}: missing authored Step 2 spec`);
   for (const field of ["nodeNames", "startNode", "edges", "correctSearch", "mistakenSearch"]) if (!String(spec.vocabulary?.[field] || "").trim()) errors.push(`${problem.id}/step2: missing vocabulary.${field}`);
-  const labelRules = new Set(["contiguous-zero", "contiguous-one", "positive-integer", "coordinate", "interior-coordinate", "state-pair", "identifier", "nested-path", "tree-path", "partial-string", "weight-prefix", "free"]);
+  const labelRules = new Set(["contiguous-zero", "contiguous-one", "positive-integer", "coordinate", "interior-coordinate", "state-pair", "identifier", "nested-path", "tree-path", "partial-string", "weight-prefix", "bracket-prefix", "free"]);
   if (!labelRules.has(spec.nodeLabels?.rule) || !String(spec.nodeLabels?.description || "").trim()) errors.push(`${problem.id}/step2: missing or invalid nodeLabels rule`);
   if (spec.fixedStart && !String(spec.fixedStart).trim()) errors.push(`${problem.id}/step2: fixedStart must be a nonempty label`);
   if (spec.startRule && spec.startRule !== "graph-root") errors.push(`${problem.id}/step2: unsupported startRule ${spec.startRule}`);
@@ -548,8 +548,8 @@ for (const problem of problems) {
 const counterSemanticFixtures = JSON.parse(fs.readFileSync(path.resolve(__dirname, "fixtures/step2-semantic-inputs.json"), "utf8"));
 for (const fixture of counterSemanticFixtures) validateCounterSemanticInputs(`fixture/${fixture.id}`, fixture.input);
 
-const expectedCounts = { original: 25, variant: 27, new: 25 };
-if (problems.length !== 77) errors.push(`Expected 77 problems; found ${problems.length}`);
+const expectedCounts = { original: 25, variant: 28, new: 25 };
+if (problems.length !== 78) errors.push(`Expected 78 problems; found ${problems.length}`);
 for (const category of Object.keys(counts)) if (counts[category] !== expectedCounts[category]) errors.push(`Expected ${expectedCounts[category]} ${category}; found ${counts[category]}`);
 for (const id of sourceIds) if (!ids.has(id)) errors.push(`Missing source problem: ${id}`);
 for (const id of ids) if (!sourceIds.has(id)) errors.push(`Unexpected problem: ${id}`);
@@ -572,4 +572,4 @@ if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
-console.log(`Validated ${problems.length} visual lessons: 25 original, 27 variant, 25 new.`);
+console.log(`Validated ${problems.length} visual lessons: 25 original, 28 variant, 25 new.`);

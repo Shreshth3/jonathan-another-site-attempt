@@ -239,7 +239,7 @@ const catalog = problems.map(problem => {
 // Problems added after answer slots and character names were balanced go last,
 // with their own slot pass below, so adding one never changes an existing lesson.
 // Listed in the order they were added; each new one goes at the end.
-const appendedProblemIds = ["the-balance-lock", "under-the-limit"];
+const appendedProblemIds = ["the-balance-lock", "under-the-limit", "balanced-brackets"];
 catalog.sort((a, b) => {
   const categoryOrder = { original: 0, variant: 1, new: 2 };
   return appendedProblemIds.indexOf(a.id) - appendedProblemIds.indexOf(b.id) || categoryOrder[a.category] - categoryOrder[b.category] || a.title.localeCompare(b.title);

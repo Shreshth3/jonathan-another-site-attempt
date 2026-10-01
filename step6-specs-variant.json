@@ -8259,5 +8259,234 @@
       }
     ],
     "source": "../jonathan-study-site/data/variants-final-6.json"
+  },
+  {
+    "id": "balanced-brackets",
+    "functionName": "balancedStrings",
+    "parameters": [
+      {
+        "name": "n",
+        "label": "n",
+        "example": 2,
+        "placeholder": "2",
+        "description": "The number of ( in every string, and also the number of ).",
+        "help": "The number of ( in every string, and also the number of )."
+      },
+      {
+        "name": "maxDepth",
+        "label": "maxDepth",
+        "example": 2,
+        "placeholder": "2",
+        "description": "The most brackets that may be open at once.",
+        "help": "The most brackets that may be open at once."
+      }
+    ],
+    "starterCode": "function balancedStrings(n, maxDepth) {\n  // Write your solution here.\n\n}\n",
+    "correctCode": "// CONTRACT for collectStrings(n, maxDepth, prefix, opens, closes, strings):\n//     when this call returns, every complete string that starts with\n//     `prefix` (which uses `opens` \"(\" and `closes` \")\"), stays\n//     balanced, and never has more than `maxDepth` brackets open has\n//     been appended to `strings`.\nconst collectStrings = (n, maxDepth, prefix, opens, closes, strings) => {\n    // Base case\n    if (prefix.length === 2 * n) {\n        strings.push(prefix);\n        return;\n    }\n\n    // Traverse neighbors\n    // Open: a string has only n \"(\" to use, and the new \"(\" must\n    // leave at most maxDepth brackets open.\n    if (opens < n && opens - closes < maxDepth) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every complete string\n        // that starts with `prefix` plus \"(\" is in `strings`.\n        // Trust it, do not trace it.\n        collectStrings(n, maxDepth, prefix + \"(\", opens + 1, closes, strings);\n    }\n\n    // Close: a \")\" must close a \"(\" that is still open. This keeps\n    // the string balanced, and it means no prefix is a dead end:\n    // while any bracket is open, closing it is always allowed.\n    if (closes < opens) {\n        // The recursive leap of faith again: trust the contract for\n        // `prefix` plus \")\". The two calls together cover every\n        // complete string that starts with `prefix` — exactly this\n        // function's contract, kept.\n        collectStrings(n, maxDepth, prefix + \")\", opens, closes + 1, strings);\n    }\n};\n\nconst balancedStrings = (n, maxDepth) => {\n    const strings = [];\n\n    // The recursive leap of faith: trust the contract. Starting from\n    // the empty string collects every answer.\n    collectStrings(n, maxDepth, \"\", 0, 0, strings);\n\n    return strings;\n};",
+    "tests": [
+      {
+        "id": "balanced-brackets-test-1",
+        "label": "maxDepth larger than n keeps every balanced string",
+        "args": [
+          3,
+          5
+        ],
+        "expected": [
+          "((()))",
+          "(()())",
+          "(())()",
+          "()(())",
+          "()()()"
+        ]
+      },
+      {
+        "id": "balanced-brackets-test-2",
+        "label": "maxDepth one below n leaves out only the deepest string",
+        "args": [
+          4,
+          3
+        ],
+        "expected": [
+          "((()()))",
+          "((())())",
+          "((()))()",
+          "(()(()))",
+          "(()()())",
+          "(()())()",
+          "(())(())",
+          "(())()()",
+          "()((()))",
+          "()(()())",
+          "()(())()",
+          "()()(())",
+          "()()()()"
+        ]
+      },
+      {
+        "id": "balanced-brackets-test-3",
+        "label": "maxDepth equal to n keeps all 14 strings",
+        "args": [
+          4,
+          4
+        ],
+        "expected": [
+          "(((())))",
+          "((()()))",
+          "((())())",
+          "((()))()",
+          "(()(()))",
+          "(()()())",
+          "(()())()",
+          "(())(())",
+          "(())()()",
+          "()((()))",
+          "()(()())",
+          "()(())()",
+          "()()(())",
+          "()()()()"
+        ]
+      },
+      {
+        "id": "balanced-brackets-test-4",
+        "label": "maxDepth 1 leaves a single string",
+        "args": [
+          5,
+          1
+        ],
+        "expected": [
+          "()()()()()"
+        ]
+      },
+      {
+        "id": "balanced-brackets-test-5",
+        "label": "Five pairs, at most two open at once",
+        "args": [
+          5,
+          2
+        ],
+        "expected": [
+          "(()()()())",
+          "(()()())()",
+          "(()())(())",
+          "(()())()()",
+          "(())(()())",
+          "(())(())()",
+          "(())()(())",
+          "(())()()()",
+          "()(()()())",
+          "()(()())()",
+          "()(())(())",
+          "()(())()()",
+          "()()(()())",
+          "()()(())()",
+          "()()()(())",
+          "()()()()()"
+        ]
+      },
+      {
+        "id": "balanced-brackets-test-6",
+        "label": "Five pairs, at most four open at once",
+        "args": [
+          5,
+          4
+        ],
+        "expected": [
+          "(((()())))",
+          "(((())()))",
+          "(((()))())",
+          "(((())))()",
+          "((()(())))",
+          "((()()()))",
+          "((()())())",
+          "((()()))()",
+          "((())(()))",
+          "((())()())",
+          "((())())()",
+          "((()))(())",
+          "((()))()()",
+          "(()((())))",
+          "(()(()()))",
+          "(()(())())",
+          "(()(()))()",
+          "(()()(()))",
+          "(()()()())",
+          "(()()())()",
+          "(()())(())",
+          "(()())()()",
+          "(())((()))",
+          "(())(()())",
+          "(())(())()",
+          "(())()(())",
+          "(())()()()",
+          "()(((())))",
+          "()((()()))",
+          "()((())())",
+          "()((()))()",
+          "()(()(()))",
+          "()(()()())",
+          "()(()())()",
+          "()(())(())",
+          "()(())()()",
+          "()()((()))",
+          "()()(()())",
+          "()()(())()",
+          "()()()(())",
+          "()()()()()"
+        ]
+      },
+      {
+        "id": "balanced-brackets-test-7",
+        "label": "maxDepth equal to n keeps all 42 strings",
+        "args": [
+          5,
+          5
+        ],
+        "expected": [
+          "((((()))))",
+          "(((()())))",
+          "(((())()))",
+          "(((()))())",
+          "(((())))()",
+          "((()(())))",
+          "((()()()))",
+          "((()())())",
+          "((()()))()",
+          "((())(()))",
+          "((())()())",
+          "((())())()",
+          "((()))(())",
+          "((()))()()",
+          "(()((())))",
+          "(()(()()))",
+          "(()(())())",
+          "(()(()))()",
+          "(()()(()))",
+          "(()()()())",
+          "(()()())()",
+          "(()())(())",
+          "(()())()()",
+          "(())((()))",
+          "(())(()())",
+          "(())(())()",
+          "(())()(())",
+          "(())()()()",
+          "()(((())))",
+          "()((()()))",
+          "()((())())",
+          "()((()))()",
+          "()(()(()))",
+          "()(()()())",
+          "()(()())()",
+          "()(())(())",
+          "()(())()()",
+          "()()((()))",
+          "()()(()())",
+          "()()(())()",
+          "()()()(())",
+          "()()()()()"
+        ]
+      }
+    ],
+    "source": "../jonathan-study-site/data/variants-final-7.json"
   }
 ]
