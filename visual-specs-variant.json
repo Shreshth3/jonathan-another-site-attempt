@@ -4542,5 +4542,160 @@
         4
       ]
     }
+  },
+  {
+    "id": "stack-pop-orders",
+    "visualKind": "backtracking",
+    "pictureQuestions": [
+      {
+        "id": "which-orders",
+        "input": "n = 4, out = [2], stack = [1,3]",
+        "prompt": "With n = 4, starting from out `[2]` and stack `[1, 3]`, which pop orders can still be finished?",
+        "correct": "three",
+        "choices": [
+          {
+            "id": "three",
+            "feedback": "Correct. Pop 3, pop 1, then push and pop 4 gives `[2, 3, 1, 4]`. Pop 3, push and pop 4, then pop 1 gives `[2, 3, 4, 1]`. Push and pop 4 first, then pop 3 and 1, gives `[2, 4, 3, 1]`.",
+            "misconception": null,
+            "label": "`[2, 3, 1, 4]`, `[2, 3, 4, 1]`, and `[2, 4, 3, 1]`"
+          },
+          {
+            "id": "late",
+            "feedback": "This pops only after every number is pushed, so it must push 4 first. Popping 3 right away is allowed too.",
+            "misconception": "pop-only-at-end",
+            "label": "`[2, 4, 3, 1]`"
+          },
+          {
+            "id": "empty",
+            "feedback": "This stops as soon as the stack is empty. `[2, 3, 1]` has an empty stack, but 4 has not been pushed yet, so it is not finished.",
+            "misconception": "stop-when-empty",
+            "label": "`[2, 3, 1]`, `[2, 3, 4, 1]`, and `[2, 4, 3, 1]`"
+          },
+          {
+            "id": "one-move",
+            "feedback": "This makes only one move from each state, popping whenever it can. Pushing 4 is also allowed while 4 is waiting, and it leads to other orders.",
+            "misconception": "one-move-only",
+            "label": "`[2, 3, 1, 4]`"
+          }
+        ]
+      },
+      {
+        "id": "how-many",
+        "input": "n = 4",
+        "prompt": "For n = 4, how many pop orders are returned?",
+        "correct": "fourteen",
+        "choices": [
+          {
+            "id": "fourteen",
+            "label": "`14`",
+            "feedback": "Correct. 14 of the 24 orderings of 1–4 can be made. An order like `[3, 1, 2, 4]` cannot: when 3 is popped first, 2 is still on top of 1, so 2 must come out before 1.",
+            "misconception": null
+          },
+          {
+            "id": "all",
+            "label": "`24`",
+            "feedback": "Not every ordering of 1–4 can be made. `[3, 1, 2, 4]` is impossible: after pushing 1, 2, 3 and popping 3, 2 is on top of 1, so 2 must come out before 1.",
+            "misconception": "any-order"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "This counts only `[4, 3, 2, 1]`, as if every number must be pushed before any pop. You may pop as soon as the stack is not empty.",
+            "misconception": "pop-only-at-end"
+          },
+          {
+            "id": "nine",
+            "label": "`9`",
+            "feedback": "This counts a run as finished whenever the stack is empty, so it includes short lists like `[1]` and `[2, 1]` before the other numbers are pushed.",
+            "misconception": "stop-when-empty"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is a node in the pop-order tree?",
+      "correct": "state",
+      "choices": [
+        {
+          "id": "state",
+          "label": "One state of the run: the numbers written in out so far, plus the numbers on the stack. The start state has both empty.",
+          "feedback": "Correct. A node remembers both out and the stack, because together they decide which moves come next.",
+          "misconception": null
+        },
+        {
+          "id": "out-only",
+          "label": "Only the numbers written in out so far. States with the same out share a node.",
+          "feedback": "Two states can have the same out but different stacks, like `out [1] | stack [2]` and `out [1] | stack [2,3]`. Different moves are possible from each, so each needs its own node.",
+          "misconception": "merge-by-out"
+        },
+        {
+          "id": "number",
+          "label": "One node per number from 1 to n.",
+          "feedback": "A number is pushed, waits on the stack, and is written down at different moments. A node must remember the whole state: out and the stack.",
+          "misconception": "number-as-node"
+        },
+        {
+          "id": "finished",
+          "label": "Only finished pop orders, where all n numbers are written.",
+          "feedback": "The states along the way are nodes too. Each finished pop order is reached by a path of moves through them.",
+          "misconception": "leaves-only"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When does a state have an edge to another state?",
+      "correct": "one-move",
+      "choices": [
+        {
+          "id": "one-move",
+          "label": "When one move leads there: push the next number (if any number is still waiting), or pop the top number into out (if the stack is not empty).",
+          "feedback": "Correct. Each edge is one push or one pop, so a state has at most two edges going out.",
+          "misconception": null
+        },
+        {
+          "id": "any-push",
+          "label": "When you push any number that has not been pushed yet, or pop the top number into out.",
+          "feedback": "Numbers are pushed in order: 1, then 2, then 3. From `out [1,3] | stack [2]` the only number left to push is 4.",
+          "misconception": "any-order"
+        },
+        {
+          "id": "pop-any",
+          "label": "When you push the next number, or pop any number in the stack into out.",
+          "feedback": "Only the top number can come off the stack: the newest number still on it.",
+          "misconception": "pop-bottom"
+        },
+        {
+          "id": "pop-late",
+          "label": "When you push the next number, or pop the top number, but only after every number has been pushed.",
+          "feedback": "You may pop as soon as the stack is not empty. Waiting until every number is pushed allows only one order.",
+          "misconception": "pop-only-at-end"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `start` for the state before any move. Name every other state `out [...] | stack [...]`: first the numbers written in out so far, then the numbers on the stack from bottom to top. Example: `out [2] | stack [1,3]` means 2 has been written down, and 3 sits on top of 1. Write an empty list as `[]`, as in `out [2,3,1] | stack []`. When the input gives out and stack, your drawing starts from that state.",
+      "pattern": "^(?:start|(?!out \\[\\] \\| stack \\[\\]$)out \\[(?:[1-9](?:,[1-9])*)?\\] \\| stack \\[(?:[1-9](?:,[1-9])*)?\\])$",
+      "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "leaves-only",
+      "no": "only finished pop orders should become nodes.",
+      "yes": "Every state of the run, finished or not, should have its own node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "two-numbers",
+        "concept-nodes",
+        "pop-early",
+        "concept-relations",
+        "concept-output"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   }
 ]

@@ -18,7 +18,7 @@ function requiresTree(problem) {
   return new Set([
     "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain",
     "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "structy-tree-sum",
-    "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "balanced-brackets", "split-the-digits", "flatten-nested-list-iterator",
+    "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "balanced-brackets", "split-the-digits", "stack-pop-orders", "flatten-nested-list-iterator",
     "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count",
     "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree",
     "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree",
@@ -189,6 +189,20 @@ function applyLabelRule(problem, graph) {
     const rename=Object.fromEntries(graph.nodes.map((node,index)=>[node,`node ${index}: ${index+1}`]));
     return {...graph,nodes:graph.nodes.map(node=>rename[node]),edges:graph.edges.map(([a,b,c])=>[rename[a],rename[b],c]),start:rename[graph.start]};
   }
+  if (rule === "stack-state") {
+    // Name the starter's states in visiting order with real Stack Pop Orders states for n = 2.
+    const states = ["start", "out [] | stack [1]", "out [1] | stack []", "out [1] | stack [2]", "out [1,2] | stack []", "out [] | stack [1,2]", "out [2] | stack [1]", "out [2,1] | stack []"];
+    const outgoing = Object.fromEntries(graph.nodes.map(node => [node, []]));
+    graph.edges.forEach(([from, to]) => outgoing[from].push(to));
+    const root = graph.nodes.find(node => !graph.edges.some(([, to]) => to === node));
+    if (!root) return graph;
+    const order = [];
+    const visit = node => { order.push(node); outgoing[node].forEach(visit); };
+    visit(root);
+    graph.nodes.filter(node => !order.includes(node)).forEach(node => order.push(node));
+    const rename = Object.fromEntries(order.map((node, index) => [node, states[index]]));
+    return { ...graph, nodes: graph.nodes.map(node => rename[node]), edges: graph.edges.map(([from, to, color]) => [rename[from], rename[to], color]), start: rename[graph.start] };
+  }
   if (["nested-path", "tree-path", "partial-string", "weight-prefix", "bracket-prefix", "piece-prefix"].includes(rule)) {
     const outgoing = Object.fromEntries(graph.nodes.map(node => [node, []]));
     graph.edges.forEach(([from, to]) => outgoing[from].push(to));
@@ -332,7 +346,7 @@ function exactResult(problem,graph,bugs=[],wrongStart=null){
 }
 
 const roundCount = problems.reduce((total, problem) => total + problem.counterexampleLesson.rounds.length, 0);
-if (roundCount !== 234) failures.push(`Expected 234 single-mistake Step 2 starters; found ${roundCount}`);
+if (roundCount !== 240) failures.push(`Expected 240 single-mistake Step 2 starters; found ${roundCount}`);
 
 function resolveNode(nodes, requested) {
   if (nodes.includes(requested)) return requested;
@@ -362,4 +376,4 @@ for (const problem of problems) for (const [index, round] of problem.counterexam
 }
 
 if(failures.length){console.error(failures.join("\n"));process.exit(1);}
-console.log("Validated all 234 single-mistake Step 2 starters.");
+console.log("Validated all 240 single-mistake Step 2 starters.");

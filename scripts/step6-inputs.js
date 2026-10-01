@@ -271,7 +271,13 @@ module.exports = {
  C('Compare numbers, not text','925',30),
  C('digits can start with a lone 0','0123',30),
  C('Zeros make longer pieces, up to the limit','1000',1000),
- C('Six digits with many ways','121212',30)]
+ C('Six digits with many ways','121212',30)],
+'stack-pop-orders':[
+ C('One number has exactly one pop order',1),
+ C('Two numbers: pop 1 early, or push 2 first',2),
+ C('Three numbers: [3, 1, 2] is impossible',3),
+ C('Four numbers make 14 pop orders',4),
+ C('Five numbers make 42 pop orders',5)]
 };
 // The zero-edge metro case still has a colors argument.
 module.exports['one-color-metro-ride'][3].args = [9,[],[],6,6];

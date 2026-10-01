@@ -165,6 +165,27 @@ test("Split the digits reads digits with or without quotes and keeps leading zer
   use("split-the-digits"); const field = { id: "digits", kind: "json" };
   same(engine.semantic("1234", field, "digits"), "1234"); same(engine.semantic("\"0105\"", field, "digits"), "0105"); same(engine.semantic("0105", field, "digits"), "0105"); same(engine.semantic("'42'", field, "digits"), "42");
 });
+// Stack pop orders, n = 2: start → out [] | stack [1]. From there pop 1 (then push 2, pop 2 → [1,2])
+// or push 2 (then pop 2, pop 1 → [2,1]). Eight states; only the two with both numbers written are answers.
+const S = { push1: "out [] | stack [1]", pop1: "out [1] | stack []", push2late: "out [1] | stack [2]", done12: "out [1,2] | stack []", push2: "out [] | stack [1,2]", pop2: "out [2] | stack [1]", done21: "out [2,1] | stack []" };
+const stackNodes = ["start", S.push1, S.pop1, S.push2late, S.done12, S.push2, S.pop2, S.done21];
+const stackEdges = [["start", S.push1], [S.push1, S.pop1], [S.pop1, S.push2late], [S.push2late, S.done12], [S.push1, S.push2], [S.push2, S.pop2], [S.pop2, S.done21]];
+const stackGraph = (nodes = stackNodes, edges = stackEdges) => graph(nodes, edges, { directed: true, start: "start", fields: { n: 2 } });
+test("Stack pop orders returns only states with every number written", () => {
+  use("stack-pop-orders"); const value = stackGraph();
+  valid(value); same(engine.result(value), [[1, 2], [2, 1]]); same(engine.result(value, ["shallow-search"]), []);
+  same(engine.result(value, ["last-branch"]), [[2, 1]]); same(engine.result(value, ["wrong-start"], S.pop1), [[1, 2]]);
+});
+test("Stack pop orders rejects a pop from the bottom and a missing state", () => {
+  use("stack-pop-orders");
+  assert.throws(() => valid(stackGraph(stackNodes, [...stackEdges, [S.push2, S.push2late]])), /is not allowed/);
+  assert.throws(() => valid(stackGraph(stackNodes.filter(node => ![S.pop1, S.push2late, S.done12].includes(node)), stackEdges.filter(([from, to]) => ![from, to].some(node => [S.pop1, S.push2late, S.done12].includes(node))))), /can also reach out \[1\] \| stack \[\]/);
+  assert.throws(() => valid(stackGraph([...stackNodes, "out [2] | stack [1,3]"], [...stackEdges, [S.pop2, "out [2] | stack [1,3]"]])), /cannot happen with n = 2/);
+});
+test("Stack pop orders output ignores the order of pop orders but not the order inside one", () => {
+  use("stack-pop-orders"); const expected = [[1, 2], [2, 1]];
+  assert(engine.matches("[[2,1],[1,2]]", expected)); assert(!engine.matches("[[1,2],[1,2]]", expected)); assert(!engine.matches("[[1,2]]", expected));
+});
 test("Playlist uses index order regardless of drawing order", () => {
   use("kth-song-in-playlist"); const value = graph(["root=[]", "root[0]=10", "root[1]=20"], [["root=[]", "root[1]=20"], ["root=[]", "root[0]=10"]], { directed: true, start: "root=[]", fields: { k: 1 }, nodeMarkers: { songId: { "root[0]=10": 10, "root[1]=20": 20 } } });
   valid(value); same(engine.result(value), 10); value.nodeMarkers.songId["root[0]=10"] = 100; assert.throws(() => valid(value), /shows 10/);

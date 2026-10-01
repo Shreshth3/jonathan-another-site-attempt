@@ -331,7 +331,7 @@ const step4Spec = {
       outputConsequence: `The code returns ${out(strings(2, 2, "close-up-to-n"))} instead of ${out(strings(2, 2))}.`,
       changedGraph: "Extra edges such as start→) and ()→()) build unbalanced strings."
     }),
-    step4Case("case-2", "Lets the Depth Go One Past maxDepth", "depth-over-by-one", 2, 1, ["opens < input.n && opens - closes <= input.maxDepth", correctClose], "one-too-deep", [
+    step4Case("depth-over-by-one", "Lets the Depth Go One Past maxDepth", "depth-over-by-one", 2, 1, ["opens < input.n && opens - closes <= input.maxDepth", correctClose], "one-too-deep", [
       { id: "one-too-deep", label: "Claim about the code: <= allows a ( while maxDepth brackets are already open, so (( reaches depth 2 when maxDepth is 1.", feedback: "Correct. Before adding (, fewer than maxDepth brackets must be open, so use < instead of <=." },
       { id: "closes-nothing", label: "Claim about the code: it adds ) even when no ( is open.", feedback: "It adds ) only when closes < opens." },
       { id: "extra-open", label: "Claim about the code: it can use more than n (.", feedback: "The ( check still requires opens < input.n." }
@@ -342,7 +342,7 @@ const step4Spec = {
       outputConsequence: `The code returns ${out(strings(2, 1, "depth-over-by-one"))} instead of ${out(strings(2, 1))}.`,
       changedGraph: "An extra edge (→(( lets the deeper string (()) be built."
     }),
-    step4Case("case-3", "Forgets That a String Has Only n Opening Brackets", "no-open-cap", 1, 4, ["opens - closes < input.maxDepth", correctClose], "extra-open", [
+    step4Case("no-open-cap", "Forgets That a String Has Only n Opening Brackets", "no-open-cap", 1, 4, ["opens - closes < input.maxDepth", correctClose], "extra-open", [
       { id: "extra-open", label: "Claim about the code: the ( check never compares opens with n, so (( uses two ( when n is 1.", feedback: "Correct. Every string has exactly n (, so a ( needs opens < n as well as the depth check." },
       { id: "one-too-deep", label: "Claim about the code: it lets the depth go one past maxDepth.", feedback: "It uses opens - closes < maxDepth, so the depth stays at most maxDepth." },
       { id: "half-length", label: "Claim about the code: it saves strings before they have 2n brackets.", feedback: "It saves a string only when prefix.length === 2 * input.n." }

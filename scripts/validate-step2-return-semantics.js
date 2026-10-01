@@ -56,6 +56,7 @@ const EXPECTED_CONTRACT = {
   "under-the-limit": "generated-terminal-strings",
   "balanced-brackets": "generated-terminal-strings",
   "split-the-digits": "generated-terminal-strings",
+  "stack-pop-orders": "generated-terminal-strings",
   "save-the-date-phone-chain": "deadline-reached-count",
   "shut-the-garden-valve": "reached-node-value-sum",
   "biggest-study-group": "maximum-component-size",

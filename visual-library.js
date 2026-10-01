@@ -130,6 +130,7 @@
     "under-the-limit": "leaves-only",
     "balanced-brackets": "leaves-only",
     "split-the-digits": "leaves-only",
+    "stack-pop-orders": "leaves-only",
     "shut-the-garden-valve": "pipe-as-node",
     "gold-and-silver-lights": "color-as-node",
     "museum-vault-keyring": "key-instance-as-node",
@@ -1484,6 +1485,7 @@
     if (rule === "weight-prefix" && (!nodes.includes("start") || nodes.some(node => node !== "start" && !/^[1-9]\d*(?:,[1-9]\d*)*$/.test(node)))) throw new Error("Use start for the empty root, then comma-separated weights like 4 or 4,2.");
     if (rule === "bracket-prefix" && (!nodes.includes("start") || nodes.some(node => node !== "start" && !/^[()]+$/.test(node)))) throw new Error("Use start for the empty string, then bracket prefixes like ( or (().");
     if (rule === "piece-prefix" && (!nodes.includes("start") || nodes.some(node => node !== "start" && !/^\d+(?:\|\d+)*$/.test(node)))) throw new Error("Use start before any cut, then the pieces joined by | like 1 or 12|3.");
+    if (rule === "stack-state" && (!nodes.includes("start") || nodes.some(node => node !== "start" && !stackStateParts(node)))) throw new Error("Use start for the first state, then out [...] | stack [...] like out [2] | stack [1,3].");
     const max = problem.counterexampleLesson?.nodeLabels?.max;
     if (max !== undefined && nodes.some(node => {
       if (["coordinate", "interior-coordinate", "state-pair"].includes(rule)) return coordinate(node).some(value => value > max);
@@ -1568,6 +1570,27 @@
       if (missing) throw new Error(`The dial choices also allow prefix ${missing}. Include every legal prefix, even incomplete dead ends.`);
       if (extra) throw new Error(`${extra} is not a legal prefix for these dials.`);
       exactEdges(pairs, "Extend by one rune from the next dial, without equal neighboring runes.");
+    }
+    if (problem.id === "stack-pop-orders") {
+      const { n } = graph.fields;
+      if (!Number.isInteger(n) || n < 1 || n > 3) throw new Error("Choose n from 1 to 3 so the tree stays small enough to draw.");
+      const label = (out, stack) => out.length || stack.length ? `out [${out}] | stack [${stack}]` : "start";
+      const nodes = ["start"], pairs = [];
+      const visit = (out, stack, next) => {
+        if (out.length === n) return;
+        const moves = [];
+        if (stack.length) moves.push([[...out, stack.at(-1)], stack.slice(0, -1), next]);
+        if (next <= n) moves.push([out, [...stack, next], next + 1]);
+        for (const [childOut, childStack, childNext] of moves) {
+          nodes.push(label(childOut, childStack)); pairs.push([label(out, stack), label(childOut, childStack)]);
+          visit(childOut, childStack, childNext);
+        }
+      };
+      visit([], [], 1);
+      const missing = nodes.find(node => !graph.nodes.includes(node)), extra = graph.nodes.find(node => !nodes.includes(node));
+      if (missing) throw new Error(`With n = ${n}, the moves can also reach ${missing}. Include every state the moves can reach, finished or not.`);
+      if (extra) throw new Error(`${extra} cannot happen with n = ${n}. Numbers are pushed in order 1, 2, 3, and a pop takes only the top number.`);
+      exactEdges(pairs, "Each edge is one move: push the next number, or pop the top number into out.");
     }
     if (problem.id === "under-the-limit") {
       const { nums, limit } = graph.fields;
@@ -1831,6 +1854,15 @@
       const limit = problem.id === "runes-on-the-castle-door" ? 6 : 4;
       if (graph.nodes.some(node => node !== rootName && (node.length > limit || (problem.id === "runes-on-the-castle-door" && /(.)\1/.test(node))))) throw new Error(problem.id === "runes-on-the-castle-door" ? "Rune strings use at most 6 letters and cannot repeat a neighboring rune." : "Phone-number prefixes use at most 4 letters.");
     }
+    if (labelRule === "stack-state") {
+      const edgeKeys = new Set(graph.edges.map(([from, to]) => `${from}\u0000${to}`));
+      for (const node of graph.nodes) if (node !== "start") {
+        const directParent = stackStateParent(node);
+        if (!directParent) throw new Error(`${node} cannot be reached by pushing 1, 2, 3, … in order.`);
+        if (!graph.nodes.includes(directParent)) throw new Error(`${node} needs the state one move before it, ${directParent}.`);
+        if (!edgeKeys.has(`${directParent}\u0000${node}`)) throw new Error(`Connect ${directParent} directly to ${node}.`);
+      }
+    }
     if (labelRule === "weight-prefix") {
       const edgeKeys = new Set(graph.edges.map(([from, to]) => `${from}\u0000${to}`));
       for (const node of graph.nodes) if (node !== "start") {
@@ -1910,7 +1942,7 @@
   }
 
   function counterexampleRequiresTree() {
-    return new Set(["package-to-the-outpost", "reachable-nodes-with-restrictions", "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain", "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "path-sum", "structy-tree-sum", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "balanced-brackets", "split-the-digits", "gold-and-silver-lights", "flatten-nested-list-iterator", "nested-list-weight-sum", "nested-list-weight-sum-ii", "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count", "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree", "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree", "binary-tree-level-order-traversal", "invert-binary-tree", "same-tree", "subtree-of-another-tree", "balanced-binary-tree", "maximum-depth-of-binary-tree", "merge-two-binary-trees", "binary-tree-right-side-view", "validate-binary-search-tree", "kth-smallest-element-in-a-bst", "construct-binary-tree-from-preorder-and-inorder-traversal", "serialize-and-deserialize-binary-tree", "all-paths-from-source-lead-to-destination", "employee-importance", "usaco-milk-factory"]).has(problem.id);
+    return new Set(["package-to-the-outpost", "reachable-nodes-with-restrictions", "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain", "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "path-sum", "structy-tree-sum", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "balanced-brackets", "split-the-digits", "stack-pop-orders", "gold-and-silver-lights", "flatten-nested-list-iterator", "nested-list-weight-sum", "nested-list-weight-sum-ii", "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count", "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree", "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree", "binary-tree-level-order-traversal", "invert-binary-tree", "same-tree", "subtree-of-another-tree", "balanced-binary-tree", "maximum-depth-of-binary-tree", "merge-two-binary-trees", "binary-tree-right-side-view", "validate-binary-search-tree", "kth-smallest-element-in-a-bst", "construct-binary-tree-from-preorder-and-inorder-traversal", "serialize-and-deserialize-binary-tree", "all-paths-from-source-lead-to-destination", "employee-importance", "usaco-milk-factory"]).has(problem.id);
   }
 
   function expectedCanvas(graph) {
@@ -2263,6 +2295,25 @@
     return best(changed.start);
   }
 
+  // A Stack Pop Orders state "out [2] | stack [1,3]": the numbers written so far and the stack, bottom to top.
+  function stackStateParts(label) {
+    if (label === "start") return { label, out: [], stack: [] };
+    const match = String(label).match(/^out \[((?:[1-9](?:,[1-9])*)?)\] \| stack \[((?:[1-9](?:,[1-9])*)?)\]$/);
+    const numbers = text => text ? text.split(",").map(Number) : [];
+    return match && (match[1] || match[2]) ? { label, out: numbers(match[1]), stack: numbers(match[2]) } : null;
+  }
+
+  // The one state a move leads from. A push leaves the largest number pushed so far on top;
+  // after a pop, the top is smaller than that, so the last move is never ambiguous.
+  function stackStateParent(label) {
+    const parts = stackStateParts(label);
+    if (!parts || label === "start") return null;
+    const { out, stack } = parts, pushed = out.length + stack.length;
+    const name = (one, two) => one.length || two.length ? `out [${one}] | stack [${two}]` : "start";
+    if (stack.length && stack.at(-1) === pushed) return name(out, stack.slice(0, -1));
+    return out.length ? name(out.slice(0, -1), [...stack, out.at(-1)]) : null;
+  }
+
   function counterTerminalStrings(graph, bugs = [], startOverride = null) {
     const changed = mistakenGraph(graph, bugs, startOverride);
     const reached = new Set(runSearch(graph, bugs, startOverride));
@@ -2271,6 +2322,7 @@
     if (problem.id === "under-the-limit") return changed.nodes.filter(node => reached.has(node)).map(node => node === "start" ? [] : node.split(",").map(Number));
     // A way uses every digit; a dead end that stopped early is not one.
     if (problem.id === "split-the-digits") return changed.nodes.filter(node => reached.has(node) && node !== "start" && node.split("|").join("") === graph.fields.digits).map(node => node.split("|").map(Number));
+    if (problem.id === "stack-pop-orders") return changed.nodes.map(stackStateParts).filter(parts => parts && reached.has(parts.label) && parts.out.length === graph.fields.n).map(parts => parts.out);
     if (problem.id === "the-balance-lock") return changed.nodes.filter(node => reached.has(node) && node !== "start" && node.split(",").length === graph.fields.dials.length).map(node => node.split(",").map(Number));
     if (problem.id === "balanced-brackets") return changed.nodes.filter(node => reached.has(node) && node !== "start" && node.length === 2 * graph.fields.n);
     return changed.nodes.filter(node => reached.has(node) && (problem.id === "runes-on-the-castle-door" ? node.length === graph.fields.dials.length : outgoing[node] === 0) && node !== "start" && node !== "empty prefix").map(node => node === "ε" ? "" : node);
@@ -2692,7 +2744,7 @@
     if (Array.isArray(expected) && expected.some(Array.isArray)) {
       try {
         const actual = parseLessonValue(String(value), "output", expected);
-        if (["enumerated-paths", "component-bounding-boxes"].includes(counterInputSpec().result) || ["the-balance-lock", "under-the-limit", "split-the-digits"].includes(problem.id)) {
+        if (["enumerated-paths", "component-bounding-boxes"].includes(counterInputSpec().result) || ["the-balance-lock", "under-the-limit", "split-the-digits", "stack-pop-orders"].includes(problem.id)) {
           const sortPaths = paths => [...paths].sort((one, two) => JSON.stringify(one).localeCompare(JSON.stringify(two), undefined, { numeric: true }));
           const normalize = item => Array.isArray(item) ? item.map(normalize) : /^-?\d+$/.test(String(item)) ? Number(item) : item;
           // A combination's numbers may be listed in any order.
@@ -2726,7 +2778,7 @@
         try { parsed = parseLessonValue(raw, "output", expected); }
         catch { parsed = typeof expected === "string" ? raw : null; }
       }
-      const unordered = new Set(["all-paths-from-source-to-target", "kill-process", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "balanced-brackets", "split-the-digits", "find-all-groups-of-farmland"]);
+      const unordered = new Set(["all-paths-from-source-to-target", "kill-process", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "balanced-brackets", "split-the-digits", "stack-pop-orders", "find-all-groups-of-farmland"]);
       const normalizePathIds = item => Array.isArray(item) ? item.map(normalizePathIds) : typeof item === "string" && /^\d+$/.test(item) ? Number(item) : item;
       const normalize = value => {
         const item = problem.id === "all-paths-from-source-to-target" ? normalizePathIds(value) : value;
@@ -3797,6 +3849,7 @@
     if (problem.id === "balanced-brackets" && name === "maxDepth") return "2";
     if (problem.id === "split-the-digits" && name === "digits") return '"302"';
     if (problem.id === "split-the-digits" && name === "limit") return "40";
+    if (problem.id === "stack-pop-orders" && name === "n") return "1";
     const examples = {
       sky: '[[0, 1], [0, 0]]', park: '[[0, 1], [0, 0]]', marina: '[[".", "B"], [".", "."]]', yard: '[[".", "T"], [".", "."]]',
       cave: '[["U", "G"], ["U", "U"]]', worked: '[[1, 0], [0, 1]]', trust: '[[10, 4], [4, 10]]',
@@ -3820,6 +3873,7 @@
       if (problem.id === 'under-the-limit') return '[[], [1], [1, 4], [4]]';
       if (problem.id === 'balanced-brackets') return '["(())", "()()"]';
       if (problem.id === 'split-the-digits') return '[[3, 0, 2], [30, 2]]';
+      if (problem.id === 'stack-pop-orders') return '[[1]]';
       return '[5, 9]';
     }
     return '"text"';

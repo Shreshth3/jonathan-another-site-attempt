@@ -36,7 +36,8 @@ const helps = {
  'the-balance-lock':'Use {"dials": listOfWeightLists, "limit": number}. Use 1–6 dials; each has 1–4 different whole numbers from 1 to 50. limit is 1–300.',
  'under-the-limit':'Use {"nums": list, "limit": number}. nums has 1–6 different whole numbers from 1 to 50. limit is 1–300.',
  'balanced-brackets':'Use {"n": number, "maxDepth": number}. n is 1–5 and maxDepth is 1–5.',
- 'split-the-digits':'Use {"digits": text, "limit": number}. digits has 1–6 characters, each from 0 to 9. limit is 1–1000.'
+ 'split-the-digits':'Use {"digits": text, "limit": number}. digits has 1–6 characters, each from 0 to 9. limit is 1–1000.',
+ 'stack-pop-orders':'Use {"n": number}. n is a whole number from 1 to 5.'
 };
 function reorder(options,seed) {return options.map((value,index)=>({value,score:((seed+index*137)*2654435761)>>>0})).sort((a,b)=>a.score-b.score).map(entry=>entry.value);}
 const output=[];
@@ -63,7 +64,7 @@ for (const [id,lines] of Object.entries(programs)) {
  if(cases.length<2||cases.length>4)throw Error(id+': expected 2–4 meaningful bugs');
  output.push({id,inputHelp:helps[id].replace(/^Use \{.*?\}\.\s*/, '')+' Explore means visit each reachable item once unless the shown code says otherwise.',source:'../jonathan-study-site/data/variants-final-*.json',correctRules,cases,tests});
 }
-if(output.length!==28)throw Error('Expected exactly 28 variant Step 5 programs');
+if(output.length!==30)throw Error('Expected exactly 30 variant Step 5 programs');
 const destination=path.join(__dirname,'..','step5-specs-variant.json');
 const generated=JSON.stringify(output,null,2)+'\n';
 if(process.argv.includes('--check')) {

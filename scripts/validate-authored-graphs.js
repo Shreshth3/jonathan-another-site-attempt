@@ -208,6 +208,27 @@ function deriveSplitTheDigits(digits, limit) {
   return model;
 }
 
+// Stack pop orders: a node is a state, the numbers written so far (out) and the
+// stack from bottom to top. From each state, pop the top number or push the next one.
+function deriveStackPopOrders(n, out = [], stack = []) {
+  const model = graph(true);
+  const label = (written, pile) => written.length || pile.length ? `out [${written.join(',')}] | stack [${pile.join(',')}]` : 'start';
+  addNode(model, label(out, stack));
+  function extend(written, pile, next) {
+    if (written.length === n) return;
+    const moves = [];
+    if (pile.length) moves.push([[...written, pile[pile.length - 1]], pile.slice(0, -1), next]);
+    if (next <= n) moves.push([written, [...pile, next], next + 1]);
+    for (const [nextWritten, nextPile, nextNumber] of moves) {
+      addNode(model, label(nextWritten, nextPile));
+      addEdge(model, label(written, pile), label(nextWritten, nextPile));
+      extend(nextWritten, nextPile, nextNumber);
+    }
+  }
+  extend(out, stack, out.length + stack.length + 1);
+  return model;
+}
+
 function deriveVariant(id, input) {
   if (input.sky || input.marina || input.yard || input.park || input.cave) {
     return deriveGrid(id, input);
@@ -217,6 +238,7 @@ function deriveVariant(id, input) {
   if (id === 'under-the-limit') return deriveUnderTheLimit(input.nums, input.limit);
   if (id === 'balanced-brackets') return deriveBalancedBrackets(input.n, input.maxDepth);
   if (id === 'split-the-digits') return deriveSplitTheDigits(input.digits, input.limit);
+  if (id === 'stack-pop-orders') return deriveStackPopOrders(input.n, input.out, input.stack);
   if (input.dials) return deriveRunes(input.dials);
   const model = graph();
 

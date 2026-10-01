@@ -9,8 +9,8 @@ const sandbox = { window: {} };
 vm.runInNewContext(fs.readFileSync(path.join(root, "visual-data.js"), "utf8"), sandbox);
 const problems = JSON.parse(JSON.stringify(sandbox.window.DFS_VISUAL_DATA.problems));
 const variants = problems.filter(problem => problem.category === "variant");
-assert.equal(specs.length, 28, "Step 5 needs exactly 28 variant lessons");
-assert.equal(new Set(specs.map(spec => spec.id)).size, 28, "Duplicate Step 5 lesson");
+assert.equal(specs.length, 30, "Step 5 needs exactly 30 variant lessons");
+assert.equal(new Set(specs.map(spec => spec.id)).size, 30, "Duplicate Step 5 lesson");
 assert.deepEqual(specs.map(spec => spec.id).sort(), variants.map(problem => problem.id).sort());
 
 let count = 0;
@@ -47,4 +47,4 @@ for (const spec of specs) {
 for (const problem of problems.filter(problem => problem.category !== "variant")) {
   assert.equal(problem.debuggingLesson, undefined, `${problem.id}: Step 5 must be variant-only`);
 }
-console.log(`Validated Step 5 content: ${count} single-bug questions across 28 variants.`);
+console.log(`Validated Step 5 content: ${count} single-bug questions across 30 variants.`);

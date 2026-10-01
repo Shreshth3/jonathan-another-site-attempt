@@ -24,8 +24,11 @@ const formatExamples = {
  n:3, k:3, row:0, col:0, start:0, source:0, headId:0, hq:0, destination:2, finish:2, target:2, quitId:5, shutId:5, checkpoint:1, deadline:3
 };
 // Parameter names shared with another problem but holding a different shape.
-const problemFormatExamples = {'the-balance-lock':{dials:[[3,8],[2,6]], limit:10}, 'under-the-limit':{nums:[1,4,6], limit:5}, 'balanced-brackets':{n:2, maxDepth:2}, 'split-the-digits':{digits:'302', limit:40}};
-const problemDescriptions = {'the-balance-lock':{dials:'A list of dials. Each dial is a list of different positive whole-number weights.', limit:'The largest safe total. A total over limit busts.'}, 'under-the-limit':{nums:'A list of different positive whole numbers.', limit:'The largest allowed sum. A combination whose sum is over limit is left out.'}, 'balanced-brackets':{n:'The number of ( in every string, and also the number of ).', maxDepth:'The most brackets that may be open at once.'}, 'split-the-digits':{digits:'A string of 1–6 digits, each from 0 to 9. Quotes are optional.', limit:'The largest allowed piece. A piece whose number is over limit is not allowed.'}};
+const problemFormatExamples = {'the-balance-lock':{dials:[[3,8],[2,6]], limit:10}, 'under-the-limit':{nums:[1,4,6], limit:5}, 'balanced-brackets':{n:2, maxDepth:2}, 'split-the-digits':{digits:'302', limit:40}, 'stack-pop-orders':{n:1}};
+const problemDescriptions = {'the-balance-lock':{dials:'A list of dials. Each dial is a list of different positive whole-number weights.', limit:'The largest safe total. A total over limit busts.'}, 'under-the-limit':{nums:'A list of different positive whole numbers.', limit:'The largest allowed sum. A combination whose sum is over limit is left out.'}, 'balanced-brackets':{n:'The number of ( in every string, and also the number of ).', maxDepth:'The most brackets that may be open at once.'}, 'split-the-digits':{digits:'A string of 1–6 digits, each from 0 to 9. Quotes are optional.', limit:'The largest allowed piece. A piece whose number is over limit is not allowed.'}, 'stack-pop-orders':{n:'How many numbers are pushed: 1, 2, …, n, in that order. A whole number from 1 to 5.'}};
+// Each problem here takes one small whole number, and every allowed value already
+// appears in its examples or lessons, so its tests only have to differ from each other.
+const smallInputDomains = new Set(['stack-pop-orders']);
 function formatPlaceholder(name, value) {
  const plain = item => typeof item === 'string' ? item : Array.isArray(item) ? '[' + item.map(plain).join(', ') + ']' : String(item);
  if (['sky','park','marina','yard','cave','worked','trust','scores'].includes(name)) return value.map(row => row.join(', ')).join('\n');
@@ -57,7 +60,7 @@ const output=sources.map(problem=>{
  const spec=step5.find(p=>p.id===problem.id);
  const exampleInput=Object.fromEntries(names.map(name=>[name,problemFormatExamples[problem.id]?.[name]??formatExamples[name === 'scores' ? 'trust' : name]]));
  engine.validate(problem.id, {...exampleInput, ...('scores' in exampleInput ? {trust:exampleInput.scores} : {})});
- const used=oldInputs(problem,names);
+ const used=smallInputDomains.has(problem.id)?new Set():oldInputs(problem,names);
  const tests=(inputs[problem.id]||[]).map((test,index)=>{
   if(test.args.length!==names.length)throw Error(problem.id+': wrong argument count for '+test.label);
   const key=JSON.stringify(test.args);
@@ -82,7 +85,7 @@ const output=sources.map(problem=>{
  if(missed.length)throw Error(problem.id+': tests miss known bugs: '+missed.join(', '));
  return {id:problem.id,functionName:problem.functionName,parameters:names.map(name=>({name,label:name,example:exampleInput[name],placeholder:formatPlaceholder(name,exampleInput[name]),description:name==='k'?kDescriptions[problem.id]:problemDescriptions[problem.id]?.[name]??descriptions[name],help:name==='k'?kDescriptions[problem.id]:problemDescriptions[problem.id]?.[name]??descriptions[name]})),starterCode:'function '+problem.functionName+'('+names.join(', ')+') {\n  // Write your solution here.\n\n}\n',correctCode:problem.solution,tests,source:'../jonathan-study-site/data/'+problem.sourceFile};
 });
-if(output.length!==28||Object.keys(inputs).length!==28)throw Error('Step 6 must cover exactly 28 variants');
+if(output.length!==30||Object.keys(inputs).length!==30)throw Error('Step 6 must cover exactly 30 variants');
 const generated=JSON.stringify(output,null,2)+'\n';
 const destination=path.join(root,'step6-specs-variant.json');
 if(process.argv.includes('--check')){if(!fs.existsSync(destination)||fs.readFileSync(destination,'utf8')!==generated)throw Error('Step 6 specs are stale. Run node scripts/step6-build.js.');}

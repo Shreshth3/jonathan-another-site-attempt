@@ -36088,5 +36088,1692 @@
         4
       ]
     }
+  },
+  {
+    "id": "stack-pop-orders",
+    "facets": [
+      "exact moves and states",
+      "full state identity",
+      "push and pop moves",
+      "finished orders only"
+    ],
+    "buildTasks": [
+      {
+        "id": "two-numbers",
+        "title": "Finish only when every number is written",
+        "facet": "finished orders only",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=2",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "out [] | stack [1]",
+              "label": "out [] | stack [1]"
+            },
+            {
+              "id": "out [1] | stack []",
+              "label": "out [1] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2]",
+              "label": "out [1] | stack [2]"
+            },
+            {
+              "id": "out [1,2] | stack []",
+              "label": "out [1,2] | stack []"
+            },
+            {
+              "id": "out [] | stack [1,2]",
+              "label": "out [] | stack [1,2]"
+            },
+            {
+              "id": "out [2] | stack [1]",
+              "label": "out [2] | stack [1]"
+            },
+            {
+              "id": "out [2,1] | stack []",
+              "label": "out [2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "out [] | stack [1]"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [1] | stack []"
+            },
+            {
+              "from": "out [1] | stack []",
+              "to": "out [1] | stack [2]"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1,2] | stack []"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [] | stack [1,2]"
+            },
+            {
+              "from": "out [] | stack [1,2]",
+              "to": "out [2] | stack [1]"
+            },
+            {
+              "from": "out [2] | stack [1]",
+              "to": "out [2,1] | stack []"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which pop orders are returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "`[1, 2]` and `[2, 1]`",
+              "feedback": "Correct. Popping 1 right away empties the stack, but 2 has not been pushed yet. A pop order is finished only when both numbers are in out.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "`[1]` and `[2, 1]`",
+              "feedback": "This stops as soon as the stack is empty. After push 1 and pop 1 the stack is empty, but 2 is still waiting, so `[1]` is not a finished pop order.",
+              "misconception": "stop-when-empty"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "Popping 1 right away empties the stack, but 2 has not been pushed yet. A pop order is finished only when both numbers are in out."
+      },
+      {
+        "id": "pop-early",
+        "title": "Pop before every push is done",
+        "facet": "push and pop moves",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=3, out=[1], stack=[]\nSome moves are already done. Draw only what can still happen, starting from this state.",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [1] | stack []",
+              "label": "out [1] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2]",
+              "label": "out [1] | stack [2]"
+            },
+            {
+              "id": "out [1,2] | stack []",
+              "label": "out [1,2] | stack []"
+            },
+            {
+              "id": "out [1,2] | stack [3]",
+              "label": "out [1,2] | stack [3]"
+            },
+            {
+              "id": "out [1,2,3] | stack []",
+              "label": "out [1,2,3] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2,3]",
+              "label": "out [1] | stack [2,3]"
+            },
+            {
+              "id": "out [1,3] | stack [2]",
+              "label": "out [1,3] | stack [2]"
+            },
+            {
+              "id": "out [1,3,2] | stack []",
+              "label": "out [1,3,2] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [1] | stack []",
+              "to": "out [1] | stack [2]"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1,2] | stack []"
+            },
+            {
+              "from": "out [1,2] | stack []",
+              "to": "out [1,2] | stack [3]"
+            },
+            {
+              "from": "out [1,2] | stack [3]",
+              "to": "out [1,2,3] | stack []"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1] | stack [2,3]"
+            },
+            {
+              "from": "out [1] | stack [2,3]",
+              "to": "out [1,3] | stack [2]"
+            },
+            {
+              "from": "out [1,3] | stack [2]",
+              "to": "out [1,3,2] | stack []"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which pop orders can still be finished from this state?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "`[1, 2, 3]` and `[1, 3, 2]`",
+              "feedback": "Correct. From here you can push 2 and pop it right away, or push 3 on top of 2 first. Both `[1, 2, 3]` and `[1, 3, 2]` can be finished.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "`[1, 3, 2]`",
+              "feedback": "This pops only after every number has been pushed, so it never pops 2 before pushing 3. Popping 2 right after pushing it is allowed.",
+              "misconception": "pop-only-at-end"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "From here you can push 2 and pop it right away, or push 3 on top of 2 first. Both `[1, 2, 3]` and `[1, 3, 2]` can be finished."
+      },
+      {
+        "id": "top-comes-off",
+        "title": "Pop the top number",
+        "facet": "push and pop moves",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=4, out=[3], stack=[1,2,4]\nSome moves are already done. Draw only what can still happen, starting from this state.",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [3] | stack [1,2,4]",
+              "label": "out [3] | stack [1,2,4]"
+            },
+            {
+              "id": "out [3,4] | stack [1,2]",
+              "label": "out [3,4] | stack [1,2]"
+            },
+            {
+              "id": "out [3,4,2] | stack [1]",
+              "label": "out [3,4,2] | stack [1]"
+            },
+            {
+              "id": "out [3,4,2,1] | stack []",
+              "label": "out [3,4,2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [3] | stack [1,2,4]",
+              "to": "out [3,4] | stack [1,2]"
+            },
+            {
+              "from": "out [3,4] | stack [1,2]",
+              "to": "out [3,4,2] | stack [1]"
+            },
+            {
+              "from": "out [3,4,2] | stack [1]",
+              "to": "out [3,4,2,1] | stack []"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which pop orders can still be finished from this state?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "`[3, 4, 2, 1]`",
+              "feedback": "Correct. Every number has been pushed, so only pops are left. Each pop takes the top number: 4, then 2, then 1.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "`[3, 1, 2, 4]`",
+              "feedback": "This takes the number at the bottom of the stack first. A pop always takes the top number, the newest number still on the stack.",
+              "misconception": "pop-bottom"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "Every number has been pushed, so only pops are left. Each pop takes the top number: 4, then 2, then 1."
+      },
+      {
+        "id": "both-moves",
+        "title": "Try both moves",
+        "facet": "exact moves and states",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=4, out=[2,1], stack=[3]\nSome moves are already done. Draw only what can still happen, starting from this state.",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [2,1] | stack [3]",
+              "label": "out [2,1] | stack [3]"
+            },
+            {
+              "id": "out [2,1,3] | stack []",
+              "label": "out [2,1,3] | stack []"
+            },
+            {
+              "id": "out [2,1,3] | stack [4]",
+              "label": "out [2,1,3] | stack [4]"
+            },
+            {
+              "id": "out [2,1,3,4] | stack []",
+              "label": "out [2,1,3,4] | stack []"
+            },
+            {
+              "id": "out [2,1] | stack [3,4]",
+              "label": "out [2,1] | stack [3,4]"
+            },
+            {
+              "id": "out [2,1,4] | stack [3]",
+              "label": "out [2,1,4] | stack [3]"
+            },
+            {
+              "id": "out [2,1,4,3] | stack []",
+              "label": "out [2,1,4,3] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [2,1] | stack [3]",
+              "to": "out [2,1,3] | stack []"
+            },
+            {
+              "from": "out [2,1,3] | stack []",
+              "to": "out [2,1,3] | stack [4]"
+            },
+            {
+              "from": "out [2,1,3] | stack [4]",
+              "to": "out [2,1,3,4] | stack []"
+            },
+            {
+              "from": "out [2,1] | stack [3]",
+              "to": "out [2,1] | stack [3,4]"
+            },
+            {
+              "from": "out [2,1] | stack [3,4]",
+              "to": "out [2,1,4] | stack [3]"
+            },
+            {
+              "from": "out [2,1,4] | stack [3]",
+              "to": "out [2,1,4,3] | stack []"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which pop orders can still be finished from this state?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "`[2, 1, 3, 4]` and `[2, 1, 4, 3]`",
+              "feedback": "Correct. Both moves are allowed here: pop 3, or push 4 first. Each move starts its own branch, so both `[2, 1, 3, 4]` and `[2, 1, 4, 3]` are finished.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "`[2, 1, 3, 4]`",
+              "feedback": "This makes only one move from each state: it pops whenever it can. Pushing 4 before popping 3 is also allowed, and it leads to `[2, 1, 4, 3]`.",
+              "misconception": "one-move-only"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "Both moves are allowed here: pop 3, or push 4 first. Each move starts its own branch, so both `[2, 1, 3, 4]` and `[2, 1, 4, 3]` are finished."
+      }
+    ],
+    "conceptTasks": [
+      {
+        "id": "concept-picture",
+        "title": "Match every input detail",
+        "facet": "exact moves and states",
+        "kind": "visual-options",
+        "prompt": "Which picture exactly matches this raw input?",
+        "input": "n=3, out=[2], stack=[1]\nSome moves are already done. Draw only what can still happen, starting from this state.",
+        "choices": [
+          {
+            "id": "exact",
+            "label": "Picture A",
+            "feedback": "Correct. Every state the moves can reach appears once, with one edge for each push or pop.",
+            "misconception": null,
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "out [2] | stack [1]",
+                  "label": "out [2] | stack [1]"
+                },
+                {
+                  "id": "out [2,1] | stack []",
+                  "label": "out [2,1] | stack []"
+                },
+                {
+                  "id": "out [2,1] | stack [3]",
+                  "label": "out [2,1] | stack [3]"
+                },
+                {
+                  "id": "out [2,1,3] | stack []",
+                  "label": "out [2,1,3] | stack []"
+                },
+                {
+                  "id": "out [2] | stack [1,3]",
+                  "label": "out [2] | stack [1,3]"
+                },
+                {
+                  "id": "out [2,3] | stack [1]",
+                  "label": "out [2,3] | stack [1]"
+                },
+                {
+                  "id": "out [2,3,1] | stack []",
+                  "label": "out [2,3,1] | stack []"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2,1] | stack []"
+                },
+                {
+                  "from": "out [2,1] | stack []",
+                  "to": "out [2,1] | stack [3]"
+                },
+                {
+                  "from": "out [2,1] | stack [3]",
+                  "to": "out [2,1,3] | stack []"
+                },
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2] | stack [1,3]"
+                },
+                {
+                  "from": "out [2] | stack [1,3]",
+                  "to": "out [2,3] | stack [1]"
+                },
+                {
+                  "from": "out [2,3] | stack [1]",
+                  "to": "out [2,3,1] | stack []"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-node",
+            "label": "Picture D",
+            "feedback": "The state `out [2,1,3] | stack []` is missing. Popping 3 from `out [2,1] | stack [3]` writes all three numbers, so that finished state needs its own node.",
+            "misconception": "omit-state",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "out [2] | stack [1]",
+                  "label": "out [2] | stack [1]"
+                },
+                {
+                  "id": "out [2,1] | stack []",
+                  "label": "out [2,1] | stack []"
+                },
+                {
+                  "id": "out [2,1] | stack [3]",
+                  "label": "out [2,1] | stack [3]"
+                },
+                {
+                  "id": "out [2] | stack [1,3]",
+                  "label": "out [2] | stack [1,3]"
+                },
+                {
+                  "id": "out [2,3] | stack [1]",
+                  "label": "out [2,3] | stack [1]"
+                },
+                {
+                  "id": "out [2,3,1] | stack []",
+                  "label": "out [2,3,1] | stack []"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2,1] | stack []"
+                },
+                {
+                  "from": "out [2,1] | stack []",
+                  "to": "out [2,1] | stack [3]"
+                },
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2] | stack [1,3]"
+                },
+                {
+                  "from": "out [2] | stack [1,3]",
+                  "to": "out [2,3] | stack [1]"
+                },
+                {
+                  "from": "out [2,3] | stack [1]",
+                  "to": "out [2,3,1] | stack []"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-edge",
+            "label": "Picture B",
+            "feedback": "The move push 3 from `out [2] | stack [1]` to `out [2] | stack [1,3]` is missing.",
+            "misconception": "omit-direct-edge",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "out [2] | stack [1]",
+                  "label": "out [2] | stack [1]"
+                },
+                {
+                  "id": "out [2,1] | stack []",
+                  "label": "out [2,1] | stack []"
+                },
+                {
+                  "id": "out [2,1] | stack [3]",
+                  "label": "out [2,1] | stack [3]"
+                },
+                {
+                  "id": "out [2,1,3] | stack []",
+                  "label": "out [2,1,3] | stack []"
+                },
+                {
+                  "id": "out [2] | stack [1,3]",
+                  "label": "out [2] | stack [1,3]"
+                },
+                {
+                  "id": "out [2,3] | stack [1]",
+                  "label": "out [2,3] | stack [1]"
+                },
+                {
+                  "id": "out [2,3,1] | stack []",
+                  "label": "out [2,3,1] | stack []"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2,1] | stack []"
+                },
+                {
+                  "from": "out [2,1] | stack []",
+                  "to": "out [2,1] | stack [3]"
+                },
+                {
+                  "from": "out [2,1] | stack [3]",
+                  "to": "out [2,1,3] | stack []"
+                },
+                {
+                  "from": "out [2] | stack [1,3]",
+                  "to": "out [2,3] | stack [1]"
+                },
+                {
+                  "from": "out [2,3] | stack [1]",
+                  "to": "out [2,3,1] | stack []"
+                }
+              ]
+            }
+          },
+          {
+            "id": "bottom-pop",
+            "label": "Picture C",
+            "feedback": "`out [2] | stack [1,3]` cannot move to `out [2,1] | stack [3]`: 1 is under 3, so only 3 can be popped there.",
+            "misconception": "pop-bottom",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "out [2] | stack [1]",
+                  "label": "out [2] | stack [1]"
+                },
+                {
+                  "id": "out [2,1] | stack []",
+                  "label": "out [2,1] | stack []"
+                },
+                {
+                  "id": "out [2,1] | stack [3]",
+                  "label": "out [2,1] | stack [3]"
+                },
+                {
+                  "id": "out [2,1,3] | stack []",
+                  "label": "out [2,1,3] | stack []"
+                },
+                {
+                  "id": "out [2] | stack [1,3]",
+                  "label": "out [2] | stack [1,3]"
+                },
+                {
+                  "id": "out [2,3] | stack [1]",
+                  "label": "out [2,3] | stack [1]"
+                },
+                {
+                  "id": "out [2,3,1] | stack []",
+                  "label": "out [2,3,1] | stack []"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2,1] | stack []"
+                },
+                {
+                  "from": "out [2,1] | stack []",
+                  "to": "out [2,1] | stack [3]"
+                },
+                {
+                  "from": "out [2,1] | stack [3]",
+                  "to": "out [2,1,3] | stack []"
+                },
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2] | stack [1,3]"
+                },
+                {
+                  "from": "out [2] | stack [1,3]",
+                  "to": "out [2,3] | stack [1]"
+                },
+                {
+                  "from": "out [2,3] | stack [1]",
+                  "to": "out [2,3,1] | stack []"
+                },
+                {
+                  "from": "out [2] | stack [1,3]",
+                  "to": "out [2,1] | stack [3]"
+                }
+              ]
+            }
+          }
+        ],
+        "correct": "exact",
+        "why": "Every state the moves can reach appears once, with one edge for each push or pop.",
+        "remedial": {
+          "id": "repair-1",
+          "title": "Fresh proof · Match every input detail",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=4, out=[1,2], stack=[3]\nSome moves are already done. Draw only what can still happen, starting from this state.",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "out [1,2] | stack [3]",
+                "label": "out [1,2] | stack [3]"
+              },
+              {
+                "id": "out [1,2,3] | stack []",
+                "label": "out [1,2,3] | stack []"
+              },
+              {
+                "id": "out [1,2,3] | stack [4]",
+                "label": "out [1,2,3] | stack [4]"
+              },
+              {
+                "id": "out [1,2,3,4] | stack []",
+                "label": "out [1,2,3,4] | stack []"
+              },
+              {
+                "id": "out [1,2] | stack [3,4]",
+                "label": "out [1,2] | stack [3,4]"
+              },
+              {
+                "id": "out [1,2,4] | stack [3]",
+                "label": "out [1,2,4] | stack [3]"
+              },
+              {
+                "id": "out [1,2,4,3] | stack []",
+                "label": "out [1,2,4,3] | stack []"
+              }
+            ],
+            "edges": [
+              {
+                "from": "out [1,2] | stack [3]",
+                "to": "out [1,2,3] | stack []"
+              },
+              {
+                "from": "out [1,2,3] | stack []",
+                "to": "out [1,2,3] | stack [4]"
+              },
+              {
+                "from": "out [1,2,3] | stack [4]",
+                "to": "out [1,2,3,4] | stack []"
+              },
+              {
+                "from": "out [1,2] | stack [3]",
+                "to": "out [1,2] | stack [3,4]"
+              },
+              {
+                "from": "out [1,2] | stack [3,4]",
+                "to": "out [1,2,4] | stack [3]"
+              },
+              {
+                "from": "out [1,2,4] | stack [3]",
+                "to": "out [1,2,4,3] | stack []"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which pop orders can still be finished from this state?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`[1, 2, 3, 4]` and `[1, 2, 4, 3]`",
+                "feedback": "Correct. Both moves are possible here: pop 3, or push 4. Each move starts its own branch, so `[1, 2, 3, 4]` and `[1, 2, 4, 3]` are both finished.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`[1, 2, 3, 4]`",
+                "feedback": "This makes only one move from each state, popping whenever it can. Pushing 4 before popping 3 is also allowed, and it leads to `[1, 2, 4, 3]`.",
+                "misconception": "one-move-only"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "Both moves are possible here: pop 3, or push 4. Each move starts its own branch, so `[1, 2, 3, 4]` and `[1, 2, 4, 3]` are both finished."
+        }
+      },
+      {
+        "id": "concept-nodes",
+        "title": "Protect entity identity",
+        "facet": "full state identity",
+        "kind": "choice",
+        "prompt": "What is a node in the pop-order tree?",
+        "input": "n=3, out=[1], stack=[2]\nSome moves are already done. Draw only what can still happen, starting from this state.",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [1] | stack [2]",
+              "label": "out [1] | stack [2]"
+            },
+            {
+              "id": "out [1,2] | stack []",
+              "label": "out [1,2] | stack []"
+            },
+            {
+              "id": "out [1,2] | stack [3]",
+              "label": "out [1,2] | stack [3]"
+            },
+            {
+              "id": "out [1,2,3] | stack []",
+              "label": "out [1,2,3] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2,3]",
+              "label": "out [1] | stack [2,3]"
+            },
+            {
+              "id": "out [1,3] | stack [2]",
+              "label": "out [1,3] | stack [2]"
+            },
+            {
+              "id": "out [1,3,2] | stack []",
+              "label": "out [1,3,2] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1,2] | stack []"
+            },
+            {
+              "from": "out [1,2] | stack []",
+              "to": "out [1,2] | stack [3]"
+            },
+            {
+              "from": "out [1,2] | stack [3]",
+              "to": "out [1,2,3] | stack []"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1] | stack [2,3]"
+            },
+            {
+              "from": "out [1] | stack [2,3]",
+              "to": "out [1,3] | stack [2]"
+            },
+            {
+              "from": "out [1,3] | stack [2]",
+              "to": "out [1,3,2] | stack []"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "state",
+            "label": "One state of the run: the numbers written in out so far, plus the numbers on the stack. The start state has both empty.",
+            "feedback": "Correct. A node remembers both out and the stack, because together they decide which moves come next.",
+            "misconception": null
+          },
+          {
+            "id": "out-only",
+            "label": "Only the numbers written in out so far. States with the same out share a node.",
+            "feedback": "Two states can have the same out but different stacks, like `out [1] | stack [2]` and `out [1] | stack [2,3]`. Different moves are possible from each, so each needs its own node.",
+            "misconception": "merge-by-out"
+          },
+          {
+            "id": "number",
+            "label": "One node per number from 1 to n.",
+            "feedback": "A number is pushed, waits on the stack, and is written down at different moments. A node must remember the whole state: out and the stack.",
+            "misconception": "number-as-node"
+          },
+          {
+            "id": "finished",
+            "label": "Only finished pop orders, where all n numbers are written.",
+            "feedback": "The states along the way are nodes too. Each finished pop order is reached by a path of moves through them.",
+            "misconception": "leaves-only"
+          }
+        ],
+        "correct": "state",
+        "why": "Correct. A node remembers both out and the stack, because together they decide which moves come next.",
+        "remedial": {
+          "id": "repair-2",
+          "title": "Fresh proof · Protect entity identity",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=4, out=[2,3], stack=[1]\nSome moves are already done. Draw only what can still happen, starting from this state.",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "out [2,3] | stack [1]",
+                "label": "out [2,3] | stack [1]"
+              },
+              {
+                "id": "out [2,3,1] | stack []",
+                "label": "out [2,3,1] | stack []"
+              },
+              {
+                "id": "out [2,3,1] | stack [4]",
+                "label": "out [2,3,1] | stack [4]"
+              },
+              {
+                "id": "out [2,3,1,4] | stack []",
+                "label": "out [2,3,1,4] | stack []"
+              },
+              {
+                "id": "out [2,3] | stack [1,4]",
+                "label": "out [2,3] | stack [1,4]"
+              },
+              {
+                "id": "out [2,3,4] | stack [1]",
+                "label": "out [2,3,4] | stack [1]"
+              },
+              {
+                "id": "out [2,3,4,1] | stack []",
+                "label": "out [2,3,4,1] | stack []"
+              }
+            ],
+            "edges": [
+              {
+                "from": "out [2,3] | stack [1]",
+                "to": "out [2,3,1] | stack []"
+              },
+              {
+                "from": "out [2,3,1] | stack []",
+                "to": "out [2,3,1] | stack [4]"
+              },
+              {
+                "from": "out [2,3,1] | stack [4]",
+                "to": "out [2,3,1,4] | stack []"
+              },
+              {
+                "from": "out [2,3] | stack [1]",
+                "to": "out [2,3] | stack [1,4]"
+              },
+              {
+                "from": "out [2,3] | stack [1,4]",
+                "to": "out [2,3,4] | stack [1]"
+              },
+              {
+                "from": "out [2,3,4] | stack [1]",
+                "to": "out [2,3,4,1] | stack []"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which pop orders can still be finished from this state?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`[2, 3, 1, 4]` and `[2, 3, 4, 1]`",
+                "feedback": "Correct. After 1 is popped, out is `[2, 3, 1]` and the stack is empty, but 4 has not been pushed yet. That state is a step along the way. Only `[2, 3, 1, 4]` and `[2, 3, 4, 1]` are finished.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`[2, 3, 1]` and `[2, 3, 4, 1]`",
+                "feedback": "This treats the empty stack after popping 1 as finished, so it returns `[2, 3, 1]`, which is missing 4.",
+                "misconception": "stop-when-empty"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "After 1 is popped, out is `[2, 3, 1]` and the stack is empty, but 4 has not been pushed yet. That state is a step along the way. Only `[2, 3, 1, 4]` and `[2, 3, 4, 1]` are finished."
+        }
+      },
+      {
+        "id": "concept-relations",
+        "title": "Protect direct relations",
+        "facet": "push and pop moves",
+        "kind": "choice",
+        "prompt": "When does a state have an edge to another state?",
+        "input": "n=4, out=[1,3], stack=[2]\nSome moves are already done. Draw only what can still happen, starting from this state.",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [1,3] | stack [2]",
+              "label": "out [1,3] | stack [2]"
+            },
+            {
+              "id": "out [1,3,2] | stack []",
+              "label": "out [1,3,2] | stack []"
+            },
+            {
+              "id": "out [1,3,2] | stack [4]",
+              "label": "out [1,3,2] | stack [4]"
+            },
+            {
+              "id": "out [1,3,2,4] | stack []",
+              "label": "out [1,3,2,4] | stack []"
+            },
+            {
+              "id": "out [1,3] | stack [2,4]",
+              "label": "out [1,3] | stack [2,4]"
+            },
+            {
+              "id": "out [1,3,4] | stack [2]",
+              "label": "out [1,3,4] | stack [2]"
+            },
+            {
+              "id": "out [1,3,4,2] | stack []",
+              "label": "out [1,3,4,2] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [1,3] | stack [2]",
+              "to": "out [1,3,2] | stack []"
+            },
+            {
+              "from": "out [1,3,2] | stack []",
+              "to": "out [1,3,2] | stack [4]"
+            },
+            {
+              "from": "out [1,3,2] | stack [4]",
+              "to": "out [1,3,2,4] | stack []"
+            },
+            {
+              "from": "out [1,3] | stack [2]",
+              "to": "out [1,3] | stack [2,4]"
+            },
+            {
+              "from": "out [1,3] | stack [2,4]",
+              "to": "out [1,3,4] | stack [2]"
+            },
+            {
+              "from": "out [1,3,4] | stack [2]",
+              "to": "out [1,3,4,2] | stack []"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "one-move",
+            "label": "When one move leads there: push the next number (if any number is still waiting), or pop the top number into out (if the stack is not empty).",
+            "feedback": "Correct. Each edge is one push or one pop, so a state has at most two edges going out.",
+            "misconception": null
+          },
+          {
+            "id": "any-push",
+            "label": "When you push any number that has not been pushed yet, or pop the top number into out.",
+            "feedback": "Numbers are pushed in order: 1, then 2, then 3. From `out [1,3] | stack [2]` the only number left to push is 4.",
+            "misconception": "any-order"
+          },
+          {
+            "id": "pop-any",
+            "label": "When you push the next number, or pop any number in the stack into out.",
+            "feedback": "Only the top number can come off the stack: the newest number still on it.",
+            "misconception": "pop-bottom"
+          },
+          {
+            "id": "pop-late",
+            "label": "When you push the next number, or pop the top number, but only after every number has been pushed.",
+            "feedback": "You may pop as soon as the stack is not empty. Waiting until every number is pushed allows only one order.",
+            "misconception": "pop-only-at-end"
+          }
+        ],
+        "correct": "one-move",
+        "why": "Correct. Each edge is one push or one pop, so a state has at most two edges going out.",
+        "remedial": {
+          "id": "repair-3",
+          "title": "Fresh proof · Protect direct relations",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=3, out=[], stack=[1,2,3]\nSome moves are already done. Draw only what can still happen, starting from this state.",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "out [] | stack [1,2,3]",
+                "label": "out [] | stack [1,2,3]"
+              },
+              {
+                "id": "out [3] | stack [1,2]",
+                "label": "out [3] | stack [1,2]"
+              },
+              {
+                "id": "out [3,2] | stack [1]",
+                "label": "out [3,2] | stack [1]"
+              },
+              {
+                "id": "out [3,2,1] | stack []",
+                "label": "out [3,2,1] | stack []"
+              }
+            ],
+            "edges": [
+              {
+                "from": "out [] | stack [1,2,3]",
+                "to": "out [3] | stack [1,2]"
+              },
+              {
+                "from": "out [3] | stack [1,2]",
+                "to": "out [3,2] | stack [1]"
+              },
+              {
+                "from": "out [3,2] | stack [1]",
+                "to": "out [3,2,1] | stack []"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which pop orders can still be finished from this state?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`[3, 2, 1]`",
+                "feedback": "Correct. All three numbers are on the stack and 3 is on top. Each pop takes the top number: 3, then 2, then 1.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`[1, 2, 3]`",
+                "feedback": "This pops the bottom number first. A pop always takes the top number, the newest number still on the stack.",
+                "misconception": "pop-bottom"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "All three numbers are on the stack and 3 is on top. Each pop takes the top number: 3, then 2, then 1."
+        }
+      },
+      {
+        "id": "concept-output",
+        "title": "Predict from a fresh input",
+        "facet": "finished orders only",
+        "kind": "choice",
+        "prompt": "With n = 4, starting from out `[2]` and stack `[1, 3]`, which pop orders can still be finished?",
+        "input": "n=4, out=[2], stack=[1,3]\nSome moves are already done. Draw only what can still happen, starting from this state.",
+        "choices": [
+          {
+            "id": "three",
+            "feedback": "Correct. Pop 3, pop 1, then push and pop 4 gives `[2, 3, 1, 4]`. Pop 3, push and pop 4, then pop 1 gives `[2, 3, 4, 1]`. Push and pop 4 first, then pop 3 and 1, gives `[2, 4, 3, 1]`.",
+            "misconception": null,
+            "label": "`[2, 3, 1, 4]`, `[2, 3, 4, 1]`, and `[2, 4, 3, 1]`"
+          },
+          {
+            "id": "late",
+            "feedback": "This pops only after every number is pushed, so it must push 4 first. Popping 3 right away is allowed too.",
+            "misconception": "pop-only-at-end",
+            "label": "`[2, 4, 3, 1]`"
+          },
+          {
+            "id": "empty",
+            "feedback": "This stops as soon as the stack is empty. `[2, 3, 1]` has an empty stack, but 4 has not been pushed yet, so it is not finished.",
+            "misconception": "stop-when-empty",
+            "label": "`[2, 3, 1]`, `[2, 3, 4, 1]`, and `[2, 4, 3, 1]`"
+          },
+          {
+            "id": "one-move",
+            "feedback": "This makes only one move from each state, popping whenever it can. Pushing 4 is also allowed while 4 is waiting, and it leads to other orders.",
+            "misconception": "one-move-only",
+            "label": "`[2, 3, 1, 4]`"
+          }
+        ],
+        "correct": "three",
+        "why": "Correct. Pop 3, pop 1, then push and pop 4 gives `[2, 3, 1, 4]`. Pop 3, push and pop 4, then pop 1 gives `[2, 3, 4, 1]`. Push and pop 4 first, then pop 3 and 1, gives `[2, 4, 3, 1]`.",
+        "remedial": {
+          "id": "repair-4",
+          "title": "Fresh proof · Predict from a fresh input",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=4, out=[3,2], stack=[1]\nSome moves are already done. Draw only what can still happen, starting from this state.",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "out [3,2] | stack [1]",
+                "label": "out [3,2] | stack [1]"
+              },
+              {
+                "id": "out [3,2,1] | stack []",
+                "label": "out [3,2,1] | stack []"
+              },
+              {
+                "id": "out [3,2,1] | stack [4]",
+                "label": "out [3,2,1] | stack [4]"
+              },
+              {
+                "id": "out [3,2,1,4] | stack []",
+                "label": "out [3,2,1,4] | stack []"
+              },
+              {
+                "id": "out [3,2] | stack [1,4]",
+                "label": "out [3,2] | stack [1,4]"
+              },
+              {
+                "id": "out [3,2,4] | stack [1]",
+                "label": "out [3,2,4] | stack [1]"
+              },
+              {
+                "id": "out [3,2,4,1] | stack []",
+                "label": "out [3,2,4,1] | stack []"
+              }
+            ],
+            "edges": [
+              {
+                "from": "out [3,2] | stack [1]",
+                "to": "out [3,2,1] | stack []"
+              },
+              {
+                "from": "out [3,2,1] | stack []",
+                "to": "out [3,2,1] | stack [4]"
+              },
+              {
+                "from": "out [3,2,1] | stack [4]",
+                "to": "out [3,2,1,4] | stack []"
+              },
+              {
+                "from": "out [3,2] | stack [1]",
+                "to": "out [3,2] | stack [1,4]"
+              },
+              {
+                "from": "out [3,2] | stack [1,4]",
+                "to": "out [3,2,4] | stack [1]"
+              },
+              {
+                "from": "out [3,2,4] | stack [1]",
+                "to": "out [3,2,4,1] | stack []"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which pop orders can still be finished from this state?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`[3, 2, 1, 4]` and `[3, 2, 4, 1]`",
+                "feedback": "Correct. 1 is on top, so you may pop it now, before pushing 4. That gives `[3, 2, 1, 4]`. Pushing 4 first gives `[3, 2, 4, 1]`.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`[3, 2, 4, 1]`",
+                "feedback": "This pops only after every number has been pushed. Popping 1 before pushing 4 is allowed too, and it gives `[3, 2, 1, 4]`.",
+                "misconception": "pop-only-at-end"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "1 is on top, so you may pop it now, before pushing 4. That gives `[3, 2, 1, 4]`. Pushing 4 first gives `[3, 2, 4, 1]`."
+        }
+      },
+      {
+        "id": "concept-bug",
+        "title": "Catch a near-miss implementation",
+        "facet": "finished orders only",
+        "kind": "choice",
+        "prompt": "For n = 4, how many pop orders are returned?",
+        "input": "n=4",
+        "choices": [
+          {
+            "id": "fourteen",
+            "label": "`14`",
+            "feedback": "Correct. 14 of the 24 orderings of 1–4 can be made. An order like `[3, 1, 2, 4]` cannot: when 3 is popped first, 2 is still on top of 1, so 2 must come out before 1.",
+            "misconception": null
+          },
+          {
+            "id": "all",
+            "label": "`24`",
+            "feedback": "Not every ordering of 1–4 can be made. `[3, 1, 2, 4]` is impossible: after pushing 1, 2, 3 and popping 3, 2 is on top of 1, so 2 must come out before 1.",
+            "misconception": "any-order"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "This counts only `[4, 3, 2, 1]`, as if every number must be pushed before any pop. You may pop as soon as the stack is not empty.",
+            "misconception": "pop-only-at-end"
+          },
+          {
+            "id": "nine",
+            "label": "`9`",
+            "feedback": "This counts a run as finished whenever the stack is empty, so it includes short lists like `[1]` and `[2, 1]` before the other numbers are pushed.",
+            "misconception": "stop-when-empty"
+          }
+        ],
+        "correct": "fourteen",
+        "why": "Correct. 14 of the 24 orderings of 1–4 can be made. An order like `[3, 1, 2, 4]` cannot: when 3 is popped first, 2 is still on top of 1, so 2 must come out before 1.",
+        "remedial": {
+          "id": "repair-5",
+          "title": "Fresh proof · Catch a near-miss implementation",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=4, out=[1,2], stack=[]\nSome moves are already done. Draw only what can still happen, starting from this state.",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "out [1,2] | stack []",
+                "label": "out [1,2] | stack []"
+              },
+              {
+                "id": "out [1,2] | stack [3]",
+                "label": "out [1,2] | stack [3]"
+              },
+              {
+                "id": "out [1,2,3] | stack []",
+                "label": "out [1,2,3] | stack []"
+              },
+              {
+                "id": "out [1,2,3] | stack [4]",
+                "label": "out [1,2,3] | stack [4]"
+              },
+              {
+                "id": "out [1,2,3,4] | stack []",
+                "label": "out [1,2,3,4] | stack []"
+              },
+              {
+                "id": "out [1,2] | stack [3,4]",
+                "label": "out [1,2] | stack [3,4]"
+              },
+              {
+                "id": "out [1,2,4] | stack [3]",
+                "label": "out [1,2,4] | stack [3]"
+              },
+              {
+                "id": "out [1,2,4,3] | stack []",
+                "label": "out [1,2,4,3] | stack []"
+              }
+            ],
+            "edges": [
+              {
+                "from": "out [1,2] | stack []",
+                "to": "out [1,2] | stack [3]"
+              },
+              {
+                "from": "out [1,2] | stack [3]",
+                "to": "out [1,2,3] | stack []"
+              },
+              {
+                "from": "out [1,2,3] | stack []",
+                "to": "out [1,2,3] | stack [4]"
+              },
+              {
+                "from": "out [1,2,3] | stack [4]",
+                "to": "out [1,2,3,4] | stack []"
+              },
+              {
+                "from": "out [1,2] | stack [3]",
+                "to": "out [1,2] | stack [3,4]"
+              },
+              {
+                "from": "out [1,2] | stack [3,4]",
+                "to": "out [1,2,4] | stack [3]"
+              },
+              {
+                "from": "out [1,2,4] | stack [3]",
+                "to": "out [1,2,4,3] | stack []"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which pop orders can still be finished from this state?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`[1, 2, 3, 4]` and `[1, 2, 4, 3]`",
+                "feedback": "Correct. The stack is empty, but 3 and 4 have not been pushed yet. Pushing and popping them gives `[1, 2, 3, 4]` and `[1, 2, 4, 3]`.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`[1, 2]`",
+                "feedback": "This treats the empty stack as finished, so it returns `[1, 2]` before 3 and 4 are ever pushed.",
+                "misconception": "stop-when-empty"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "The stack is empty, but 3 and 4 have not been pushed yet. Pushing and popping them gives `[1, 2, 3, 4]` and `[1, 2, 4, 3]`."
+        }
+      }
+    ],
+    "structureTasks": [
+      {
+        "id": "transfer-1",
+        "input": "n=1",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "out [] | stack [1]",
+              "label": "out [] | stack [1]"
+            },
+            {
+              "id": "out [1] | stack []",
+              "label": "out [1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "out [] | stack [1]"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [1] | stack []"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-2",
+        "input": "n=3, out=[], stack=[1,2]",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [] | stack [1,2]",
+              "label": "out [] | stack [1,2]"
+            },
+            {
+              "id": "out [2] | stack [1]",
+              "label": "out [2] | stack [1]"
+            },
+            {
+              "id": "out [2,1] | stack []",
+              "label": "out [2,1] | stack []"
+            },
+            {
+              "id": "out [2,1] | stack [3]",
+              "label": "out [2,1] | stack [3]"
+            },
+            {
+              "id": "out [2,1,3] | stack []",
+              "label": "out [2,1,3] | stack []"
+            },
+            {
+              "id": "out [2] | stack [1,3]",
+              "label": "out [2] | stack [1,3]"
+            },
+            {
+              "id": "out [2,3] | stack [1]",
+              "label": "out [2,3] | stack [1]"
+            },
+            {
+              "id": "out [2,3,1] | stack []",
+              "label": "out [2,3,1] | stack []"
+            },
+            {
+              "id": "out [] | stack [1,2,3]",
+              "label": "out [] | stack [1,2,3]"
+            },
+            {
+              "id": "out [3] | stack [1,2]",
+              "label": "out [3] | stack [1,2]"
+            },
+            {
+              "id": "out [3,2] | stack [1]",
+              "label": "out [3,2] | stack [1]"
+            },
+            {
+              "id": "out [3,2,1] | stack []",
+              "label": "out [3,2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [] | stack [1,2]",
+              "to": "out [2] | stack [1]"
+            },
+            {
+              "from": "out [2] | stack [1]",
+              "to": "out [2,1] | stack []"
+            },
+            {
+              "from": "out [2,1] | stack []",
+              "to": "out [2,1] | stack [3]"
+            },
+            {
+              "from": "out [2,1] | stack [3]",
+              "to": "out [2,1,3] | stack []"
+            },
+            {
+              "from": "out [2] | stack [1]",
+              "to": "out [2] | stack [1,3]"
+            },
+            {
+              "from": "out [2] | stack [1,3]",
+              "to": "out [2,3] | stack [1]"
+            },
+            {
+              "from": "out [2,3] | stack [1]",
+              "to": "out [2,3,1] | stack []"
+            },
+            {
+              "from": "out [] | stack [1,2]",
+              "to": "out [] | stack [1,2,3]"
+            },
+            {
+              "from": "out [] | stack [1,2,3]",
+              "to": "out [3] | stack [1,2]"
+            },
+            {
+              "from": "out [3] | stack [1,2]",
+              "to": "out [3,2] | stack [1]"
+            },
+            {
+              "from": "out [3,2] | stack [1]",
+              "to": "out [3,2,1] | stack []"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-3",
+        "input": "n=4, out=[4], stack=[1,2,3]",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [4] | stack [1,2,3]",
+              "label": "out [4] | stack [1,2,3]"
+            },
+            {
+              "id": "out [4,3] | stack [1,2]",
+              "label": "out [4,3] | stack [1,2]"
+            },
+            {
+              "id": "out [4,3,2] | stack [1]",
+              "label": "out [4,3,2] | stack [1]"
+            },
+            {
+              "id": "out [4,3,2,1] | stack []",
+              "label": "out [4,3,2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [4] | stack [1,2,3]",
+              "to": "out [4,3] | stack [1,2]"
+            },
+            {
+              "from": "out [4,3] | stack [1,2]",
+              "to": "out [4,3,2] | stack [1]"
+            },
+            {
+              "from": "out [4,3,2] | stack [1]",
+              "to": "out [4,3,2,1] | stack []"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-4",
+        "input": "n=4, out=[2,1], stack=[]",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [2,1] | stack []",
+              "label": "out [2,1] | stack []"
+            },
+            {
+              "id": "out [2,1] | stack [3]",
+              "label": "out [2,1] | stack [3]"
+            },
+            {
+              "id": "out [2,1,3] | stack []",
+              "label": "out [2,1,3] | stack []"
+            },
+            {
+              "id": "out [2,1,3] | stack [4]",
+              "label": "out [2,1,3] | stack [4]"
+            },
+            {
+              "id": "out [2,1,3,4] | stack []",
+              "label": "out [2,1,3,4] | stack []"
+            },
+            {
+              "id": "out [2,1] | stack [3,4]",
+              "label": "out [2,1] | stack [3,4]"
+            },
+            {
+              "id": "out [2,1,4] | stack [3]",
+              "label": "out [2,1,4] | stack [3]"
+            },
+            {
+              "id": "out [2,1,4,3] | stack []",
+              "label": "out [2,1,4,3] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [2,1] | stack []",
+              "to": "out [2,1] | stack [3]"
+            },
+            {
+              "from": "out [2,1] | stack [3]",
+              "to": "out [2,1,3] | stack []"
+            },
+            {
+              "from": "out [2,1,3] | stack []",
+              "to": "out [2,1,3] | stack [4]"
+            },
+            {
+              "from": "out [2,1,3] | stack [4]",
+              "to": "out [2,1,3,4] | stack []"
+            },
+            {
+              "from": "out [2,1] | stack [3]",
+              "to": "out [2,1] | stack [3,4]"
+            },
+            {
+              "from": "out [2,1] | stack [3,4]",
+              "to": "out [2,1,4] | stack [3]"
+            },
+            {
+              "from": "out [2,1,4] | stack [3]",
+              "to": "out [2,1,4,3] | stack []"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-5",
+        "input": "n=4, out=[], stack=[1,2,3]",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [] | stack [1,2,3]",
+              "label": "out [] | stack [1,2,3]"
+            },
+            {
+              "id": "out [3] | stack [1,2]",
+              "label": "out [3] | stack [1,2]"
+            },
+            {
+              "id": "out [3,2] | stack [1]",
+              "label": "out [3,2] | stack [1]"
+            },
+            {
+              "id": "out [3,2,1] | stack []",
+              "label": "out [3,2,1] | stack []"
+            },
+            {
+              "id": "out [3,2,1] | stack [4]",
+              "label": "out [3,2,1] | stack [4]"
+            },
+            {
+              "id": "out [3,2,1,4] | stack []",
+              "label": "out [3,2,1,4] | stack []"
+            },
+            {
+              "id": "out [3,2] | stack [1,4]",
+              "label": "out [3,2] | stack [1,4]"
+            },
+            {
+              "id": "out [3,2,4] | stack [1]",
+              "label": "out [3,2,4] | stack [1]"
+            },
+            {
+              "id": "out [3,2,4,1] | stack []",
+              "label": "out [3,2,4,1] | stack []"
+            },
+            {
+              "id": "out [3] | stack [1,2,4]",
+              "label": "out [3] | stack [1,2,4]"
+            },
+            {
+              "id": "out [3,4] | stack [1,2]",
+              "label": "out [3,4] | stack [1,2]"
+            },
+            {
+              "id": "out [3,4,2] | stack [1]",
+              "label": "out [3,4,2] | stack [1]"
+            },
+            {
+              "id": "out [3,4,2,1] | stack []",
+              "label": "out [3,4,2,1] | stack []"
+            },
+            {
+              "id": "out [] | stack [1,2,3,4]",
+              "label": "out [] | stack [1,2,3,4]"
+            },
+            {
+              "id": "out [4] | stack [1,2,3]",
+              "label": "out [4] | stack [1,2,3]"
+            },
+            {
+              "id": "out [4,3] | stack [1,2]",
+              "label": "out [4,3] | stack [1,2]"
+            },
+            {
+              "id": "out [4,3,2] | stack [1]",
+              "label": "out [4,3,2] | stack [1]"
+            },
+            {
+              "id": "out [4,3,2,1] | stack []",
+              "label": "out [4,3,2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [] | stack [1,2,3]",
+              "to": "out [3] | stack [1,2]"
+            },
+            {
+              "from": "out [3] | stack [1,2]",
+              "to": "out [3,2] | stack [1]"
+            },
+            {
+              "from": "out [3,2] | stack [1]",
+              "to": "out [3,2,1] | stack []"
+            },
+            {
+              "from": "out [3,2,1] | stack []",
+              "to": "out [3,2,1] | stack [4]"
+            },
+            {
+              "from": "out [3,2,1] | stack [4]",
+              "to": "out [3,2,1,4] | stack []"
+            },
+            {
+              "from": "out [3,2] | stack [1]",
+              "to": "out [3,2] | stack [1,4]"
+            },
+            {
+              "from": "out [3,2] | stack [1,4]",
+              "to": "out [3,2,4] | stack [1]"
+            },
+            {
+              "from": "out [3,2,4] | stack [1]",
+              "to": "out [3,2,4,1] | stack []"
+            },
+            {
+              "from": "out [3] | stack [1,2]",
+              "to": "out [3] | stack [1,2,4]"
+            },
+            {
+              "from": "out [3] | stack [1,2,4]",
+              "to": "out [3,4] | stack [1,2]"
+            },
+            {
+              "from": "out [3,4] | stack [1,2]",
+              "to": "out [3,4,2] | stack [1]"
+            },
+            {
+              "from": "out [3,4,2] | stack [1]",
+              "to": "out [3,4,2,1] | stack []"
+            },
+            {
+              "from": "out [] | stack [1,2,3]",
+              "to": "out [] | stack [1,2,3,4]"
+            },
+            {
+              "from": "out [] | stack [1,2,3,4]",
+              "to": "out [4] | stack [1,2,3]"
+            },
+            {
+              "from": "out [4] | stack [1,2,3]",
+              "to": "out [4,3] | stack [1,2]"
+            },
+            {
+              "from": "out [4,3] | stack [1,2]",
+              "to": "out [4,3,2] | stack [1]"
+            },
+            {
+              "from": "out [4,3,2] | stack [1]",
+              "to": "out [4,3,2,1] | stack []"
+            }
+          ]
+        }
+      }
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "two-numbers",
+        "concept-nodes",
+        "pop-early",
+        "concept-relations",
+        "concept-output"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   }
 ]
