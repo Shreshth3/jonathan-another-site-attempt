@@ -239,7 +239,7 @@ const catalog = problems.map(problem => {
 // Problems added after answer slots and character names were balanced go last,
 // with their own slot pass below, so adding one never changes an existing lesson.
 // Listed in the order they were added; each new one goes at the end.
-const appendedProblemIds = ["the-balance-lock", "under-the-limit"];
+const appendedProblemIds = ["the-balance-lock", "under-the-limit", "split-the-digits"];
 catalog.sort((a, b) => {
   const categoryOrder = { original: 0, variant: 1, new: 2 };
   return appendedProblemIds.indexOf(a.id) - appendedProblemIds.indexOf(b.id) || categoryOrder[a.category] - categoryOrder[b.category] || a.title.localeCompare(b.title);
@@ -257,8 +257,18 @@ function stableHash(value) {
 const diagnosisRefs = catalog.flatMap(problem => (problem.codeReasoning?.cases || [])
   .filter(codeCase => codeCase.diagnoses?.length === 3)
   .map(codeCase => ({ problem, codeCase })));
-for (let start = 0; start < diagnosisRefs.length; start += 3) {
-  const group = diagnosisRefs.slice(start, start + 3);
+// Step 4 cases share answer-slot groups of three. Problems appended after
+// under-the-limit start their own groups, so appending one never regroups the
+// cases before it (which would change an existing problem's answers).
+const ownStep4Groups = new Set(appendedProblemIds.slice(appendedProblemIds.indexOf("under-the-limit") + 1));
+const diagnosisGroups = [];
+diagnosisRefs.forEach((ref, index) => {
+  const last = diagnosisGroups.at(-1);
+  const startsOwnGroup = ownStep4Groups.has(ref.problem.id) && diagnosisRefs[index - 1]?.problem !== ref.problem;
+  if (!last || last.length === 3 || startsOwnGroup) diagnosisGroups.push([ref]);
+  else last.push(ref);
+});
+for (const group of diagnosisGroups) {
   const offset = stableHash(`step4:v3:${group.map(ref => `${ref.problem.id}:${ref.codeCase.caseId}`).join("|")}`) % 3;
   group.forEach((ref, index) => { ref.codeCase.answerSlot = (offset + index) % 3; });
 }

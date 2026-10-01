@@ -1,0 +1,90 @@
+[
+  {
+    "id": "split-the-digits",
+    "title": "Split the Digits",
+    "category": "variant",
+    "parentId": "letter-combinations-of-a-phone-number",
+    "parentTitle": "Letter Combinations of a Phone Number",
+    "followsUp": "the-balance-lock",
+    "difficulty": "Hard",
+    "twist": "The hardest step after The Balance Lock: each choice is how many digits the next piece takes, and a piece must be a number at most limit with no leading zero.",
+    "statement": "You are given a string `digits` made of the characters `0` to `9`, and a whole number `limit`.\n\nCut `digits` into one or more **pieces**. Keep the digits in order, and use every digit exactly once. Read each piece as a whole number. A piece is allowed only if its number is **at most** `limit` and it does not start with `0`, unless the piece is exactly `0`. So `0` is allowed, but `05` is not.\n\nReturn **every** way to cut `digits` into allowed pieces. Write each way as a list of its piece numbers, from left to right. You may return the ways in any order. If there is no way, return an empty list.",
+    "examples": [
+      {
+        "input": "digits = \"1234\", limit = 30",
+        "output": "[[1,2,3,4],[1,23,4],[12,3,4]]",
+        "explanation": "Every single digit is at most 30, and so are 12 and 23. 34, 123, 234, and 1234 are over 30, so no way can use them."
+      },
+      {
+        "input": "digits = \"105\", limit = 20",
+        "output": "[[1,0,5],[10,5]]",
+        "explanation": "Cutting 1, 0, 5 works because a lone 0 is allowed. Cutting 1, 05 does not: 05 starts with 0. 105 is over 20."
+      },
+      {
+        "input": "digits = \"17\", limit = 5",
+        "output": "[]",
+        "explanation": "1 is allowed, but then 7 is over 5. 17 is over 5 too. No way uses every digit, so the answer is empty."
+      }
+    ],
+    "constraints": [
+      "1 <= digits.length <= 6",
+      "digits contains only the characters 0 to 9",
+      "1 <= limit <= 1000"
+    ],
+    "functionName": "splitUnderLimit",
+    "solution": "// CONTRACT for collectSplits(digits, limit, startIndex, piecesSoFar, splits):\n//     when this call returns, every way to cut the rest of `digits`\n//     (from index `startIndex` onward) into allowed pieces has been\n//     appended to `splits`, each one written after `piecesSoFar`.\nconst collectSplits = (digits, limit, startIndex, piecesSoFar, splits) => {\n    // Base case: every digit is used, so the pieces are one complete way.\n    if (startIndex === digits.length) {\n        splits.push(piecesSoFar);\n        return;\n    }\n\n    // Traverse neighbors: cut the next piece, one length at a time.\n    for (let end = startIndex + 1; end <= digits.length; end++) {\n        const piece = digits.slice(startIndex, end);\n\n        // A longer piece that starts with \"0\", like \"05\", is not allowed.\n        // Every longer piece from here starts with the same \"0\", so stop.\n        if (piece.length > 1 && piece[0] === \"0\") break;\n\n        // Adding a digit never makes the number smaller, so once a piece\n        // is over the limit, every longer piece from here is over it too.\n        if (Number(piece) > limit) break;\n\n        // The recursive leap of faith, one level down: this call has the\n        // SAME contract — when it returns, every way to finish the cut\n        // after `piece` is in `splits`. Trust it, do not trace it.\n        // Trying every allowed next piece covers every way that starts\n        // with `piecesSoFar` — exactly this function's contract, kept.\n        collectSplits(digits, limit, end, [...piecesSoFar, Number(piece)], splits);\n    }\n};\n\nconst splitUnderLimit = (digits, limit) => {\n    const splits = [];\n\n    // The recursive leap of faith: trust the contract. Starting with no\n    // pieces at index 0 collects every way to cut all of `digits`.\n    collectSplits(digits, limit, 0, [], splits);\n\n    return splits;\n};",
+    "tests": [
+      {
+        "args": [
+          "1234",
+          30
+        ],
+        "expected": [
+          [
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            1,
+            23,
+            4
+          ],
+          [
+            12,
+            3,
+            4
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          "105",
+          20
+        ],
+        "expected": [
+          [
+            1,
+            0,
+            5
+          ],
+          [
+            10,
+            5
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          "17",
+          5
+        ],
+        "expected": [],
+        "unordered": true
+      }
+    ]
+  }
+]

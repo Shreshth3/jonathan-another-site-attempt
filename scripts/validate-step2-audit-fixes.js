@@ -102,6 +102,39 @@ test("Under the limit output ignores both orders but not repeats", () => {
   use("under-the-limit"); const expected = [[], [2], [2, 3], [3], [5]];
   assert(engine.matches("[[5],[3,2],[3],[2],[]]", expected)); assert(!engine.matches("[[5],[3,2],[2,3],[3],[2],[]]", expected)); assert(!engine.matches("[[2],[2,3],[3],[5]]", expected));
 });
+// Split the digits: digits "105", limit 20 → 1|0|5 and 10|5. 05 starts with 0 and 105 is over 20.
+const split = (nodes, edges, fields = { digits: "105", limit: 20 }) => graph(nodes, edges, { directed: true, start: "start", fields });
+const splitTree = () => split(["start", "1", "1|0", "1|0|5", "10", "10|5"], [["start", "1"], ["1", "1|0"], ["1|0", "1|0|5"], ["start", "10"], ["10", "10|5"]]);
+test("Split the digits returns only cuts that use every digit", () => {
+  use("split-the-digits"); const value = splitTree();
+  valid(value); same(engine.result(value), [[1, 0, 5], [10, 5]]);
+  same(engine.result(value, ["last-branch"]), [[10, 5]]); same(engine.result(value, ["shallow-search"]), []); same(engine.result(value, ["wrong-start"], "1"), [[1, 0, 5]]);
+});
+test("Split the digits dead ends are not answers but must be drawn", () => {
+  use("split-the-digits"); const fields = { digits: "17", limit: 5 };
+  const value = split(["start", "1"], [["start", "1"]], fields); valid(value); same(engine.result(value), []);
+  assert.throws(() => valid(split(["start"], [], fields)), /partial cut 1\./);
+});
+test("Split the digits rejects leading zeros, pieces over the limit, and out-of-order digits", () => {
+  use("split-the-digits");
+  const zero = splitTree(); zero.nodes.push("1|05"); zero.edges.push(["1", "1|05"]);
+  assert.throws(() => valid(zero), /05 starts with 0/);
+  assert.throws(() => valid(split(["start", "1", "1|2", "12"], [["start", "1"], ["1", "1|2"], ["start", "12"]], { digits: "12", limit: 10 })), /12 is over the limit 10/);
+  assert.throws(() => valid(split(["start", "1", "1|2", "2"], [["start", "1"], ["1", "1|2"], ["start", "2"]], { digits: "12", limit: 10 })), /does not follow the digits/);
+  assert.throws(() => valid(split(["start", "1", "1|0", "1|0|5", "10"], [["start", "1"], ["1", "1|0"], ["1|0", "1|0|5"], ["start", "10"]])), /partial cut 10\|5/);
+  assert.throws(() => valid(split(["start"], [], { digits: "12a", limit: 10 })), /1–6 characters/);
+});
+test("Split the digits output ignores the order of ways, not the order of pieces", () => {
+  use("split-the-digits"); const expected = [[1, 0, 5], [10, 5]];
+  assert(engine.matches("[[10,5],[1,0,5]]", expected)); assert(!engine.matches("[[5,0,1],[10,5]]", expected)); assert(!engine.matches("[[1,0,5]]", expected));
+  assert(engine.matches("[]", [])); assert(!engine.matches("[[1]]", []));
+});
+test("Split the digits reads digits with or without quotes and keeps leading zeros", () => {
+  // In the browser, window is the global object, so the bundled Acorn parser is window.acorn.
+  sandbox.window.acorn ??= sandbox.acorn;
+  use("split-the-digits"); const field = { id: "digits", kind: "json" };
+  same(engine.semantic("1234", field, "digits"), "1234"); same(engine.semantic("\"0105\"", field, "digits"), "0105"); same(engine.semantic("0105", field, "digits"), "0105"); same(engine.semantic("'42'", field, "digits"), "42");
+});
 test("Playlist uses index order regardless of drawing order", () => {
   use("kth-song-in-playlist"); const value = graph(["root=[]", "root[0]=10", "root[1]=20"], [["root=[]", "root[1]=20"], ["root=[]", "root[0]=10"]], { directed: true, start: "root=[]", fields: { k: 1 }, nodeMarkers: { songId: { "root[0]=10": 10, "root[1]=20": 20 } } });
   valid(value); same(engine.result(value), 10); value.nodeMarkers.songId["root[0]=10"] = 100; assert.throws(() => valid(value), /shows 10/);

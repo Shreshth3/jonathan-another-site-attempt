@@ -7436,5 +7436,312 @@
         }
       }
     ]
+  },
+  {
+    "id": "split-the-digits",
+    "cases": [
+      {
+        "id": "split-the-digits",
+        "caseId": "authored-deep-case",
+        "bugTitle": "Lets a Piece Start With 0",
+        "misconception": "allow-leading-zero",
+        "input": {
+          "digits": "2057",
+          "limit": 30
+        },
+        "code": "function solve(input) {\n  const splits = [];\n  function cut(index, pieces) {\n    if (index === input.digits.length) {\n      splits.push(pieces);\n      return;\n    }\n    for (let end = index + 1; end <= input.digits.length; end++) {\n      const piece = input.digits.slice(index, end);\n      if (Number(piece) > input.limit) break;\n      cut(end, [...pieces, Number(piece)]);\n    }\n  }\n  cut(0, []);\n  return splits;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2|0",
+              "label": "2|0"
+            },
+            {
+              "id": "2|0|5",
+              "label": "2|0|5"
+            },
+            {
+              "id": "2|0|5|7",
+              "label": "2|0|5|7"
+            },
+            {
+              "id": "20",
+              "label": "20"
+            },
+            {
+              "id": "20|5",
+              "label": "20|5"
+            },
+            {
+              "id": "20|5|7",
+              "label": "20|5|7"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2|0"
+            },
+            {
+              "from": "2|0",
+              "to": "2|0|5"
+            },
+            {
+              "from": "2|0|5",
+              "to": "2|0|5|7"
+            },
+            {
+              "from": "start",
+              "to": "20"
+            },
+            {
+              "from": "20",
+              "to": "20|5"
+            },
+            {
+              "from": "20|5",
+              "to": "20|5|7"
+            }
+          ]
+        },
+        "outputFormat": "list of every way to cut digits into allowed pieces",
+        "buggyOutput": "[[2,0,5,7],[2,5,7],[20,5,7]]",
+        "correctOutput": "[[2,0,5,7],[20,5,7]]",
+        "correctDiagnosis": "leading-zero",
+        "diagnoses": [
+          {
+            "id": "leading-zero",
+            "label": "Claim about the code: it never checks for a leading 0, so it cuts 05 and returns [2,5,7].",
+            "feedback": "Correct. A piece longer than one digit must not start with 0. Stop when piece has more than one digit and starts with \"0\"."
+          },
+          {
+            "id": "equal-limit",
+            "label": "Claim about the code: it leaves out a piece equal to the limit.",
+            "feedback": "It uses >, so a piece equal to the limit is kept."
+          },
+          {
+            "id": "short-pieces",
+            "label": "Claim about the code: it tries only pieces of 1 or 2 digits.",
+            "feedback": "The loop moves end up to the last digit, so every length is tried."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "The tree is start→2→2|0→2|0|5→2|0|5|7 and start→20→20|5→20|5|7. 05 is not an allowed piece.",
+          "codeRule": "Any piece whose number is at most limit is cut, even one that starts with 0.",
+          "separatingFeature": "After 2, the next two digits are 05, which starts with 0.",
+          "outputConsequence": "The code returns [[2,0,5,7],[2,5,7],[20,5,7]] instead of [[2,0,5,7],[20,5,7]].",
+          "changedGraph": "An extra edge 2→2|05 leads on to 2|05|7."
+        }
+      },
+      {
+        "id": "split-the-digits",
+        "caseId": "visited-position",
+        "bugTitle": "Marks Each Position as Visited",
+        "misconception": "visited-position",
+        "input": {
+          "digits": "123",
+          "limit": 30
+        },
+        "code": "function solve(input) {\n  const splits = [];\n  const visitedIndexes = new Set();\n  function cut(index, pieces) {\n    if (visitedIndexes.has(index)) return;\n    visitedIndexes.add(index);\n    if (index === input.digits.length) {\n      splits.push(pieces);\n      return;\n    }\n    for (let end = index + 1; end <= input.digits.length; end++) {\n      const piece = input.digits.slice(index, end);\n      if (piece.length > 1 && piece[0] === \"0\") break;\n      if (Number(piece) > input.limit) break;\n      cut(end, [...pieces, Number(piece)]);\n    }\n  }\n  cut(0, []);\n  return splits;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            },
+            {
+              "id": "1|2",
+              "label": "1|2"
+            },
+            {
+              "id": "1|2|3",
+              "label": "1|2|3"
+            },
+            {
+              "id": "1|23",
+              "label": "1|23"
+            },
+            {
+              "id": "12",
+              "label": "12"
+            },
+            {
+              "id": "12|3",
+              "label": "12|3"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "1"
+            },
+            {
+              "from": "1",
+              "to": "1|2"
+            },
+            {
+              "from": "1|2",
+              "to": "1|2|3"
+            },
+            {
+              "from": "1",
+              "to": "1|23"
+            },
+            {
+              "from": "start",
+              "to": "12"
+            },
+            {
+              "from": "12",
+              "to": "12|3"
+            }
+          ]
+        },
+        "outputFormat": "list of every way to cut digits into allowed pieces",
+        "buggyOutput": "[[1,2,3]]",
+        "correctOutput": "[[1,2,3],[1,23],[12,3]]",
+        "correctDiagnosis": "visited-index",
+        "diagnoses": [
+          {
+            "id": "visited-index",
+            "label": "Claim about the code: it enters each position only once, so 1|23 and 12|3 are dropped when they reach positions that 1|2|3 already used.",
+            "feedback": "Correct. Different cuts can reach the same position, and each one is its own answer. A cutting tree needs no visited set."
+          },
+          {
+            "id": "short-pieces",
+            "label": "Claim about the code: it tries only pieces of 1 or 2 digits.",
+            "feedback": "The loop moves end up to the last digit, so every length is tried."
+          },
+          {
+            "id": "equal-limit",
+            "label": "Claim about the code: it leaves out a piece equal to the limit.",
+            "feedback": "It uses >, so a piece equal to the limit is kept."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "The tree is start→1→1|2→1|2|3, 1→1|23, and start→12→12|3. 123 is over 30.",
+          "codeRule": "Each position in digits is entered at most once, no matter which cut reaches it.",
+          "separatingFeature": "1|2 and 12 both end at position 2, and 1|23 reaches the end that 1|2|3 reached first.",
+          "outputConsequence": "The code returns [[1,2,3]] instead of [[1,2,3],[1,23],[12,3]].",
+          "changedGraph": "Edges into cuts that reach an already-visited position are removed: 1→1|23 and start→12."
+        }
+      },
+      {
+        "id": "split-the-digits",
+        "caseId": "equal-limit",
+        "bugTitle": "Leaves Out a Piece Equal to the Limit",
+        "misconception": "strict-limit",
+        "input": {
+          "digits": "125",
+          "limit": 25
+        },
+        "code": "function solve(input) {\n  const splits = [];\n  function cut(index, pieces) {\n    if (index === input.digits.length) {\n      splits.push(pieces);\n      return;\n    }\n    for (let end = index + 1; end <= input.digits.length; end++) {\n      const piece = input.digits.slice(index, end);\n      if (piece.length > 1 && piece[0] === \"0\") break;\n      if (Number(piece) >= input.limit) break;\n      cut(end, [...pieces, Number(piece)]);\n    }\n  }\n  cut(0, []);\n  return splits;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            },
+            {
+              "id": "1|2",
+              "label": "1|2"
+            },
+            {
+              "id": "1|2|5",
+              "label": "1|2|5"
+            },
+            {
+              "id": "1|25",
+              "label": "1|25"
+            },
+            {
+              "id": "12",
+              "label": "12"
+            },
+            {
+              "id": "12|5",
+              "label": "12|5"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "1"
+            },
+            {
+              "from": "1",
+              "to": "1|2"
+            },
+            {
+              "from": "1|2",
+              "to": "1|2|5"
+            },
+            {
+              "from": "1",
+              "to": "1|25"
+            },
+            {
+              "from": "start",
+              "to": "12"
+            },
+            {
+              "from": "12",
+              "to": "12|5"
+            }
+          ]
+        },
+        "outputFormat": "list of every way to cut digits into allowed pieces",
+        "buggyOutput": "[[1,2,5],[12,5]]",
+        "correctOutput": "[[1,2,5],[1,25],[12,5]]",
+        "correctDiagnosis": "equal-limit",
+        "diagnoses": [
+          {
+            "id": "equal-limit",
+            "label": "Claim about the code: >= stops at 25 even though 25 equals the limit, which is allowed.",
+            "feedback": "Correct. Only a number over limit is not allowed, so [1,25] must be returned."
+          },
+          {
+            "id": "leading-zero",
+            "label": "Claim about the code: it lets a piece start with 0.",
+            "feedback": "It stops when a piece has more than one digit and starts with \"0\"."
+          },
+          {
+            "id": "visited-index",
+            "label": "Claim about the code: it skips positions it has already visited.",
+            "feedback": "It keeps no visited set, so every cut is explored."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "The tree is start→1→1|2→1|2|5, 1→1|25, and start→12→12|5. 125 is over 25.",
+          "codeRule": "A piece is cut only if its number is below the limit.",
+          "separatingFeature": "The piece 25 equals the limit exactly.",
+          "outputConsequence": "The code returns [[1,2,5],[12,5]] instead of [[1,2,5],[1,25],[12,5]].",
+          "changedGraph": "The edge 1→1|25 is removed."
+        }
+      }
+    ]
   }
 ]

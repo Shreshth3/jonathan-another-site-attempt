@@ -1744,5 +1744,74 @@
         }
       ]
     }
+  },
+  {
+    "id": "split-the-digits",
+    "vocabulary": {
+      "nodeNames": "partial cuts",
+      "startNode": "uncut start",
+      "edges": "one-piece cuts",
+      "correctSearch": "partial cuts reached",
+      "mistakenSearch": "cuts the flawed search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Last cut only",
+        "presentation": "predict-first",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Starts after cutting 1",
+        "presentation": "repair-case",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start",
+        "mistakenStartLabel": "1"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "One piece at most",
+        "presentation": "exact-difference",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "piece-prefix",
+      "description": "Use start before any cut, then the pieces joined by | like 1 or 12|3."
+    },
+    "fixedStart": "start",
+    "input": {
+      "name": "uncut start",
+      "prompt": "Choose the start, before any cut",
+      "result": "generated-terminal-strings",
+      "resultLabel": "every way to cut digits into allowed pieces",
+      "fields": [
+        {
+          "id": "digits",
+          "kind": "json",
+          "label": "a string of 1\u20136 digits",
+          "prompt": "Enter digits, like 1234",
+          "required": true
+        },
+        {
+          "id": "limit",
+          "kind": "integer",
+          "label": "limit",
+          "prompt": "Choose the limit",
+          "required": true,
+          "min": 1,
+          "max": 1000
+        }
+      ]
+    }
   }
 ]

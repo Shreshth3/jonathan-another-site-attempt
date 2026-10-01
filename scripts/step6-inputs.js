@@ -252,7 +252,18 @@ module.exports = {
  C('Only small groups fit',[6,4,5,3],10),
  C('Six numbers, small limit',[1,2,3,4,5,6],4),
  C('A bigger number first does not stop later numbers',[5,1,4],5),
- C('A limit smaller than every number leaves only the empty combination',[7,8,9],3)]
+ C('A limit smaller than every number leaves only the empty combination',[7,8,9],3)],
+'split-the-digits':[
+ C('One digit that fits','7',9),
+ C('A piece equal to the limit is allowed','4512',45),
+ C('A lone 0 is a piece, but 07 is not','3070',40),
+ C('Three-digit pieces count when they fit','4321',500),
+ C('A digit over the limit leaves no way','282',7),
+ C('Every digit alone when the limit is small','123456',9),
+ C('Compare numbers, not text','925',30),
+ C('digits can start with a lone 0','0123',30),
+ C('Zeros make longer pieces, up to the limit','1000',1000),
+ C('Six digits with many ways','121212',30)]
 };
 // The zero-edge metro case still has a colors argument.
 module.exports['one-color-metro-ride'][3].args = [9,[],[],6,6];

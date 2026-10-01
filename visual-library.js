@@ -128,6 +128,7 @@
     "runes-on-the-castle-door": "leaves-only",
     "the-balance-lock": "leaves-only",
     "under-the-limit": "leaves-only",
+    "split-the-digits": "leaves-only",
     "shut-the-garden-valve": "pipe-as-node",
     "gold-and-silver-lights": "color-as-node",
     "museum-vault-keyring": "key-instance-as-node",
@@ -1480,6 +1481,7 @@
       if (!nodes.includes(rootName) || nodes.some(node => node !== rootName && !/^[a-z]+$/.test(node))) throw new Error(`Use ${rootName} for the empty root, then lowercase partial strings like a or ab.`);
     }
     if (rule === "weight-prefix" && (!nodes.includes("start") || nodes.some(node => node !== "start" && !/^[1-9]\d*(?:,[1-9]\d*)*$/.test(node)))) throw new Error("Use start for the empty root, then comma-separated weights like 4 or 4,2.");
+    if (rule === "piece-prefix" && (!nodes.includes("start") || nodes.some(node => node !== "start" && !/^\d+(?:\|\d+)*$/.test(node)))) throw new Error("Use start before any cut, then the pieces joined by | like 1 or 12|3.");
     const max = problem.counterexampleLesson?.nodeLabels?.max;
     if (max !== undefined && nodes.some(node => {
       if (["coordinate", "interior-coordinate", "state-pair"].includes(rule)) return coordinate(node).some(value => value > max);
@@ -1603,6 +1605,34 @@
       if (missing) throw new Error(`These dials also allow the safe prefix ${missing}. Include every safe prefix, even dead ends.`);
       if (extra) throw new Error(`${extra} is not a safe prefix for these dials and limit.`);
       exactEdges(pairs, "Extend by one weight from the next dial, keeping the running total at most limit.");
+    }
+    if (problem.id === "split-the-digits") {
+      const { digits, limit } = graph.fields;
+      if (typeof digits !== "string" || !/^\d{1,6}$/.test(digits)) throw new Error("Give digits as 1–6 characters, each from 0 to 9, like 1234.");
+      if (!Number.isInteger(limit) || limit < 1 || limit > 1000) throw new Error("Choose a whole-number limit from 1 to 1000.");
+      const nodes = ["start"], pairs = [];
+      const visit = (index, pieces) => {
+        for (let end = index + 1; end <= digits.length; end++) {
+          const piece = digits.slice(index, end);
+          if (piece.length > 1 && piece[0] === "0") break;
+          if (Number(piece) > limit) break;
+          const next = [...pieces, piece].join("|");
+          nodes.push(next); pairs.push([pieces.length ? pieces.join("|") : "start", next]);
+          if (nodes.length > 24) throw new Error("These digits make more than 24 partial cuts. Choose fewer digits or a smaller limit for a small counterexample.");
+          visit(end, [...pieces, piece]);
+        }
+      };
+      visit(0, []);
+      const missing = nodes.find(node => !graph.nodes.includes(node)), extra = graph.nodes.find(node => !nodes.includes(node));
+      if (missing) throw new Error(`These digits also allow the partial cut ${missing}. Include every allowed partial cut, even dead ends.`);
+      if (extra) {
+        const pieces = extra.split("|"), zero = pieces.find(piece => piece.length > 1 && piece[0] === "0"), big = pieces.find(piece => Number(piece) > limit);
+        if (!digits.startsWith(pieces.join(""))) throw new Error(`${extra} does not follow the digits ${digits} in order from the start.`);
+        if (zero) throw new Error(`${extra} is not allowed: ${zero} starts with 0. Only a lone 0 may start with 0.`);
+        if (big) throw new Error(`${extra} is not allowed: ${big} is over the limit ${limit}.`);
+        throw new Error(`${extra} is not an allowed partial cut for these digits and limit.`);
+      }
+      exactEdges(pairs, "Cut one more allowed piece right after the last piece.");
     }
     const increasing = ["longest-increasing-path-in-a-matrix", "number-of-increasing-paths-in-a-grid"].includes(problem.id);
     if (increasing || problem.id === "counting-docked-boats") {
@@ -1786,6 +1816,15 @@
       }
       if (graph.nodes.some(node => node.split(",").length > 6)) throw new Error("Codes use at most 6 weights.");
     }
+    if (labelRule === "piece-prefix") {
+      const edgeKeys = new Set(graph.edges.map(([from, to]) => `${from}\u0000${to}`));
+      for (const node of graph.nodes) if (node !== "start") {
+        const directParent = node.includes("|") ? node.slice(0, node.lastIndexOf("|")) : "start";
+        if (!graph.nodes.includes(directParent)) throw new Error(`${node} needs the shorter cut ${directParent}.`);
+        if (!edgeKeys.has(`${directParent}\u0000${node}`)) throw new Error(`Connect ${directParent} directly to ${node}.`);
+      }
+      if (graph.nodes.some(node => node.split("|").join("").length > 6)) throw new Error("digits has at most 6 characters, so a cut uses at most 6 digits.");
+    }
     if (problem.counterexampleLesson?.startRule === "graph-root") {
       const incoming = Object.fromEntries(graph.nodes.map(node => [node, 0]));
       graph.edges.forEach(([, to]) => incoming[to]++);
@@ -1838,7 +1877,7 @@
   }
 
   function counterexampleRequiresTree() {
-    return new Set(["package-to-the-outpost", "reachable-nodes-with-restrictions", "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain", "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "path-sum", "structy-tree-sum", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "gold-and-silver-lights", "flatten-nested-list-iterator", "nested-list-weight-sum", "nested-list-weight-sum-ii", "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count", "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree", "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree", "binary-tree-level-order-traversal", "invert-binary-tree", "same-tree", "subtree-of-another-tree", "balanced-binary-tree", "maximum-depth-of-binary-tree", "merge-two-binary-trees", "binary-tree-right-side-view", "validate-binary-search-tree", "kth-smallest-element-in-a-bst", "construct-binary-tree-from-preorder-and-inorder-traversal", "serialize-and-deserialize-binary-tree", "all-paths-from-source-lead-to-destination", "employee-importance", "usaco-milk-factory"]).has(problem.id);
+    return new Set(["package-to-the-outpost", "reachable-nodes-with-restrictions", "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain", "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "path-sum", "structy-tree-sum", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "split-the-digits", "gold-and-silver-lights", "flatten-nested-list-iterator", "nested-list-weight-sum", "nested-list-weight-sum-ii", "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count", "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree", "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree", "binary-tree-level-order-traversal", "invert-binary-tree", "same-tree", "subtree-of-another-tree", "balanced-binary-tree", "maximum-depth-of-binary-tree", "merge-two-binary-trees", "binary-tree-right-side-view", "validate-binary-search-tree", "kth-smallest-element-in-a-bst", "construct-binary-tree-from-preorder-and-inorder-traversal", "serialize-and-deserialize-binary-tree", "all-paths-from-source-lead-to-destination", "employee-importance", "usaco-milk-factory"]).has(problem.id);
   }
 
   function expectedCanvas(graph) {
@@ -2197,6 +2236,8 @@
     const outgoing = Object.fromEntries(changed.nodes.map(node => [node, 0]));
     changed.edges.forEach(([from]) => outgoing[from]++);
     if (problem.id === "under-the-limit") return changed.nodes.filter(node => reached.has(node)).map(node => node === "start" ? [] : node.split(",").map(Number));
+    // A way uses every digit; a dead end that stopped early is not one.
+    if (problem.id === "split-the-digits") return changed.nodes.filter(node => reached.has(node) && node !== "start" && node.split("|").join("") === graph.fields.digits).map(node => node.split("|").map(Number));
     if (problem.id === "the-balance-lock") return changed.nodes.filter(node => reached.has(node) && node !== "start" && node.split(",").length === graph.fields.dials.length).map(node => node.split(",").map(Number));
     return changed.nodes.filter(node => reached.has(node) && (problem.id === "runes-on-the-castle-door" ? node.length === graph.fields.dials.length : outgoing[node] === 0) && node !== "start" && node !== "empty prefix").map(node => node === "ε" ? "" : node);
   }
@@ -2617,7 +2658,7 @@
     if (Array.isArray(expected) && expected.some(Array.isArray)) {
       try {
         const actual = parseLessonValue(String(value), "output", expected);
-        if (["enumerated-paths", "component-bounding-boxes"].includes(counterInputSpec().result) || ["the-balance-lock", "under-the-limit"].includes(problem.id)) {
+        if (["enumerated-paths", "component-bounding-boxes"].includes(counterInputSpec().result) || ["the-balance-lock", "under-the-limit", "split-the-digits"].includes(problem.id)) {
           const sortPaths = paths => [...paths].sort((one, two) => JSON.stringify(one).localeCompare(JSON.stringify(two), undefined, { numeric: true }));
           const normalize = item => Array.isArray(item) ? item.map(normalize) : /^-?\d+$/.test(String(item)) ? Number(item) : item;
           // A combination's numbers may be listed in any order.
@@ -2651,7 +2692,7 @@
         try { parsed = parseLessonValue(raw, "output", expected); }
         catch { parsed = typeof expected === "string" ? raw : null; }
       }
-      const unordered = new Set(["all-paths-from-source-to-target", "kill-process", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "find-all-groups-of-farmland"]);
+      const unordered = new Set(["all-paths-from-source-to-target", "kill-process", "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "split-the-digits", "find-all-groups-of-farmland"]);
       const normalizePathIds = item => Array.isArray(item) ? item.map(normalizePathIds) : typeof item === "string" && /^\d+$/.test(item) ? Number(item) : item;
       const normalize = value => {
         const item = problem.id === "all-paths-from-source-to-target" ? normalizePathIds(value) : value;
@@ -2825,6 +2866,8 @@
       statement = "In this input, only flooded campsites should become nodes.";
     } else if (problem.id === "under-the-limit" && misconception === "leaves-only") {
       statement = "In this input, only combinations that cannot take another number should become nodes.";
+    } else if (problem.id === "split-the-digits" && misconception === "leaves-only") {
+      statement = "In this input, only cuts that use every digit should become nodes.";
     } else if (["runes-on-the-castle-door", "the-balance-lock"].includes(problem.id) && misconception === "leaves-only") {
       statement = "In this input, only complete-code leaves should become nodes.";
     } else if (problem.id === "path-sum" && misconception === "counts-only-leaf") {
@@ -3099,6 +3142,19 @@
         statement: `The dead-end prefix ${prefix.label} ${correct ? "is still incomplete" : "is a complete code"}.`, correct,
         feedback: `${prefix.label} has ${prefix.label.split(",").length} weight${prefix.label.includes(",") ? "s" : ""}, but there are ${dials.length} dials. Every next weight busts, so this prefix never becomes a complete code.`
       };
+    }
+    if (problem.id === "split-the-digits") {
+      const digits = (task.input.match(/digits\s*=\s*"(\d+)"/) || [])[1] || "";
+      const limit = Number((task.input.match(/limit\s*=\s*(\d+)/) || [])[1]);
+      const outgoing = new Set(canvas.edges.map(edge => String(edge.from)));
+      const cut = canvas.nodes.find(node => !outgoing.has(String(node.id)) && node.label !== "start" && node.label.split("|").join("").length < digits.length);
+      if (cut) {
+        const used = cut.label.split("|").join("").length;
+        return {
+          statement: `The dead-end cut ${cut.label} ${correct ? "is still unfinished" : "is a complete way to cut digits"}.`, correct,
+          feedback: `${cut.label} uses ${used} of the ${digits.length} digits. The next digit, ${digits[used]}, is over ${limit}, and every longer piece from there is bigger still, so ${cut.label} never becomes a complete way.`
+        };
+      }
     }
     if (problem.id === "counting-docked-boats") {
       const match = task.input.match(/marina\s*=\s*(\[[^\]]*\])/);
@@ -3699,6 +3755,8 @@
     if (problem.id === "the-balance-lock" && name === "limit") return "10";
     if (problem.id === "under-the-limit" && name === "nums") return "[1, 4, 6]";
     if (problem.id === "under-the-limit" && name === "limit") return "5";
+    if (problem.id === "split-the-digits" && name === "digits") return '"302"';
+    if (problem.id === "split-the-digits" && name === "limit") return "40";
     const examples = {
       sky: '[[0, 1], [0, 0]]', park: '[[0, 1], [0, 0]]', marina: '[[".", "B"], [".", "."]]', yard: '[[".", "T"], [".", "."]]',
       cave: '[["U", "G"], ["U", "U"]]', worked: '[[1, 0], [0, 1]]', trust: '[[10, 4], [4, 10]]',
@@ -3720,6 +3778,7 @@
       if (problem.id === 'runes-on-the-castle-door') return '["xm", "yn"]';
       if (problem.id === 'the-balance-lock') return '[[3, 2], [3, 6], [8, 2]]';
       if (problem.id === 'under-the-limit') return '[[], [1], [1, 4], [4]]';
+      if (problem.id === 'split-the-digits') return '[[3, 0, 2], [30, 2]]';
       return '[5, 9]';
     }
     return '"text"';

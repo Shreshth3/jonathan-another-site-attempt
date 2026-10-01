@@ -74,6 +74,14 @@ programs['under-the-limit'] = [
   choice('bust','over','    If sum + nums[i] > limit, skip this number.','atleast','    If sum + nums[i] ≥ limit, skip this number.','A sum exactly at limit still counts. Skipping a number when the sum reaches limit loses combinations that land exactly on it.'),
   fixed('end','    BUILD(i + 1, combo followed by nums[i], sum + nums[i])\nEnd function\nBUILD(0, empty list, 0)\nReturn combos.')
 ];
+programs['split-the-digits'] = [
+  fixed('setup','splits ← empty list\nFunction CUT(index, pieces):\n  If index = length of digits:\n    Add pieces to splits and return.'),
+  choice('loop','all','  For each length L from 1 to the number of digits left:','two','  For each length L from 1 to 2, without going past the end of digits:','A piece can be longer than 2 digits. Trying only lengths 1 and 2 loses every way that uses a 3-digit piece, like 314 when limit is 400.'),
+  fixed('take','    piece ← the next L digits, starting at index'),
+  choice('zero','lead','    If L > 1 and piece starts with "0", stop trying longer pieces.','any','    If piece starts with "0", stop trying longer pieces.','A piece that is exactly "0" is allowed. Only a longer piece that starts with "0", like "05", is not. Stopping at every piece that starts with "0" loses every way that cuts a lone 0.'),
+  choice('limit','over','    If the number piece > limit, stop trying longer pieces.','atleast','    If the number piece ≥ limit, stop trying longer pieces.','A piece whose number equals limit is allowed. Stopping when the number reaches limit loses every way that uses a piece exactly equal to limit.'),
+  fixed('end','    CUT(index + L, pieces followed by the number piece)\nEnd function\nCUT(0, empty list)\nReturn splits.')
+];
 const bustRule = programs['the-balance-lock'].find(line => line.key === 'bust');
 bustRule.options.push({id:'weight',text:'    If weight > limit, skip this weight.'});
 bustRule.buggy = ['atleast', 'weight'];

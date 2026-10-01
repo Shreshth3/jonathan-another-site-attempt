@@ -8259,5 +8259,333 @@
       }
     ],
     "source": "../jonathan-study-site/data/variants-final-6.json"
+  },
+  {
+    "id": "split-the-digits",
+    "functionName": "splitUnderLimit",
+    "parameters": [
+      {
+        "name": "digits",
+        "label": "digits",
+        "example": "302",
+        "placeholder": "302",
+        "description": "A string of 1–6 digits, each from 0 to 9. Quotes are optional.",
+        "help": "A string of 1–6 digits, each from 0 to 9. Quotes are optional."
+      },
+      {
+        "name": "limit",
+        "label": "limit",
+        "example": 40,
+        "placeholder": "40",
+        "description": "The largest allowed piece. A piece whose number is over limit is not allowed.",
+        "help": "The largest allowed piece. A piece whose number is over limit is not allowed."
+      }
+    ],
+    "starterCode": "function splitUnderLimit(digits, limit) {\n  // Write your solution here.\n\n}\n",
+    "correctCode": "// CONTRACT for collectSplits(digits, limit, startIndex, piecesSoFar, splits):\n//     when this call returns, every way to cut the rest of `digits`\n//     (from index `startIndex` onward) into allowed pieces has been\n//     appended to `splits`, each one written after `piecesSoFar`.\nconst collectSplits = (digits, limit, startIndex, piecesSoFar, splits) => {\n    // Base case: every digit is used, so the pieces are one complete way.\n    if (startIndex === digits.length) {\n        splits.push(piecesSoFar);\n        return;\n    }\n\n    // Traverse neighbors: cut the next piece, one length at a time.\n    for (let end = startIndex + 1; end <= digits.length; end++) {\n        const piece = digits.slice(startIndex, end);\n\n        // A longer piece that starts with \"0\", like \"05\", is not allowed.\n        // Every longer piece from here starts with the same \"0\", so stop.\n        if (piece.length > 1 && piece[0] === \"0\") break;\n\n        // Adding a digit never makes the number smaller, so once a piece\n        // is over the limit, every longer piece from here is over it too.\n        if (Number(piece) > limit) break;\n\n        // The recursive leap of faith, one level down: this call has the\n        // SAME contract — when it returns, every way to finish the cut\n        // after `piece` is in `splits`. Trust it, do not trace it.\n        // Trying every allowed next piece covers every way that starts\n        // with `piecesSoFar` — exactly this function's contract, kept.\n        collectSplits(digits, limit, end, [...piecesSoFar, Number(piece)], splits);\n    }\n};\n\nconst splitUnderLimit = (digits, limit) => {\n    const splits = [];\n\n    // The recursive leap of faith: trust the contract. Starting with no\n    // pieces at index 0 collects every way to cut all of `digits`.\n    collectSplits(digits, limit, 0, [], splits);\n\n    return splits;\n};",
+    "tests": [
+      {
+        "id": "split-the-digits-test-1",
+        "label": "One digit that fits",
+        "args": [
+          "7",
+          9
+        ],
+        "expected": [
+          [
+            7
+          ]
+        ]
+      },
+      {
+        "id": "split-the-digits-test-2",
+        "label": "A piece equal to the limit is allowed",
+        "args": [
+          "4512",
+          45
+        ],
+        "expected": [
+          [
+            4,
+            5,
+            1,
+            2
+          ],
+          [
+            4,
+            5,
+            12
+          ],
+          [
+            45,
+            1,
+            2
+          ],
+          [
+            45,
+            12
+          ]
+        ]
+      },
+      {
+        "id": "split-the-digits-test-3",
+        "label": "A lone 0 is a piece, but 07 is not",
+        "args": [
+          "3070",
+          40
+        ],
+        "expected": [
+          [
+            3,
+            0,
+            7,
+            0
+          ],
+          [
+            30,
+            7,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "split-the-digits-test-4",
+        "label": "Three-digit pieces count when they fit",
+        "args": [
+          "4321",
+          500
+        ],
+        "expected": [
+          [
+            4,
+            3,
+            2,
+            1
+          ],
+          [
+            4,
+            3,
+            21
+          ],
+          [
+            4,
+            32,
+            1
+          ],
+          [
+            4,
+            321
+          ],
+          [
+            43,
+            2,
+            1
+          ],
+          [
+            43,
+            21
+          ],
+          [
+            432,
+            1
+          ]
+        ]
+      },
+      {
+        "id": "split-the-digits-test-5",
+        "label": "A digit over the limit leaves no way",
+        "args": [
+          "282",
+          7
+        ],
+        "expected": []
+      },
+      {
+        "id": "split-the-digits-test-6",
+        "label": "Every digit alone when the limit is small",
+        "args": [
+          "123456",
+          9
+        ],
+        "expected": [
+          [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        ]
+      },
+      {
+        "id": "split-the-digits-test-7",
+        "label": "Compare numbers, not text",
+        "args": [
+          "925",
+          30
+        ],
+        "expected": [
+          [
+            9,
+            2,
+            5
+          ],
+          [
+            9,
+            25
+          ]
+        ]
+      },
+      {
+        "id": "split-the-digits-test-8",
+        "label": "digits can start with a lone 0",
+        "args": [
+          "0123",
+          30
+        ],
+        "expected": [
+          [
+            0,
+            1,
+            2,
+            3
+          ],
+          [
+            0,
+            1,
+            23
+          ],
+          [
+            0,
+            12,
+            3
+          ]
+        ]
+      },
+      {
+        "id": "split-the-digits-test-9",
+        "label": "Zeros make longer pieces, up to the limit",
+        "args": [
+          "1000",
+          1000
+        ],
+        "expected": [
+          [
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            10,
+            0,
+            0
+          ],
+          [
+            100,
+            0
+          ],
+          [
+            1000
+          ]
+        ]
+      },
+      {
+        "id": "split-the-digits-test-10",
+        "label": "Six digits with many ways",
+        "args": [
+          "121212",
+          30
+        ],
+        "expected": [
+          [
+            1,
+            2,
+            1,
+            2,
+            1,
+            2
+          ],
+          [
+            1,
+            2,
+            1,
+            2,
+            12
+          ],
+          [
+            1,
+            2,
+            1,
+            21,
+            2
+          ],
+          [
+            1,
+            2,
+            12,
+            1,
+            2
+          ],
+          [
+            1,
+            2,
+            12,
+            12
+          ],
+          [
+            1,
+            21,
+            2,
+            1,
+            2
+          ],
+          [
+            1,
+            21,
+            2,
+            12
+          ],
+          [
+            1,
+            21,
+            21,
+            2
+          ],
+          [
+            12,
+            1,
+            2,
+            1,
+            2
+          ],
+          [
+            12,
+            1,
+            2,
+            12
+          ],
+          [
+            12,
+            1,
+            21,
+            2
+          ],
+          [
+            12,
+            12,
+            1,
+            2
+          ],
+          [
+            12,
+            12,
+            12
+          ]
+        ]
+      }
+    ],
+    "source": "../jonathan-study-site/data/variants-final-8.json"
   }
 ]
