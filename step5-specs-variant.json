@@ -46704,5 +46704,2508 @@
         ]
       }
     ]
+  },
+  {
+    "id": "split-the-digits",
+    "inputHelp": "digits has 1–6 characters, each from 0 to 9. limit is 1–1000. Explore means visit each reachable item once unless the shown code says otherwise.",
+    "source": "../jonathan-study-site/data/variants-final-*.json",
+    "correctRules": {
+      "setup": "fixed",
+      "loop": "all",
+      "take": "fixed",
+      "zero": "lead",
+      "limit": "over",
+      "end": "fixed"
+    },
+    "cases": [
+      {
+        "id": "split-the-digits-loop-two",
+        "title": "Debug challenge 1",
+        "misconception": "loop-two",
+        "feedback": "A piece can be longer than 2 digits. Trying only lengths 1 and 2 loses every way that uses a 3-digit piece, like 314 when limit is 400.",
+        "correctAnswer": "A piece can be longer than 2 digits. Trying only lengths 1 and 2 loses every way that uses a 3-digit piece, like 314 when limit is 400.\n\nThe corrected rule is:\n  For each length L from 1 to the number of digits left:",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "splits ← empty list\nFunction CUT(index, pieces):\n  If index = length of digits:\n    Add pieces to splits and return."
+              }
+            ]
+          },
+          {
+            "key": "loop",
+            "selected": "two",
+            "options": [
+              {
+                "id": "all",
+                "text": "  For each length L from 1 to the number of digits left:"
+              },
+              {
+                "id": "two",
+                "text": "  For each length L from 1 to 2, without going past the end of digits:"
+              }
+            ]
+          },
+          {
+            "key": "take",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    piece ← the next L digits, starting at index"
+              }
+            ]
+          },
+          {
+            "key": "zero",
+            "selected": "lead",
+            "options": [
+              {
+                "id": "any",
+                "text": "    If piece starts with \"0\", stop trying longer pieces."
+              },
+              {
+                "id": "lead",
+                "text": "    If L > 1 and piece starts with \"0\", stop trying longer pieces."
+              }
+            ]
+          },
+          {
+            "key": "limit",
+            "selected": "over",
+            "options": [
+              {
+                "id": "over",
+                "text": "    If the number piece > limit, stop trying longer pieces."
+              },
+              {
+                "id": "atleast",
+                "text": "    If the number piece ≥ limit, stop trying longer pieces."
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    CUT(index + L, pieces followed by the number piece)\nEnd function\nCUT(0, empty list)\nReturn splits."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "digits": "10940",
+          "limit": 400
+        }
+      },
+      {
+        "id": "split-the-digits-zero-any",
+        "title": "Debug challenge 2",
+        "misconception": "zero-any",
+        "feedback": "A piece that is exactly \"0\" is allowed. Only a longer piece that starts with \"0\", like \"05\", is not. Stopping at every piece that starts with \"0\" loses every way that cuts a lone 0.",
+        "correctAnswer": "A piece that is exactly \"0\" is allowed. Only a longer piece that starts with \"0\", like \"05\", is not. Stopping at every piece that starts with \"0\" loses every way that cuts a lone 0.\n\nThe corrected rule is:\n    If L > 1 and piece starts with \"0\", stop trying longer pieces.",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "splits ← empty list\nFunction CUT(index, pieces):\n  If index = length of digits:\n    Add pieces to splits and return."
+              }
+            ]
+          },
+          {
+            "key": "loop",
+            "selected": "all",
+            "options": [
+              {
+                "id": "two",
+                "text": "  For each length L from 1 to 2, without going past the end of digits:"
+              },
+              {
+                "id": "all",
+                "text": "  For each length L from 1 to the number of digits left:"
+              }
+            ]
+          },
+          {
+            "key": "take",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    piece ← the next L digits, starting at index"
+              }
+            ]
+          },
+          {
+            "key": "zero",
+            "selected": "any",
+            "options": [
+              {
+                "id": "lead",
+                "text": "    If L > 1 and piece starts with \"0\", stop trying longer pieces."
+              },
+              {
+                "id": "any",
+                "text": "    If piece starts with \"0\", stop trying longer pieces."
+              }
+            ]
+          },
+          {
+            "key": "limit",
+            "selected": "over",
+            "options": [
+              {
+                "id": "atleast",
+                "text": "    If the number piece ≥ limit, stop trying longer pieces."
+              },
+              {
+                "id": "over",
+                "text": "    If the number piece > limit, stop trying longer pieces."
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    CUT(index + L, pieces followed by the number piece)\nEnd function\nCUT(0, empty list)\nReturn splits."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "digits": "105",
+          "limit": 20
+        }
+      },
+      {
+        "id": "split-the-digits-limit-atleast",
+        "title": "Debug challenge 3",
+        "misconception": "limit-atleast",
+        "feedback": "A piece whose number equals limit is allowed. Stopping when the number reaches limit loses every way that uses a piece exactly equal to limit.",
+        "correctAnswer": "A piece whose number equals limit is allowed. Stopping when the number reaches limit loses every way that uses a piece exactly equal to limit.\n\nThe corrected rule is:\n    If the number piece > limit, stop trying longer pieces.",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "splits ← empty list\nFunction CUT(index, pieces):\n  If index = length of digits:\n    Add pieces to splits and return."
+              }
+            ]
+          },
+          {
+            "key": "loop",
+            "selected": "all",
+            "options": [
+              {
+                "id": "two",
+                "text": "  For each length L from 1 to 2, without going past the end of digits:"
+              },
+              {
+                "id": "all",
+                "text": "  For each length L from 1 to the number of digits left:"
+              }
+            ]
+          },
+          {
+            "key": "take",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    piece ← the next L digits, starting at index"
+              }
+            ]
+          },
+          {
+            "key": "zero",
+            "selected": "lead",
+            "options": [
+              {
+                "id": "any",
+                "text": "    If piece starts with \"0\", stop trying longer pieces."
+              },
+              {
+                "id": "lead",
+                "text": "    If L > 1 and piece starts with \"0\", stop trying longer pieces."
+              }
+            ]
+          },
+          {
+            "key": "limit",
+            "selected": "atleast",
+            "options": [
+              {
+                "id": "atleast",
+                "text": "    If the number piece ≥ limit, stop trying longer pieces."
+              },
+              {
+                "id": "over",
+                "text": "    If the number piece > limit, stop trying longer pieces."
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    CUT(index + L, pieces followed by the number piece)\nEnd function\nCUT(0, empty list)\nReturn splits."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "digits": "6",
+          "limit": 6
+        }
+      }
+    ],
+    "tests": [
+      {
+        "input": {
+          "digits": "1234",
+          "limit": 30
+        },
+        "expected": [
+          [
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            1,
+            23,
+            4
+          ],
+          [
+            12,
+            3,
+            4
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "105",
+          "limit": 20
+        },
+        "expected": [
+          [
+            1,
+            0,
+            5
+          ],
+          [
+            10,
+            5
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "17",
+          "limit": 5
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "digits": "6",
+          "limit": 6
+        },
+        "expected": [
+          [
+            6
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "173010",
+          "limit": 9
+        },
+        "expected": [
+          [
+            1,
+            7,
+            3,
+            0,
+            1,
+            0
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "38111",
+          "limit": 25
+        },
+        "expected": [
+          [
+            3,
+            8,
+            1,
+            1,
+            1
+          ],
+          [
+            3,
+            8,
+            1,
+            11
+          ],
+          [
+            3,
+            8,
+            11,
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "10444",
+          "limit": 1
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "digits": "10940",
+          "limit": 400
+        },
+        "expected": [
+          [
+            1,
+            0,
+            9,
+            4,
+            0
+          ],
+          [
+            1,
+            0,
+            9,
+            40
+          ],
+          [
+            1,
+            0,
+            94,
+            0
+          ],
+          [
+            10,
+            9,
+            4,
+            0
+          ],
+          [
+            10,
+            9,
+            40
+          ],
+          [
+            10,
+            94,
+            0
+          ],
+          [
+            109,
+            4,
+            0
+          ],
+          [
+            109,
+            40
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "080",
+          "limit": 100
+        },
+        "expected": [
+          [
+            0,
+            8,
+            0
+          ],
+          [
+            0,
+            80
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "9080",
+          "limit": 908
+        },
+        "expected": [
+          [
+            9,
+            0,
+            8,
+            0
+          ],
+          [
+            9,
+            0,
+            80
+          ],
+          [
+            90,
+            8,
+            0
+          ],
+          [
+            90,
+            80
+          ],
+          [
+            908,
+            0
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "63815",
+          "limit": 150
+        },
+        "expected": [
+          [
+            6,
+            3,
+            8,
+            1,
+            5
+          ],
+          [
+            6,
+            3,
+            8,
+            15
+          ],
+          [
+            6,
+            3,
+            81,
+            5
+          ],
+          [
+            6,
+            38,
+            1,
+            5
+          ],
+          [
+            6,
+            38,
+            15
+          ],
+          [
+            63,
+            8,
+            1,
+            5
+          ],
+          [
+            63,
+            8,
+            15
+          ],
+          [
+            63,
+            81,
+            5
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "30792",
+          "limit": 25
+        },
+        "expected": [
+          [
+            3,
+            0,
+            7,
+            9,
+            2
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "4",
+          "limit": 4
+        },
+        "expected": [
+          [
+            4
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "708",
+          "limit": 3
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "digits": "529",
+          "limit": 10
+        },
+        "expected": [
+          [
+            5,
+            2,
+            9
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "34",
+          "limit": 3
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "digits": "398000",
+          "limit": 30
+        },
+        "expected": [
+          [
+            3,
+            9,
+            8,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "0303",
+          "limit": 30
+        },
+        "expected": [
+          [
+            0,
+            3,
+            0,
+            3
+          ],
+          [
+            0,
+            30,
+            3
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "0124",
+          "limit": 24
+        },
+        "expected": [
+          [
+            0,
+            1,
+            2,
+            4
+          ],
+          [
+            0,
+            1,
+            24
+          ],
+          [
+            0,
+            12,
+            4
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "77",
+          "limit": 9
+        },
+        "expected": [
+          [
+            7,
+            7
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "20734",
+          "limit": 100
+        },
+        "expected": [
+          [
+            2,
+            0,
+            7,
+            3,
+            4
+          ],
+          [
+            2,
+            0,
+            7,
+            34
+          ],
+          [
+            2,
+            0,
+            73,
+            4
+          ],
+          [
+            20,
+            7,
+            3,
+            4
+          ],
+          [
+            20,
+            7,
+            34
+          ],
+          [
+            20,
+            73,
+            4
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "565471",
+          "limit": 654
+        },
+        "expected": [
+          [
+            5,
+            6,
+            5,
+            4,
+            7,
+            1
+          ],
+          [
+            5,
+            6,
+            5,
+            4,
+            71
+          ],
+          [
+            5,
+            6,
+            5,
+            47,
+            1
+          ],
+          [
+            5,
+            6,
+            5,
+            471
+          ],
+          [
+            5,
+            6,
+            54,
+            7,
+            1
+          ],
+          [
+            5,
+            6,
+            54,
+            71
+          ],
+          [
+            5,
+            6,
+            547,
+            1
+          ],
+          [
+            5,
+            65,
+            4,
+            7,
+            1
+          ],
+          [
+            5,
+            65,
+            4,
+            71
+          ],
+          [
+            5,
+            65,
+            47,
+            1
+          ],
+          [
+            5,
+            65,
+            471
+          ],
+          [
+            5,
+            654,
+            7,
+            1
+          ],
+          [
+            5,
+            654,
+            71
+          ],
+          [
+            56,
+            5,
+            4,
+            7,
+            1
+          ],
+          [
+            56,
+            5,
+            4,
+            71
+          ],
+          [
+            56,
+            5,
+            47,
+            1
+          ],
+          [
+            56,
+            5,
+            471
+          ],
+          [
+            56,
+            54,
+            7,
+            1
+          ],
+          [
+            56,
+            54,
+            71
+          ],
+          [
+            56,
+            547,
+            1
+          ],
+          [
+            565,
+            4,
+            7,
+            1
+          ],
+          [
+            565,
+            4,
+            71
+          ],
+          [
+            565,
+            47,
+            1
+          ],
+          [
+            565,
+            471
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "30042",
+          "limit": 100
+        },
+        "expected": [
+          [
+            3,
+            0,
+            0,
+            4,
+            2
+          ],
+          [
+            3,
+            0,
+            0,
+            42
+          ],
+          [
+            30,
+            0,
+            4,
+            2
+          ],
+          [
+            30,
+            0,
+            42
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "7",
+          "limit": 100
+        },
+        "expected": [
+          [
+            7
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "900",
+          "limit": 60
+        },
+        "expected": [
+          [
+            9,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "0700",
+          "limit": 3
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "digits": "00203",
+          "limit": 30
+        },
+        "expected": [
+          [
+            0,
+            0,
+            2,
+            0,
+            3
+          ],
+          [
+            0,
+            0,
+            20,
+            3
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "481303",
+          "limit": 130
+        },
+        "expected": [
+          [
+            4,
+            8,
+            1,
+            3,
+            0,
+            3
+          ],
+          [
+            4,
+            8,
+            1,
+            30,
+            3
+          ],
+          [
+            4,
+            8,
+            13,
+            0,
+            3
+          ],
+          [
+            4,
+            8,
+            130,
+            3
+          ],
+          [
+            4,
+            81,
+            3,
+            0,
+            3
+          ],
+          [
+            4,
+            81,
+            30,
+            3
+          ],
+          [
+            48,
+            1,
+            3,
+            0,
+            3
+          ],
+          [
+            48,
+            1,
+            30,
+            3
+          ],
+          [
+            48,
+            13,
+            0,
+            3
+          ],
+          [
+            48,
+            130,
+            3
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "00090",
+          "limit": 30
+        },
+        "expected": [
+          [
+            0,
+            0,
+            0,
+            9,
+            0
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "7138",
+          "limit": 10
+        },
+        "expected": [
+          [
+            7,
+            1,
+            3,
+            8
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "80",
+          "limit": 20
+        },
+        "expected": [
+          [
+            8,
+            0
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "001187",
+          "limit": 9
+        },
+        "expected": [
+          [
+            0,
+            0,
+            1,
+            1,
+            8,
+            7
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "0020",
+          "limit": 150
+        },
+        "expected": [
+          [
+            0,
+            0,
+            2,
+            0
+          ],
+          [
+            0,
+            0,
+            20
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "09077",
+          "limit": 9
+        },
+        "expected": [
+          [
+            0,
+            9,
+            0,
+            7,
+            7
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "30050",
+          "limit": 7
+        },
+        "expected": [
+          [
+            3,
+            0,
+            0,
+            5,
+            0
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "0695",
+          "limit": 1000
+        },
+        "expected": [
+          [
+            0,
+            6,
+            9,
+            5
+          ],
+          [
+            0,
+            6,
+            95
+          ],
+          [
+            0,
+            69,
+            5
+          ],
+          [
+            0,
+            695
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "006272",
+          "limit": 6
+        },
+        "expected": []
+      },
+      {
+        "input": {
+          "digits": "94703",
+          "limit": 45
+        },
+        "expected": [
+          [
+            9,
+            4,
+            7,
+            0,
+            3
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "080",
+          "limit": 20
+        },
+        "expected": [
+          [
+            0,
+            8,
+            0
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "66",
+          "limit": 6
+        },
+        "expected": [
+          [
+            6,
+            6
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "969",
+          "limit": 99
+        },
+        "expected": [
+          [
+            9,
+            6,
+            9
+          ],
+          [
+            9,
+            69
+          ],
+          [
+            96,
+            9
+          ]
+        ]
+      },
+      {
+        "input": {
+          "digits": "6",
+          "limit": 30
+        },
+        "expected": [
+          [
+            6
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "stack-pop-orders",
+    "inputHelp": "n is a whole number from 1 to 5. Explore means visit each reachable item once unless the shown code says otherwise.",
+    "source": "../jonathan-study-site/data/variants-final-*.json",
+    "correctRules": {
+      "setup": "fixed",
+      "finish": "all",
+      "save": "fixed",
+      "when": "any",
+      "take": "top",
+      "end": "fixed"
+    },
+    "cases": [
+      {
+        "id": "stack-pop-orders-finish-empty",
+        "title": "Debug challenge 1",
+        "misconception": "finish-empty",
+        "feedback": "A run is finished only when all n numbers are in out. An empty stack can also mean that some numbers have not been pushed yet, so stopping there saves unfinished lists like [1].",
+        "correctAnswer": "A run is finished only when all n numbers are in out. An empty stack can also mean that some numbers have not been pushed yet, so stopping there saves unfinished lists like [1].\n\nThe corrected rule is:\n  If out has n numbers:",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "orders ← empty list\nFunction BUILD(out, stack, next):"
+              }
+            ]
+          },
+          {
+            "key": "finish",
+            "selected": "empty",
+            "options": [
+              {
+                "id": "all",
+                "text": "  If out has n numbers:"
+              },
+              {
+                "id": "empty",
+                "text": "  If stack is empty and out is not empty:"
+              }
+            ]
+          },
+          {
+            "key": "save",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    Add out to orders and return."
+              }
+            ]
+          },
+          {
+            "key": "when",
+            "selected": "any",
+            "options": [
+              {
+                "id": "end",
+                "text": "  If stack is not empty and every number has been pushed (next > n):"
+              },
+              {
+                "id": "any",
+                "text": "  If stack is not empty:"
+              }
+            ]
+          },
+          {
+            "key": "take",
+            "selected": "top",
+            "options": [
+              {
+                "id": "top",
+                "text": "    BUILD(out followed by the top of stack, stack without its top, next)"
+              },
+              {
+                "id": "bottom",
+                "text": "    BUILD(out followed by the bottom of stack, stack without its bottom, next)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "  If next ≤ n:\n    BUILD(out, stack followed by next, next + 1)\nEnd function\nBUILD(empty list, empty list, 1)\nReturn orders."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 2
+        }
+      },
+      {
+        "id": "stack-pop-orders-when-end",
+        "title": "Debug challenge 2",
+        "misconception": "when-end",
+        "feedback": "A pop is allowed as soon as the stack is not empty. Waiting until every number is pushed allows only one pop order, [n, …, 2, 1].",
+        "correctAnswer": "A pop is allowed as soon as the stack is not empty. Waiting until every number is pushed allows only one pop order, [n, …, 2, 1].\n\nThe corrected rule is:\n  If stack is not empty:",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "orders ← empty list\nFunction BUILD(out, stack, next):"
+              }
+            ]
+          },
+          {
+            "key": "finish",
+            "selected": "all",
+            "options": [
+              {
+                "id": "empty",
+                "text": "  If stack is empty and out is not empty:"
+              },
+              {
+                "id": "all",
+                "text": "  If out has n numbers:"
+              }
+            ]
+          },
+          {
+            "key": "save",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    Add out to orders and return."
+              }
+            ]
+          },
+          {
+            "key": "when",
+            "selected": "end",
+            "options": [
+              {
+                "id": "any",
+                "text": "  If stack is not empty:"
+              },
+              {
+                "id": "end",
+                "text": "  If stack is not empty and every number has been pushed (next > n):"
+              }
+            ]
+          },
+          {
+            "key": "take",
+            "selected": "top",
+            "options": [
+              {
+                "id": "bottom",
+                "text": "    BUILD(out followed by the bottom of stack, stack without its bottom, next)"
+              },
+              {
+                "id": "top",
+                "text": "    BUILD(out followed by the top of stack, stack without its top, next)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "  If next ≤ n:\n    BUILD(out, stack followed by next, next + 1)\nEnd function\nBUILD(empty list, empty list, 1)\nReturn orders."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 2
+        }
+      },
+      {
+        "id": "stack-pop-orders-take-bottom",
+        "title": "Debug challenge 3",
+        "misconception": "take-bottom",
+        "feedback": "A pop takes the top number, the newest number still on the stack. Taking the bottom number writes the numbers in the order they were pushed, so every run gives [1, 2, …, n].",
+        "correctAnswer": "A pop takes the top number, the newest number still on the stack. Taking the bottom number writes the numbers in the order they were pushed, so every run gives [1, 2, …, n].\n\nThe corrected rule is:\n    BUILD(out followed by the top of stack, stack without its top, next)",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "orders ← empty list\nFunction BUILD(out, stack, next):"
+              }
+            ]
+          },
+          {
+            "key": "finish",
+            "selected": "all",
+            "options": [
+              {
+                "id": "empty",
+                "text": "  If stack is empty and out is not empty:"
+              },
+              {
+                "id": "all",
+                "text": "  If out has n numbers:"
+              }
+            ]
+          },
+          {
+            "key": "save",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    Add out to orders and return."
+              }
+            ]
+          },
+          {
+            "key": "when",
+            "selected": "any",
+            "options": [
+              {
+                "id": "end",
+                "text": "  If stack is not empty and every number has been pushed (next > n):"
+              },
+              {
+                "id": "any",
+                "text": "  If stack is not empty:"
+              }
+            ]
+          },
+          {
+            "key": "take",
+            "selected": "bottom",
+            "options": [
+              {
+                "id": "bottom",
+                "text": "    BUILD(out followed by the bottom of stack, stack without its bottom, next)"
+              },
+              {
+                "id": "top",
+                "text": "    BUILD(out followed by the top of stack, stack without its top, next)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "  If next ≤ n:\n    BUILD(out, stack followed by next, next + 1)\nEnd function\nBUILD(empty list, empty list, 1)\nReturn orders."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 2
+        }
+      }
+    ],
+    "tests": [
+      {
+        "input": {
+          "n": 1
+        },
+        "expected": [
+          [
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "n": 2
+        },
+        "expected": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "n": 3
+        },
+        "expected": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            2,
+            1,
+            3
+          ],
+          [
+            2,
+            3,
+            1
+          ],
+          [
+            3,
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "n": 4
+        },
+        "expected": [
+          [
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            1,
+            2,
+            4,
+            3
+          ],
+          [
+            1,
+            3,
+            2,
+            4
+          ],
+          [
+            1,
+            3,
+            4,
+            2
+          ],
+          [
+            1,
+            4,
+            3,
+            2
+          ],
+          [
+            2,
+            1,
+            3,
+            4
+          ],
+          [
+            2,
+            1,
+            4,
+            3
+          ],
+          [
+            2,
+            3,
+            1,
+            4
+          ],
+          [
+            2,
+            3,
+            4,
+            1
+          ],
+          [
+            2,
+            4,
+            3,
+            1
+          ],
+          [
+            3,
+            2,
+            1,
+            4
+          ],
+          [
+            3,
+            2,
+            4,
+            1
+          ],
+          [
+            3,
+            4,
+            2,
+            1
+          ],
+          [
+            4,
+            3,
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "n": 5
+        },
+        "expected": [
+          [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          [
+            1,
+            2,
+            3,
+            5,
+            4
+          ],
+          [
+            1,
+            2,
+            4,
+            3,
+            5
+          ],
+          [
+            1,
+            2,
+            4,
+            5,
+            3
+          ],
+          [
+            1,
+            2,
+            5,
+            4,
+            3
+          ],
+          [
+            1,
+            3,
+            2,
+            4,
+            5
+          ],
+          [
+            1,
+            3,
+            2,
+            5,
+            4
+          ],
+          [
+            1,
+            3,
+            4,
+            2,
+            5
+          ],
+          [
+            1,
+            3,
+            4,
+            5,
+            2
+          ],
+          [
+            1,
+            3,
+            5,
+            4,
+            2
+          ],
+          [
+            1,
+            4,
+            3,
+            2,
+            5
+          ],
+          [
+            1,
+            4,
+            3,
+            5,
+            2
+          ],
+          [
+            1,
+            4,
+            5,
+            3,
+            2
+          ],
+          [
+            1,
+            5,
+            4,
+            3,
+            2
+          ],
+          [
+            2,
+            1,
+            3,
+            4,
+            5
+          ],
+          [
+            2,
+            1,
+            3,
+            5,
+            4
+          ],
+          [
+            2,
+            1,
+            4,
+            3,
+            5
+          ],
+          [
+            2,
+            1,
+            4,
+            5,
+            3
+          ],
+          [
+            2,
+            1,
+            5,
+            4,
+            3
+          ],
+          [
+            2,
+            3,
+            1,
+            4,
+            5
+          ],
+          [
+            2,
+            3,
+            1,
+            5,
+            4
+          ],
+          [
+            2,
+            3,
+            4,
+            1,
+            5
+          ],
+          [
+            2,
+            3,
+            4,
+            5,
+            1
+          ],
+          [
+            2,
+            3,
+            5,
+            4,
+            1
+          ],
+          [
+            2,
+            4,
+            3,
+            1,
+            5
+          ],
+          [
+            2,
+            4,
+            3,
+            5,
+            1
+          ],
+          [
+            2,
+            4,
+            5,
+            3,
+            1
+          ],
+          [
+            2,
+            5,
+            4,
+            3,
+            1
+          ],
+          [
+            3,
+            2,
+            1,
+            4,
+            5
+          ],
+          [
+            3,
+            2,
+            1,
+            5,
+            4
+          ],
+          [
+            3,
+            2,
+            4,
+            1,
+            5
+          ],
+          [
+            3,
+            2,
+            4,
+            5,
+            1
+          ],
+          [
+            3,
+            2,
+            5,
+            4,
+            1
+          ],
+          [
+            3,
+            4,
+            2,
+            1,
+            5
+          ],
+          [
+            3,
+            4,
+            2,
+            5,
+            1
+          ],
+          [
+            3,
+            4,
+            5,
+            2,
+            1
+          ],
+          [
+            3,
+            5,
+            4,
+            2,
+            1
+          ],
+          [
+            4,
+            3,
+            2,
+            1,
+            5
+          ],
+          [
+            4,
+            3,
+            2,
+            5,
+            1
+          ],
+          [
+            4,
+            3,
+            5,
+            2,
+            1
+          ],
+          [
+            4,
+            5,
+            3,
+            2,
+            1
+          ],
+          [
+            5,
+            4,
+            3,
+            2,
+            1
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "balanced-brackets",
+    "inputHelp": "n is 1–5 and maxDepth is 1–5. Explore means visit each reachable item once unless the shown code says otherwise.",
+    "source": "../jonathan-study-site/data/variants-final-*.json",
+    "correctRules": {
+      "setup": "fixed",
+      "base": "full",
+      "open": "depth",
+      "close": "opened",
+      "end": "fixed"
+    },
+    "cases": [
+      {
+        "id": "balanced-brackets-base-half",
+        "title": "Debug challenge 1",
+        "misconception": "base-half",
+        "feedback": "A complete string has n \"(\" and n \")\", so it is 2 × n brackets long. Stopping at n brackets returns half-built prefixes instead of complete strings.",
+        "correctAnswer": "A complete string has n \"(\" and n \")\", so it is 2 × n brackets long. Stopping at n brackets returns half-built prefixes instead of complete strings.\n\nThe corrected rule is:\n  If prefix has 2 × n brackets:\n    Add prefix to strings and return.",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "strings ← empty list\nFunction BUILD(prefix, opens, closes):"
+              }
+            ]
+          },
+          {
+            "key": "base",
+            "selected": "half",
+            "options": [
+              {
+                "id": "half",
+                "text": "  If prefix has n brackets:\n    Add prefix to strings and return."
+              },
+              {
+                "id": "full",
+                "text": "  If prefix has 2 × n brackets:\n    Add prefix to strings and return."
+              }
+            ]
+          },
+          {
+            "key": "open",
+            "selected": "depth",
+            "options": [
+              {
+                "id": "depth",
+                "text": "  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "nodepth",
+                "text": "  If opens < n:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "atmost",
+                "text": "  If opens < n and opens − closes ≤ maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              }
+            ]
+          },
+          {
+            "key": "close",
+            "selected": "opened",
+            "options": [
+              {
+                "id": "any",
+                "text": "  If closes < n:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              },
+              {
+                "id": "opened",
+                "text": "  If closes < opens:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "End function\nBUILD(empty text, 0, 0)\nReturn strings."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 3,
+          "maxDepth": 2
+        }
+      },
+      {
+        "id": "balanced-brackets-open-atmost",
+        "title": "Debug challenge 2",
+        "misconception": "open-atmost",
+        "feedback": "opens − closes is how many brackets are open before the new \"(\". Allowing it when that already equals maxDepth makes the depth maxDepth + 1, so strings one level too deep enter the answer.",
+        "correctAnswer": "opens − closes is how many brackets are open before the new \"(\". Allowing it when that already equals maxDepth makes the depth maxDepth + 1, so strings one level too deep enter the answer.\n\nThe corrected rule is:\n  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "strings ← empty list\nFunction BUILD(prefix, opens, closes):"
+              }
+            ]
+          },
+          {
+            "key": "base",
+            "selected": "full",
+            "options": [
+              {
+                "id": "full",
+                "text": "  If prefix has 2 × n brackets:\n    Add prefix to strings and return."
+              },
+              {
+                "id": "half",
+                "text": "  If prefix has n brackets:\n    Add prefix to strings and return."
+              }
+            ]
+          },
+          {
+            "key": "open",
+            "selected": "atmost",
+            "options": [
+              {
+                "id": "atmost",
+                "text": "  If opens < n and opens − closes ≤ maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "depth",
+                "text": "  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "nodepth",
+                "text": "  If opens < n:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              }
+            ]
+          },
+          {
+            "key": "close",
+            "selected": "opened",
+            "options": [
+              {
+                "id": "any",
+                "text": "  If closes < n:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              },
+              {
+                "id": "opened",
+                "text": "  If closes < opens:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "End function\nBUILD(empty text, 0, 0)\nReturn strings."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 3,
+          "maxDepth": 2
+        }
+      },
+      {
+        "id": "balanced-brackets-open-nodepth",
+        "title": "Debug challenge 3",
+        "misconception": "open-nodepth",
+        "feedback": "Without the depth check, a \"(\" is added however many brackets are already open, so strings deeper than maxDepth enter the answer.",
+        "correctAnswer": "Without the depth check, a \"(\" is added however many brackets are already open, so strings deeper than maxDepth enter the answer.\n\nThe corrected rule is:\n  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "strings ← empty list\nFunction BUILD(prefix, opens, closes):"
+              }
+            ]
+          },
+          {
+            "key": "base",
+            "selected": "full",
+            "options": [
+              {
+                "id": "full",
+                "text": "  If prefix has 2 × n brackets:\n    Add prefix to strings and return."
+              },
+              {
+                "id": "half",
+                "text": "  If prefix has n brackets:\n    Add prefix to strings and return."
+              }
+            ]
+          },
+          {
+            "key": "open",
+            "selected": "nodepth",
+            "options": [
+              {
+                "id": "atmost",
+                "text": "  If opens < n and opens − closes ≤ maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "depth",
+                "text": "  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "nodepth",
+                "text": "  If opens < n:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              }
+            ]
+          },
+          {
+            "key": "close",
+            "selected": "opened",
+            "options": [
+              {
+                "id": "any",
+                "text": "  If closes < n:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              },
+              {
+                "id": "opened",
+                "text": "  If closes < opens:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "End function\nBUILD(empty text, 0, 0)\nReturn strings."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 3,
+          "maxDepth": 2
+        }
+      },
+      {
+        "id": "balanced-brackets-close-any",
+        "title": "Debug challenge 4",
+        "misconception": "close-any",
+        "feedback": "A \")\" must close a \"(\" that is still open. Allowing it whenever fewer than n \")\" are used builds unbalanced strings such as \")(\", which close a bracket that was never opened.",
+        "correctAnswer": "A \")\" must close a \"(\" that is still open. Allowing it whenever fewer than n \")\" are used builds unbalanced strings such as \")(\", which close a bracket that was never opened.\n\nThe corrected rule is:\n  If closes < opens:\n    BUILD(prefix followed by \")\", opens, closes + 1)",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "strings ← empty list\nFunction BUILD(prefix, opens, closes):"
+              }
+            ]
+          },
+          {
+            "key": "base",
+            "selected": "full",
+            "options": [
+              {
+                "id": "half",
+                "text": "  If prefix has n brackets:\n    Add prefix to strings and return."
+              },
+              {
+                "id": "full",
+                "text": "  If prefix has 2 × n brackets:\n    Add prefix to strings and return."
+              }
+            ]
+          },
+          {
+            "key": "open",
+            "selected": "depth",
+            "options": [
+              {
+                "id": "nodepth",
+                "text": "  If opens < n:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "atmost",
+                "text": "  If opens < n and opens − closes ≤ maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              },
+              {
+                "id": "depth",
+                "text": "  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by \"(\", opens + 1, closes)"
+              }
+            ]
+          },
+          {
+            "key": "close",
+            "selected": "any",
+            "options": [
+              {
+                "id": "opened",
+                "text": "  If closes < opens:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              },
+              {
+                "id": "any",
+                "text": "  If closes < n:\n    BUILD(prefix followed by \")\", opens, closes + 1)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "End function\nBUILD(empty text, 0, 0)\nReturn strings."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 3,
+          "maxDepth": 2
+        }
+      }
+    ],
+    "tests": [
+      {
+        "input": {
+          "n": 3,
+          "maxDepth": 2
+        },
+        "expected": [
+          "(()())",
+          "(())()",
+          "()(())",
+          "()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 3,
+          "maxDepth": 3
+        },
+        "expected": [
+          "((()))",
+          "(()())",
+          "(())()",
+          "()(())",
+          "()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 3,
+          "maxDepth": 1
+        },
+        "expected": [
+          "()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 1,
+          "maxDepth": 1
+        },
+        "expected": [
+          "()"
+        ]
+      },
+      {
+        "input": {
+          "n": 1,
+          "maxDepth": 2
+        },
+        "expected": [
+          "()"
+        ]
+      },
+      {
+        "input": {
+          "n": 1,
+          "maxDepth": 3
+        },
+        "expected": [
+          "()"
+        ]
+      },
+      {
+        "input": {
+          "n": 1,
+          "maxDepth": 4
+        },
+        "expected": [
+          "()"
+        ]
+      },
+      {
+        "input": {
+          "n": 1,
+          "maxDepth": 5
+        },
+        "expected": [
+          "()"
+        ]
+      },
+      {
+        "input": {
+          "n": 2,
+          "maxDepth": 1
+        },
+        "expected": [
+          "()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 2,
+          "maxDepth": 2
+        },
+        "expected": [
+          "(())",
+          "()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 2,
+          "maxDepth": 3
+        },
+        "expected": [
+          "(())",
+          "()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 2,
+          "maxDepth": 4
+        },
+        "expected": [
+          "(())",
+          "()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 2,
+          "maxDepth": 5
+        },
+        "expected": [
+          "(())",
+          "()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 3,
+          "maxDepth": 4
+        },
+        "expected": [
+          "((()))",
+          "(()())",
+          "(())()",
+          "()(())",
+          "()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 4,
+          "maxDepth": 1
+        },
+        "expected": [
+          "()()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 4,
+          "maxDepth": 2
+        },
+        "expected": [
+          "(()()())",
+          "(()())()",
+          "(())(())",
+          "(())()()",
+          "()(()())",
+          "()(())()",
+          "()()(())",
+          "()()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 4,
+          "maxDepth": 5
+        },
+        "expected": [
+          "(((())))",
+          "((()()))",
+          "((())())",
+          "((()))()",
+          "(()(()))",
+          "(()()())",
+          "(()())()",
+          "(())(())",
+          "(())()()",
+          "()((()))",
+          "()(()())",
+          "()(())()",
+          "()()(())",
+          "()()()()"
+        ]
+      },
+      {
+        "input": {
+          "n": 5,
+          "maxDepth": 3
+        },
+        "expected": [
+          "((()()()))",
+          "((()())())",
+          "((()()))()",
+          "((())(()))",
+          "((())()())",
+          "((())())()",
+          "((()))(())",
+          "((()))()()",
+          "(()(()()))",
+          "(()(())())",
+          "(()(()))()",
+          "(()()(()))",
+          "(()()()())",
+          "(()()())()",
+          "(()())(())",
+          "(()())()()",
+          "(())((()))",
+          "(())(()())",
+          "(())(())()",
+          "(())()(())",
+          "(())()()()",
+          "()((()()))",
+          "()((())())",
+          "()((()))()",
+          "()(()(()))",
+          "()(()()())",
+          "()(()())()",
+          "()(())(())",
+          "()(())()()",
+          "()()((()))",
+          "()()(()())",
+          "()()(())()",
+          "()()()(())",
+          "()()()()()"
+        ]
+      }
+    ]
   }
 ]

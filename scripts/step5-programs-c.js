@@ -74,8 +74,35 @@ programs['under-the-limit'] = [
   choice('bust','over','    If sum + nums[i] > limit, skip this number.','atleast','    If sum + nums[i] ≥ limit, skip this number.','A sum exactly at limit still counts. Skipping a number when the sum reaches limit loses combinations that land exactly on it.'),
   fixed('end','    BUILD(i + 1, combo followed by nums[i], sum + nums[i])\nEnd function\nBUILD(0, empty list, 0)\nReturn combos.')
 ];
+programs['split-the-digits'] = [
+  fixed('setup','splits ← empty list\nFunction CUT(index, pieces):\n  If index = length of digits:\n    Add pieces to splits and return.'),
+  choice('loop','all','  For each length L from 1 to the number of digits left:','two','  For each length L from 1 to 2, without going past the end of digits:','A piece can be longer than 2 digits. Trying only lengths 1 and 2 loses every way that uses a 3-digit piece, like 314 when limit is 400.'),
+  fixed('take','    piece ← the next L digits, starting at index'),
+  choice('zero','lead','    If L > 1 and piece starts with "0", stop trying longer pieces.','any','    If piece starts with "0", stop trying longer pieces.','A piece that is exactly "0" is allowed. Only a longer piece that starts with "0", like "05", is not. Stopping at every piece that starts with "0" loses every way that cuts a lone 0.'),
+  choice('limit','over','    If the number piece > limit, stop trying longer pieces.','atleast','    If the number piece ≥ limit, stop trying longer pieces.','A piece whose number equals limit is allowed. Stopping when the number reaches limit loses every way that uses a piece exactly equal to limit.'),
+  fixed('end','    CUT(index + L, pieces followed by the number piece)\nEnd function\nCUT(0, empty list)\nReturn splits.')
+];
+programs['stack-pop-orders'] = [
+  fixed('setup','orders ← empty list\nFunction BUILD(out, stack, next):'),
+  choice('finish','all','  If out has n numbers:','empty','  If stack is empty and out is not empty:','A run is finished only when all n numbers are in out. An empty stack can also mean that some numbers have not been pushed yet, so stopping there saves unfinished lists like [1].'),
+  fixed('save','    Add out to orders and return.'),
+  choice('when','any','  If stack is not empty:','end','  If stack is not empty and every number has been pushed (next > n):','A pop is allowed as soon as the stack is not empty. Waiting until every number is pushed allows only one pop order, [n, …, 2, 1].'),
+  choice('take','top','    BUILD(out followed by the top of stack, stack without its top, next)','bottom','    BUILD(out followed by the bottom of stack, stack without its bottom, next)','A pop takes the top number, the newest number still on the stack. Taking the bottom number writes the numbers in the order they were pushed, so every run gives [1, 2, …, n].'),
+  fixed('end','  If next ≤ n:\n    BUILD(out, stack followed by next, next + 1)\nEnd function\nBUILD(empty list, empty list, 1)\nReturn orders.')
+];
 const bustRule = programs['the-balance-lock'].find(line => line.key === 'bust');
 bustRule.options.push({id:'weight',text:'    If weight > limit, skip this weight.'});
 bustRule.buggy = ['atleast', 'weight'];
 bustRule.feedback = {atleast:bustRule.feedback,weight:'The lock adds every chosen weight. Comparing one weight with limit lets a code whose running total goes over limit survive, so busted codes enter the answer.'};
+programs['balanced-brackets'] = [
+  fixed('setup','strings ← empty list\nFunction BUILD(prefix, opens, closes):'),
+  choice('base','full','  If prefix has 2 × n brackets:\n    Add prefix to strings and return.','half','  If prefix has n brackets:\n    Add prefix to strings and return.','A complete string has n "(" and n ")", so it is 2 × n brackets long. Stopping at n brackets returns half-built prefixes instead of complete strings.'),
+  choice('open','depth','  If opens < n and opens − closes < maxDepth:\n    BUILD(prefix followed by "(", opens + 1, closes)','atmost','  If opens < n and opens − closes ≤ maxDepth:\n    BUILD(prefix followed by "(", opens + 1, closes)','opens − closes is how many brackets are open before the new "(". Allowing it when that already equals maxDepth makes the depth maxDepth + 1, so strings one level too deep enter the answer.'),
+  choice('close','opened','  If closes < opens:\n    BUILD(prefix followed by ")", opens, closes + 1)','any','  If closes < n:\n    BUILD(prefix followed by ")", opens, closes + 1)','A ")" must close a "(" that is still open. Allowing it whenever fewer than n ")" are used builds unbalanced strings such as ")(", which close a bracket that was never opened.'),
+  fixed('end','End function\nBUILD(empty text, 0, 0)\nReturn strings.')
+];
+const depthRule = programs['balanced-brackets'].find(line => line.key === 'open');
+depthRule.options.push({id:'nodepth',text:'  If opens < n:\n    BUILD(prefix followed by "(", opens + 1, closes)'});
+depthRule.buggy = ['atmost', 'nodepth'];
+depthRule.feedback = {atmost:depthRule.feedback,nodepth:'Without the depth check, a "(" is added however many brackets are already open, so strings deeper than maxDepth enter the answer.'};
 module.exports = programs;

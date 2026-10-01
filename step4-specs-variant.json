@@ -7436,5 +7436,963 @@
         }
       }
     ]
+  },
+  {
+    "id": "balanced-brackets",
+    "cases": [
+      {
+        "id": "balanced-brackets",
+        "caseId": "authored-deep-case",
+        "bugTitle": "Closes a Bracket That Was Never Opened",
+        "misconception": "close-up-to-n",
+        "input": {
+          "n": 2,
+          "maxDepth": 2
+        },
+        "code": "function solve(input) {\n  const strings = [];\n  function build(prefix, opens, closes) {\n    if (prefix.length === 2 * input.n) {\n      strings.push(prefix);\n      return;\n    }\n    if (opens < input.n && opens - closes < input.maxDepth) {\n      build(prefix + \"(\", opens + 1, closes);\n    }\n    if (closes < input.n) {\n      build(prefix + \")\", opens, closes + 1);\n    }\n  }\n  build(\"\", 0, 0);\n  return strings;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "((",
+              "label": "(("
+            },
+            {
+              "id": "(()",
+              "label": "(()"
+            },
+            {
+              "id": "(())",
+              "label": "(())"
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "(("
+            },
+            {
+              "from": "((",
+              "to": "(()"
+            },
+            {
+              "from": "(()",
+              "to": "(())"
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        },
+        "outputFormat": "list of every balanced string no deeper than maxDepth",
+        "buggyOutput": "[\"(())\",\"()()\",\"())(\",\")(()\",\")()(\",\"))((\"]",
+        "correctOutput": "[\"(())\",\"()()\"]",
+        "correctDiagnosis": "closes-nothing",
+        "diagnoses": [
+          {
+            "id": "closes-nothing",
+            "label": "Claim about the code: it adds ) whenever fewer than n ) are used, so a string can start with ) and close a bracket that was never opened.",
+            "feedback": "Correct. A ) must close an open (, so the check is closes < opens."
+          },
+          {
+            "id": "too-deep",
+            "label": "Claim about the code: it lets more than maxDepth brackets be open at once.",
+            "feedback": "The ( check still requires opens - closes < maxDepth."
+          },
+          {
+            "id": "half-length",
+            "label": "Claim about the code: it saves strings before they have 2n brackets.",
+            "feedback": "It saves a string only when prefix.length === 2 * input.n."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "The tree is start→(, then (→((→(()→(()) and (→()→()(→()(). Every prefix can be completed.",
+          "codeRule": "A ) is added whenever fewer than n ) are used, even when no ( is open.",
+          "separatingFeature": "start and () have no open bracket, but the code still adds ) after them.",
+          "outputConsequence": "The code returns [\"(())\",\"()()\",\"())(\",\")(()\",\")()(\",\"))((\"] instead of [\"(())\",\"()()\"].",
+          "changedGraph": "Extra edges such as start→) and ()→()) build unbalanced strings."
+        }
+      },
+      {
+        "id": "balanced-brackets",
+        "caseId": "depth-over-by-one",
+        "bugTitle": "Lets the Depth Go One Past maxDepth",
+        "misconception": "depth-over-by-one",
+        "input": {
+          "n": 2,
+          "maxDepth": 1
+        },
+        "code": "function solve(input) {\n  const strings = [];\n  function build(prefix, opens, closes) {\n    if (prefix.length === 2 * input.n) {\n      strings.push(prefix);\n      return;\n    }\n    if (opens < input.n && opens - closes <= input.maxDepth) {\n      build(prefix + \"(\", opens + 1, closes);\n    }\n    if (closes < opens) {\n      build(prefix + \")\", opens, closes + 1);\n    }\n  }\n  build(\"\", 0, 0);\n  return strings;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        },
+        "outputFormat": "list of every balanced string no deeper than maxDepth",
+        "buggyOutput": "[\"(())\",\"()()\"]",
+        "correctOutput": "[\"()()\"]",
+        "correctDiagnosis": "one-too-deep",
+        "diagnoses": [
+          {
+            "id": "one-too-deep",
+            "label": "Claim about the code: <= allows a ( while maxDepth brackets are already open, so (( reaches depth 2 when maxDepth is 1.",
+            "feedback": "Correct. Before adding (, fewer than maxDepth brackets must be open, so use < instead of <=."
+          },
+          {
+            "id": "closes-nothing",
+            "label": "Claim about the code: it adds ) even when no ( is open.",
+            "feedback": "It adds ) only when closes < opens."
+          },
+          {
+            "id": "extra-open",
+            "label": "Claim about the code: it can use more than n (.",
+            "feedback": "The ( check still requires opens < input.n."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "The tree is the chain start→(→()→()(→()(). With maxDepth 1, ( cannot follow (.",
+          "codeRule": "A ( is added while opens - closes is at most maxDepth, so the new depth can be maxDepth + 1.",
+          "separatingFeature": "At ( one bracket is open, which already equals maxDepth 1.",
+          "outputConsequence": "The code returns [\"(())\",\"()()\"] instead of [\"()()\"].",
+          "changedGraph": "An extra edge (→(( lets the deeper string (()) be built."
+        }
+      },
+      {
+        "id": "balanced-brackets",
+        "caseId": "no-open-cap",
+        "bugTitle": "Forgets That a String Has Only n Opening Brackets",
+        "misconception": "no-open-cap",
+        "input": {
+          "n": 1,
+          "maxDepth": 4
+        },
+        "code": "function solve(input) {\n  const strings = [];\n  function build(prefix, opens, closes) {\n    if (prefix.length === 2 * input.n) {\n      strings.push(prefix);\n      return;\n    }\n    if (opens - closes < input.maxDepth) {\n      build(prefix + \"(\", opens + 1, closes);\n    }\n    if (closes < opens) {\n      build(prefix + \")\", opens, closes + 1);\n    }\n  }\n  build(\"\", 0, 0);\n  return strings;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            }
+          ]
+        },
+        "outputFormat": "list of every balanced string no deeper than maxDepth",
+        "buggyOutput": "[\"((\",\"()\"]",
+        "correctOutput": "[\"()\"]",
+        "correctDiagnosis": "extra-open",
+        "diagnoses": [
+          {
+            "id": "extra-open",
+            "label": "Claim about the code: the ( check never compares opens with n, so (( uses two ( when n is 1.",
+            "feedback": "Correct. Every string has exactly n (, so a ( needs opens < n as well as the depth check."
+          },
+          {
+            "id": "one-too-deep",
+            "label": "Claim about the code: it lets the depth go one past maxDepth.",
+            "feedback": "It uses opens - closes < maxDepth, so the depth stays at most maxDepth."
+          },
+          {
+            "id": "half-length",
+            "label": "Claim about the code: it saves strings before they have 2n brackets.",
+            "feedback": "It saves a string only when prefix.length === 2 * input.n."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "The tree is the chain start→(→(). Only one ( is allowed because n is 1.",
+          "codeRule": "A ( is added whenever the depth is below maxDepth, however many ( are already used.",
+          "separatingFeature": "maxDepth 4 leaves room for a second (, but n is 1.",
+          "outputConsequence": "The code returns [\"((\",\"()\"] instead of [\"()\"].",
+          "changedGraph": "An extra edge (→(( builds a 2-bracket string with no ) in it."
+        }
+      }
+    ]
+  },
+  {
+    "id": "split-the-digits",
+    "cases": [
+      {
+        "id": "split-the-digits",
+        "caseId": "authored-deep-case",
+        "bugTitle": "Lets a Piece Start With 0",
+        "misconception": "allow-leading-zero",
+        "input": {
+          "digits": "2057",
+          "limit": 30
+        },
+        "code": "function solve(input) {\n  const splits = [];\n  function cut(index, pieces) {\n    if (index === input.digits.length) {\n      splits.push(pieces);\n      return;\n    }\n    for (let end = index + 1; end <= input.digits.length; end++) {\n      const piece = input.digits.slice(index, end);\n      if (Number(piece) > input.limit) break;\n      cut(end, [...pieces, Number(piece)]);\n    }\n  }\n  cut(0, []);\n  return splits;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2|0",
+              "label": "2|0"
+            },
+            {
+              "id": "2|0|5",
+              "label": "2|0|5"
+            },
+            {
+              "id": "2|0|5|7",
+              "label": "2|0|5|7"
+            },
+            {
+              "id": "20",
+              "label": "20"
+            },
+            {
+              "id": "20|5",
+              "label": "20|5"
+            },
+            {
+              "id": "20|5|7",
+              "label": "20|5|7"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2|0"
+            },
+            {
+              "from": "2|0",
+              "to": "2|0|5"
+            },
+            {
+              "from": "2|0|5",
+              "to": "2|0|5|7"
+            },
+            {
+              "from": "start",
+              "to": "20"
+            },
+            {
+              "from": "20",
+              "to": "20|5"
+            },
+            {
+              "from": "20|5",
+              "to": "20|5|7"
+            }
+          ]
+        },
+        "outputFormat": "list of every way to cut digits into allowed pieces",
+        "buggyOutput": "[[2,0,5,7],[2,5,7],[20,5,7]]",
+        "correctOutput": "[[2,0,5,7],[20,5,7]]",
+        "correctDiagnosis": "leading-zero",
+        "diagnoses": [
+          {
+            "id": "leading-zero",
+            "label": "Claim about the code: it never checks for a leading 0, so it cuts 05 and returns [2,5,7].",
+            "feedback": "Correct. A piece longer than one digit must not start with 0. Stop when piece has more than one digit and starts with \"0\"."
+          },
+          {
+            "id": "equal-limit",
+            "label": "Claim about the code: it leaves out a piece equal to the limit.",
+            "feedback": "It uses >, so a piece equal to the limit is kept."
+          },
+          {
+            "id": "short-pieces",
+            "label": "Claim about the code: it tries only pieces of 1 or 2 digits.",
+            "feedback": "The loop moves end up to the last digit, so every length is tried."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "The tree is start→2→2|0→2|0|5→2|0|5|7 and start→20→20|5→20|5|7. 05 is not an allowed piece.",
+          "codeRule": "Any piece whose number is at most limit is cut, even one that starts with 0.",
+          "separatingFeature": "After 2, the next two digits are 05, which starts with 0.",
+          "outputConsequence": "The code returns [[2,0,5,7],[2,5,7],[20,5,7]] instead of [[2,0,5,7],[20,5,7]].",
+          "changedGraph": "An extra edge 2→2|05 leads on to 2|05|7."
+        }
+      },
+      {
+        "id": "split-the-digits",
+        "caseId": "visited-position",
+        "bugTitle": "Marks Each Position as Visited",
+        "misconception": "visited-position",
+        "input": {
+          "digits": "123",
+          "limit": 30
+        },
+        "code": "function solve(input) {\n  const splits = [];\n  const visitedIndexes = new Set();\n  function cut(index, pieces) {\n    if (visitedIndexes.has(index)) return;\n    visitedIndexes.add(index);\n    if (index === input.digits.length) {\n      splits.push(pieces);\n      return;\n    }\n    for (let end = index + 1; end <= input.digits.length; end++) {\n      const piece = input.digits.slice(index, end);\n      if (piece.length > 1 && piece[0] === \"0\") break;\n      if (Number(piece) > input.limit) break;\n      cut(end, [...pieces, Number(piece)]);\n    }\n  }\n  cut(0, []);\n  return splits;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            },
+            {
+              "id": "1|2",
+              "label": "1|2"
+            },
+            {
+              "id": "1|2|3",
+              "label": "1|2|3"
+            },
+            {
+              "id": "1|23",
+              "label": "1|23"
+            },
+            {
+              "id": "12",
+              "label": "12"
+            },
+            {
+              "id": "12|3",
+              "label": "12|3"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "1"
+            },
+            {
+              "from": "1",
+              "to": "1|2"
+            },
+            {
+              "from": "1|2",
+              "to": "1|2|3"
+            },
+            {
+              "from": "1",
+              "to": "1|23"
+            },
+            {
+              "from": "start",
+              "to": "12"
+            },
+            {
+              "from": "12",
+              "to": "12|3"
+            }
+          ]
+        },
+        "outputFormat": "list of every way to cut digits into allowed pieces",
+        "buggyOutput": "[[1,2,3]]",
+        "correctOutput": "[[1,2,3],[1,23],[12,3]]",
+        "correctDiagnosis": "visited-index",
+        "diagnoses": [
+          {
+            "id": "visited-index",
+            "label": "Claim about the code: it enters each position only once, so 1|23 and 12|3 are dropped when they reach positions that 1|2|3 already used.",
+            "feedback": "Correct. Different cuts can reach the same position, and each one is its own answer. A cutting tree needs no visited set."
+          },
+          {
+            "id": "short-pieces",
+            "label": "Claim about the code: it tries only pieces of 1 or 2 digits.",
+            "feedback": "The loop moves end up to the last digit, so every length is tried."
+          },
+          {
+            "id": "equal-limit",
+            "label": "Claim about the code: it leaves out a piece equal to the limit.",
+            "feedback": "It uses >, so a piece equal to the limit is kept."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "The tree is start→1→1|2→1|2|3, 1→1|23, and start→12→12|3. 123 is over 30.",
+          "codeRule": "Each position in digits is entered at most once, no matter which cut reaches it.",
+          "separatingFeature": "1|2 and 12 both end at position 2, and 1|23 reaches the end that 1|2|3 reached first.",
+          "outputConsequence": "The code returns [[1,2,3]] instead of [[1,2,3],[1,23],[12,3]].",
+          "changedGraph": "Edges into cuts that reach an already-visited position are removed: 1→1|23 and start→12."
+        }
+      },
+      {
+        "id": "split-the-digits",
+        "caseId": "equal-limit",
+        "bugTitle": "Leaves Out a Piece Equal to the Limit",
+        "misconception": "strict-limit",
+        "input": {
+          "digits": "125",
+          "limit": 25
+        },
+        "code": "function solve(input) {\n  const splits = [];\n  function cut(index, pieces) {\n    if (index === input.digits.length) {\n      splits.push(pieces);\n      return;\n    }\n    for (let end = index + 1; end <= input.digits.length; end++) {\n      const piece = input.digits.slice(index, end);\n      if (piece.length > 1 && piece[0] === \"0\") break;\n      if (Number(piece) >= input.limit) break;\n      cut(end, [...pieces, Number(piece)]);\n    }\n  }\n  cut(0, []);\n  return splits;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            },
+            {
+              "id": "1|2",
+              "label": "1|2"
+            },
+            {
+              "id": "1|2|5",
+              "label": "1|2|5"
+            },
+            {
+              "id": "1|25",
+              "label": "1|25"
+            },
+            {
+              "id": "12",
+              "label": "12"
+            },
+            {
+              "id": "12|5",
+              "label": "12|5"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "1"
+            },
+            {
+              "from": "1",
+              "to": "1|2"
+            },
+            {
+              "from": "1|2",
+              "to": "1|2|5"
+            },
+            {
+              "from": "1",
+              "to": "1|25"
+            },
+            {
+              "from": "start",
+              "to": "12"
+            },
+            {
+              "from": "12",
+              "to": "12|5"
+            }
+          ]
+        },
+        "outputFormat": "list of every way to cut digits into allowed pieces",
+        "buggyOutput": "[[1,2,5],[12,5]]",
+        "correctOutput": "[[1,2,5],[1,25],[12,5]]",
+        "correctDiagnosis": "equal-limit",
+        "diagnoses": [
+          {
+            "id": "equal-limit",
+            "label": "Claim about the code: >= stops at 25 even though 25 equals the limit, which is allowed.",
+            "feedback": "Correct. Only a number over limit is not allowed, so [1,25] must be returned."
+          },
+          {
+            "id": "leading-zero",
+            "label": "Claim about the code: it lets a piece start with 0.",
+            "feedback": "It stops when a piece has more than one digit and starts with \"0\"."
+          },
+          {
+            "id": "visited-index",
+            "label": "Claim about the code: it skips positions it has already visited.",
+            "feedback": "It keeps no visited set, so every cut is explored."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "The tree is start→1→1|2→1|2|5, 1→1|25, and start→12→12|5. 125 is over 25.",
+          "codeRule": "A piece is cut only if its number is below the limit.",
+          "separatingFeature": "The piece 25 equals the limit exactly.",
+          "outputConsequence": "The code returns [[1,2,5],[12,5]] instead of [[1,2,5],[1,25],[12,5]].",
+          "changedGraph": "The edge 1→1|25 is removed."
+        }
+      }
+    ]
+  },
+  {
+    "id": "stack-pop-orders",
+    "cases": [
+      {
+        "id": "stack-pop-orders",
+        "caseId": "authored-deep-case",
+        "bugTitle": "Stops When the Stack Is Empty",
+        "misconception": "stop-when-empty",
+        "input": {
+          "n": 2
+        },
+        "code": "function solve(input) {\n  const orders = [];\n  function build(out, stack, next) {\n    if (stack.length === 0 && out.length > 0) {\n      orders.push(out);\n      return;\n    }\n    if (stack.length > 0) {\n      build([...out, stack[stack.length - 1]], stack.slice(0, -1), next);\n    }\n    if (next <= input.n) {\n      build(out, [...stack, next], next + 1);\n    }\n  }\n  build([], [], 1);\n  return orders;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "out [] | stack [1]",
+              "label": "out [] | stack [1]"
+            },
+            {
+              "id": "out [1] | stack []",
+              "label": "out [1] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2]",
+              "label": "out [1] | stack [2]"
+            },
+            {
+              "id": "out [1,2] | stack []",
+              "label": "out [1,2] | stack []"
+            },
+            {
+              "id": "out [] | stack [1,2]",
+              "label": "out [] | stack [1,2]"
+            },
+            {
+              "id": "out [2] | stack [1]",
+              "label": "out [2] | stack [1]"
+            },
+            {
+              "id": "out [2,1] | stack []",
+              "label": "out [2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "out [] | stack [1]"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [1] | stack []"
+            },
+            {
+              "from": "out [1] | stack []",
+              "to": "out [1] | stack [2]"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1,2] | stack []"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [] | stack [1,2]"
+            },
+            {
+              "from": "out [] | stack [1,2]",
+              "to": "out [2] | stack [1]"
+            },
+            {
+              "from": "out [2] | stack [1]",
+              "to": "out [2,1] | stack []"
+            }
+          ]
+        },
+        "outputFormat": "list of every pop order",
+        "buggyOutput": "[[1],[2,1]]",
+        "correctOutput": "[[1,2],[2,1]]",
+        "correctDiagnosis": "stops-on-empty",
+        "diagnoses": [
+          {
+            "id": "stops-on-empty",
+            "label": "Claim about the code: it saves out as soon as the stack is empty, so after push 1 and pop 1 it saves [1] before 2 is ever pushed.",
+            "feedback": "Correct. A pop order is finished only when all n numbers are in out, so check out.length === input.n."
+          },
+          {
+            "id": "pops-late",
+            "label": "Claim about the code: it pops only after every number has been pushed.",
+            "feedback": "The pop runs whenever the stack is not empty, before any later push."
+          },
+          {
+            "id": "push-off-by-one",
+            "label": "Claim about the code: it never pushes the last number, n.",
+            "feedback": "The push runs while next <= input.n, so n is pushed too."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "For n = 2 the tree is start → out [] | stack [1], which branches to out [1] | stack [] (pop 1) and out [] | stack [1,2] (push 2). The finished states are out [1,2] | stack [] and out [2,1] | stack [].",
+          "codeRule": "A state counts as finished as soon as its stack is empty and out is not empty.",
+          "separatingFeature": "out [1] | stack [] has an empty stack, but 2 has not been pushed yet.",
+          "outputConsequence": "The code returns [[1],[2,1]] instead of [[1,2],[2,1]].",
+          "changedGraph": "The branch below out [1] | stack [] is cut off, and that unfinished state is saved as an answer."
+        }
+      },
+      {
+        "id": "stack-pop-orders",
+        "caseId": "pop-only-at-end",
+        "bugTitle": "Pops Only After Every Push",
+        "misconception": "pop-only-at-end",
+        "input": {
+          "n": 3
+        },
+        "code": "function solve(input) {\n  const orders = [];\n  function build(out, stack, next) {\n    if (out.length === input.n) {\n      orders.push(out);\n      return;\n    }\n    if (stack.length > 0 && next > input.n) {\n      build([...out, stack[stack.length - 1]], stack.slice(0, -1), next);\n    }\n    if (next <= input.n) {\n      build(out, [...stack, next], next + 1);\n    }\n  }\n  build([], [], 1);\n  return orders;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "out [] | stack [1]",
+              "label": "out [] | stack [1]"
+            },
+            {
+              "id": "out [1] | stack []",
+              "label": "out [1] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2]",
+              "label": "out [1] | stack [2]"
+            },
+            {
+              "id": "out [1,2] | stack []",
+              "label": "out [1,2] | stack []"
+            },
+            {
+              "id": "out [1,2] | stack [3]",
+              "label": "out [1,2] | stack [3]"
+            },
+            {
+              "id": "out [1,2,3] | stack []",
+              "label": "out [1,2,3] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2,3]",
+              "label": "out [1] | stack [2,3]"
+            },
+            {
+              "id": "out [1,3] | stack [2]",
+              "label": "out [1,3] | stack [2]"
+            },
+            {
+              "id": "out [1,3,2] | stack []",
+              "label": "out [1,3,2] | stack []"
+            },
+            {
+              "id": "out [] | stack [1,2]",
+              "label": "out [] | stack [1,2]"
+            },
+            {
+              "id": "out [2] | stack [1]",
+              "label": "out [2] | stack [1]"
+            },
+            {
+              "id": "out [2,1] | stack []",
+              "label": "out [2,1] | stack []"
+            },
+            {
+              "id": "out [2,1] | stack [3]",
+              "label": "out [2,1] | stack [3]"
+            },
+            {
+              "id": "out [2,1,3] | stack []",
+              "label": "out [2,1,3] | stack []"
+            },
+            {
+              "id": "out [2] | stack [1,3]",
+              "label": "out [2] | stack [1,3]"
+            },
+            {
+              "id": "out [2,3] | stack [1]",
+              "label": "out [2,3] | stack [1]"
+            },
+            {
+              "id": "out [2,3,1] | stack []",
+              "label": "out [2,3,1] | stack []"
+            },
+            {
+              "id": "out [] | stack [1,2,3]",
+              "label": "out [] | stack [1,2,3]"
+            },
+            {
+              "id": "out [3] | stack [1,2]",
+              "label": "out [3] | stack [1,2]"
+            },
+            {
+              "id": "out [3,2] | stack [1]",
+              "label": "out [3,2] | stack [1]"
+            },
+            {
+              "id": "out [3,2,1] | stack []",
+              "label": "out [3,2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "out [] | stack [1]"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [1] | stack []"
+            },
+            {
+              "from": "out [1] | stack []",
+              "to": "out [1] | stack [2]"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1,2] | stack []"
+            },
+            {
+              "from": "out [1,2] | stack []",
+              "to": "out [1,2] | stack [3]"
+            },
+            {
+              "from": "out [1,2] | stack [3]",
+              "to": "out [1,2,3] | stack []"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1] | stack [2,3]"
+            },
+            {
+              "from": "out [1] | stack [2,3]",
+              "to": "out [1,3] | stack [2]"
+            },
+            {
+              "from": "out [1,3] | stack [2]",
+              "to": "out [1,3,2] | stack []"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [] | stack [1,2]"
+            },
+            {
+              "from": "out [] | stack [1,2]",
+              "to": "out [2] | stack [1]"
+            },
+            {
+              "from": "out [2] | stack [1]",
+              "to": "out [2,1] | stack []"
+            },
+            {
+              "from": "out [2,1] | stack []",
+              "to": "out [2,1] | stack [3]"
+            },
+            {
+              "from": "out [2,1] | stack [3]",
+              "to": "out [2,1,3] | stack []"
+            },
+            {
+              "from": "out [2] | stack [1]",
+              "to": "out [2] | stack [1,3]"
+            },
+            {
+              "from": "out [2] | stack [1,3]",
+              "to": "out [2,3] | stack [1]"
+            },
+            {
+              "from": "out [2,3] | stack [1]",
+              "to": "out [2,3,1] | stack []"
+            },
+            {
+              "from": "out [] | stack [1,2]",
+              "to": "out [] | stack [1,2,3]"
+            },
+            {
+              "from": "out [] | stack [1,2,3]",
+              "to": "out [3] | stack [1,2]"
+            },
+            {
+              "from": "out [3] | stack [1,2]",
+              "to": "out [3,2] | stack [1]"
+            },
+            {
+              "from": "out [3,2] | stack [1]",
+              "to": "out [3,2,1] | stack []"
+            }
+          ]
+        },
+        "outputFormat": "list of every pop order",
+        "buggyOutput": "[[3,2,1]]",
+        "correctOutput": "[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,2,1]]",
+        "correctDiagnosis": "pops-late",
+        "diagnoses": [
+          {
+            "id": "pops-late",
+            "label": "Claim about the code: it pops only when next > input.n, so every number is pushed before the first pop and only [3,2,1] is saved.",
+            "feedback": "Correct. A pop is allowed whenever the stack is not empty, so remove the next > input.n condition."
+          },
+          {
+            "id": "stops-on-empty",
+            "label": "Claim about the code: it saves a pop order whenever the stack is empty.",
+            "feedback": "It saves out only when out.length === input.n."
+          },
+          {
+            "id": "push-off-by-one",
+            "label": "Claim about the code: it never pushes the last number, n.",
+            "feedback": "The push runs while next <= input.n, so n is pushed too."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "For n = 3 the tree has 22 states. Five of them are finished, one for each pop order.",
+          "codeRule": "A pop is tried only after every number has been pushed.",
+          "separatingFeature": "From out [] | stack [1], the pop edge to out [1] | stack [] is never followed.",
+          "outputConsequence": "The code returns [[3,2,1]] instead of [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,2,1]].",
+          "changedGraph": "Only the path that pushes 1, 2, 3 and then pops three times is left."
+        }
+      },
+      {
+        "id": "stack-pop-orders",
+        "caseId": "push-limit",
+        "bugTitle": "Never Pushes n Itself",
+        "misconception": "push-limit",
+        "input": {
+          "n": 1
+        },
+        "code": "function solve(input) {\n  const orders = [];\n  function build(out, stack, next) {\n    if (out.length === input.n) {\n      orders.push(out);\n      return;\n    }\n    if (stack.length > 0) {\n      build([...out, stack[stack.length - 1]], stack.slice(0, -1), next);\n    }\n    if (next < input.n) {\n      build(out, [...stack, next], next + 1);\n    }\n  }\n  build([], [], 1);\n  return orders;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "out [] | stack [1]",
+              "label": "out [] | stack [1]"
+            },
+            {
+              "id": "out [1] | stack []",
+              "label": "out [1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "out [] | stack [1]"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [1] | stack []"
+            }
+          ]
+        },
+        "outputFormat": "list of every pop order",
+        "buggyOutput": "[]",
+        "correctOutput": "[[1]]",
+        "correctDiagnosis": "push-off-by-one",
+        "diagnoses": [
+          {
+            "id": "push-off-by-one",
+            "label": "Claim about the code: next < input.n is false when next = n, so the last number is never pushed and no pop order is ever finished.",
+            "feedback": "Correct. The next number may be pushed while next <= input.n, including n itself."
+          },
+          {
+            "id": "pops-late",
+            "label": "Claim about the code: it pops only after every number has been pushed.",
+            "feedback": "The pop runs whenever the stack is not empty."
+          },
+          {
+            "id": "stops-on-empty",
+            "label": "Claim about the code: it saves a pop order whenever the stack is empty.",
+            "feedback": "It saves out only when out.length === input.n."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "For n = 1 the tree is start → out [] | stack [1] → out [1] | stack [].",
+          "codeRule": "A push happens only while next < n, so the number n is never pushed.",
+          "separatingFeature": "With n = 1, next starts at 1, and 1 < 1 is false, so even the first push is skipped.",
+          "outputConsequence": "The code returns [] instead of [[1]].",
+          "changedGraph": "The edge start → out [] | stack [1] is missing, so no other state is reached."
+        }
+      }
+    ]
   }
 ]

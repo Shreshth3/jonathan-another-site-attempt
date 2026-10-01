@@ -1744,5 +1744,207 @@
         }
       ]
     }
+  },
+  {
+    "id": "balanced-brackets",
+    "vocabulary": {
+      "nodeNames": "bracket prefixes",
+      "startNode": "empty string",
+      "edges": "one-bracket extensions",
+      "correctSearch": "prefixes reached",
+      "mistakenSearch": "prefixes the flawed search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "One bracket at most",
+        "presentation": "exact-difference",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Starts after ((",
+        "presentation": "repair-case",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start",
+        "mistakenStartLabel": "(("
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Last bracket only",
+        "presentation": "predict-first",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "bracket-prefix",
+      "description": "Use start for the empty string, then bracket prefixes like ( or (()."
+    },
+    "fixedStart": "start",
+    "input": {
+      "name": "empty string",
+      "prompt": "Choose the empty string",
+      "result": "generated-terminal-strings",
+      "resultLabel": "all balanced strings no deeper than maxDepth",
+      "fields": [
+        {
+          "id": "n",
+          "kind": "integer",
+          "label": "n",
+          "prompt": "Choose n, the number of ( in each string",
+          "required": true,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "id": "maxDepth",
+          "kind": "integer",
+          "label": "maxDepth",
+          "prompt": "Choose maxDepth, the most brackets open at once",
+          "required": true,
+          "min": 1,
+          "max": 5
+        }
+      ]
+    }
+  },
+  {
+    "id": "split-the-digits",
+    "vocabulary": {
+      "nodeNames": "partial cuts",
+      "startNode": "uncut start",
+      "edges": "one-piece cuts",
+      "correctSearch": "partial cuts reached",
+      "mistakenSearch": "cuts the flawed search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Last cut only",
+        "presentation": "predict-first",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Starts after cutting 1",
+        "presentation": "repair-case",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start",
+        "mistakenStartLabel": "1"
+      },
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "One piece at most",
+        "presentation": "exact-difference",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "piece-prefix",
+      "description": "Use start before any cut, then the pieces joined by | like 1 or 12|3."
+    },
+    "fixedStart": "start",
+    "input": {
+      "name": "uncut start",
+      "prompt": "Choose the start, before any cut",
+      "result": "generated-terminal-strings",
+      "resultLabel": "every way to cut digits into allowed pieces",
+      "fields": [
+        {
+          "id": "digits",
+          "kind": "json",
+          "label": "a string of 1\u20136 digits",
+          "prompt": "Enter digits, like 1234",
+          "required": true
+        },
+        {
+          "id": "limit",
+          "kind": "integer",
+          "label": "limit",
+          "prompt": "Choose the limit",
+          "required": true,
+          "min": 1,
+          "max": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "stack-pop-orders",
+    "vocabulary": {
+      "nodeNames": "states",
+      "startNode": "start state",
+      "edges": "moves",
+      "correctSearch": "states reached",
+      "mistakenSearch": "states the flawed search reaches"
+    },
+    "rounds": [
+      {
+        "bugs": [
+          "shallow-search"
+        ],
+        "level": "One move only",
+        "presentation": "exact-difference",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      },
+      {
+        "bugs": [
+          "last-branch"
+        ],
+        "level": "Last move only",
+        "presentation": "predict-first",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start"
+      },
+      {
+        "bugs": [
+          "wrong-start"
+        ],
+        "level": "Starts after 1 is popped",
+        "presentation": "repair-case",
+        "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
+        "startLabel": "start",
+        "mistakenStartLabel": "out [1] | stack []"
+      }
+    ],
+    "nodeLabels": {
+      "rule": "stack-state",
+      "description": "Use start for the first state, then out [...] | stack [...] like out [2] | stack [1,3]."
+    },
+    "fixedStart": "start",
+    "input": {
+      "name": "start state",
+      "prompt": "Choose the start state",
+      "result": "generated-terminal-strings",
+      "resultLabel": "all pop orders",
+      "fields": [
+        {
+          "id": "n",
+          "kind": "integer",
+          "label": "n",
+          "prompt": "Choose n",
+          "required": true,
+          "min": 1,
+          "max": 3
+        }
+      ]
+    }
   }
 ]

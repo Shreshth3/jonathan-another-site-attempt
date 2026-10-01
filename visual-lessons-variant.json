@@ -33026,5 +33026,4754 @@
         4
       ]
     }
+  },
+  {
+    "id": "balanced-brackets",
+    "facets": [
+      "exact n and maxDepth",
+      "prefix state identity",
+      "open and close rules",
+      "complete balanced strings"
+    ],
+    "buildTasks": [
+      {
+        "id": "depth-limit",
+        "title": "Respect maxDepth",
+        "facet": "open and close rules",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=2, maxDepth=1",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which string list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "`()()`",
+              "feedback": "Correct. With maxDepth 1, the first `(` must close before the next one opens, so `(())` is never built.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "`(())` and `()()`",
+              "feedback": "This ignores maxDepth. `(())` has 2 brackets open at once, more than maxDepth 1.",
+              "misconception": "ignore-max-depth"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "With maxDepth 1, the first `(` must close before the next one opens, so `(())` is never built."
+      },
+      {
+        "id": "balanced-closes",
+        "title": "Close only an open bracket",
+        "facet": "open and close rules",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=1, maxDepth=1",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which string list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "`()`",
+              "feedback": "Correct. A `)` must close a `(` that is still open, so `()` is the only string.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "`()` and `)(`",
+              "feedback": "This adds `)` whenever fewer than n `)` are used. `)(` starts by closing a bracket that was never opened.",
+              "misconception": "close-up-to-n"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "A `)` must close a `(` that is still open, so `()` is the only string."
+      },
+      {
+        "id": "full-length",
+        "title": "Finish at 2n brackets",
+        "facet": "complete balanced strings",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=2, maxDepth=2",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "((",
+              "label": "(("
+            },
+            {
+              "id": "(()",
+              "label": "(()"
+            },
+            {
+              "id": "(())",
+              "label": "(())"
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "(("
+            },
+            {
+              "from": "((",
+              "to": "(()"
+            },
+            {
+              "from": "(()",
+              "to": "(())"
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which string list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "`(())` and `()()`",
+              "feedback": "Correct. A complete string has 2 `(` and 2 `)`, so only the 4-bracket leaves `(())` and `()()` are returned.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "`((` and `()`",
+              "feedback": "This returns a prefix as soon as it has n = 2 brackets. `((` and `()` are only halfway: a complete string has 2n = 4.",
+              "misconception": "stop-at-n"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "A complete string has 2 `(` and 2 `)`, so only the 4-bracket leaves `(())` and `()()` are returned."
+      },
+      {
+        "id": "open-cap",
+        "title": "Use exactly n opening brackets",
+        "facet": "exact n and maxDepth",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=1, maxDepth=2",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which string list is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "`()`",
+              "feedback": "Correct. n is 1, so only one `(` is allowed. maxDepth 2 would allow a second, but there is none to use.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "`((` and `()`",
+              "feedback": "This adds `(` whenever the depth allows it, so `((` uses two `(` when n is 1.",
+              "misconception": "no-open-cap"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "n is 1, so only one `(` is allowed. maxDepth 2 would allow a second, but there is none to use."
+      }
+    ],
+    "conceptTasks": [
+      {
+        "id": "concept-picture",
+        "title": "Match every input detail",
+        "facet": "exact n and maxDepth",
+        "kind": "visual-options",
+        "prompt": "Which picture exactly matches this raw input?",
+        "input": "n=2, maxDepth=3",
+        "choices": [
+          {
+            "id": "exact",
+            "label": "Picture A",
+            "feedback": "Correct. Every prefix and every one-bracket extension appears exactly once.",
+            "misconception": null,
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "(",
+                  "label": "("
+                },
+                {
+                  "id": "((",
+                  "label": "(("
+                },
+                {
+                  "id": "(()",
+                  "label": "(()"
+                },
+                {
+                  "id": "(())",
+                  "label": "(())"
+                },
+                {
+                  "id": "()",
+                  "label": "()"
+                },
+                {
+                  "id": "()(",
+                  "label": "()("
+                },
+                {
+                  "id": "()()",
+                  "label": "()()"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "("
+                },
+                {
+                  "from": "(",
+                  "to": "(("
+                },
+                {
+                  "from": "((",
+                  "to": "(()"
+                },
+                {
+                  "from": "(()",
+                  "to": "(())"
+                },
+                {
+                  "from": "(",
+                  "to": "()"
+                },
+                {
+                  "from": "()",
+                  "to": "()("
+                },
+                {
+                  "from": "()(",
+                  "to": "()()"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-node",
+            "label": "Picture D",
+            "feedback": "`(())` is missing. It is a complete balanced string, so it needs its own node.",
+            "misconception": "omit-complete-string",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "(",
+                  "label": "("
+                },
+                {
+                  "id": "((",
+                  "label": "(("
+                },
+                {
+                  "id": "(()",
+                  "label": "(()"
+                },
+                {
+                  "id": "()",
+                  "label": "()"
+                },
+                {
+                  "id": "()(",
+                  "label": "()("
+                },
+                {
+                  "id": "()()",
+                  "label": "()()"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "("
+                },
+                {
+                  "from": "(",
+                  "to": "(("
+                },
+                {
+                  "from": "((",
+                  "to": "(()"
+                },
+                {
+                  "from": "(",
+                  "to": "()"
+                },
+                {
+                  "from": "()",
+                  "to": "()("
+                },
+                {
+                  "from": "()(",
+                  "to": "()()"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-edge",
+            "label": "Picture B",
+            "feedback": "The direct extension from `(` to `()` is missing.",
+            "misconception": "omit-direct-edge",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "(",
+                  "label": "("
+                },
+                {
+                  "id": "((",
+                  "label": "(("
+                },
+                {
+                  "id": "(()",
+                  "label": "(()"
+                },
+                {
+                  "id": "(())",
+                  "label": "(())"
+                },
+                {
+                  "id": "()",
+                  "label": "()"
+                },
+                {
+                  "id": "()(",
+                  "label": "()("
+                },
+                {
+                  "id": "()()",
+                  "label": "()()"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "("
+                },
+                {
+                  "from": "(",
+                  "to": "(("
+                },
+                {
+                  "from": "((",
+                  "to": "(()"
+                },
+                {
+                  "from": "(()",
+                  "to": "(())"
+                },
+                {
+                  "from": "()",
+                  "to": "()("
+                },
+                {
+                  "from": "()(",
+                  "to": "()()"
+                }
+              ]
+            }
+          },
+          {
+            "id": "unbalanced",
+            "label": "Picture C",
+            "feedback": "After `()`, no bracket is open, so `())` closes a bracket that was never opened. A `)` is allowed only while a `(` is still open.",
+            "misconception": "close-up-to-n",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "(",
+                  "label": "("
+                },
+                {
+                  "id": "((",
+                  "label": "(("
+                },
+                {
+                  "id": "(()",
+                  "label": "(()"
+                },
+                {
+                  "id": "(())",
+                  "label": "(())"
+                },
+                {
+                  "id": "()",
+                  "label": "()"
+                },
+                {
+                  "id": "()(",
+                  "label": "()("
+                },
+                {
+                  "id": "()()",
+                  "label": "()()"
+                },
+                {
+                  "id": "())",
+                  "label": "())"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "("
+                },
+                {
+                  "from": "(",
+                  "to": "(("
+                },
+                {
+                  "from": "((",
+                  "to": "(()"
+                },
+                {
+                  "from": "(()",
+                  "to": "(())"
+                },
+                {
+                  "from": "(",
+                  "to": "()"
+                },
+                {
+                  "from": "()",
+                  "to": "()("
+                },
+                {
+                  "from": "()(",
+                  "to": "()()"
+                },
+                {
+                  "from": "()",
+                  "to": "())"
+                }
+              ]
+            }
+          }
+        ],
+        "correct": "exact",
+        "why": "Every prefix and every one-bracket extension appears exactly once.",
+        "remedial": {
+          "id": "repair-1",
+          "title": "Fresh proof · Match every input detail",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=1, maxDepth=4",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "(",
+                "label": "("
+              },
+              {
+                "id": "()",
+                "label": "()"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "("
+              },
+              {
+                "from": "(",
+                "to": "()"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which string list is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`()`",
+                "feedback": "Correct. A complete string has 2n = 2 brackets, so the answer is `()`.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`(`",
+                "feedback": "This returns `(` because it has n = 1 bracket. A complete string has 2n = 2 brackets.",
+                "misconception": "stop-at-n"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "A complete string has 2n = 2 brackets, so the answer is `()`."
+        }
+      },
+      {
+        "id": "concept-nodes",
+        "title": "Protect entity identity",
+        "facet": "prefix state identity",
+        "kind": "choice",
+        "prompt": "What is a node in the bracket decision tree?",
+        "input": "n=2, maxDepth=1",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "prefix",
+            "label": "A prefix: the brackets written so far, from left to right. The root `start` is the empty string.",
+            "feedback": "Correct. Each level adds one bracket, so a node remembers the whole string built so far.",
+            "misconception": null
+          },
+          {
+            "id": "depth",
+            "label": "One node per depth, so prefixes with the same number of open brackets share a node.",
+            "feedback": "Different prefixes can have the same depth: `(` and `(()` both have one bracket open. They lead to different strings, so each needs its own node.",
+            "misconception": "merge-by-depth"
+          },
+          {
+            "id": "full",
+            "label": "Only complete strings with 2n brackets.",
+            "feedback": "Complete strings are the leaves. The shorter prefixes are needed to show the choices that lead to them.",
+            "misconception": "leaves-only"
+          },
+          {
+            "id": "bracket",
+            "label": "Two nodes in total: one for `(` and one for `)`.",
+            "feedback": "The same bracket at a different place builds a different string. A node must remember the whole prefix, not just its last bracket.",
+            "misconception": "bracket-as-node"
+          }
+        ],
+        "correct": "prefix",
+        "why": "Correct. Each level adds one bracket, so a node remembers the whole string built so far.",
+        "remedial": {
+          "id": "repair-2",
+          "title": "Fresh proof · Protect entity identity",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=2, maxDepth=2",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "(",
+                "label": "("
+              },
+              {
+                "id": "((",
+                "label": "(("
+              },
+              {
+                "id": "(()",
+                "label": "(()"
+              },
+              {
+                "id": "(())",
+                "label": "(())"
+              },
+              {
+                "id": "()",
+                "label": "()"
+              },
+              {
+                "id": "()(",
+                "label": "()("
+              },
+              {
+                "id": "()()",
+                "label": "()()"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "("
+              },
+              {
+                "from": "(",
+                "to": "(("
+              },
+              {
+                "from": "((",
+                "to": "(()"
+              },
+              {
+                "from": "(()",
+                "to": "(())"
+              },
+              {
+                "from": "(",
+                "to": "()"
+              },
+              {
+                "from": "()",
+                "to": "()("
+              },
+              {
+                "from": "()(",
+                "to": "()()"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "How many strings are returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "2",
+                "feedback": "Correct. The tree has 8 prefixes, but only the 2 complete strings `(())` and `()()` are returned.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "8",
+                "feedback": "This returns every node, including the empty string at `start` and unfinished prefixes like `((`. Only complete strings with 2n brackets are answers.",
+                "misconception": "every-node"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "The tree has 8 prefixes, but only the 2 complete strings `(())` and `()()` are returned."
+        }
+      },
+      {
+        "id": "concept-relations",
+        "title": "Protect direct relations",
+        "facet": "open and close rules",
+        "kind": "choice",
+        "prompt": "When does a prefix have an edge to a longer prefix?",
+        "input": "n=2, maxDepth=2",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "((",
+              "label": "(("
+            },
+            {
+              "id": "(()",
+              "label": "(()"
+            },
+            {
+              "id": "(())",
+              "label": "(())"
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "(("
+            },
+            {
+              "from": "((",
+              "to": "(()"
+            },
+            {
+              "from": "(()",
+              "to": "(())"
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "two-rules",
+            "label": "Add `(` if fewer than n `(` are used and fewer than maxDepth brackets are open. Add `)` if fewer `)` than `(` are used so far.",
+            "feedback": "Correct. A new `(` keeps the depth at most maxDepth, and a new `)` always closes a bracket that is still open.",
+            "misconception": null
+          },
+          {
+            "id": "close-up-to-n",
+            "label": "Add `(` by the same rule. Add `)` whenever fewer than n `)` are used.",
+            "feedback": "Then `)` could come first, as in `)(`. That closes a bracket that was never opened, so the string is not balanced.",
+            "misconception": "close-up-to-n"
+          },
+          {
+            "id": "depth-at-most",
+            "label": "Add `(` if fewer than n `(` are used and at most maxDepth brackets are open. Add `)` if fewer `)` than `(` are used so far.",
+            "feedback": "If maxDepth brackets are already open, one more `(` makes the depth maxDepth + 1, which is too deep.",
+            "misconception": "depth-over-by-one"
+          },
+          {
+            "id": "no-cap",
+            "label": "Add `(` whenever fewer than maxDepth brackets are open. Add `)` if fewer `)` than `(` are used so far.",
+            "feedback": "Every answer has exactly n `(`. Without the n check, a string can use more `(` than `)`, like `((` when n is 1.",
+            "misconception": "no-open-cap"
+          }
+        ],
+        "correct": "two-rules",
+        "why": "Correct. A new `(` keeps the depth at most maxDepth, and a new `)` always closes a bracket that is still open.",
+        "remedial": {
+          "id": "repair-3",
+          "title": "Fresh proof · Protect direct relations",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=2, maxDepth=3",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "(",
+                "label": "("
+              },
+              {
+                "id": "((",
+                "label": "(("
+              },
+              {
+                "id": "(()",
+                "label": "(()"
+              },
+              {
+                "id": "(())",
+                "label": "(())"
+              },
+              {
+                "id": "()",
+                "label": "()"
+              },
+              {
+                "id": "()(",
+                "label": "()("
+              },
+              {
+                "id": "()()",
+                "label": "()()"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "("
+              },
+              {
+                "from": "(",
+                "to": "(("
+              },
+              {
+                "from": "((",
+                "to": "(()"
+              },
+              {
+                "from": "(()",
+                "to": "(())"
+              },
+              {
+                "from": "(",
+                "to": "()"
+              },
+              {
+                "from": "()",
+                "to": "()("
+              },
+              {
+                "from": "()(",
+                "to": "()()"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "How many strings are returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "2",
+                "feedback": "Correct. Only `(())` and `()()` are returned: every `)` closes a `(` that is still open.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "6",
+                "feedback": "This adds `)` whenever fewer than n `)` are used, so it also counts unbalanced strings like `)(()` and `())(`.",
+                "misconception": "close-up-to-n"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "Only `(())` and `()()` are returned: every `)` closes a `(` that is still open."
+        }
+      },
+      {
+        "id": "concept-output",
+        "title": "Predict from a fresh input",
+        "facet": "complete balanced strings",
+        "kind": "choice",
+        "prompt": "For n = `1` and maxDepth = `3`, which strings are returned?",
+        "input": "n=1, maxDepth=3",
+        "choices": [
+          {
+            "id": "one",
+            "feedback": "Correct. With one `(` and one `)`, the only balanced string is `()`. maxDepth 3 never matters, because at most one bracket can be open.",
+            "misconception": null,
+            "label": "`()`"
+          },
+          {
+            "id": "closes-first",
+            "feedback": "`)(` starts with a `)` that closes nothing. A `)` is allowed only while a `(` is still open.",
+            "misconception": "close-up-to-n",
+            "label": "`()` and `)(`"
+          },
+          {
+            "id": "half",
+            "feedback": "`(` is only half a string. A complete string has n `(` and n `)`, so it is 2n = 2 brackets long.",
+            "misconception": "stop-at-n",
+            "label": "`(`"
+          },
+          {
+            "id": "extra-open",
+            "feedback": "`((` uses two `(`, but n is 1. Every string has exactly n `(`, even when maxDepth would allow more.",
+            "misconception": "no-open-cap",
+            "label": "`((` and `()`"
+          }
+        ],
+        "correct": "one",
+        "why": "Correct. With one `(` and one `)`, the only balanced string is `()`. maxDepth 3 never matters, because at most one bracket can be open.",
+        "remedial": {
+          "id": "repair-4",
+          "title": "Fresh proof · Predict from a fresh input",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=1, maxDepth=2",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "(",
+                "label": "("
+              },
+              {
+                "id": "()",
+                "label": "()"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "("
+              },
+              {
+                "from": "(",
+                "to": "()"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which string list is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`()`",
+                "feedback": "Correct. Only `()` is balanced. A `)` must close a `(` that is still open.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`()` and `)(`",
+                "feedback": "This allows `)` first, building `)(`, which closes a bracket that was never opened.",
+                "misconception": "close-up-to-n"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "Only `()` is balanced. A `)` must close a `(` that is still open."
+        }
+      },
+      {
+        "id": "concept-bug",
+        "title": "Catch a near-miss implementation",
+        "facet": "open and close rules",
+        "kind": "choice",
+        "prompt": "For n = `4` and maxDepth = `2`, how many strings are returned?",
+        "input": "n=4, maxDepth=2",
+        "choices": [
+          {
+            "id": "eight",
+            "feedback": "Correct. Of the 14 balanced strings with four pairs, 8 never have more than 2 brackets open at once.",
+            "misconception": null,
+            "label": "`8`"
+          },
+          {
+            "id": "fourteen",
+            "feedback": "This counts every balanced string with four pairs. It ignores maxDepth, so strings like `((()))()` with 3 brackets open are counted too.",
+            "misconception": "ignore-max-depth",
+            "label": "`14`"
+          },
+          {
+            "id": "one",
+            "feedback": "This stops a `(` that would make 2 brackets open. maxDepth 2 allows exactly 2 open at once; only a third is too deep.",
+            "misconception": "depth-under-by-one",
+            "label": "`1`"
+          },
+          {
+            "id": "four",
+            "feedback": "This counts prefixes with 4 brackets. A complete string has n `(` and n `)`, so it is 2n = 8 brackets long.",
+            "misconception": "stop-at-n",
+            "label": "`4`"
+          }
+        ],
+        "correct": "eight",
+        "why": "Correct. Of the 14 balanced strings with four pairs, 8 never have more than 2 brackets open at once.",
+        "remedial": {
+          "id": "repair-5",
+          "title": "Fresh proof · Catch a near-miss implementation",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=2, maxDepth=2",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "(",
+                "label": "("
+              },
+              {
+                "id": "((",
+                "label": "(("
+              },
+              {
+                "id": "(()",
+                "label": "(()"
+              },
+              {
+                "id": "(())",
+                "label": "(())"
+              },
+              {
+                "id": "()",
+                "label": "()"
+              },
+              {
+                "id": "()(",
+                "label": "()("
+              },
+              {
+                "id": "()()",
+                "label": "()()"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "("
+              },
+              {
+                "from": "(",
+                "to": "(("
+              },
+              {
+                "from": "((",
+                "to": "(()"
+              },
+              {
+                "from": "(()",
+                "to": "(())"
+              },
+              {
+                "from": "(",
+                "to": "()"
+              },
+              {
+                "from": "()",
+                "to": "()("
+              },
+              {
+                "from": "()(",
+                "to": "()()"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which string list is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`(())` and `()()`",
+                "feedback": "Correct. `(())` reaches depth 2, which maxDepth 2 allows. Only going deeper than maxDepth is left out.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`()()`",
+                "feedback": "This refuses a `(` that would make 2 brackets open, so it loses `(())`. maxDepth 2 allows exactly 2 open at once.",
+                "misconception": "depth-under-by-one"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "`(())` reaches depth 2, which maxDepth 2 allows. Only going deeper than maxDepth is left out."
+        }
+      }
+    ],
+    "structureTasks": [
+      {
+        "id": "transfer-1",
+        "input": "n=2, maxDepth=4",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "((",
+              "label": "(("
+            },
+            {
+              "id": "(()",
+              "label": "(()"
+            },
+            {
+              "id": "(())",
+              "label": "(())"
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "(("
+            },
+            {
+              "from": "((",
+              "to": "(()"
+            },
+            {
+              "from": "(()",
+              "to": "(())"
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-2",
+        "input": "n=3, maxDepth=1",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            },
+            {
+              "id": "()()(",
+              "label": "()()("
+            },
+            {
+              "id": "()()()",
+              "label": "()()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            },
+            {
+              "from": "()()",
+              "to": "()()("
+            },
+            {
+              "from": "()()(",
+              "to": "()()()"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-3",
+        "input": "n=1, maxDepth=5",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-4",
+        "input": "n=2, maxDepth=5",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "((",
+              "label": "(("
+            },
+            {
+              "id": "(()",
+              "label": "(()"
+            },
+            {
+              "id": "(())",
+              "label": "(())"
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "(("
+            },
+            {
+              "from": "((",
+              "to": "(()"
+            },
+            {
+              "from": "(()",
+              "to": "(())"
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-5",
+        "input": "n=4, maxDepth=1",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "(",
+              "label": "("
+            },
+            {
+              "id": "()",
+              "label": "()"
+            },
+            {
+              "id": "()(",
+              "label": "()("
+            },
+            {
+              "id": "()()",
+              "label": "()()"
+            },
+            {
+              "id": "()()(",
+              "label": "()()("
+            },
+            {
+              "id": "()()()",
+              "label": "()()()"
+            },
+            {
+              "id": "()()()(",
+              "label": "()()()("
+            },
+            {
+              "id": "()()()()",
+              "label": "()()()()"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "("
+            },
+            {
+              "from": "(",
+              "to": "()"
+            },
+            {
+              "from": "()",
+              "to": "()("
+            },
+            {
+              "from": "()(",
+              "to": "()()"
+            },
+            {
+              "from": "()()",
+              "to": "()()("
+            },
+            {
+              "from": "()()(",
+              "to": "()()()"
+            },
+            {
+              "from": "()()()",
+              "to": "()()()("
+            },
+            {
+              "from": "()()()(",
+              "to": "()()()()"
+            }
+          ]
+        }
+      }
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "depth-limit",
+        "concept-nodes",
+        "balanced-closes",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
+  },
+  {
+    "id": "split-the-digits",
+    "facets": [
+      "exact digits and limit",
+      "partial-cut identity",
+      "allowed next pieces",
+      "complete cuts only"
+    ],
+    "buildTasks": [
+      {
+        "id": "zero-piece",
+        "title": "Keep a lone 0, but not 05",
+        "facet": "allowed next pieces",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "digits=\"205\", limit=30",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2|0",
+              "label": "2|0"
+            },
+            {
+              "id": "2|0|5",
+              "label": "2|0|5"
+            },
+            {
+              "id": "20",
+              "label": "20"
+            },
+            {
+              "id": "20|5",
+              "label": "20|5"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2|0"
+            },
+            {
+              "from": "2|0",
+              "to": "2|0|5"
+            },
+            {
+              "from": "start",
+              "to": "20"
+            },
+            {
+              "from": "20",
+              "to": "20|5"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which list of ways is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[[2,0,5],[20,5]]",
+              "feedback": "Correct. `2|0|5` and `20|5` work. A lone 0 is an allowed piece, but 05 starts with 0, and 205 is over 30.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[[2,0,5],[2,5],[20,5]]",
+              "feedback": "This also keeps `2|05`, reading 05 as 5. A piece cannot start with 0 unless it is exactly 0.",
+              "misconception": "allow-leading-zero"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "`2|0|5` and `20|5` work. A lone 0 is an allowed piece, but 05 starts with 0, and 205 is over 30."
+      },
+      {
+        "id": "number-not-text",
+        "title": "Compare numbers, not text",
+        "facet": "exact digits and limit",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "digits=\"394\", limit=40",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "3",
+              "label": "3"
+            },
+            {
+              "id": "3|9",
+              "label": "3|9"
+            },
+            {
+              "id": "3|9|4",
+              "label": "3|9|4"
+            },
+            {
+              "id": "39",
+              "label": "39"
+            },
+            {
+              "id": "39|4",
+              "label": "39|4"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "3"
+            },
+            {
+              "from": "3",
+              "to": "3|9"
+            },
+            {
+              "from": "3|9",
+              "to": "3|9|4"
+            },
+            {
+              "from": "start",
+              "to": "39"
+            },
+            {
+              "from": "39",
+              "to": "39|4"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which list of ways is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[[3,9,4],[39,4]]",
+              "feedback": "Correct. `3|9|4` and `39|4` work: 9 and 39 are at most 40. 94 and 394 are over 40.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[[39,4],[394]]",
+              "feedback": "This compares pieces as text. In dictionary order \"9\" comes after \"40\", so 9 looks too big, and \"394\" comes before \"40\", so 394 looks small enough.",
+              "misconception": "compare-as-text"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "`3|9|4` and `39|4` work: 9 and 39 are at most 40. 94 and 394 are over 40."
+      },
+      {
+        "id": "every-length",
+        "title": "Try pieces of every length",
+        "facet": "allowed next pieces",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "digits=\"251\", limit=300",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2|5",
+              "label": "2|5"
+            },
+            {
+              "id": "2|5|1",
+              "label": "2|5|1"
+            },
+            {
+              "id": "2|51",
+              "label": "2|51"
+            },
+            {
+              "id": "25",
+              "label": "25"
+            },
+            {
+              "id": "25|1",
+              "label": "25|1"
+            },
+            {
+              "id": "251",
+              "label": "251"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2|5"
+            },
+            {
+              "from": "2|5",
+              "to": "2|5|1"
+            },
+            {
+              "from": "2",
+              "to": "2|51"
+            },
+            {
+              "from": "start",
+              "to": "25"
+            },
+            {
+              "from": "25",
+              "to": "25|1"
+            },
+            {
+              "from": "start",
+              "to": "251"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which list of ways is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[[2,5,1],[2,51],[25,1],[251]]",
+              "feedback": "Correct. 251 is one piece of 3 digits, and it is at most 300, so `[251]` is a way too.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[[2,5,1],[2,51],[25,1]]",
+              "feedback": "This tries only pieces of 1 or 2 digits, so it never cuts 251 as one piece.",
+              "misconception": "lengths-one-two"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "251 is one piece of 3 digits, and it is at most 300, so `[251]` is a way too."
+      },
+      {
+        "id": "dead-end",
+        "title": "A dead end is not a way",
+        "facet": "complete cuts only",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "digits=\"2481\", limit=6",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2|4",
+              "label": "2|4"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2|4"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which list of ways is returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "[]",
+              "feedback": "Correct. After `2|4`, the next digit 8 is over 6, and every longer piece from there is bigger still. `2|4` is a dead end, and no way uses every digit.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "[[2,4]]",
+              "feedback": "This records `2|4` because it cannot go further. A way must use every digit, and 8 and 1 are never used.",
+              "misconception": "dead-end-as-answer"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "After `2|4`, the next digit 8 is over 6, and every longer piece from there is bigger still. `2|4` is a dead end, and no way uses every digit."
+      }
+    ],
+    "conceptTasks": [
+      {
+        "id": "concept-picture",
+        "title": "Match every input detail",
+        "facet": "exact digits and limit",
+        "kind": "visual-options",
+        "prompt": "Which picture exactly matches this raw input?",
+        "input": "digits=\"907\", limit=95",
+        "choices": [
+          {
+            "id": "exact",
+            "label": "Picture A",
+            "feedback": "Correct. Every allowed partial cut and every one-piece cut appears exactly once.",
+            "misconception": null,
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "9",
+                  "label": "9"
+                },
+                {
+                  "id": "9|0",
+                  "label": "9|0"
+                },
+                {
+                  "id": "9|0|7",
+                  "label": "9|0|7"
+                },
+                {
+                  "id": "90",
+                  "label": "90"
+                },
+                {
+                  "id": "90|7",
+                  "label": "90|7"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "9"
+                },
+                {
+                  "from": "9",
+                  "to": "9|0"
+                },
+                {
+                  "from": "9|0",
+                  "to": "9|0|7"
+                },
+                {
+                  "from": "start",
+                  "to": "90"
+                },
+                {
+                  "from": "90",
+                  "to": "90|7"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-node",
+            "label": "Picture D",
+            "feedback": "Cut `90|7` is missing. 90 is at most 95, so after cutting 90 you can still cut 7.",
+            "misconception": "omit-cut",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "9",
+                  "label": "9"
+                },
+                {
+                  "id": "9|0",
+                  "label": "9|0"
+                },
+                {
+                  "id": "9|0|7",
+                  "label": "9|0|7"
+                },
+                {
+                  "id": "90",
+                  "label": "90"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "9"
+                },
+                {
+                  "from": "9",
+                  "to": "9|0"
+                },
+                {
+                  "from": "9|0",
+                  "to": "9|0|7"
+                },
+                {
+                  "from": "start",
+                  "to": "90"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-edge",
+            "label": "Picture B",
+            "feedback": "The direct cut from `9` to `9|0` is missing.",
+            "misconception": "omit-direct-edge",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "9",
+                  "label": "9"
+                },
+                {
+                  "id": "9|0",
+                  "label": "9|0"
+                },
+                {
+                  "id": "9|0|7",
+                  "label": "9|0|7"
+                },
+                {
+                  "id": "90",
+                  "label": "90"
+                },
+                {
+                  "id": "90|7",
+                  "label": "90|7"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "9"
+                },
+                {
+                  "from": "9|0",
+                  "to": "9|0|7"
+                },
+                {
+                  "from": "start",
+                  "to": "90"
+                },
+                {
+                  "from": "90",
+                  "to": "90|7"
+                }
+              ]
+            }
+          },
+          {
+            "id": "leading-zero",
+            "label": "Picture C",
+            "feedback": "`9|07` should not be drawn: 07 starts with 0, so it is not an allowed piece. Only a lone 0 may start with 0.",
+            "misconception": "allow-leading-zero",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "start",
+                  "label": "start"
+                },
+                {
+                  "id": "9",
+                  "label": "9"
+                },
+                {
+                  "id": "9|0",
+                  "label": "9|0"
+                },
+                {
+                  "id": "9|0|7",
+                  "label": "9|0|7"
+                },
+                {
+                  "id": "90",
+                  "label": "90"
+                },
+                {
+                  "id": "90|7",
+                  "label": "90|7"
+                },
+                {
+                  "id": "9|07",
+                  "label": "9|07"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "start",
+                  "to": "9"
+                },
+                {
+                  "from": "9",
+                  "to": "9|0"
+                },
+                {
+                  "from": "9|0",
+                  "to": "9|0|7"
+                },
+                {
+                  "from": "start",
+                  "to": "90"
+                },
+                {
+                  "from": "90",
+                  "to": "90|7"
+                },
+                {
+                  "from": "9",
+                  "to": "9|07"
+                }
+              ]
+            }
+          }
+        ],
+        "correct": "exact",
+        "why": "Every allowed partial cut and every one-piece cut appears exactly once.",
+        "remedial": {
+          "id": "repair-1",
+          "title": "Fresh proof · Match every input detail",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "digits=\"1203\", limit=15",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "1",
+                "label": "1"
+              },
+              {
+                "id": "1|2",
+                "label": "1|2"
+              },
+              {
+                "id": "1|2|0",
+                "label": "1|2|0"
+              },
+              {
+                "id": "1|2|0|3",
+                "label": "1|2|0|3"
+              },
+              {
+                "id": "12",
+                "label": "12"
+              },
+              {
+                "id": "12|0",
+                "label": "12|0"
+              },
+              {
+                "id": "12|0|3",
+                "label": "12|0|3"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "1"
+              },
+              {
+                "from": "1",
+                "to": "1|2"
+              },
+              {
+                "from": "1|2",
+                "to": "1|2|0"
+              },
+              {
+                "from": "1|2|0",
+                "to": "1|2|0|3"
+              },
+              {
+                "from": "start",
+                "to": "12"
+              },
+              {
+                "from": "12",
+                "to": "12|0"
+              },
+              {
+                "from": "12|0",
+                "to": "12|0|3"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which list of ways is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[[1,2,0,3],[12,0,3]]",
+                "feedback": "Correct. A lone 0 is an allowed piece, so `1|2|0|3` and `12|0|3` work. 03 starts with 0, and 20 and 120 are over 15.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[]",
+                "feedback": "This refuses every piece that starts with 0, even a lone 0, so every cut gets stuck at the 0.",
+                "misconception": "reject-zero"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "A lone 0 is an allowed piece, so `1|2|0|3` and `12|0|3` work. 03 starts with 0, and 20 and 120 are over 15."
+        }
+      },
+      {
+        "id": "concept-nodes",
+        "title": "Protect entity identity",
+        "facet": "partial-cut identity",
+        "kind": "choice",
+        "prompt": "What is a node in the cutting tree?",
+        "input": "digits=\"12\", limit=20",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            },
+            {
+              "id": "1|2",
+              "label": "1|2"
+            },
+            {
+              "id": "12",
+              "label": "12"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "1"
+            },
+            {
+              "from": "1",
+              "to": "1|2"
+            },
+            {
+              "from": "start",
+              "to": "12"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "cut",
+            "label": "The pieces cut so far, in order. The root, `start`, has no pieces yet.",
+            "feedback": "Correct. The pieces cut so far also say how many digits are used, so each node knows where the next piece starts.",
+            "misconception": null
+          },
+          {
+            "id": "position",
+            "label": "One node per number of digits used so far, so `1|2` and `12` share a node.",
+            "feedback": "`1|2` and `12` both use two digits, but they are different ways to cut. Each leads to its own answers, so each needs its own node.",
+            "misconception": "visited-position"
+          },
+          {
+            "id": "full",
+            "label": "Only cuts that use every digit.",
+            "feedback": "Partial cuts count too. `1` has not used every digit, but the tree needs it to reach `1|2`.",
+            "misconception": "leaves-only"
+          },
+          {
+            "id": "digit",
+            "label": "One node per digit in digits.",
+            "feedback": "One digit can be part of many different pieces. A node must remember the whole cut so far.",
+            "misconception": "digit-as-node"
+          }
+        ],
+        "correct": "cut",
+        "why": "Correct. The pieces cut so far also say how many digits are used, so each node knows where the next piece starts.",
+        "remedial": {
+          "id": "repair-2",
+          "title": "Fresh proof · Protect entity identity",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "digits=\"213\", limit=30",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "2",
+                "label": "2"
+              },
+              {
+                "id": "2|1",
+                "label": "2|1"
+              },
+              {
+                "id": "2|1|3",
+                "label": "2|1|3"
+              },
+              {
+                "id": "2|13",
+                "label": "2|13"
+              },
+              {
+                "id": "21",
+                "label": "21"
+              },
+              {
+                "id": "21|3",
+                "label": "21|3"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "2"
+              },
+              {
+                "from": "2",
+                "to": "2|1"
+              },
+              {
+                "from": "2|1",
+                "to": "2|1|3"
+              },
+              {
+                "from": "2",
+                "to": "2|13"
+              },
+              {
+                "from": "start",
+                "to": "21"
+              },
+              {
+                "from": "21",
+                "to": "21|3"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "How many ways are returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "3",
+                "feedback": "Correct. `2|1|3`, `2|13`, and `21|3` are three different ways, even though they reach the same positions in digits.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "1",
+                "feedback": "This visits each position only once, so `2|13` and `21|3` are skipped after `2|1|3` reaches those positions first.",
+                "misconception": "visited-position"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "`2|1|3`, `2|13`, and `21|3` are three different ways, even though they reach the same positions in digits."
+        }
+      },
+      {
+        "id": "concept-relations",
+        "title": "Protect direct relations",
+        "facet": "allowed next pieces",
+        "kind": "choice",
+        "prompt": "When does a partial cut have an edge to a longer cut?",
+        "input": "digits=\"324\", limit=40",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "3",
+              "label": "3"
+            },
+            {
+              "id": "3|2",
+              "label": "3|2"
+            },
+            {
+              "id": "3|2|4",
+              "label": "3|2|4"
+            },
+            {
+              "id": "3|24",
+              "label": "3|24"
+            },
+            {
+              "id": "32",
+              "label": "32"
+            },
+            {
+              "id": "32|4",
+              "label": "32|4"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "3"
+            },
+            {
+              "from": "3",
+              "to": "3|2"
+            },
+            {
+              "from": "3|2",
+              "to": "3|2|4"
+            },
+            {
+              "from": "3",
+              "to": "3|24"
+            },
+            {
+              "from": "start",
+              "to": "32"
+            },
+            {
+              "from": "32",
+              "to": "32|4"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "next-piece",
+            "label": "Cut the next piece, of any length, right after the last piece. Its number must be at most limit, and it must not start with `0` unless it is exactly `0`.",
+            "feedback": "Correct. Each edge cuts one more allowed piece from the digits that are left.",
+            "misconception": null
+          },
+          {
+            "id": "short",
+            "label": "Cut the next piece of 1 or 2 digits, if its number is at most limit and it does not start with `0` unless it is exactly `0`.",
+            "feedback": "Pieces can have 3 or more digits. Any length is allowed while the number stays at most limit.",
+            "misconception": "lengths-one-two"
+          },
+          {
+            "id": "strict",
+            "label": "Cut the next piece, of any length, if its number is below limit and it does not start with `0` unless it is exactly `0`.",
+            "feedback": "A piece exactly equal to limit is allowed. Only a number over limit is left out.",
+            "misconception": "strict-limit"
+          },
+          {
+            "id": "leading",
+            "label": "Cut the next piece, of any length, if its number is at most limit. A piece like `05` counts as 5.",
+            "feedback": "A piece cannot start with `0` unless it is exactly `0`. `05` is not allowed, even though 5 is small.",
+            "misconception": "allow-leading-zero"
+          }
+        ],
+        "correct": "next-piece",
+        "why": "Correct. Each edge cuts one more allowed piece from the digits that are left.",
+        "remedial": {
+          "id": "repair-3",
+          "title": "Fresh proof · Protect direct relations",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "digits=\"315\", limit=15",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "3",
+                "label": "3"
+              },
+              {
+                "id": "3|1",
+                "label": "3|1"
+              },
+              {
+                "id": "3|1|5",
+                "label": "3|1|5"
+              },
+              {
+                "id": "3|15",
+                "label": "3|15"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "3"
+              },
+              {
+                "from": "3",
+                "to": "3|1"
+              },
+              {
+                "from": "3|1",
+                "to": "3|1|5"
+              },
+              {
+                "from": "3",
+                "to": "3|15"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which list of ways is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[[3,1,5],[3,15]]",
+                "feedback": "Correct. 15 equals the limit, so `3|15` works too. 31 and 315 are over 15.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[[3,1,5]]",
+                "feedback": "This leaves out a piece equal to 15. Only a number over limit is not allowed.",
+                "misconception": "strict-limit"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "15 equals the limit, so `3|15` works too. 31 and 315 are over 15."
+        }
+      },
+      {
+        "id": "concept-output",
+        "title": "Predict from a fresh input",
+        "facet": "allowed next pieces",
+        "kind": "choice",
+        "prompt": "For digits `\"406\"` with limit `40`, which ways are returned?",
+        "input": "digits=\"406\", limit=40",
+        "choices": [
+          {
+            "id": "two",
+            "feedback": "Correct. 40 equals the limit, so it is allowed, and a lone 0 is allowed too. 06 starts with 0, and 406 is over 40.",
+            "misconception": null,
+            "label": "`[4, 0, 6]` and `[40, 6]`"
+          },
+          {
+            "id": "leading",
+            "feedback": "06 starts with 0, so cutting 4 then 06 is not allowed, even though 6 is small.",
+            "misconception": "allow-leading-zero",
+            "label": "`[4, 0, 6]`, `[4, 6]`, and `[40, 6]`"
+          },
+          {
+            "id": "no-zero",
+            "feedback": "A piece that is exactly 0 is allowed, so cutting 4, 0, 6 works too.",
+            "misconception": "reject-zero",
+            "label": "`[40, 6]`"
+          },
+          {
+            "id": "strict",
+            "feedback": "40 equals the limit, which is allowed. Only a number over limit is left out.",
+            "misconception": "strict-limit",
+            "label": "`[4, 0, 6]`"
+          }
+        ],
+        "correct": "two",
+        "why": "Correct. 40 equals the limit, so it is allowed, and a lone 0 is allowed too. 06 starts with 0, and 406 is over 40.",
+        "remedial": {
+          "id": "repair-4",
+          "title": "Fresh proof · Predict from a fresh input",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "digits=\"192\", limit=25",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "1",
+                "label": "1"
+              },
+              {
+                "id": "1|9",
+                "label": "1|9"
+              },
+              {
+                "id": "1|9|2",
+                "label": "1|9|2"
+              },
+              {
+                "id": "19",
+                "label": "19"
+              },
+              {
+                "id": "19|2",
+                "label": "19|2"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "1"
+              },
+              {
+                "from": "1",
+                "to": "1|9"
+              },
+              {
+                "from": "1|9",
+                "to": "1|9|2"
+              },
+              {
+                "from": "start",
+                "to": "19"
+              },
+              {
+                "from": "19",
+                "to": "19|2"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which list of ways is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[[1,9,2],[19,2]]",
+                "feedback": "Correct. `1|9|2` and `19|2` work: 9 and 19 are at most 25. 92 and 192 are over 25.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[[19,2],[192]]",
+                "feedback": "This compares pieces as text: \"9\" comes after \"25\" in dictionary order, and \"192\" comes before it.",
+                "misconception": "compare-as-text"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "`1|9|2` and `19|2` work: 9 and 19 are at most 25. 92 and 192 are over 25."
+        }
+      },
+      {
+        "id": "concept-bug",
+        "title": "Catch a near-miss implementation",
+        "facet": "complete cuts only",
+        "kind": "choice",
+        "prompt": "For digits `\"314\"` with limit `400`, how many ways are returned?",
+        "input": "digits=\"314\", limit=400",
+        "choices": [
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "Correct. `3|1|4`, `3|14`, `31|4`, and `314` all work. 314 is one piece of 3 digits, and it is at most 400.",
+            "misconception": null
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "This tries only pieces of 1 or 2 digits, so it misses the single piece 314.",
+            "misconception": "lengths-one-two"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "This marks each position as visited, like a graph search. `3|14`, `31|4`, and `314` reach positions that `3|1|4` already visited, so they are skipped. Different cuts that reach the same position are different answers.",
+            "misconception": "visited-position"
+          },
+          {
+            "id": "eight",
+            "label": "`8`",
+            "feedback": "This counts every partial cut in the tree, including start. Only cuts that use every digit are answers.",
+            "misconception": "record-every-node"
+          }
+        ],
+        "correct": "four",
+        "why": "Correct. `3|1|4`, `3|14`, `31|4`, and `314` all work. 314 is one piece of 3 digits, and it is at most 400.",
+        "remedial": {
+          "id": "repair-5",
+          "title": "Fresh proof · Catch a near-miss implementation",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "digits=\"1291\", limit=5",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "start",
+                "label": "start"
+              },
+              {
+                "id": "1",
+                "label": "1"
+              },
+              {
+                "id": "1|2",
+                "label": "1|2"
+              }
+            ],
+            "edges": [
+              {
+                "from": "start",
+                "to": "1"
+              },
+              {
+                "from": "1",
+                "to": "1|2"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which list of ways is returned?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "[]",
+                "feedback": "Correct. After `1|2`, the digit 9 is over 5, so `1|2` is a dead end. 12 is over 5 too, so no way uses every digit.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "[[1,2]]",
+                "feedback": "This records the dead end `1|2`. A way must use every digit.",
+                "misconception": "dead-end-as-answer"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "After `1|2`, the digit 9 is over 5, so `1|2` is a dead end. 12 is over 5 too, so no way uses every digit."
+        }
+      }
+    ],
+    "structureTasks": [
+      {
+        "id": "transfer-1",
+        "input": "digits=\"1010\", limit=10",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            },
+            {
+              "id": "1|0",
+              "label": "1|0"
+            },
+            {
+              "id": "1|0|1",
+              "label": "1|0|1"
+            },
+            {
+              "id": "1|0|1|0",
+              "label": "1|0|1|0"
+            },
+            {
+              "id": "1|0|10",
+              "label": "1|0|10"
+            },
+            {
+              "id": "10",
+              "label": "10"
+            },
+            {
+              "id": "10|1",
+              "label": "10|1"
+            },
+            {
+              "id": "10|1|0",
+              "label": "10|1|0"
+            },
+            {
+              "id": "10|10",
+              "label": "10|10"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "1"
+            },
+            {
+              "from": "1",
+              "to": "1|0"
+            },
+            {
+              "from": "1|0",
+              "to": "1|0|1"
+            },
+            {
+              "from": "1|0|1",
+              "to": "1|0|1|0"
+            },
+            {
+              "from": "1|0",
+              "to": "1|0|10"
+            },
+            {
+              "from": "start",
+              "to": "10"
+            },
+            {
+              "from": "10",
+              "to": "10|1"
+            },
+            {
+              "from": "10|1",
+              "to": "10|1|0"
+            },
+            {
+              "from": "10",
+              "to": "10|10"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-2",
+        "input": "digits=\"271\", limit=80",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "2",
+              "label": "2"
+            },
+            {
+              "id": "2|7",
+              "label": "2|7"
+            },
+            {
+              "id": "2|7|1",
+              "label": "2|7|1"
+            },
+            {
+              "id": "2|71",
+              "label": "2|71"
+            },
+            {
+              "id": "27",
+              "label": "27"
+            },
+            {
+              "id": "27|1",
+              "label": "27|1"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "2"
+            },
+            {
+              "from": "2",
+              "to": "2|7"
+            },
+            {
+              "from": "2|7",
+              "to": "2|7|1"
+            },
+            {
+              "from": "2",
+              "to": "2|71"
+            },
+            {
+              "from": "start",
+              "to": "27"
+            },
+            {
+              "from": "27",
+              "to": "27|1"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-3",
+        "input": "digits=\"3333\", limit=40",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "3",
+              "label": "3"
+            },
+            {
+              "id": "3|3",
+              "label": "3|3"
+            },
+            {
+              "id": "3|3|3",
+              "label": "3|3|3"
+            },
+            {
+              "id": "3|3|3|3",
+              "label": "3|3|3|3"
+            },
+            {
+              "id": "3|3|33",
+              "label": "3|3|33"
+            },
+            {
+              "id": "3|33",
+              "label": "3|33"
+            },
+            {
+              "id": "3|33|3",
+              "label": "3|33|3"
+            },
+            {
+              "id": "33",
+              "label": "33"
+            },
+            {
+              "id": "33|3",
+              "label": "33|3"
+            },
+            {
+              "id": "33|3|3",
+              "label": "33|3|3"
+            },
+            {
+              "id": "33|33",
+              "label": "33|33"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "3"
+            },
+            {
+              "from": "3",
+              "to": "3|3"
+            },
+            {
+              "from": "3|3",
+              "to": "3|3|3"
+            },
+            {
+              "from": "3|3|3",
+              "to": "3|3|3|3"
+            },
+            {
+              "from": "3|3",
+              "to": "3|3|33"
+            },
+            {
+              "from": "3",
+              "to": "3|33"
+            },
+            {
+              "from": "3|33",
+              "to": "3|33|3"
+            },
+            {
+              "from": "start",
+              "to": "33"
+            },
+            {
+              "from": "33",
+              "to": "33|3"
+            },
+            {
+              "from": "33|3",
+              "to": "33|3|3"
+            },
+            {
+              "from": "33",
+              "to": "33|33"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-4",
+        "input": "digits=\"608\", limit=70",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "6",
+              "label": "6"
+            },
+            {
+              "id": "6|0",
+              "label": "6|0"
+            },
+            {
+              "id": "6|0|8",
+              "label": "6|0|8"
+            },
+            {
+              "id": "60",
+              "label": "60"
+            },
+            {
+              "id": "60|8",
+              "label": "60|8"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "6"
+            },
+            {
+              "from": "6",
+              "to": "6|0"
+            },
+            {
+              "from": "6|0",
+              "to": "6|0|8"
+            },
+            {
+              "from": "start",
+              "to": "60"
+            },
+            {
+              "from": "60",
+              "to": "60|8"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-5",
+        "input": "digits=\"1571\", limit=6",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "1",
+              "label": "1"
+            },
+            {
+              "id": "1|5",
+              "label": "1|5"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "1"
+            },
+            {
+              "from": "1",
+              "to": "1|5"
+            }
+          ]
+        }
+      }
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "zero-piece",
+        "concept-nodes",
+        "dead-end",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
+  },
+  {
+    "id": "stack-pop-orders",
+    "facets": [
+      "exact moves and states",
+      "full state identity",
+      "push and pop moves",
+      "finished orders only"
+    ],
+    "buildTasks": [
+      {
+        "id": "two-numbers",
+        "title": "Finish only when every number is written",
+        "facet": "finished orders only",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=2",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "out [] | stack [1]",
+              "label": "out [] | stack [1]"
+            },
+            {
+              "id": "out [1] | stack []",
+              "label": "out [1] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2]",
+              "label": "out [1] | stack [2]"
+            },
+            {
+              "id": "out [1,2] | stack []",
+              "label": "out [1,2] | stack []"
+            },
+            {
+              "id": "out [] | stack [1,2]",
+              "label": "out [] | stack [1,2]"
+            },
+            {
+              "id": "out [2] | stack [1]",
+              "label": "out [2] | stack [1]"
+            },
+            {
+              "id": "out [2,1] | stack []",
+              "label": "out [2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "out [] | stack [1]"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [1] | stack []"
+            },
+            {
+              "from": "out [1] | stack []",
+              "to": "out [1] | stack [2]"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1,2] | stack []"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [] | stack [1,2]"
+            },
+            {
+              "from": "out [] | stack [1,2]",
+              "to": "out [2] | stack [1]"
+            },
+            {
+              "from": "out [2] | stack [1]",
+              "to": "out [2,1] | stack []"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which pop orders are returned?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "`[1, 2]` and `[2, 1]`",
+              "feedback": "Correct. Popping 1 right away empties the stack, but 2 has not been pushed yet. A pop order is finished only when both numbers are in out.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "`[1]` and `[2, 1]`",
+              "feedback": "This stops as soon as the stack is empty. After push 1 and pop 1 the stack is empty, but 2 is still waiting, so `[1]` is not a finished pop order.",
+              "misconception": "stop-when-empty"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "Popping 1 right away empties the stack, but 2 has not been pushed yet. A pop order is finished only when both numbers are in out."
+      },
+      {
+        "id": "pop-early",
+        "title": "Pop before every push is done",
+        "facet": "push and pop moves",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=3, out=[1], stack=[]\nSome moves are already done: out is [1], the stack is empty, and 2 is the next number to push. Name your first node \"out [1] | stack []\" and draw only what can still happen from it.",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [1] | stack []",
+              "label": "out [1] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2]",
+              "label": "out [1] | stack [2]"
+            },
+            {
+              "id": "out [1,2] | stack []",
+              "label": "out [1,2] | stack []"
+            },
+            {
+              "id": "out [1,2] | stack [3]",
+              "label": "out [1,2] | stack [3]"
+            },
+            {
+              "id": "out [1,2,3] | stack []",
+              "label": "out [1,2,3] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2,3]",
+              "label": "out [1] | stack [2,3]"
+            },
+            {
+              "id": "out [1,3] | stack [2]",
+              "label": "out [1,3] | stack [2]"
+            },
+            {
+              "id": "out [1,3,2] | stack []",
+              "label": "out [1,3,2] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [1] | stack []",
+              "to": "out [1] | stack [2]"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1,2] | stack []"
+            },
+            {
+              "from": "out [1,2] | stack []",
+              "to": "out [1,2] | stack [3]"
+            },
+            {
+              "from": "out [1,2] | stack [3]",
+              "to": "out [1,2,3] | stack []"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1] | stack [2,3]"
+            },
+            {
+              "from": "out [1] | stack [2,3]",
+              "to": "out [1,3] | stack [2]"
+            },
+            {
+              "from": "out [1,3] | stack [2]",
+              "to": "out [1,3,2] | stack []"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which pop orders can still be finished from this state?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "`[1, 2, 3]` and `[1, 3, 2]`",
+              "feedback": "Correct. From here you can push 2 and pop it right away, or push 3 on top of 2 first. Both `[1, 2, 3]` and `[1, 3, 2]` can be finished.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "`[1, 3, 2]`",
+              "feedback": "This pops only after every number has been pushed, so it never pops 2 before pushing 3. Popping 2 right after pushing it is allowed.",
+              "misconception": "pop-only-at-end"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "From here you can push 2 and pop it right away, or push 3 on top of 2 first. Both `[1, 2, 3]` and `[1, 3, 2]` can be finished."
+      },
+      {
+        "id": "top-comes-off",
+        "title": "Pop the top number",
+        "facet": "push and pop moves",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=4, out=[3], stack=[1,2,4]\nSome moves are already done: out is [3], the stack holds [1, 2, 4] (bottom to top), and every number has been pushed. Name your first node \"out [3] | stack [1,2,4]\" and draw only what can still happen from it.",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [3] | stack [1,2,4]",
+              "label": "out [3] | stack [1,2,4]"
+            },
+            {
+              "id": "out [3,4] | stack [1,2]",
+              "label": "out [3,4] | stack [1,2]"
+            },
+            {
+              "id": "out [3,4,2] | stack [1]",
+              "label": "out [3,4,2] | stack [1]"
+            },
+            {
+              "id": "out [3,4,2,1] | stack []",
+              "label": "out [3,4,2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [3] | stack [1,2,4]",
+              "to": "out [3,4] | stack [1,2]"
+            },
+            {
+              "from": "out [3,4] | stack [1,2]",
+              "to": "out [3,4,2] | stack [1]"
+            },
+            {
+              "from": "out [3,4,2] | stack [1]",
+              "to": "out [3,4,2,1] | stack []"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which pop orders can still be finished from this state?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "`[3, 4, 2, 1]`",
+              "feedback": "Correct. Every number has been pushed, so only pops are left. Each pop takes the top number: 4, then 2, then 1.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "`[3, 1, 2, 4]`",
+              "feedback": "This takes the number at the bottom of the stack first. A pop always takes the top number, the newest number still on the stack.",
+              "misconception": "pop-bottom"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "Every number has been pushed, so only pops are left. Each pop takes the top number: 4, then 2, then 1."
+      },
+      {
+        "id": "both-moves",
+        "title": "Try both moves",
+        "facet": "exact moves and states",
+        "prompt": "Use the raw input to complete the challenge. Then choose the result.",
+        "input": "n=4, out=[2,1], stack=[3]\nSome moves are already done: out is [2, 1], the stack holds [3] (bottom to top), and 4 is the next number to push. Name your first node \"out [2,1] | stack [3]\" and draw only what can still happen from it.",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [2,1] | stack [3]",
+              "label": "out [2,1] | stack [3]"
+            },
+            {
+              "id": "out [2,1,3] | stack []",
+              "label": "out [2,1,3] | stack []"
+            },
+            {
+              "id": "out [2,1,3] | stack [4]",
+              "label": "out [2,1,3] | stack [4]"
+            },
+            {
+              "id": "out [2,1,3,4] | stack []",
+              "label": "out [2,1,3,4] | stack []"
+            },
+            {
+              "id": "out [2,1] | stack [3,4]",
+              "label": "out [2,1] | stack [3,4]"
+            },
+            {
+              "id": "out [2,1,4] | stack [3]",
+              "label": "out [2,1,4] | stack [3]"
+            },
+            {
+              "id": "out [2,1,4,3] | stack []",
+              "label": "out [2,1,4,3] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [2,1] | stack [3]",
+              "to": "out [2,1,3] | stack []"
+            },
+            {
+              "from": "out [2,1,3] | stack []",
+              "to": "out [2,1,3] | stack [4]"
+            },
+            {
+              "from": "out [2,1,3] | stack [4]",
+              "to": "out [2,1,3,4] | stack []"
+            },
+            {
+              "from": "out [2,1] | stack [3]",
+              "to": "out [2,1] | stack [3,4]"
+            },
+            {
+              "from": "out [2,1] | stack [3,4]",
+              "to": "out [2,1,4] | stack [3]"
+            },
+            {
+              "from": "out [2,1,4] | stack [3]",
+              "to": "out [2,1,4,3] | stack []"
+            }
+          ]
+        },
+        "decision": {
+          "prompt": "Which pop orders can still be finished from this state?",
+          "choices": [
+            {
+              "id": "correct",
+              "label": "`[2, 1, 3, 4]` and `[2, 1, 4, 3]`",
+              "feedback": "Correct. Both moves are allowed here: pop 3, or push 4 first. Each move starts its own branch, so both `[2, 1, 3, 4]` and `[2, 1, 4, 3]` are finished.",
+              "misconception": null
+            },
+            {
+              "id": "bug",
+              "label": "`[2, 1, 3, 4]`",
+              "feedback": "This makes only one move from each state: it pops whenever it can. Pushing 4 before popping 3 is also allowed, and it leads to `[2, 1, 4, 3]`.",
+              "misconception": "one-move-only"
+            }
+          ],
+          "correct": "correct"
+        },
+        "why": "Both moves are allowed here: pop 3, or push 4 first. Each move starts its own branch, so both `[2, 1, 3, 4]` and `[2, 1, 4, 3]` are finished."
+      }
+    ],
+    "conceptTasks": [
+      {
+        "id": "concept-picture",
+        "title": "Match every input detail",
+        "facet": "exact moves and states",
+        "kind": "visual-options",
+        "prompt": "Which picture exactly matches this raw input?",
+        "input": "n=3, out=[2], stack=[1]\nSome moves are already done: out is [2], the stack holds [1] (bottom to top), and 3 is the next number to push. Name your first node \"out [2] | stack [1]\" and draw only what can still happen from it.",
+        "choices": [
+          {
+            "id": "exact",
+            "label": "Picture A",
+            "feedback": "Correct. Every state the moves can reach appears once, with one edge for each push or pop.",
+            "misconception": null,
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "out [2] | stack [1]",
+                  "label": "out [2] | stack [1]"
+                },
+                {
+                  "id": "out [2,1] | stack []",
+                  "label": "out [2,1] | stack []"
+                },
+                {
+                  "id": "out [2,1] | stack [3]",
+                  "label": "out [2,1] | stack [3]"
+                },
+                {
+                  "id": "out [2,1,3] | stack []",
+                  "label": "out [2,1,3] | stack []"
+                },
+                {
+                  "id": "out [2] | stack [1,3]",
+                  "label": "out [2] | stack [1,3]"
+                },
+                {
+                  "id": "out [2,3] | stack [1]",
+                  "label": "out [2,3] | stack [1]"
+                },
+                {
+                  "id": "out [2,3,1] | stack []",
+                  "label": "out [2,3,1] | stack []"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2,1] | stack []"
+                },
+                {
+                  "from": "out [2,1] | stack []",
+                  "to": "out [2,1] | stack [3]"
+                },
+                {
+                  "from": "out [2,1] | stack [3]",
+                  "to": "out [2,1,3] | stack []"
+                },
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2] | stack [1,3]"
+                },
+                {
+                  "from": "out [2] | stack [1,3]",
+                  "to": "out [2,3] | stack [1]"
+                },
+                {
+                  "from": "out [2,3] | stack [1]",
+                  "to": "out [2,3,1] | stack []"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-node",
+            "label": "Picture D",
+            "feedback": "The state `out [2,1,3] | stack []` is missing. Popping 3 from `out [2,1] | stack [3]` writes all three numbers, so that finished state needs its own node.",
+            "misconception": "omit-state",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "out [2] | stack [1]",
+                  "label": "out [2] | stack [1]"
+                },
+                {
+                  "id": "out [2,1] | stack []",
+                  "label": "out [2,1] | stack []"
+                },
+                {
+                  "id": "out [2,1] | stack [3]",
+                  "label": "out [2,1] | stack [3]"
+                },
+                {
+                  "id": "out [2] | stack [1,3]",
+                  "label": "out [2] | stack [1,3]"
+                },
+                {
+                  "id": "out [2,3] | stack [1]",
+                  "label": "out [2,3] | stack [1]"
+                },
+                {
+                  "id": "out [2,3,1] | stack []",
+                  "label": "out [2,3,1] | stack []"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2,1] | stack []"
+                },
+                {
+                  "from": "out [2,1] | stack []",
+                  "to": "out [2,1] | stack [3]"
+                },
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2] | stack [1,3]"
+                },
+                {
+                  "from": "out [2] | stack [1,3]",
+                  "to": "out [2,3] | stack [1]"
+                },
+                {
+                  "from": "out [2,3] | stack [1]",
+                  "to": "out [2,3,1] | stack []"
+                }
+              ]
+            }
+          },
+          {
+            "id": "missing-edge",
+            "label": "Picture B",
+            "feedback": "The move push 3 from `out [2] | stack [1]` to `out [2] | stack [1,3]` is missing.",
+            "misconception": "omit-direct-edge",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "out [2] | stack [1]",
+                  "label": "out [2] | stack [1]"
+                },
+                {
+                  "id": "out [2,1] | stack []",
+                  "label": "out [2,1] | stack []"
+                },
+                {
+                  "id": "out [2,1] | stack [3]",
+                  "label": "out [2,1] | stack [3]"
+                },
+                {
+                  "id": "out [2,1,3] | stack []",
+                  "label": "out [2,1,3] | stack []"
+                },
+                {
+                  "id": "out [2] | stack [1,3]",
+                  "label": "out [2] | stack [1,3]"
+                },
+                {
+                  "id": "out [2,3] | stack [1]",
+                  "label": "out [2,3] | stack [1]"
+                },
+                {
+                  "id": "out [2,3,1] | stack []",
+                  "label": "out [2,3,1] | stack []"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2,1] | stack []"
+                },
+                {
+                  "from": "out [2,1] | stack []",
+                  "to": "out [2,1] | stack [3]"
+                },
+                {
+                  "from": "out [2,1] | stack [3]",
+                  "to": "out [2,1,3] | stack []"
+                },
+                {
+                  "from": "out [2] | stack [1,3]",
+                  "to": "out [2,3] | stack [1]"
+                },
+                {
+                  "from": "out [2,3] | stack [1]",
+                  "to": "out [2,3,1] | stack []"
+                }
+              ]
+            }
+          },
+          {
+            "id": "bottom-pop",
+            "label": "Picture C",
+            "feedback": "`out [2] | stack [1,3]` cannot move to `out [2,1] | stack [3]`: 1 is under 3, so only 3 can be popped there.",
+            "misconception": "pop-bottom",
+            "model": {
+              "directed": true,
+              "nodes": [
+                {
+                  "id": "out [2] | stack [1]",
+                  "label": "out [2] | stack [1]"
+                },
+                {
+                  "id": "out [2,1] | stack []",
+                  "label": "out [2,1] | stack []"
+                },
+                {
+                  "id": "out [2,1] | stack [3]",
+                  "label": "out [2,1] | stack [3]"
+                },
+                {
+                  "id": "out [2,1,3] | stack []",
+                  "label": "out [2,1,3] | stack []"
+                },
+                {
+                  "id": "out [2] | stack [1,3]",
+                  "label": "out [2] | stack [1,3]"
+                },
+                {
+                  "id": "out [2,3] | stack [1]",
+                  "label": "out [2,3] | stack [1]"
+                },
+                {
+                  "id": "out [2,3,1] | stack []",
+                  "label": "out [2,3,1] | stack []"
+                }
+              ],
+              "edges": [
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2,1] | stack []"
+                },
+                {
+                  "from": "out [2,1] | stack []",
+                  "to": "out [2,1] | stack [3]"
+                },
+                {
+                  "from": "out [2,1] | stack [3]",
+                  "to": "out [2,1,3] | stack []"
+                },
+                {
+                  "from": "out [2] | stack [1]",
+                  "to": "out [2] | stack [1,3]"
+                },
+                {
+                  "from": "out [2] | stack [1,3]",
+                  "to": "out [2,3] | stack [1]"
+                },
+                {
+                  "from": "out [2,3] | stack [1]",
+                  "to": "out [2,3,1] | stack []"
+                },
+                {
+                  "from": "out [2] | stack [1,3]",
+                  "to": "out [2,1] | stack [3]"
+                }
+              ]
+            }
+          }
+        ],
+        "correct": "exact",
+        "why": "Every state the moves can reach appears once, with one edge for each push or pop.",
+        "remedial": {
+          "id": "repair-1",
+          "title": "Fresh proof · Match every input detail",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=4, out=[1,2], stack=[3]\nSome moves are already done: out is [1, 2], the stack holds [3] (bottom to top), and 4 is the next number to push. Name your first node \"out [1,2] | stack [3]\" and draw only what can still happen from it.",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "out [1,2] | stack [3]",
+                "label": "out [1,2] | stack [3]"
+              },
+              {
+                "id": "out [1,2,3] | stack []",
+                "label": "out [1,2,3] | stack []"
+              },
+              {
+                "id": "out [1,2,3] | stack [4]",
+                "label": "out [1,2,3] | stack [4]"
+              },
+              {
+                "id": "out [1,2,3,4] | stack []",
+                "label": "out [1,2,3,4] | stack []"
+              },
+              {
+                "id": "out [1,2] | stack [3,4]",
+                "label": "out [1,2] | stack [3,4]"
+              },
+              {
+                "id": "out [1,2,4] | stack [3]",
+                "label": "out [1,2,4] | stack [3]"
+              },
+              {
+                "id": "out [1,2,4,3] | stack []",
+                "label": "out [1,2,4,3] | stack []"
+              }
+            ],
+            "edges": [
+              {
+                "from": "out [1,2] | stack [3]",
+                "to": "out [1,2,3] | stack []"
+              },
+              {
+                "from": "out [1,2,3] | stack []",
+                "to": "out [1,2,3] | stack [4]"
+              },
+              {
+                "from": "out [1,2,3] | stack [4]",
+                "to": "out [1,2,3,4] | stack []"
+              },
+              {
+                "from": "out [1,2] | stack [3]",
+                "to": "out [1,2] | stack [3,4]"
+              },
+              {
+                "from": "out [1,2] | stack [3,4]",
+                "to": "out [1,2,4] | stack [3]"
+              },
+              {
+                "from": "out [1,2,4] | stack [3]",
+                "to": "out [1,2,4,3] | stack []"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which pop orders can still be finished from this state?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`[1, 2, 3, 4]` and `[1, 2, 4, 3]`",
+                "feedback": "Correct. Both moves are possible here: pop 3, or push 4. Each move starts its own branch, so `[1, 2, 3, 4]` and `[1, 2, 4, 3]` are both finished.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`[1, 2, 3, 4]`",
+                "feedback": "This makes only one move from each state, popping whenever it can. Pushing 4 before popping 3 is also allowed, and it leads to `[1, 2, 4, 3]`.",
+                "misconception": "one-move-only"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "Both moves are possible here: pop 3, or push 4. Each move starts its own branch, so `[1, 2, 3, 4]` and `[1, 2, 4, 3]` are both finished."
+        }
+      },
+      {
+        "id": "concept-nodes",
+        "title": "Protect entity identity",
+        "facet": "full state identity",
+        "kind": "choice",
+        "prompt": "What is a node in the pop-order tree?",
+        "input": "n=3, out=[1], stack=[2]\nSome moves are already done: out is [1], the stack holds [2] (bottom to top), and 3 is the next number to push. Name your first node \"out [1] | stack [2]\" and draw only what can still happen from it.",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [1] | stack [2]",
+              "label": "out [1] | stack [2]"
+            },
+            {
+              "id": "out [1,2] | stack []",
+              "label": "out [1,2] | stack []"
+            },
+            {
+              "id": "out [1,2] | stack [3]",
+              "label": "out [1,2] | stack [3]"
+            },
+            {
+              "id": "out [1,2,3] | stack []",
+              "label": "out [1,2,3] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2,3]",
+              "label": "out [1] | stack [2,3]"
+            },
+            {
+              "id": "out [1,3] | stack [2]",
+              "label": "out [1,3] | stack [2]"
+            },
+            {
+              "id": "out [1,3,2] | stack []",
+              "label": "out [1,3,2] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1,2] | stack []"
+            },
+            {
+              "from": "out [1,2] | stack []",
+              "to": "out [1,2] | stack [3]"
+            },
+            {
+              "from": "out [1,2] | stack [3]",
+              "to": "out [1,2,3] | stack []"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1] | stack [2,3]"
+            },
+            {
+              "from": "out [1] | stack [2,3]",
+              "to": "out [1,3] | stack [2]"
+            },
+            {
+              "from": "out [1,3] | stack [2]",
+              "to": "out [1,3,2] | stack []"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "state",
+            "label": "One state of the run: the numbers written in out so far, plus the numbers on the stack. The start state has both empty.",
+            "feedback": "Correct. A node remembers both out and the stack, because together they decide which moves come next.",
+            "misconception": null
+          },
+          {
+            "id": "out-only",
+            "label": "Only the numbers written in out so far. States with the same out share a node.",
+            "feedback": "Two states can have the same out but different stacks, like `out [1] | stack [2]` and `out [1] | stack [2,3]`. Different moves are possible from each, so each needs its own node.",
+            "misconception": "merge-by-out"
+          },
+          {
+            "id": "number",
+            "label": "One node per number from 1 to n.",
+            "feedback": "A number is pushed, waits on the stack, and is written down at different moments. A node must remember the whole state: out and the stack.",
+            "misconception": "number-as-node"
+          },
+          {
+            "id": "finished",
+            "label": "Only finished pop orders, where all n numbers are written.",
+            "feedback": "The states along the way are nodes too. Each finished pop order is reached by a path of moves through them.",
+            "misconception": "leaves-only"
+          }
+        ],
+        "correct": "state",
+        "why": "Correct. A node remembers both out and the stack, because together they decide which moves come next.",
+        "remedial": {
+          "id": "repair-2",
+          "title": "Fresh proof · Protect entity identity",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=4, out=[2,3], stack=[1]\nSome moves are already done: out is [2, 3], the stack holds [1] (bottom to top), and 4 is the next number to push. Name your first node \"out [2,3] | stack [1]\" and draw only what can still happen from it.",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "out [2,3] | stack [1]",
+                "label": "out [2,3] | stack [1]"
+              },
+              {
+                "id": "out [2,3,1] | stack []",
+                "label": "out [2,3,1] | stack []"
+              },
+              {
+                "id": "out [2,3,1] | stack [4]",
+                "label": "out [2,3,1] | stack [4]"
+              },
+              {
+                "id": "out [2,3,1,4] | stack []",
+                "label": "out [2,3,1,4] | stack []"
+              },
+              {
+                "id": "out [2,3] | stack [1,4]",
+                "label": "out [2,3] | stack [1,4]"
+              },
+              {
+                "id": "out [2,3,4] | stack [1]",
+                "label": "out [2,3,4] | stack [1]"
+              },
+              {
+                "id": "out [2,3,4,1] | stack []",
+                "label": "out [2,3,4,1] | stack []"
+              }
+            ],
+            "edges": [
+              {
+                "from": "out [2,3] | stack [1]",
+                "to": "out [2,3,1] | stack []"
+              },
+              {
+                "from": "out [2,3,1] | stack []",
+                "to": "out [2,3,1] | stack [4]"
+              },
+              {
+                "from": "out [2,3,1] | stack [4]",
+                "to": "out [2,3,1,4] | stack []"
+              },
+              {
+                "from": "out [2,3] | stack [1]",
+                "to": "out [2,3] | stack [1,4]"
+              },
+              {
+                "from": "out [2,3] | stack [1,4]",
+                "to": "out [2,3,4] | stack [1]"
+              },
+              {
+                "from": "out [2,3,4] | stack [1]",
+                "to": "out [2,3,4,1] | stack []"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which pop orders can still be finished from this state?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`[2, 3, 1, 4]` and `[2, 3, 4, 1]`",
+                "feedback": "Correct. After 1 is popped, out is `[2, 3, 1]` and the stack is empty, but 4 has not been pushed yet. That state is a step along the way. Only `[2, 3, 1, 4]` and `[2, 3, 4, 1]` are finished.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`[2, 3, 1]` and `[2, 3, 4, 1]`",
+                "feedback": "This treats the empty stack after popping 1 as finished, so it returns `[2, 3, 1]`, which is missing 4.",
+                "misconception": "stop-when-empty"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "After 1 is popped, out is `[2, 3, 1]` and the stack is empty, but 4 has not been pushed yet. That state is a step along the way. Only `[2, 3, 1, 4]` and `[2, 3, 4, 1]` are finished."
+        }
+      },
+      {
+        "id": "concept-relations",
+        "title": "Protect direct relations",
+        "facet": "push and pop moves",
+        "kind": "choice",
+        "prompt": "When does a state have an edge to another state?",
+        "input": "n=4, out=[1,3], stack=[2]\nSome moves are already done: out is [1, 3], the stack holds [2] (bottom to top), and 4 is the next number to push. Name your first node \"out [1,3] | stack [2]\" and draw only what can still happen from it.",
+        "shownModel": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [1,3] | stack [2]",
+              "label": "out [1,3] | stack [2]"
+            },
+            {
+              "id": "out [1,3,2] | stack []",
+              "label": "out [1,3,2] | stack []"
+            },
+            {
+              "id": "out [1,3,2] | stack [4]",
+              "label": "out [1,3,2] | stack [4]"
+            },
+            {
+              "id": "out [1,3,2,4] | stack []",
+              "label": "out [1,3,2,4] | stack []"
+            },
+            {
+              "id": "out [1,3] | stack [2,4]",
+              "label": "out [1,3] | stack [2,4]"
+            },
+            {
+              "id": "out [1,3,4] | stack [2]",
+              "label": "out [1,3,4] | stack [2]"
+            },
+            {
+              "id": "out [1,3,4,2] | stack []",
+              "label": "out [1,3,4,2] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [1,3] | stack [2]",
+              "to": "out [1,3,2] | stack []"
+            },
+            {
+              "from": "out [1,3,2] | stack []",
+              "to": "out [1,3,2] | stack [4]"
+            },
+            {
+              "from": "out [1,3,2] | stack [4]",
+              "to": "out [1,3,2,4] | stack []"
+            },
+            {
+              "from": "out [1,3] | stack [2]",
+              "to": "out [1,3] | stack [2,4]"
+            },
+            {
+              "from": "out [1,3] | stack [2,4]",
+              "to": "out [1,3,4] | stack [2]"
+            },
+            {
+              "from": "out [1,3,4] | stack [2]",
+              "to": "out [1,3,4,2] | stack []"
+            }
+          ]
+        },
+        "choices": [
+          {
+            "id": "one-move",
+            "label": "When one move leads there: push the next number (if any number is still waiting), or pop the top number into out (if the stack is not empty).",
+            "feedback": "Correct. Each edge is one push or one pop, so a state has at most two edges going out.",
+            "misconception": null
+          },
+          {
+            "id": "any-push",
+            "label": "When you push any number that has not been pushed yet, or pop the top number into out.",
+            "feedback": "Numbers are pushed in order: 1, then 2, then 3. From `out [1,3] | stack [2]` the only number left to push is 4.",
+            "misconception": "any-order"
+          },
+          {
+            "id": "pop-any",
+            "label": "When you push the next number, or pop any number in the stack into out.",
+            "feedback": "Only the top number can come off the stack: the newest number still on it.",
+            "misconception": "pop-bottom"
+          },
+          {
+            "id": "pop-late",
+            "label": "When you push the next number, or pop the top number, but only after every number has been pushed.",
+            "feedback": "You may pop as soon as the stack is not empty. Waiting until every number is pushed allows only one order.",
+            "misconception": "pop-only-at-end"
+          }
+        ],
+        "correct": "one-move",
+        "why": "Correct. Each edge is one push or one pop, so a state has at most two edges going out.",
+        "remedial": {
+          "id": "repair-3",
+          "title": "Fresh proof · Protect direct relations",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=3, out=[], stack=[1,2,3]\nSome moves are already done: out is [], the stack holds [1, 2, 3] (bottom to top), and every number has been pushed. Name your first node \"out [] | stack [1,2,3]\" and draw only what can still happen from it.",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "out [] | stack [1,2,3]",
+                "label": "out [] | stack [1,2,3]"
+              },
+              {
+                "id": "out [3] | stack [1,2]",
+                "label": "out [3] | stack [1,2]"
+              },
+              {
+                "id": "out [3,2] | stack [1]",
+                "label": "out [3,2] | stack [1]"
+              },
+              {
+                "id": "out [3,2,1] | stack []",
+                "label": "out [3,2,1] | stack []"
+              }
+            ],
+            "edges": [
+              {
+                "from": "out [] | stack [1,2,3]",
+                "to": "out [3] | stack [1,2]"
+              },
+              {
+                "from": "out [3] | stack [1,2]",
+                "to": "out [3,2] | stack [1]"
+              },
+              {
+                "from": "out [3,2] | stack [1]",
+                "to": "out [3,2,1] | stack []"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which pop orders can still be finished from this state?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`[3, 2, 1]`",
+                "feedback": "Correct. All three numbers are on the stack and 3 is on top. Each pop takes the top number: 3, then 2, then 1.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`[1, 2, 3]`",
+                "feedback": "This pops the bottom number first. A pop always takes the top number, the newest number still on the stack.",
+                "misconception": "pop-bottom"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "All three numbers are on the stack and 3 is on top. Each pop takes the top number: 3, then 2, then 1."
+        }
+      },
+      {
+        "id": "concept-output",
+        "title": "Predict from a fresh input",
+        "facet": "finished orders only",
+        "kind": "choice",
+        "prompt": "With n = 4, starting from out `[2]` and stack `[1, 3]`, which pop orders can still be finished?",
+        "input": "n=4, out=[2], stack=[1,3]\nSome moves are already done: out is [2], the stack holds [1, 3] (bottom to top), and 4 is the next number to push. Name your first node \"out [2] | stack [1,3]\" and draw only what can still happen from it.",
+        "choices": [
+          {
+            "id": "three",
+            "feedback": "Correct. Pop 3, pop 1, then push and pop 4 gives `[2, 3, 1, 4]`. Pop 3, push and pop 4, then pop 1 gives `[2, 3, 4, 1]`. Push and pop 4 first, then pop 3 and 1, gives `[2, 4, 3, 1]`.",
+            "misconception": null,
+            "label": "`[2, 3, 1, 4]`, `[2, 3, 4, 1]`, and `[2, 4, 3, 1]`"
+          },
+          {
+            "id": "late",
+            "feedback": "This pops only after every number is pushed, so it must push 4 first. Popping 3 right away is allowed too.",
+            "misconception": "pop-only-at-end",
+            "label": "`[2, 4, 3, 1]`"
+          },
+          {
+            "id": "empty",
+            "feedback": "This stops as soon as the stack is empty. `[2, 3, 1]` has an empty stack, but 4 has not been pushed yet, so it is not finished.",
+            "misconception": "stop-when-empty",
+            "label": "`[2, 3, 1]`, `[2, 3, 4, 1]`, and `[2, 4, 3, 1]`"
+          },
+          {
+            "id": "one-move",
+            "feedback": "This makes only one move from each state, popping whenever it can. Pushing 4 is also allowed while 4 is waiting, and it leads to other orders.",
+            "misconception": "one-move-only",
+            "label": "`[2, 3, 1, 4]`"
+          }
+        ],
+        "correct": "three",
+        "why": "Correct. Pop 3, pop 1, then push and pop 4 gives `[2, 3, 1, 4]`. Pop 3, push and pop 4, then pop 1 gives `[2, 3, 4, 1]`. Push and pop 4 first, then pop 3 and 1, gives `[2, 4, 3, 1]`.",
+        "remedial": {
+          "id": "repair-4",
+          "title": "Fresh proof · Predict from a fresh input",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=4, out=[3,2], stack=[1]\nSome moves are already done: out is [3, 2], the stack holds [1] (bottom to top), and 4 is the next number to push. Name your first node \"out [3,2] | stack [1]\" and draw only what can still happen from it.",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "out [3,2] | stack [1]",
+                "label": "out [3,2] | stack [1]"
+              },
+              {
+                "id": "out [3,2,1] | stack []",
+                "label": "out [3,2,1] | stack []"
+              },
+              {
+                "id": "out [3,2,1] | stack [4]",
+                "label": "out [3,2,1] | stack [4]"
+              },
+              {
+                "id": "out [3,2,1,4] | stack []",
+                "label": "out [3,2,1,4] | stack []"
+              },
+              {
+                "id": "out [3,2] | stack [1,4]",
+                "label": "out [3,2] | stack [1,4]"
+              },
+              {
+                "id": "out [3,2,4] | stack [1]",
+                "label": "out [3,2,4] | stack [1]"
+              },
+              {
+                "id": "out [3,2,4,1] | stack []",
+                "label": "out [3,2,4,1] | stack []"
+              }
+            ],
+            "edges": [
+              {
+                "from": "out [3,2] | stack [1]",
+                "to": "out [3,2,1] | stack []"
+              },
+              {
+                "from": "out [3,2,1] | stack []",
+                "to": "out [3,2,1] | stack [4]"
+              },
+              {
+                "from": "out [3,2,1] | stack [4]",
+                "to": "out [3,2,1,4] | stack []"
+              },
+              {
+                "from": "out [3,2] | stack [1]",
+                "to": "out [3,2] | stack [1,4]"
+              },
+              {
+                "from": "out [3,2] | stack [1,4]",
+                "to": "out [3,2,4] | stack [1]"
+              },
+              {
+                "from": "out [3,2,4] | stack [1]",
+                "to": "out [3,2,4,1] | stack []"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which pop orders can still be finished from this state?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`[3, 2, 1, 4]` and `[3, 2, 4, 1]`",
+                "feedback": "Correct. 1 is on top, so you may pop it now, before pushing 4. That gives `[3, 2, 1, 4]`. Pushing 4 first gives `[3, 2, 4, 1]`.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`[3, 2, 4, 1]`",
+                "feedback": "This pops only after every number has been pushed. Popping 1 before pushing 4 is allowed too, and it gives `[3, 2, 1, 4]`.",
+                "misconception": "pop-only-at-end"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "1 is on top, so you may pop it now, before pushing 4. That gives `[3, 2, 1, 4]`. Pushing 4 first gives `[3, 2, 4, 1]`."
+        }
+      },
+      {
+        "id": "concept-bug",
+        "title": "Catch a near-miss implementation",
+        "facet": "finished orders only",
+        "kind": "choice",
+        "prompt": "For n = 4, how many pop orders are returned?",
+        "input": "n=4",
+        "choices": [
+          {
+            "id": "fourteen",
+            "label": "`14`",
+            "feedback": "Correct. 14 of the 24 orderings of 1–4 can be made. An order like `[3, 1, 2, 4]` cannot: when 3 is popped first, 2 is still on top of 1, so 2 must come out before 1.",
+            "misconception": null
+          },
+          {
+            "id": "all",
+            "label": "`24`",
+            "feedback": "Not every ordering of 1–4 can be made. `[3, 1, 2, 4]` is impossible: after pushing 1, 2, 3 and popping 3, 2 is on top of 1, so 2 must come out before 1.",
+            "misconception": "any-order"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "This counts only `[4, 3, 2, 1]`, as if every number must be pushed before any pop. You may pop as soon as the stack is not empty.",
+            "misconception": "pop-only-at-end"
+          },
+          {
+            "id": "nine",
+            "label": "`9`",
+            "feedback": "This counts a run as finished whenever the stack is empty, so it includes short lists like `[1]` and `[2, 1]` before the other numbers are pushed.",
+            "misconception": "stop-when-empty"
+          }
+        ],
+        "correct": "fourteen",
+        "why": "Correct. 14 of the 24 orderings of 1–4 can be made. An order like `[3, 1, 2, 4]` cannot: when 3 is popped first, 2 is still on top of 1, so 2 must come out before 1.",
+        "remedial": {
+          "id": "repair-5",
+          "title": "Fresh proof · Catch a near-miss implementation",
+          "prompt": "Use this fresh raw input to complete the challenge. Then choose the result.",
+          "input": "n=4, out=[1,2], stack=[]\nSome moves are already done: out is [1, 2], the stack is empty, and 3 is the next number to push. Name your first node \"out [1,2] | stack []\" and draw only what can still happen from it.",
+          "canvas": {
+            "directed": true,
+            "nodes": [
+              {
+                "id": "out [1,2] | stack []",
+                "label": "out [1,2] | stack []"
+              },
+              {
+                "id": "out [1,2] | stack [3]",
+                "label": "out [1,2] | stack [3]"
+              },
+              {
+                "id": "out [1,2,3] | stack []",
+                "label": "out [1,2,3] | stack []"
+              },
+              {
+                "id": "out [1,2,3] | stack [4]",
+                "label": "out [1,2,3] | stack [4]"
+              },
+              {
+                "id": "out [1,2,3,4] | stack []",
+                "label": "out [1,2,3,4] | stack []"
+              },
+              {
+                "id": "out [1,2] | stack [3,4]",
+                "label": "out [1,2] | stack [3,4]"
+              },
+              {
+                "id": "out [1,2,4] | stack [3]",
+                "label": "out [1,2,4] | stack [3]"
+              },
+              {
+                "id": "out [1,2,4,3] | stack []",
+                "label": "out [1,2,4,3] | stack []"
+              }
+            ],
+            "edges": [
+              {
+                "from": "out [1,2] | stack []",
+                "to": "out [1,2] | stack [3]"
+              },
+              {
+                "from": "out [1,2] | stack [3]",
+                "to": "out [1,2,3] | stack []"
+              },
+              {
+                "from": "out [1,2,3] | stack []",
+                "to": "out [1,2,3] | stack [4]"
+              },
+              {
+                "from": "out [1,2,3] | stack [4]",
+                "to": "out [1,2,3,4] | stack []"
+              },
+              {
+                "from": "out [1,2] | stack [3]",
+                "to": "out [1,2] | stack [3,4]"
+              },
+              {
+                "from": "out [1,2] | stack [3,4]",
+                "to": "out [1,2,4] | stack [3]"
+              },
+              {
+                "from": "out [1,2,4] | stack [3]",
+                "to": "out [1,2,4,3] | stack []"
+              }
+            ]
+          },
+          "decision": {
+            "prompt": "Which pop orders can still be finished from this state?",
+            "choices": [
+              {
+                "id": "correct",
+                "label": "`[1, 2, 3, 4]` and `[1, 2, 4, 3]`",
+                "feedback": "Correct. The stack is empty, but 3 and 4 have not been pushed yet. Pushing and popping them gives `[1, 2, 3, 4]` and `[1, 2, 4, 3]`.",
+                "misconception": null
+              },
+              {
+                "id": "bug",
+                "label": "`[1, 2]`",
+                "feedback": "This treats the empty stack as finished, so it returns `[1, 2]` before 3 and 4 are ever pushed.",
+                "misconception": "stop-when-empty"
+              }
+            ],
+            "correct": "correct"
+          },
+          "why": "The stack is empty, but 3 and 4 have not been pushed yet. Pushing and popping them gives `[1, 2, 3, 4]` and `[1, 2, 4, 3]`."
+        }
+      }
+    ],
+    "structureTasks": [
+      {
+        "id": "transfer-1",
+        "input": "n=1",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "out [] | stack [1]",
+              "label": "out [] | stack [1]"
+            },
+            {
+              "id": "out [1] | stack []",
+              "label": "out [1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "out [] | stack [1]"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [1] | stack []"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-2",
+        "input": "n=3, out=[], stack=[1,2]",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [] | stack [1,2]",
+              "label": "out [] | stack [1,2]"
+            },
+            {
+              "id": "out [2] | stack [1]",
+              "label": "out [2] | stack [1]"
+            },
+            {
+              "id": "out [2,1] | stack []",
+              "label": "out [2,1] | stack []"
+            },
+            {
+              "id": "out [2,1] | stack [3]",
+              "label": "out [2,1] | stack [3]"
+            },
+            {
+              "id": "out [2,1,3] | stack []",
+              "label": "out [2,1,3] | stack []"
+            },
+            {
+              "id": "out [2] | stack [1,3]",
+              "label": "out [2] | stack [1,3]"
+            },
+            {
+              "id": "out [2,3] | stack [1]",
+              "label": "out [2,3] | stack [1]"
+            },
+            {
+              "id": "out [2,3,1] | stack []",
+              "label": "out [2,3,1] | stack []"
+            },
+            {
+              "id": "out [] | stack [1,2,3]",
+              "label": "out [] | stack [1,2,3]"
+            },
+            {
+              "id": "out [3] | stack [1,2]",
+              "label": "out [3] | stack [1,2]"
+            },
+            {
+              "id": "out [3,2] | stack [1]",
+              "label": "out [3,2] | stack [1]"
+            },
+            {
+              "id": "out [3,2,1] | stack []",
+              "label": "out [3,2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [] | stack [1,2]",
+              "to": "out [2] | stack [1]"
+            },
+            {
+              "from": "out [2] | stack [1]",
+              "to": "out [2,1] | stack []"
+            },
+            {
+              "from": "out [2,1] | stack []",
+              "to": "out [2,1] | stack [3]"
+            },
+            {
+              "from": "out [2,1] | stack [3]",
+              "to": "out [2,1,3] | stack []"
+            },
+            {
+              "from": "out [2] | stack [1]",
+              "to": "out [2] | stack [1,3]"
+            },
+            {
+              "from": "out [2] | stack [1,3]",
+              "to": "out [2,3] | stack [1]"
+            },
+            {
+              "from": "out [2,3] | stack [1]",
+              "to": "out [2,3,1] | stack []"
+            },
+            {
+              "from": "out [] | stack [1,2]",
+              "to": "out [] | stack [1,2,3]"
+            },
+            {
+              "from": "out [] | stack [1,2,3]",
+              "to": "out [3] | stack [1,2]"
+            },
+            {
+              "from": "out [3] | stack [1,2]",
+              "to": "out [3,2] | stack [1]"
+            },
+            {
+              "from": "out [3,2] | stack [1]",
+              "to": "out [3,2,1] | stack []"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-3",
+        "input": "n=4, out=[4], stack=[1,2,3]",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [4] | stack [1,2,3]",
+              "label": "out [4] | stack [1,2,3]"
+            },
+            {
+              "id": "out [4,3] | stack [1,2]",
+              "label": "out [4,3] | stack [1,2]"
+            },
+            {
+              "id": "out [4,3,2] | stack [1]",
+              "label": "out [4,3,2] | stack [1]"
+            },
+            {
+              "id": "out [4,3,2,1] | stack []",
+              "label": "out [4,3,2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [4] | stack [1,2,3]",
+              "to": "out [4,3] | stack [1,2]"
+            },
+            {
+              "from": "out [4,3] | stack [1,2]",
+              "to": "out [4,3,2] | stack [1]"
+            },
+            {
+              "from": "out [4,3,2] | stack [1]",
+              "to": "out [4,3,2,1] | stack []"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-4",
+        "input": "n=4, out=[2,1], stack=[]",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [2,1] | stack []",
+              "label": "out [2,1] | stack []"
+            },
+            {
+              "id": "out [2,1] | stack [3]",
+              "label": "out [2,1] | stack [3]"
+            },
+            {
+              "id": "out [2,1,3] | stack []",
+              "label": "out [2,1,3] | stack []"
+            },
+            {
+              "id": "out [2,1,3] | stack [4]",
+              "label": "out [2,1,3] | stack [4]"
+            },
+            {
+              "id": "out [2,1,3,4] | stack []",
+              "label": "out [2,1,3,4] | stack []"
+            },
+            {
+              "id": "out [2,1] | stack [3,4]",
+              "label": "out [2,1] | stack [3,4]"
+            },
+            {
+              "id": "out [2,1,4] | stack [3]",
+              "label": "out [2,1,4] | stack [3]"
+            },
+            {
+              "id": "out [2,1,4,3] | stack []",
+              "label": "out [2,1,4,3] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [2,1] | stack []",
+              "to": "out [2,1] | stack [3]"
+            },
+            {
+              "from": "out [2,1] | stack [3]",
+              "to": "out [2,1,3] | stack []"
+            },
+            {
+              "from": "out [2,1,3] | stack []",
+              "to": "out [2,1,3] | stack [4]"
+            },
+            {
+              "from": "out [2,1,3] | stack [4]",
+              "to": "out [2,1,3,4] | stack []"
+            },
+            {
+              "from": "out [2,1] | stack [3]",
+              "to": "out [2,1] | stack [3,4]"
+            },
+            {
+              "from": "out [2,1] | stack [3,4]",
+              "to": "out [2,1,4] | stack [3]"
+            },
+            {
+              "from": "out [2,1,4] | stack [3]",
+              "to": "out [2,1,4,3] | stack []"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transfer-5",
+        "input": "n=4, out=[], stack=[1,2,3]",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "out [] | stack [1,2,3]",
+              "label": "out [] | stack [1,2,3]"
+            },
+            {
+              "id": "out [3] | stack [1,2]",
+              "label": "out [3] | stack [1,2]"
+            },
+            {
+              "id": "out [3,2] | stack [1]",
+              "label": "out [3,2] | stack [1]"
+            },
+            {
+              "id": "out [3,2,1] | stack []",
+              "label": "out [3,2,1] | stack []"
+            },
+            {
+              "id": "out [3,2,1] | stack [4]",
+              "label": "out [3,2,1] | stack [4]"
+            },
+            {
+              "id": "out [3,2,1,4] | stack []",
+              "label": "out [3,2,1,4] | stack []"
+            },
+            {
+              "id": "out [3,2] | stack [1,4]",
+              "label": "out [3,2] | stack [1,4]"
+            },
+            {
+              "id": "out [3,2,4] | stack [1]",
+              "label": "out [3,2,4] | stack [1]"
+            },
+            {
+              "id": "out [3,2,4,1] | stack []",
+              "label": "out [3,2,4,1] | stack []"
+            },
+            {
+              "id": "out [3] | stack [1,2,4]",
+              "label": "out [3] | stack [1,2,4]"
+            },
+            {
+              "id": "out [3,4] | stack [1,2]",
+              "label": "out [3,4] | stack [1,2]"
+            },
+            {
+              "id": "out [3,4,2] | stack [1]",
+              "label": "out [3,4,2] | stack [1]"
+            },
+            {
+              "id": "out [3,4,2,1] | stack []",
+              "label": "out [3,4,2,1] | stack []"
+            },
+            {
+              "id": "out [] | stack [1,2,3,4]",
+              "label": "out [] | stack [1,2,3,4]"
+            },
+            {
+              "id": "out [4] | stack [1,2,3]",
+              "label": "out [4] | stack [1,2,3]"
+            },
+            {
+              "id": "out [4,3] | stack [1,2]",
+              "label": "out [4,3] | stack [1,2]"
+            },
+            {
+              "id": "out [4,3,2] | stack [1]",
+              "label": "out [4,3,2] | stack [1]"
+            },
+            {
+              "id": "out [4,3,2,1] | stack []",
+              "label": "out [4,3,2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "out [] | stack [1,2,3]",
+              "to": "out [3] | stack [1,2]"
+            },
+            {
+              "from": "out [3] | stack [1,2]",
+              "to": "out [3,2] | stack [1]"
+            },
+            {
+              "from": "out [3,2] | stack [1]",
+              "to": "out [3,2,1] | stack []"
+            },
+            {
+              "from": "out [3,2,1] | stack []",
+              "to": "out [3,2,1] | stack [4]"
+            },
+            {
+              "from": "out [3,2,1] | stack [4]",
+              "to": "out [3,2,1,4] | stack []"
+            },
+            {
+              "from": "out [3,2] | stack [1]",
+              "to": "out [3,2] | stack [1,4]"
+            },
+            {
+              "from": "out [3,2] | stack [1,4]",
+              "to": "out [3,2,4] | stack [1]"
+            },
+            {
+              "from": "out [3,2,4] | stack [1]",
+              "to": "out [3,2,4,1] | stack []"
+            },
+            {
+              "from": "out [3] | stack [1,2]",
+              "to": "out [3] | stack [1,2,4]"
+            },
+            {
+              "from": "out [3] | stack [1,2,4]",
+              "to": "out [3,4] | stack [1,2]"
+            },
+            {
+              "from": "out [3,4] | stack [1,2]",
+              "to": "out [3,4,2] | stack [1]"
+            },
+            {
+              "from": "out [3,4,2] | stack [1]",
+              "to": "out [3,4,2,1] | stack []"
+            },
+            {
+              "from": "out [] | stack [1,2,3]",
+              "to": "out [] | stack [1,2,3,4]"
+            },
+            {
+              "from": "out [] | stack [1,2,3,4]",
+              "to": "out [4] | stack [1,2,3]"
+            },
+            {
+              "from": "out [4] | stack [1,2,3]",
+              "to": "out [4,3] | stack [1,2]"
+            },
+            {
+              "from": "out [4,3] | stack [1,2]",
+              "to": "out [4,3,2] | stack [1]"
+            },
+            {
+              "from": "out [4,3,2] | stack [1]",
+              "to": "out [4,3,2,1] | stack []"
+            }
+          ]
+        }
+      }
+    ],
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "two-numbers",
+        "concept-nodes",
+        "pop-early",
+        "concept-relations",
+        "concept-output"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   }
 ]

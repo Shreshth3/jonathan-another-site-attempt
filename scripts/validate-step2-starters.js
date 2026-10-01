@@ -18,7 +18,7 @@ function requiresTree(problem) {
   return new Set([
     "kill-process", "time-needed-to-inform-all-employees", "who-keeps-their-job", "save-the-date-phone-chain",
     "shut-the-garden-valve", "evaluate-boolean-binary-tree", "structy-max-root-to-leaf-path-sum", "structy-tree-sum",
-    "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "flatten-nested-list-iterator",
+    "letter-combinations-of-a-phone-number", "runes-on-the-castle-door", "the-balance-lock", "under-the-limit", "balanced-brackets", "split-the-digits", "stack-pop-orders", "flatten-nested-list-iterator",
     "busiest-shelf-level", "coins-on-level-k", "kth-song-in-playlist", "top-of-the-pile", "codewars-array-deep-count",
     "minimum-fuel-cost-to-report-to-the-capital", "minimum-time-to-collect-all-apples-in-a-tree",
     "count-good-nodes-in-binary-tree", "diameter-of-binary-tree", "lowest-common-ancestor-of-a-binary-tree",
@@ -67,6 +67,8 @@ function starter(problem, round) {
     if (base === "drop-last-edge") return { directed: true, nodes: ["1","2","3"], edges: [["1","2"],["3","2"]], start: "1" };
     return { directed: true, nodes: ["1","2"], edges: [["1","2"]], start: "1" };
   }
+  // Its mistaken start is the grandchild "((" (every string starts with "(").
+  if (problem.id === "balanced-brackets" && base === "wrong-start") return { directed: true, nodes: ["A","B","C","D"], edges: [["A","B"],["B","C"],["B","D"]], start: "A" };
   if (problem.id === "all-paths-from-source-to-target" && base === "last-branch") return { directed: true, nodes: ["0","1","2","3"], edges: [["0","1"],["0","2"],["1","3"],["2","3"]], start: "0" };
   if (["detonate-the-maximum-bombs", "moocast"].includes(problem.id) && base === "make-two-way") return { directed: true, nodes: ["0","1","2"], edges: [["0","2"],["1","2"]], start: "0" };
   if (problem.id === "ladder-takahashi" && base === "last-branch") return { directed: false, nodes: ["A","B","C","D"], edges: [["A","D"],["A","B"],["B","C"]], start: "A" };
@@ -187,16 +189,32 @@ function applyLabelRule(problem, graph) {
     const rename=Object.fromEntries(graph.nodes.map((node,index)=>[node,`node ${index}: ${index+1}`]));
     return {...graph,nodes:graph.nodes.map(node=>rename[node]),edges:graph.edges.map(([a,b,c])=>[rename[a],rename[b],c]),start:rename[graph.start]};
   }
-  if (["nested-path", "tree-path", "partial-string", "weight-prefix"].includes(rule)) {
+  if (rule === "stack-state") {
+    // Name the starter's states in visiting order with real Stack Pop Orders states for n = 2.
+    const states = ["start", "out [] | stack [1]", "out [1] | stack []", "out [1] | stack [2]", "out [1,2] | stack []", "out [] | stack [1,2]", "out [2] | stack [1]", "out [2,1] | stack []"];
     const outgoing = Object.fromEntries(graph.nodes.map(node => [node, []]));
     graph.edges.forEach(([from, to]) => outgoing[from].push(to));
     const root = graph.nodes.find(node => !graph.edges.some(([, to]) => to === node));
     if (!root) return graph;
-    const rename = { [root]: rule === "nested-path" || rule === "tree-path" ? "root" : rule === "weight-prefix" ? "start" : "ε" };
+    const order = [];
+    const visit = node => { order.push(node); outgoing[node].forEach(visit); };
+    visit(root);
+    graph.nodes.filter(node => !order.includes(node)).forEach(node => order.push(node));
+    const rename = Object.fromEntries(order.map((node, index) => [node, states[index]]));
+    return { ...graph, nodes: graph.nodes.map(node => rename[node]), edges: graph.edges.map(([from, to, color]) => [rename[from], rename[to], color]), start: rename[graph.start] };
+  }
+  if (["nested-path", "tree-path", "partial-string", "weight-prefix", "bracket-prefix", "piece-prefix"].includes(rule)) {
+    const outgoing = Object.fromEntries(graph.nodes.map(node => [node, []]));
+    graph.edges.forEach(([from, to]) => outgoing[from].push(to));
+    const root = graph.nodes.find(node => !graph.edges.some(([, to]) => to === node));
+    if (!root) return graph;
+    const rename = { [root]: rule === "nested-path" || rule === "tree-path" ? "root" : ["weight-prefix", "bracket-prefix", "piece-prefix"].includes(rule) ? "start" : "ε" };
     const visit = node => outgoing[node].forEach((child, index) => {
       if (rule === "nested-path") rename[child] = `${rename[node]}[${index}]`;
       else if (rule === "tree-path") rename[child] = rename[node] === "root" ? ["L", "R"][index] : `${rename[node]}${["L", "R"][index]}`;
       else if (rule === "weight-prefix") rename[child] = rename[node] === "start" ? String([5, 2, 3][index]) : `${rename[node]},${[5, 2, 3][index]}`;
+      else if (rule === "bracket-prefix") rename[child] = `${rename[node] === "start" ? "" : rename[node]}${["(", ")"][index]}`;
+      else if (rule === "piece-prefix") rename[child] = rename[node] === "start" ? String([1, 2, 3][index]) : `${rename[node]}|${[1, 2, 3][index]}`;
       else {
         const parent = rename[node] === "ε" ? "" : rename[node];
         const letter = ["a", "b", "c"].filter(value => value !== parent.at(-1))[index];
@@ -328,7 +346,7 @@ function exactResult(problem,graph,bugs=[],wrongStart=null){
 }
 
 const roundCount = problems.reduce((total, problem) => total + problem.counterexampleLesson.rounds.length, 0);
-if (roundCount !== 231) failures.push(`Expected 231 single-mistake Step 2 starters; found ${roundCount}`);
+if (roundCount !== 240) failures.push(`Expected 240 single-mistake Step 2 starters; found ${roundCount}`);
 
 function resolveNode(nodes, requested) {
   if (nodes.includes(requested)) return requested;
@@ -358,4 +376,4 @@ for (const problem of problems) for (const [index, round] of problem.counterexam
 }
 
 if(failures.length){console.error(failures.join("\n"));process.exit(1);}
-console.log("Validated all 231 single-mistake Step 2 starters.");
+console.log("Validated all 240 single-mistake Step 2 starters.");

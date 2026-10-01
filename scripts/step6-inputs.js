@@ -252,7 +252,32 @@ module.exports = {
  C('Only small groups fit',[6,4,5,3],10),
  C('Six numbers, small limit',[1,2,3,4,5,6],4),
  C('A bigger number first does not stop later numbers',[5,1,4],5),
- C('A limit smaller than every number leaves only the empty combination',[7,8,9],3)]
+ C('A limit smaller than every number leaves only the empty combination',[7,8,9],3)],
+'balanced-brackets':[
+ C('maxDepth larger than n keeps every balanced string',3,5),
+ C('maxDepth one below n leaves out only the deepest string',4,3),
+ C('maxDepth equal to n keeps all 14 strings',4,4),
+ C('maxDepth 1 leaves a single string',5,1),
+ C('Five pairs, at most two open at once',5,2),
+ C('Five pairs, at most four open at once',5,4),
+ C('maxDepth equal to n keeps all 42 strings',5,5)],
+'split-the-digits':[
+ C('One digit that fits','7',9),
+ C('A piece equal to the limit is allowed','4512',45),
+ C('A lone 0 is a piece, but 07 is not','3070',40),
+ C('Three-digit pieces count when they fit','4321',500),
+ C('A digit over the limit leaves no way','282',7),
+ C('Every digit alone when the limit is small','123456',9),
+ C('Compare numbers, not text','925',30),
+ C('digits can start with a lone 0','0123',30),
+ C('Zeros make longer pieces, up to the limit','1000',1000),
+ C('Six digits with many ways','121212',30)],
+'stack-pop-orders':[
+ C('One number has exactly one pop order',1),
+ C('Two numbers: pop 1 early, or push 2 first',2),
+ C('Three numbers: [3, 1, 2] is impossible',3),
+ C('Four numbers make 14 pop orders',4),
+ C('Five numbers make 42 pop orders',5)]
 };
 // The zero-edge metro case still has a colors argument.
 module.exports['one-color-metro-ride'][3].args = [9,[],[],6,6];

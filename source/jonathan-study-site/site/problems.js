@@ -11336,5 +11336,269 @@ window.PROBLEMS = [
         "limit"
       ]
     }
+  },
+  {
+    "id": "balanced-brackets",
+    "title": "Balanced Brackets",
+    "category": "variant",
+    "difficulty": "Medium",
+    "statement": "You are given two whole numbers, `n` and `maxDepth`.\n\nReturn **every** string made of exactly `n` opening brackets `(` and `n` closing brackets `)` that is **balanced** and never more than `maxDepth` deep.\n\nA string is **balanced** when, reading from left to right, the number of `)` never exceeds the number of `(` so far. The **depth** at any point is the number of `(` so far minus the number of `)` so far: how many brackets are open at once. The depth must never be more than `maxDepth`.\n\nYou may return the strings in any order.",
+    "examples": [
+      {
+        "input": "n = 3, maxDepth = 2",
+        "output": "[\"(()())\",\"(())()\",\"()(())\",\"()()()\"]",
+        "explanation": "These are the balanced strings with three pairs that never have more than 2 brackets open. `((()))` is left out: after its third `(`, 3 brackets are open at once."
+      },
+      {
+        "input": "n = 3, maxDepth = 3",
+        "output": "[\"((()))\",\"(()())\",\"(())()\",\"()(())\",\"()()()\"]",
+        "explanation": "A string with three `(` can never have more than 3 brackets open, so maxDepth rules nothing out. All five balanced strings count."
+      },
+      {
+        "input": "n = 3, maxDepth = 1",
+        "output": "[\"()()()\"]",
+        "explanation": "With maxDepth 1, each `(` must close before the next one opens, so only one string is left."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 5",
+      "1 <= maxDepth <= 5"
+    ],
+    "functionName": "balancedStrings",
+    "solution": "// CONTRACT for collectStrings(n, maxDepth, prefix, opens, closes, strings):\n//     when this call returns, every complete string that starts with\n//     `prefix` (which uses `opens` \"(\" and `closes` \")\"), stays\n//     balanced, and never has more than `maxDepth` brackets open has\n//     been appended to `strings`.\nconst collectStrings = (n, maxDepth, prefix, opens, closes, strings) => {\n    // Base case\n    if (prefix.length === 2 * n) {\n        strings.push(prefix);\n        return;\n    }\n\n    // Traverse neighbors\n    // Open: a string has only n \"(\" to use, and the new \"(\" must\n    // leave at most maxDepth brackets open.\n    if (opens < n && opens - closes < maxDepth) {\n        // The recursive leap of faith, one level down: this call has\n        // the SAME contract — when it returns, every complete string\n        // that starts with `prefix` plus \"(\" is in `strings`.\n        // Trust it, do not trace it.\n        collectStrings(n, maxDepth, prefix + \"(\", opens + 1, closes, strings);\n    }\n\n    // Close: a \")\" must close a \"(\" that is still open. This keeps\n    // the string balanced, and it means no prefix is a dead end:\n    // while any bracket is open, closing it is always allowed.\n    if (closes < opens) {\n        // The recursive leap of faith again: trust the contract for\n        // `prefix` plus \")\". The two calls together cover every\n        // complete string that starts with `prefix` — exactly this\n        // function's contract, kept.\n        collectStrings(n, maxDepth, prefix + \")\", opens, closes + 1, strings);\n    }\n};\n\nconst balancedStrings = (n, maxDepth) => {\n    const strings = [];\n\n    // The recursive leap of faith: trust the contract. Starting from\n    // the empty string collects every answer.\n    collectStrings(n, maxDepth, \"\", 0, 0, strings);\n\n    return strings;\n};",
+    "tests": [
+      {
+        "args": [
+          3,
+          2
+        ],
+        "expected": [
+          "(()())",
+          "(())()",
+          "()(())",
+          "()()()"
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          3,
+          3
+        ],
+        "expected": [
+          "((()))",
+          "(()())",
+          "(())()",
+          "()(())",
+          "()()()"
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          3,
+          1
+        ],
+        "expected": [
+          "()()()"
+        ],
+        "unordered": true
+      }
+    ],
+    "runner": {
+      "kind": "function",
+      "parameterNames": [
+        "n",
+        "maxDepth"
+      ]
+    }
+  },
+  {
+    "id": "split-the-digits",
+    "title": "Split the Digits",
+    "category": "variant",
+    "difficulty": "Hard",
+    "statement": "You are given a string `digits` made of the characters `0` to `9`, and a whole number `limit`.\n\nCut `digits` into one or more **pieces**. Keep the digits in order, and use every digit exactly once. Read each piece as a whole number. A piece is allowed only if its number is **at most** `limit` and it does not start with `0`, unless the piece is exactly `0`. So `0` is allowed, but `05` is not.\n\nReturn **every** way to cut `digits` into allowed pieces. Write each way as a list of its piece numbers, from left to right. You may return the ways in any order. If there is no way, return an empty list.",
+    "examples": [
+      {
+        "input": "digits = \"1234\", limit = 30",
+        "output": "[[1,2,3,4],[1,23,4],[12,3,4]]",
+        "explanation": "Every single digit is at most 30, and so are 12 and 23. 34, 123, 234, and 1234 are over 30, so no way can use them."
+      },
+      {
+        "input": "digits = \"105\", limit = 20",
+        "output": "[[1,0,5],[10,5]]",
+        "explanation": "Cutting 1, 0, 5 works because a lone 0 is allowed. Cutting 10, 5 works because 10 and 5 are both at most 20. Cutting 1, 05 does not: 05 starts with 0. 105 is over 20."
+      },
+      {
+        "input": "digits = \"17\", limit = 5",
+        "output": "[]",
+        "explanation": "1 is allowed, but then 7 is over 5. 17 is over 5 too. No way uses every digit, so the answer is empty."
+      }
+    ],
+    "constraints": [
+      "1 <= digits.length <= 6",
+      "digits contains only the characters 0 to 9",
+      "1 <= limit <= 1000"
+    ],
+    "functionName": "splitUnderLimit",
+    "solution": "// CONTRACT for collectSplits(digits, limit, startIndex, piecesSoFar, splits):\n//     when this call returns, every way to cut the rest of `digits`\n//     (from index `startIndex` onward) into allowed pieces has been\n//     appended to `splits`, each one written after `piecesSoFar`.\nconst collectSplits = (digits, limit, startIndex, piecesSoFar, splits) => {\n    // Base case: every digit is used, so the pieces are one complete way.\n    if (startIndex === digits.length) {\n        splits.push(piecesSoFar);\n        return;\n    }\n\n    // Traverse neighbors: cut the next piece, one length at a time.\n    for (let end = startIndex + 1; end <= digits.length; end++) {\n        const piece = digits.slice(startIndex, end);\n\n        // A longer piece that starts with \"0\", like \"05\", is not allowed.\n        // Every longer piece from here starts with the same \"0\", so stop.\n        if (piece.length > 1 && piece[0] === \"0\") break;\n\n        // Adding a digit never makes the number smaller, so once a piece\n        // is over the limit, every longer piece from here is over it too.\n        if (Number(piece) > limit) break;\n\n        // The recursive leap of faith, one level down: this call has the\n        // SAME contract — when it returns, every way to finish the cut\n        // after `piece` is in `splits`. Trust it, do not trace it.\n        // Trying every allowed next piece covers every way that starts\n        // with `piecesSoFar` — exactly this function's contract, kept.\n        collectSplits(digits, limit, end, [...piecesSoFar, Number(piece)], splits);\n    }\n};\n\nconst splitUnderLimit = (digits, limit) => {\n    const splits = [];\n\n    // The recursive leap of faith: trust the contract. Starting with no\n    // pieces at index 0 collects every way to cut all of `digits`.\n    collectSplits(digits, limit, 0, [], splits);\n\n    return splits;\n};",
+    "tests": [
+      {
+        "args": [
+          "1234",
+          30
+        ],
+        "expected": [
+          [
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            1,
+            23,
+            4
+          ],
+          [
+            12,
+            3,
+            4
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          "105",
+          20
+        ],
+        "expected": [
+          [
+            1,
+            0,
+            5
+          ],
+          [
+            10,
+            5
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          "17",
+          5
+        ],
+        "expected": [],
+        "unordered": true
+      }
+    ],
+    "runner": {
+      "kind": "function",
+      "parameterNames": [
+        "digits",
+        "limit"
+      ]
+    }
+  },
+  {
+    "id": "stack-pop-orders",
+    "title": "Stack Pop Orders",
+    "category": "variant",
+    "difficulty": "Hard",
+    "statement": "A **stack** is a pile of numbers that only changes at its **top**: the top is the newest number still in the pile. To **push** a number means to put it on top of the stack. To **pop** means to take the top number off.\n\nYou are given a whole number `n`. Start with an empty stack and an empty list called `out`. The numbers 1, 2, …, `n` must be pushed in that order. At each step, you may make either move:\n\n• **push**: put the next number on the stack, if some numbers have not been pushed yet.\n• **pop**: take the top number off the stack and write it at the end of `out`, if the stack is not empty.\n\nWhen all `n` numbers are in `out`, the list `out` is one **pop order**. Return a list of **all** possible pop orders. You may return them in any order.\n\nOne run for `n = 3` (the stack is listed from bottom to top):\n1. push 1 → out `[]`, stack `[1]`\n2. push 2 → out `[]`, stack `[1, 2]`\n3. pop → 2 comes off the top: out `[2]`, stack `[1]`\n4. push 3 → out `[2]`, stack `[1, 3]`\n5. pop → 3 comes off the top: out `[2, 3]`, stack `[1]`\n6. pop → 1 comes off: out `[2, 3, 1]`, stack `[]`\nAll three numbers are in `out`, so `[2, 3, 1]` is a pop order.",
+    "examples": [
+      {
+        "input": "n = 1",
+        "output": "[[1]]",
+        "explanation": "Push 1, then pop 1."
+      },
+      {
+        "input": "n = 2",
+        "output": "[[1,2],[2,1]]",
+        "explanation": "Pop 1 before pushing 2 to get `[1, 2]`. Push both numbers first, then pop twice, to get `[2, 1]`."
+      },
+      {
+        "input": "n = 3",
+        "output": "[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,2,1]]",
+        "explanation": "`[3, 1, 2]` is missing because it is impossible: to pop 3 first, 1 and 2 must already be on the stack, with 2 on top of 1. So 2 comes off before 1."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 5"
+    ],
+    "functionName": "popOrders",
+    "solution": "// CONTRACT for collectOrders(n, out, stack, next, orders):\n//     `out` holds the numbers written down so far, `stack` holds the\n//     pushed numbers that are not written yet (bottom to top), and `next`\n//     is the next number to push. When this call returns, every pop order\n//     that can still be finished from this state has been appended to\n//     `orders`.\nconst collectOrders = (n, out, stack, next, orders) => {\n    // Base case: all n numbers are in out, so this pop order is finished.\n    // An empty stack alone is not enough: some numbers may not have been\n    // pushed yet.\n    if (out.length === n) {\n        orders.push(out);\n        return;\n    }\n\n    // Traverse neighbors: there are at most two moves.\n    // Move 1, pop: take the top number off the stack and write it in out.\n    if (stack.length > 0) {\n        const top = stack[stack.length - 1];\n        // The recursive leap of faith, one level down: this call has the\n        // SAME contract, so when it returns, every order that can be\n        // finished after this pop is in `orders`. Trust it, do not trace\n        // it. It gets new arrays, so it cannot change this call's state.\n        collectOrders(n, [...out, top], stack.slice(0, -1), next, orders);\n    }\n\n    // Move 2, push: put the next number on top of the stack.\n    if (next <= n) {\n        // Leap of faith again: trust this call to collect every order\n        // that can be finished after this push.\n        collectOrders(n, out, [...stack, next], next + 1, orders);\n    }\n};\n\nconst popOrders = (n) => {\n    const orders = [];\n\n    // The recursive leap of faith: trust the contract. Starting with\n    // nothing written, an empty stack, and 1 as the next number collects\n    // every pop order.\n    collectOrders(n, [], [], 1, orders);\n\n    return orders;\n};",
+    "tests": [
+      {
+        "args": [
+          1
+        ],
+        "expected": [
+          [
+            1
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          2
+        ],
+        "expected": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          3
+        ],
+        "expected": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            2,
+            1,
+            3
+          ],
+          [
+            2,
+            3,
+            1
+          ],
+          [
+            3,
+            2,
+            1
+          ]
+        ],
+        "unordered": true
+      }
+    ],
+    "runner": {
+      "kind": "function",
+      "parameterNames": [
+        "n"
+      ]
+    }
   }
 ];

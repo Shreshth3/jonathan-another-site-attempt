@@ -119,9 +119,16 @@
       if (id === 'museum-vault-keyring') nodes('startKeys', graph.length);
       if (id === 'dungeon-gold-run') need(list('gold').length === graph.length && input.gold.every(v => integer(v, 0, 1000)), 'gold needs one whole number from 0–1000 per room.');
       if (id === 'routes-past-the-coffee-cart') num('checkpoint', 1, graph.length - 2);
+    } else if (id === 'balanced-brackets') {
+      num('n', 1, 5); num('maxDepth', 1, 5);
+    } else if (id === 'stack-pop-orders') {
+      num('n', 1, 5);
     } else if (id === 'under-the-limit') {
       const nums = list('nums'); need(nums.length >= 1 && nums.length <= 6 && distinct(nums) && nums.every(v => integer(v, 1, 50)), 'nums must have 1–6 different whole numbers from 1 to 50.');
       num('limit', 1, 300);
+    } else if (id === 'split-the-digits') {
+      need(typeof input.digits === 'string' && /^[0-9]{1,6}$/.test(input.digits), 'digits must be text with 1–6 characters, each from 0 to 9, like "1234".');
+      num('limit', 1, 1000);
     } else if (id === 'the-balance-lock') {
       const dials = list('dials'); need(dials.length >= 1 && dials.length <= 6 && dials.every(v => Array.isArray(v) && v.length >= 1 && v.length <= 4 && distinct(v) && v.every(w => integer(w, 1, 50))), 'Use 1–6 dials, each with 1–4 different whole numbers from 1 to 50.');
       num('limit', 1, 300);
@@ -266,6 +273,16 @@
       function walk(prefix,index){if(index===i.dials.length){result.push(prefix);return;}for(const char of(r.choices==='first'?i.dials[index].slice(0,1):i.dials[index])){if(r.repeat==='anywhere'?prefix.includes(char):r.repeat==='allow'?false:prefix.endsWith(char))continue;walk(prefix+char,index+1);}}
       walk('',0);return r.finish==='short'?result.map(word=>word.slice(0,-1)):result;
     }
+    if (id === 'balanced-brackets') {
+      const result=[];
+      function walk(prefix,opens,closes){if(prefix.length===(r.base==='half'?i.n:2*i.n)){result.push(prefix);return;}if(opens<i.n&&(r.open==='nodepth'||(r.open==='atmost'?opens-closes<=i.maxDepth:opens-closes<i.maxDepth)))walk(prefix+'(',opens+1,closes);if(r.close==='any'?closes<i.n:closes<opens)walk(prefix+')',opens,closes+1);}
+      walk('',0,0);return result;
+    }
+    if (id === 'stack-pop-orders') {
+      const result=[];
+      function walk(out,stack,next){if(r.finish==='empty'?stack.length===0&&out.length>0:out.length===i.n){result.push(out);return;}if(stack.length&&(r.when!=='end'||next>i.n))walk([...out,r.take==='bottom'?stack[0]:stack[stack.length-1]],r.take==='bottom'?stack.slice(1):stack.slice(0,-1),next);if(next<=i.n)walk(out,[...stack,next],next+1);}
+      walk([],[],1);return result;
+    }
     if (id === 'under-the-limit') {
       const result=[];
       function walk(start,combo,total){if(r.record==='always'||combo.length)result.push(combo);for(let index=r.loop==='all'?0:start;index<i.nums.length;index++){const number=i.nums[index];if(r.loop==='all'&&combo.includes(number))continue;if(r.bust==='atleast'?total+number>=i.limit:total+number>i.limit)continue;walk(index+1,[...combo,number],total+number);}}
@@ -275,6 +292,11 @@
       const result=[];
       function walk(code,total,index){if(index===i.dials.length){result.push(code);return;}for(const weight of(r.choices==='first'?i.dials[index].slice(0,1):i.dials[index])){if(r.bust==='atleast'?total+weight>=i.limit:r.bust==='weight'?weight>i.limit:total+weight>i.limit)continue;walk([...code,weight],total+weight,index+1);}}
       walk([],0,0);return result;
+    }
+    if (id === 'split-the-digits') {
+      const result=[], digits=i.digits;
+      function walk(index,pieces){if(index===digits.length){result.push(pieces);return;}const longest=r.loop==='two'?Math.min(2,digits.length-index):digits.length-index;for(let length=1;length<=longest;length++){const piece=digits.slice(index,index+length);if(r.zero==='any'?piece[0]==='0':length>1&&piece[0]==='0')break;if(r.limit==='atleast'?Number(piece)>=i.limit:Number(piece)>i.limit)break;walk(index+length,[...pieces,Number(piece)]);}}
+      walk(0,[]);return result;
     }
     if (id === 'gas-pocket-survey') {
       const cave=i.cave, seen=new Set();
@@ -293,7 +315,7 @@
   function equal(id, a, b) {
     // Neither the combinations' order nor the numbers' order inside one matters; repeats still do.
     if (id === 'under-the-limit' && Array.isArray(a) && Array.isArray(b)) { const key = list => JSON.stringify(list.map(v => Array.isArray(v) ? JSON.stringify([...v].sort((x, y) => x - y)) : JSON.stringify(v)).sort()); return key(a) === key(b); }
-    if (['routes-past-the-coffee-cart','runes-on-the-castle-door','the-balance-lock'].includes(id) && Array.isArray(a) && Array.isArray(b)) return JSON.stringify(a.map(v=>JSON.stringify(v)).sort())===JSON.stringify(b.map(v=>JSON.stringify(v)).sort());
+    if (['routes-past-the-coffee-cart','runes-on-the-castle-door','the-balance-lock','balanced-brackets','split-the-digits','stack-pop-orders'].includes(id) && Array.isArray(a) && Array.isArray(b)) return JSON.stringify(a.map(v=>JSON.stringify(v)).sort())===JSON.stringify(b.map(v=>JSON.stringify(v)).sort());
     return JSON.stringify(a)===JSON.stringify(b);
   }
   function getRules(challenge, selected) {

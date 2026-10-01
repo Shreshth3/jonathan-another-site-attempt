@@ -4232,5 +4232,470 @@
         4
       ]
     }
+  },
+  {
+    "id": "balanced-brackets",
+    "visualKind": "backtracking",
+    "pictureQuestions": [
+      {
+        "id": "which-strings",
+        "input": "n = 1, maxDepth = 3",
+        "prompt": "For n = `1` and maxDepth = `3`, which strings are returned?",
+        "correct": "one",
+        "choices": [
+          {
+            "id": "one",
+            "feedback": "Correct. With one `(` and one `)`, the only balanced string is `()`. maxDepth 3 never matters, because at most one bracket can be open.",
+            "misconception": null,
+            "label": "`()`"
+          },
+          {
+            "id": "closes-first",
+            "feedback": "`)(` starts with a `)` that closes nothing. A `)` is allowed only while a `(` is still open.",
+            "misconception": "close-up-to-n",
+            "label": "`()` and `)(`"
+          },
+          {
+            "id": "half",
+            "feedback": "`(` is only half a string. A complete string has n `(` and n `)`, so it is 2n = 2 brackets long.",
+            "misconception": "stop-at-n",
+            "label": "`(`"
+          },
+          {
+            "id": "extra-open",
+            "feedback": "`((` uses two `(`, but n is 1. Every string has exactly n `(`, even when maxDepth would allow more.",
+            "misconception": "no-open-cap",
+            "label": "`((` and `()`"
+          }
+        ]
+      },
+      {
+        "id": "how-many",
+        "input": "n = 4, maxDepth = 2",
+        "prompt": "For n = `4` and maxDepth = `2`, how many strings are returned?",
+        "correct": "eight",
+        "choices": [
+          {
+            "id": "eight",
+            "feedback": "Correct. Of the 14 balanced strings with four pairs, 8 never have more than 2 brackets open at once.",
+            "misconception": null,
+            "label": "`8`"
+          },
+          {
+            "id": "fourteen",
+            "feedback": "This counts every balanced string with four pairs. It ignores maxDepth, so strings like `((()))()` with 3 brackets open are counted too.",
+            "misconception": "ignore-max-depth",
+            "label": "`14`"
+          },
+          {
+            "id": "one",
+            "feedback": "This stops a `(` that would make 2 brackets open. maxDepth 2 allows exactly 2 open at once; only a third is too deep.",
+            "misconception": "depth-under-by-one",
+            "label": "`1`"
+          },
+          {
+            "id": "four",
+            "feedback": "This counts prefixes with 4 brackets. A complete string has n `(` and n `)`, so it is 2n = 8 brackets long.",
+            "misconception": "stop-at-n",
+            "label": "`4`"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is a node in the bracket decision tree?",
+      "correct": "prefix",
+      "choices": [
+        {
+          "id": "prefix",
+          "label": "A prefix: the brackets written so far, from left to right. The root `start` is the empty string.",
+          "feedback": "Correct. Each level adds one bracket, so a node remembers the whole string built so far.",
+          "misconception": null
+        },
+        {
+          "id": "depth",
+          "label": "One node per depth, so prefixes with the same number of open brackets share a node.",
+          "feedback": "Different prefixes can have the same depth: `(` and `(()` both have one bracket open. They lead to different strings, so each needs its own node.",
+          "misconception": "merge-by-depth"
+        },
+        {
+          "id": "full",
+          "label": "Only complete strings with 2n brackets.",
+          "feedback": "Complete strings are the leaves. The shorter prefixes are needed to show the choices that lead to them.",
+          "misconception": "leaves-only"
+        },
+        {
+          "id": "bracket",
+          "label": "Two nodes in total: one for `(` and one for `)`.",
+          "feedback": "The same bracket at a different place builds a different string. A node must remember the whole prefix, not just its last bracket.",
+          "misconception": "bracket-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When does a prefix have an edge to a longer prefix?",
+      "correct": "two-rules",
+      "choices": [
+        {
+          "id": "two-rules",
+          "label": "Add `(` if fewer than n `(` are used and fewer than maxDepth brackets are open. Add `)` if fewer `)` than `(` are used so far.",
+          "feedback": "Correct. A new `(` keeps the depth at most maxDepth, and a new `)` always closes a bracket that is still open.",
+          "misconception": null
+        },
+        {
+          "id": "close-up-to-n",
+          "label": "Add `(` by the same rule. Add `)` whenever fewer than n `)` are used.",
+          "feedback": "Then `)` could come first, as in `)(`. That closes a bracket that was never opened, so the string is not balanced.",
+          "misconception": "close-up-to-n"
+        },
+        {
+          "id": "depth-at-most",
+          "label": "Add `(` if fewer than n `(` are used and at most maxDepth brackets are open. Add `)` if fewer `)` than `(` are used so far.",
+          "feedback": "If maxDepth brackets are already open, one more `(` makes the depth maxDepth + 1, which is too deep.",
+          "misconception": "depth-over-by-one"
+        },
+        {
+          "id": "no-cap",
+          "label": "Add `(` whenever fewer than maxDepth brackets are open. Add `)` if fewer `)` than `(` are used so far.",
+          "feedback": "Every answer has exactly n `(`. Without the n check, a string can use more `(` than `)`, like `((` when n is 1.",
+          "misconception": "no-open-cap"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `start` for the empty string. After that, write the brackets chosen so far. Example: `(()`.",
+      "pattern": "^(?:start|[()]+)$",
+      "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "leaves-only",
+      "no": "only complete strings with 2n brackets should become nodes.",
+      "yes": "Every shorter prefix along the way should have its own node too."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "depth-limit",
+        "concept-nodes",
+        "balanced-closes",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
+  },
+  {
+    "id": "split-the-digits",
+    "visualKind": "backtracking",
+    "pictureQuestions": [
+      {
+        "id": "which-ways",
+        "input": "digits = \"406\", limit = 40",
+        "prompt": "For digits `\"406\"` with limit `40`, which ways are returned?",
+        "correct": "two",
+        "choices": [
+          {
+            "id": "two",
+            "feedback": "Correct. 40 equals the limit, so it is allowed, and a lone 0 is allowed too. 06 starts with 0, and 406 is over 40.",
+            "misconception": null,
+            "label": "`[4, 0, 6]` and `[40, 6]`"
+          },
+          {
+            "id": "leading",
+            "feedback": "06 starts with 0, so cutting 4 then 06 is not allowed, even though 6 is small.",
+            "misconception": "allow-leading-zero",
+            "label": "`[4, 0, 6]`, `[4, 6]`, and `[40, 6]`"
+          },
+          {
+            "id": "no-zero",
+            "feedback": "A piece that is exactly 0 is allowed, so cutting 4, 0, 6 works too.",
+            "misconception": "reject-zero",
+            "label": "`[40, 6]`"
+          },
+          {
+            "id": "strict",
+            "feedback": "40 equals the limit, which is allowed. Only a number over limit is left out.",
+            "misconception": "strict-limit",
+            "label": "`[4, 0, 6]`"
+          }
+        ]
+      },
+      {
+        "id": "how-many",
+        "input": "digits = \"314\", limit = 400",
+        "prompt": "For digits `\"314\"` with limit `400`, how many ways are returned?",
+        "correct": "four",
+        "choices": [
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "Correct. `3|1|4`, `3|14`, `31|4`, and `314` all work. 314 is one piece of 3 digits, and it is at most 400.",
+            "misconception": null
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "This tries only pieces of 1 or 2 digits, so it misses the single piece 314.",
+            "misconception": "lengths-one-two"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "This marks each position as visited, like a graph search. `3|14`, `31|4`, and `314` reach positions that `3|1|4` already visited, so they are skipped. Different cuts that reach the same position are different answers.",
+            "misconception": "visited-position"
+          },
+          {
+            "id": "eight",
+            "label": "`8`",
+            "feedback": "This counts every partial cut in the tree, including start. Only cuts that use every digit are answers.",
+            "misconception": "record-every-node"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is a node in the cutting tree?",
+      "correct": "cut",
+      "choices": [
+        {
+          "id": "cut",
+          "label": "The pieces cut so far, in order. The root, `start`, has no pieces yet.",
+          "feedback": "Correct. The pieces cut so far also say how many digits are used, so each node knows where the next piece starts.",
+          "misconception": null
+        },
+        {
+          "id": "position",
+          "label": "One node per number of digits used so far, so `1|2` and `12` share a node.",
+          "feedback": "`1|2` and `12` both use two digits, but they are different ways to cut. Each leads to its own answers, so each needs its own node.",
+          "misconception": "visited-position"
+        },
+        {
+          "id": "full",
+          "label": "Only cuts that use every digit.",
+          "feedback": "Partial cuts count too. `1` has not used every digit, but the tree needs it to reach `1|2`.",
+          "misconception": "leaves-only"
+        },
+        {
+          "id": "digit",
+          "label": "One node per digit in digits.",
+          "feedback": "One digit can be part of many different pieces. A node must remember the whole cut so far.",
+          "misconception": "digit-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When does a partial cut have an edge to a longer cut?",
+      "correct": "next-piece",
+      "choices": [
+        {
+          "id": "next-piece",
+          "label": "Cut the next piece, of any length, right after the last piece. Its number must be at most limit, and it must not start with `0` unless it is exactly `0`.",
+          "feedback": "Correct. Each edge cuts one more allowed piece from the digits that are left.",
+          "misconception": null
+        },
+        {
+          "id": "short",
+          "label": "Cut the next piece of 1 or 2 digits, if its number is at most limit and it does not start with `0` unless it is exactly `0`.",
+          "feedback": "Pieces can have 3 or more digits. Any length is allowed while the number stays at most limit.",
+          "misconception": "lengths-one-two"
+        },
+        {
+          "id": "strict",
+          "label": "Cut the next piece, of any length, if its number is below limit and it does not start with `0` unless it is exactly `0`.",
+          "feedback": "A piece exactly equal to limit is allowed. Only a number over limit is left out.",
+          "misconception": "strict-limit"
+        },
+        {
+          "id": "leading",
+          "label": "Cut the next piece, of any length, if its number is at most limit. A piece like `05` counts as 5.",
+          "feedback": "A piece cannot start with `0` unless it is exactly `0`. `05` is not allowed, even though 5 is small.",
+          "misconception": "allow-leading-zero"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `start` before any cut. After that, write the pieces cut so far in order, joined by `|`. Example: `12|3`.",
+      "pattern": "^(?:start|\\d+(?:\\|\\d+)*)$",
+      "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "leaves-only",
+      "no": "only cuts that use every digit should become nodes.",
+      "yes": "A partial cut that has not used every digit should have its own node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "zero-piece",
+        "concept-nodes",
+        "dead-end",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
+  },
+  {
+    "id": "stack-pop-orders",
+    "visualKind": "backtracking",
+    "pictureQuestions": [
+      {
+        "id": "which-orders",
+        "input": "n = 4, out = [2], stack = [1,3]",
+        "prompt": "With n = 4, starting from out `[2]` and stack `[1, 3]`, which pop orders can still be finished?",
+        "correct": "three",
+        "choices": [
+          {
+            "id": "three",
+            "feedback": "Correct. Pop 3, pop 1, then push and pop 4 gives `[2, 3, 1, 4]`. Pop 3, push and pop 4, then pop 1 gives `[2, 3, 4, 1]`. Push and pop 4 first, then pop 3 and 1, gives `[2, 4, 3, 1]`.",
+            "misconception": null,
+            "label": "`[2, 3, 1, 4]`, `[2, 3, 4, 1]`, and `[2, 4, 3, 1]`"
+          },
+          {
+            "id": "late",
+            "feedback": "This pops only after every number is pushed, so it must push 4 first. Popping 3 right away is allowed too.",
+            "misconception": "pop-only-at-end",
+            "label": "`[2, 4, 3, 1]`"
+          },
+          {
+            "id": "empty",
+            "feedback": "This stops as soon as the stack is empty. `[2, 3, 1]` has an empty stack, but 4 has not been pushed yet, so it is not finished.",
+            "misconception": "stop-when-empty",
+            "label": "`[2, 3, 1]`, `[2, 3, 4, 1]`, and `[2, 4, 3, 1]`"
+          },
+          {
+            "id": "one-move",
+            "feedback": "This makes only one move from each state, popping whenever it can. Pushing 4 is also allowed while 4 is waiting, and it leads to other orders.",
+            "misconception": "one-move-only",
+            "label": "`[2, 3, 1, 4]`"
+          }
+        ]
+      },
+      {
+        "id": "how-many",
+        "input": "n = 4",
+        "prompt": "For n = 4, how many pop orders are returned?",
+        "correct": "fourteen",
+        "choices": [
+          {
+            "id": "fourteen",
+            "label": "`14`",
+            "feedback": "Correct. 14 of the 24 orderings of 1–4 can be made. An order like `[3, 1, 2, 4]` cannot: when 3 is popped first, 2 is still on top of 1, so 2 must come out before 1.",
+            "misconception": null
+          },
+          {
+            "id": "all",
+            "label": "`24`",
+            "feedback": "Not every ordering of 1–4 can be made. `[3, 1, 2, 4]` is impossible: after pushing 1, 2, 3 and popping 3, 2 is on top of 1, so 2 must come out before 1.",
+            "misconception": "any-order"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "This counts only `[4, 3, 2, 1]`, as if every number must be pushed before any pop. You may pop as soon as the stack is not empty.",
+            "misconception": "pop-only-at-end"
+          },
+          {
+            "id": "nine",
+            "label": "`9`",
+            "feedback": "This counts a run as finished whenever the stack is empty, so it includes short lists like `[1]` and `[2, 1]` before the other numbers are pushed.",
+            "misconception": "stop-when-empty"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is a node in the pop-order tree?",
+      "correct": "state",
+      "choices": [
+        {
+          "id": "state",
+          "label": "One state of the run: the numbers written in out so far, plus the numbers on the stack. The start state has both empty.",
+          "feedback": "Correct. A node remembers both out and the stack, because together they decide which moves come next.",
+          "misconception": null
+        },
+        {
+          "id": "out-only",
+          "label": "Only the numbers written in out so far. States with the same out share a node.",
+          "feedback": "Two states can have the same out but different stacks, like `out [1] | stack [2]` and `out [1] | stack [2,3]`. Different moves are possible from each, so each needs its own node.",
+          "misconception": "merge-by-out"
+        },
+        {
+          "id": "number",
+          "label": "One node per number from 1 to n.",
+          "feedback": "A number is pushed, waits on the stack, and is written down at different moments. A node must remember the whole state: out and the stack.",
+          "misconception": "number-as-node"
+        },
+        {
+          "id": "finished",
+          "label": "Only finished pop orders, where all n numbers are written.",
+          "feedback": "The states along the way are nodes too. Each finished pop order is reached by a path of moves through them.",
+          "misconception": "leaves-only"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When does a state have an edge to another state?",
+      "correct": "one-move",
+      "choices": [
+        {
+          "id": "one-move",
+          "label": "When one move leads there: push the next number (if any number is still waiting), or pop the top number into out (if the stack is not empty).",
+          "feedback": "Correct. Each edge is one push or one pop, so a state has at most two edges going out.",
+          "misconception": null
+        },
+        {
+          "id": "any-push",
+          "label": "When you push any number that has not been pushed yet, or pop the top number into out.",
+          "feedback": "Numbers are pushed in order: 1, then 2, then 3. From `out [1,3] | stack [2]` the only number left to push is 4.",
+          "misconception": "any-order"
+        },
+        {
+          "id": "pop-any",
+          "label": "When you push the next number, or pop any number in the stack into out.",
+          "feedback": "Only the top number can come off the stack: the newest number still on it.",
+          "misconception": "pop-bottom"
+        },
+        {
+          "id": "pop-late",
+          "label": "When you push the next number, or pop the top number, but only after every number has been pushed.",
+          "feedback": "You may pop as soon as the stack is not empty. Waiting until every number is pushed allows only one order.",
+          "misconception": "pop-only-at-end"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `start` for the state before any move. Name every other state `out [...] | stack [...]`: first the numbers written in out so far, then the numbers on the stack from bottom to top. Example: `out [2] | stack [1,3]` means 2 has been written down, and 3 sits on top of 1. Write an empty list as `[]`, as in `out [2,3,1] | stack []`. When the input gives out and stack, your drawing starts from that state.",
+      "pattern": "^(?:start|(?!out \\[\\] \\| stack \\[\\]$)out \\[(?:[1-9](?:,[1-9])*)?\\] \\| stack \\[(?:[1-9](?:,[1-9])*)?\\])$",
+      "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "leaves-only",
+      "no": "only finished pop orders should become nodes.",
+      "yes": "Every state of the run, finished or not, should have its own node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "two-numbers",
+        "concept-nodes",
+        "pop-early",
+        "concept-relations",
+        "concept-output"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   }
 ]

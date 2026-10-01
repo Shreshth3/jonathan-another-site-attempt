@@ -102,6 +102,90 @@ test("Under the limit output ignores both orders but not repeats", () => {
   use("under-the-limit"); const expected = [[], [2], [2, 3], [3], [5]];
   assert(engine.matches("[[5],[3,2],[3],[2],[]]", expected)); assert(!engine.matches("[[5],[3,2],[2,3],[3],[2],[]]", expected)); assert(!engine.matches("[[2],[2,3],[3],[5]]", expected));
 });
+// Balanced brackets: n 2, maxDepth 2 → (()) and ()(). Every prefix can be completed; only 4-bracket strings are answers.
+const brackets = (nodes, edges, fields = { n: 2, maxDepth: 2 }) => graph(nodes, edges, { directed: true, start: "start", fields });
+const bracketNodes = ["start", "(", "((", "(()", "(())", "()", "()(", "()()"];
+const bracketEdges = [["start", "("], ["(", "(("], ["((", "(()"], ["(()", "(())"], ["(", "()"], ["()", "()("], ["()(", "()()"]];
+test("Balanced brackets returns only complete strings", () => {
+  use("balanced-brackets"); const value = brackets(bracketNodes, bracketEdges);
+  valid(value); same(engine.result(value), ["(())", "()()"]); same(engine.result(value, ["shallow-search"]), []); same(engine.result(value, ["last-branch"]), ["()()"]); same(engine.result(value, ["wrong-start"], "(("), ["(())"]);
+});
+test("Balanced brackets maxDepth 1 allows only one open bracket", () => {
+  use("balanced-brackets"); const fields = { n: 2, maxDepth: 1 };
+  const value = brackets(["start", "(", "()", "()(", "()()"], [["start", "("], ["(", "()"], ["()", "()("], ["()(", "()()"]], fields);
+  valid(value); same(engine.result(value), ["()()"]);
+  assert.throws(() => valid(brackets(bracketNodes, bracketEdges, fields)), /: \(\( is not an allowed prefix/);
+});
+test("Balanced brackets rejects an unbalanced prefix and a missing prefix", () => {
+  use("balanced-brackets");
+  assert.throws(() => valid(brackets([...bracketNodes, "())"], [...bracketEdges, ["()", "())"]])), /: \(\)\) is not an allowed prefix/);
+  assert.throws(() => valid(brackets(bracketNodes.filter(node => node !== "()("), bracketEdges.filter(([, to]) => to !== "()("))), /prefix \(\)\(\. /);
+  assert.throws(() => engine.shape(brackets(["start", "(", "(()"], [["start", "("], ["(", "(()"]])), /: \(\(\) needs its prefix \(\(\./);
+});
+test("Balanced brackets output ignores order but not repeats, with or without quotes", () => {
+  use("balanced-brackets"); const expected = ["(())", "()()"];
+  assert(engine.matches('["()()","(())"]', expected)); assert(engine.matches("[()(), (())]", expected)); assert(engine.matches("(()), ()()", expected));
+  assert(!engine.matches('["(())","(())","()()"]', expected)); assert(!engine.matches('["(())"]', expected)); assert(!engine.matches('["(())","()()",")("]', expected));
+  assert(engine.matches("[]", [])); same(engine.format(expected), '["(())","()()"]');
+});
+test("Balanced brackets reads n and maxDepth as bounded whole numbers", () => {
+  use("balanced-brackets"); const n = { id: "n", kind: "integer", min: 1, max: 5 };
+  same(engine.semantic(" 3 ", n, "n"), 3); assert.throws(() => engine.semantic("6", n, "n"), /at most 5/); assert.throws(() => engine.semantic("0", n, "n"), /at least 1/); assert.throws(() => engine.semantic("1.5", n, "n"), /whole number/);
+});
+// Split the digits: digits "105", limit 20 → 1|0|5 and 10|5. 05 starts with 0 and 105 is over 20.
+const split = (nodes, edges, fields = { digits: "105", limit: 20 }) => graph(nodes, edges, { directed: true, start: "start", fields });
+const splitTree = () => split(["start", "1", "1|0", "1|0|5", "10", "10|5"], [["start", "1"], ["1", "1|0"], ["1|0", "1|0|5"], ["start", "10"], ["10", "10|5"]]);
+test("Split the digits returns only cuts that use every digit", () => {
+  use("split-the-digits"); const value = splitTree();
+  valid(value); same(engine.result(value), [[1, 0, 5], [10, 5]]);
+  same(engine.result(value, ["last-branch"]), [[10, 5]]); same(engine.result(value, ["shallow-search"]), []); same(engine.result(value, ["wrong-start"], "1"), [[1, 0, 5]]);
+});
+test("Split the digits dead ends are not answers but must be drawn", () => {
+  use("split-the-digits"); const fields = { digits: "17", limit: 5 };
+  const value = split(["start", "1"], [["start", "1"]], fields); valid(value); same(engine.result(value), []);
+  assert.throws(() => valid(split(["start"], [], fields)), /partial cut 1\./);
+});
+test("Split the digits rejects leading zeros, pieces over the limit, and out-of-order digits", () => {
+  use("split-the-digits");
+  const zero = splitTree(); zero.nodes.push("1|05"); zero.edges.push(["1", "1|05"]);
+  assert.throws(() => valid(zero), /05 starts with 0/);
+  assert.throws(() => valid(split(["start", "1", "1|2", "12"], [["start", "1"], ["1", "1|2"], ["start", "12"]], { digits: "12", limit: 10 })), /12 is over the limit 10/);
+  assert.throws(() => valid(split(["start", "1", "1|2", "2"], [["start", "1"], ["1", "1|2"], ["start", "2"]], { digits: "12", limit: 10 })), /does not follow the digits/);
+  assert.throws(() => valid(split(["start", "1", "1|0", "1|0|5", "10"], [["start", "1"], ["1", "1|0"], ["1|0", "1|0|5"], ["start", "10"]])), /partial cut 10\|5/);
+  assert.throws(() => valid(split(["start"], [], { digits: "12a", limit: 10 })), /1–6 characters/);
+});
+test("Split the digits output ignores the order of ways, not the order of pieces", () => {
+  use("split-the-digits"); const expected = [[1, 0, 5], [10, 5]];
+  assert(engine.matches("[[10,5],[1,0,5]]", expected)); assert(!engine.matches("[[5,0,1],[10,5]]", expected)); assert(!engine.matches("[[1,0,5]]", expected));
+  assert(engine.matches("[]", [])); assert(!engine.matches("[[1]]", []));
+});
+test("Split the digits reads digits with or without quotes and keeps leading zeros", () => {
+  // In the browser, window is the global object, so the bundled Acorn parser is window.acorn.
+  sandbox.window.acorn ??= sandbox.acorn;
+  use("split-the-digits"); const field = { id: "digits", kind: "json" };
+  same(engine.semantic("1234", field, "digits"), "1234"); same(engine.semantic("\"0105\"", field, "digits"), "0105"); same(engine.semantic("0105", field, "digits"), "0105"); same(engine.semantic("'42'", field, "digits"), "42");
+});
+// Stack pop orders, n = 2: start → out [] | stack [1]. From there pop 1 (then push 2, pop 2 → [1,2])
+// or push 2 (then pop 2, pop 1 → [2,1]). Eight states; only the two with both numbers written are answers.
+const S = { push1: "out [] | stack [1]", pop1: "out [1] | stack []", push2late: "out [1] | stack [2]", done12: "out [1,2] | stack []", push2: "out [] | stack [1,2]", pop2: "out [2] | stack [1]", done21: "out [2,1] | stack []" };
+const stackNodes = ["start", S.push1, S.pop1, S.push2late, S.done12, S.push2, S.pop2, S.done21];
+const stackEdges = [["start", S.push1], [S.push1, S.pop1], [S.pop1, S.push2late], [S.push2late, S.done12], [S.push1, S.push2], [S.push2, S.pop2], [S.pop2, S.done21]];
+const stackGraph = (nodes = stackNodes, edges = stackEdges) => graph(nodes, edges, { directed: true, start: "start", fields: { n: 2 } });
+test("Stack pop orders returns only states with every number written", () => {
+  use("stack-pop-orders"); const value = stackGraph();
+  valid(value); same(engine.result(value), [[1, 2], [2, 1]]); same(engine.result(value, ["shallow-search"]), []);
+  same(engine.result(value, ["last-branch"]), [[2, 1]]); same(engine.result(value, ["wrong-start"], S.pop1), [[1, 2]]);
+});
+test("Stack pop orders rejects a pop from the bottom and a missing state", () => {
+  use("stack-pop-orders");
+  assert.throws(() => valid(stackGraph(stackNodes, [...stackEdges, [S.push2, S.push2late]])), /is not allowed/);
+  assert.throws(() => valid(stackGraph(stackNodes.filter(node => ![S.pop1, S.push2late, S.done12].includes(node)), stackEdges.filter(([from, to]) => ![from, to].some(node => [S.pop1, S.push2late, S.done12].includes(node))))), /can also reach out \[1\] \| stack \[\]/);
+  assert.throws(() => valid(stackGraph([...stackNodes, "out [2] | stack [1,3]"], [...stackEdges, [S.pop2, "out [2] | stack [1,3]"]])), /cannot happen with n = 2/);
+});
+test("Stack pop orders output ignores the order of pop orders but not the order inside one", () => {
+  use("stack-pop-orders"); const expected = [[1, 2], [2, 1]];
+  assert(engine.matches("[[2,1],[1,2]]", expected)); assert(!engine.matches("[[1,2],[1,2]]", expected)); assert(!engine.matches("[[1,2]]", expected));
+});
 test("Playlist uses index order regardless of drawing order", () => {
   use("kth-song-in-playlist"); const value = graph(["root=[]", "root[0]=10", "root[1]=20"], [["root=[]", "root[1]=20"], ["root=[]", "root[0]=10"]], { directed: true, start: "root=[]", fields: { k: 1 }, nodeMarkers: { songId: { "root[0]=10": 10, "root[1]=20": 20 } } });
   valid(value); same(engine.result(value), 10); value.nodeMarkers.songId["root[0]=10"] = 100; assert.throws(() => valid(value), /shows 10/);
