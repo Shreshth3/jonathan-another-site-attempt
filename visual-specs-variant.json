@@ -4387,5 +4387,160 @@
         4
       ]
     }
+  },
+  {
+    "id": "split-the-digits",
+    "visualKind": "backtracking",
+    "pictureQuestions": [
+      {
+        "id": "which-ways",
+        "input": "digits = \"406\", limit = 40",
+        "prompt": "For digits `\"406\"` with limit `40`, which ways are returned?",
+        "correct": "two",
+        "choices": [
+          {
+            "id": "two",
+            "feedback": "Correct. 40 equals the limit, so it is allowed, and a lone 0 is allowed too. 06 starts with 0, and 406 is over 40.",
+            "misconception": null,
+            "label": "`[4, 0, 6]` and `[40, 6]`"
+          },
+          {
+            "id": "leading",
+            "feedback": "06 starts with 0, so cutting 4 then 06 is not allowed, even though 6 is small.",
+            "misconception": "allow-leading-zero",
+            "label": "`[4, 0, 6]`, `[4, 6]`, and `[40, 6]`"
+          },
+          {
+            "id": "no-zero",
+            "feedback": "A piece that is exactly 0 is allowed, so cutting 4, 0, 6 works too.",
+            "misconception": "reject-zero",
+            "label": "`[40, 6]`"
+          },
+          {
+            "id": "strict",
+            "feedback": "40 equals the limit, which is allowed. Only a number over limit is left out.",
+            "misconception": "strict-limit",
+            "label": "`[4, 0, 6]`"
+          }
+        ]
+      },
+      {
+        "id": "how-many",
+        "input": "digits = \"314\", limit = 400",
+        "prompt": "For digits `\"314\"` with limit `400`, how many ways are returned?",
+        "correct": "four",
+        "choices": [
+          {
+            "id": "four",
+            "label": "`4`",
+            "feedback": "Correct. `3|1|4`, `3|14`, `31|4`, and `314` all work. 314 is one piece of 3 digits, and it is at most 400.",
+            "misconception": null
+          },
+          {
+            "id": "three",
+            "label": "`3`",
+            "feedback": "This tries only pieces of 1 or 2 digits, so it misses the single piece 314.",
+            "misconception": "lengths-one-two"
+          },
+          {
+            "id": "one",
+            "label": "`1`",
+            "feedback": "This marks each position as visited, like a graph search. `3|14`, `31|4`, and `314` reach positions that `3|1|4` already visited, so they are skipped. Different cuts that reach the same position are different answers.",
+            "misconception": "visited-position"
+          },
+          {
+            "id": "eight",
+            "label": "`8`",
+            "feedback": "This counts every partial cut in the tree, including start. Only cuts that use every digit are answers.",
+            "misconception": "record-every-node"
+          }
+        ]
+      }
+    ],
+    "nodeQuestion": {
+      "prompt": "What is a node in the cutting tree?",
+      "correct": "cut",
+      "choices": [
+        {
+          "id": "cut",
+          "label": "The pieces cut so far, in order. The root, `start`, has no pieces yet.",
+          "feedback": "Correct. The pieces cut so far also say how many digits are used, so each node knows where the next piece starts.",
+          "misconception": null
+        },
+        {
+          "id": "position",
+          "label": "One node per number of digits used so far, so `1|2` and `12` share a node.",
+          "feedback": "`1|2` and `12` both use two digits, but they are different ways to cut. Each leads to its own answers, so each needs its own node.",
+          "misconception": "visited-position"
+        },
+        {
+          "id": "full",
+          "label": "Only cuts that use every digit.",
+          "feedback": "Partial cuts count too. `1` has not used every digit, but the tree needs it to reach `1|2`.",
+          "misconception": "leaves-only"
+        },
+        {
+          "id": "digit",
+          "label": "One node per digit in digits.",
+          "feedback": "One digit can be part of many different pieces. A node must remember the whole cut so far.",
+          "misconception": "digit-as-node"
+        }
+      ]
+    },
+    "edgeQuestion": {
+      "prompt": "When does a partial cut have an edge to a longer cut?",
+      "correct": "next-piece",
+      "choices": [
+        {
+          "id": "next-piece",
+          "label": "Cut the next piece, of any length, right after the last piece. Its number must be at most limit, and it must not start with `0` unless it is exactly `0`.",
+          "feedback": "Correct. Each edge cuts one more allowed piece from the digits that are left.",
+          "misconception": null
+        },
+        {
+          "id": "short",
+          "label": "Cut the next piece of 1 or 2 digits, if its number is at most limit and it does not start with `0` unless it is exactly `0`.",
+          "feedback": "Pieces can be longer. With limit 400, `314` is one allowed piece of 3 digits.",
+          "misconception": "lengths-one-two"
+        },
+        {
+          "id": "strict",
+          "label": "Cut the next piece, of any length, if its number is below limit and it does not start with `0` unless it is exactly `0`.",
+          "feedback": "A piece exactly equal to limit is allowed. Only a number over limit is left out.",
+          "misconception": "strict-limit"
+        },
+        {
+          "id": "leading",
+          "label": "Cut the next piece, of any length, if its number is at most limit. A piece like `05` counts as 5.",
+          "feedback": "A piece cannot start with `0` unless it is exactly `0`. `05` is not allowed, even though 5 is small.",
+          "misconception": "allow-leading-zero"
+        }
+      ]
+    },
+    "nodeLabelFormat": {
+      "instruction": "Use `start` before any cut. After that, write the pieces cut so far in order, joined by `|`. Example: `12|3`.",
+      "pattern": "^(?:start|\\d+(?:\\|\\d+)*)$",
+      "showExactLabels": false
+    },
+    "membershipClaim": {
+      "misconception": "leaves-only",
+      "no": "only cuts that use every digit should become nodes.",
+      "yes": "A partial cut that has not used every digit should have its own node."
+    },
+    "practicePlan": {
+      "version": "short-v1",
+      "step1": [
+        "zero-piece",
+        "concept-nodes",
+        "dead-end",
+        "concept-relations",
+        "concept-bug"
+      ],
+      "step3": [
+        0,
+        1,
+        4
+      ]
+    }
   }
 ]

@@ -35,7 +35,8 @@ const helps = {
  'runes-on-the-castle-door':'Use {"dials": listOfStrings}. Use 1–6 dials; each string has 1–4 distinct lowercase letters.',
  'the-balance-lock':'Use {"dials": listOfWeightLists, "limit": number}. Use 1–6 dials; each has 1–4 different whole numbers from 1 to 50. limit is 1–300.',
  'under-the-limit':'Use {"nums": list, "limit": number}. nums has 1–6 different whole numbers from 1 to 50. limit is 1–300.',
- 'balanced-brackets':'Use {"n": number, "maxDepth": number}. n is 1–5 and maxDepth is 1–5.'
+ 'balanced-brackets':'Use {"n": number, "maxDepth": number}. n is 1–5 and maxDepth is 1–5.',
+ 'split-the-digits':'Use {"digits": text, "limit": number}. digits has 1–6 characters, each from 0 to 9. limit is 1–1000.'
 };
 function reorder(options,seed) {return options.map((value,index)=>({value,score:((seed+index*137)*2654435761)>>>0})).sort((a,b)=>a.score-b.score).map(entry=>entry.value);}
 const output=[];

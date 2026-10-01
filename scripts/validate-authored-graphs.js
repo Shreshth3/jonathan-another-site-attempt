@@ -188,6 +188,26 @@ function deriveBalancedBrackets(n, maxDepth) {
   return model;
 }
 
+// Split the digits: a node is the pieces cut so far, joined by |. Every piece
+// length is checked on its own here (no early stop), as an independent check.
+function deriveSplitTheDigits(digits, limit) {
+  const model = graph(true);
+  addNode(model, 'start');
+  const allowed = piece => (piece === '0' || !piece.startsWith('0')) && Number(piece) <= limit;
+  function extend(used, cut) {
+    for (let end = used + 1; end <= digits.length; end++) {
+      const piece = digits.slice(used, end);
+      if (!allowed(piece)) continue;
+      const next = cut ? `${cut}|${piece}` : piece;
+      addNode(model, next);
+      addEdge(model, cut || 'start', next);
+      extend(end, next);
+    }
+  }
+  extend(0, '');
+  return model;
+}
+
 function deriveVariant(id, input) {
   if (input.sky || input.marina || input.yard || input.park || input.cave) {
     return deriveGrid(id, input);
@@ -196,6 +216,7 @@ function deriveVariant(id, input) {
   if (id === 'the-balance-lock') return deriveBalanceLock(input.dials, input.limit);
   if (id === 'under-the-limit') return deriveUnderTheLimit(input.nums, input.limit);
   if (id === 'balanced-brackets') return deriveBalancedBrackets(input.n, input.maxDepth);
+  if (id === 'split-the-digits') return deriveSplitTheDigits(input.digits, input.limit);
   if (input.dials) return deriveRunes(input.dials);
   const model = graph();
 

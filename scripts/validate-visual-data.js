@@ -356,7 +356,7 @@ function validateCounterexampleLesson(problem) {
   const spec = problem.counterexampleLesson;
   if (!spec) return errors.push(`${problem.id}: missing authored Step 2 spec`);
   for (const field of ["nodeNames", "startNode", "edges", "correctSearch", "mistakenSearch"]) if (!String(spec.vocabulary?.[field] || "").trim()) errors.push(`${problem.id}/step2: missing vocabulary.${field}`);
-  const labelRules = new Set(["contiguous-zero", "contiguous-one", "positive-integer", "coordinate", "interior-coordinate", "state-pair", "identifier", "nested-path", "tree-path", "partial-string", "weight-prefix", "bracket-prefix", "free"]);
+  const labelRules = new Set(["contiguous-zero", "contiguous-one", "positive-integer", "coordinate", "interior-coordinate", "state-pair", "identifier", "nested-path", "tree-path", "partial-string", "weight-prefix", "bracket-prefix", "piece-prefix", "free"]);
   if (!labelRules.has(spec.nodeLabels?.rule) || !String(spec.nodeLabels?.description || "").trim()) errors.push(`${problem.id}/step2: missing or invalid nodeLabels rule`);
   if (spec.fixedStart && !String(spec.fixedStart).trim()) errors.push(`${problem.id}/step2: fixedStart must be a nonempty label`);
   if (spec.startRule && spec.startRule !== "graph-root") errors.push(`${problem.id}/step2: unsupported startRule ${spec.startRule}`);

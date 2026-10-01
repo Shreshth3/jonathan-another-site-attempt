@@ -24,8 +24,8 @@ const formatExamples = {
  n:3, k:3, row:0, col:0, start:0, source:0, headId:0, hq:0, destination:2, finish:2, target:2, quitId:5, shutId:5, checkpoint:1, deadline:3
 };
 // Parameter names shared with another problem but holding a different shape.
-const problemFormatExamples = {'the-balance-lock':{dials:[[3,8],[2,6]], limit:10}, 'under-the-limit':{nums:[1,4,6], limit:5}, 'balanced-brackets':{n:2, maxDepth:2}};
-const problemDescriptions = {'the-balance-lock':{dials:'A list of dials. Each dial is a list of different positive whole-number weights.', limit:'The largest safe total. A total over limit busts.'}, 'under-the-limit':{nums:'A list of different positive whole numbers.', limit:'The largest allowed sum. A combination whose sum is over limit is left out.'}, 'balanced-brackets':{n:'The number of ( in every string, and also the number of ).', maxDepth:'The most brackets that may be open at once.'}};
+const problemFormatExamples = {'the-balance-lock':{dials:[[3,8],[2,6]], limit:10}, 'under-the-limit':{nums:[1,4,6], limit:5}, 'balanced-brackets':{n:2, maxDepth:2}, 'split-the-digits':{digits:'302', limit:40}};
+const problemDescriptions = {'the-balance-lock':{dials:'A list of dials. Each dial is a list of different positive whole-number weights.', limit:'The largest safe total. A total over limit busts.'}, 'under-the-limit':{nums:'A list of different positive whole numbers.', limit:'The largest allowed sum. A combination whose sum is over limit is left out.'}, 'balanced-brackets':{n:'The number of ( in every string, and also the number of ).', maxDepth:'The most brackets that may be open at once.'}, 'split-the-digits':{digits:'A string of 1–6 digits, each from 0 to 9. Quotes are optional.', limit:'The largest allowed piece. A piece whose number is over limit is not allowed.'}};
 function formatPlaceholder(name, value) {
  const plain = item => typeof item === 'string' ? item : Array.isArray(item) ? '[' + item.map(plain).join(', ') + ']' : String(item);
  if (['sky','park','marina','yard','cave','worked','trust','scores'].includes(name)) return value.map(row => row.join(', ')).join('\n');

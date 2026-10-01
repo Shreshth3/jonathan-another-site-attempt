@@ -124,6 +124,9 @@
     } else if (id === 'under-the-limit') {
       const nums = list('nums'); need(nums.length >= 1 && nums.length <= 6 && distinct(nums) && nums.every(v => integer(v, 1, 50)), 'nums must have 1–6 different whole numbers from 1 to 50.');
       num('limit', 1, 300);
+    } else if (id === 'split-the-digits') {
+      need(typeof input.digits === 'string' && /^[0-9]{1,6}$/.test(input.digits), 'digits must be text with 1–6 characters, each from 0 to 9, like "1234".');
+      num('limit', 1, 1000);
     } else if (id === 'the-balance-lock') {
       const dials = list('dials'); need(dials.length >= 1 && dials.length <= 6 && dials.every(v => Array.isArray(v) && v.length >= 1 && v.length <= 4 && distinct(v) && v.every(w => integer(w, 1, 50))), 'Use 1–6 dials, each with 1–4 different whole numbers from 1 to 50.');
       num('limit', 1, 300);
@@ -283,6 +286,11 @@
       function walk(code,total,index){if(index===i.dials.length){result.push(code);return;}for(const weight of(r.choices==='first'?i.dials[index].slice(0,1):i.dials[index])){if(r.bust==='atleast'?total+weight>=i.limit:r.bust==='weight'?weight>i.limit:total+weight>i.limit)continue;walk([...code,weight],total+weight,index+1);}}
       walk([],0,0);return result;
     }
+    if (id === 'split-the-digits') {
+      const result=[], digits=i.digits;
+      function walk(index,pieces){if(index===digits.length){result.push(pieces);return;}const longest=r.loop==='two'?Math.min(2,digits.length-index):digits.length-index;for(let length=1;length<=longest;length++){const piece=digits.slice(index,index+length);if(r.zero==='any'?piece[0]==='0':length>1&&piece[0]==='0')break;if(r.limit==='atleast'?Number(piece)>=i.limit:Number(piece)>i.limit)break;walk(index+length,[...pieces,Number(piece)]);}}
+      walk(0,[]);return result;
+    }
     if (id === 'gas-pocket-survey') {
       const cave=i.cave, seen=new Set();
       const neighbors=(row,col,diagonal)=>{const result=[];for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)if((dr||dc)&&(diagonal||Math.abs(dr)+Math.abs(dc)===1)&&cave[row+dr]?.[col+dc]!==undefined)result.push([row+dr,col+dc]);return result;};
@@ -300,7 +308,7 @@
   function equal(id, a, b) {
     // Neither the combinations' order nor the numbers' order inside one matters; repeats still do.
     if (id === 'under-the-limit' && Array.isArray(a) && Array.isArray(b)) { const key = list => JSON.stringify(list.map(v => Array.isArray(v) ? JSON.stringify([...v].sort((x, y) => x - y)) : JSON.stringify(v)).sort()); return key(a) === key(b); }
-    if (['routes-past-the-coffee-cart','runes-on-the-castle-door','the-balance-lock','balanced-brackets'].includes(id) && Array.isArray(a) && Array.isArray(b)) return JSON.stringify(a.map(v=>JSON.stringify(v)).sort())===JSON.stringify(b.map(v=>JSON.stringify(v)).sort());
+    if (['routes-past-the-coffee-cart','runes-on-the-castle-door','the-balance-lock','balanced-brackets','split-the-digits'].includes(id) && Array.isArray(a) && Array.isArray(b)) return JSON.stringify(a.map(v=>JSON.stringify(v)).sort())===JSON.stringify(b.map(v=>JSON.stringify(v)).sort());
     return JSON.stringify(a)===JSON.stringify(b);
   }
   function getRules(challenge, selected) {
