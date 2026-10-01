@@ -709,8 +709,15 @@
     if (value?.type === "edge") svg.querySelector(`.scratch-edge[data-edge-id="${value.id}"]`)?.classList.add("selected");
   }
 
+  // A stack state's two text lines need a wider circle than the default.
+  function stackStateRadius(label) {
+    const parts = String(label).match(/^(out \[[^\]]*\]) \| (stack \[[^\]]*\])$/);
+    return parts ? Math.max(32, Math.ceil(Math.max(parts[1].length + 2, parts[2].length) * 3.4 + 10)) : 32;
+  }
+
   function render() {
     if (!enabled || !svg || !contextKey) return;
+    if (nodeLabelRule === "stack-state") drawing.nodes.forEach(node => { node.r = stackStateRadius(node.label); });
     const bounds = boardBounds();
     if (board.clientWidth > 0) {
       const previous = drawing.viewport || {

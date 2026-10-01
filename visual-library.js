@@ -4904,6 +4904,8 @@
 
   function miniLabelLines(value) {
     const text = String(value).trim();
+    const stackState = text.match(/^(out \[[^\]]*\]) \| (stack \[[^\]]*\])$/);
+    if (stackState) return [`${stackState[1]} |`, stackState[2]];
     if (text.length <= 9) return [text];
     const lines = [];
     for (const word of text.split(/\s+/)) {

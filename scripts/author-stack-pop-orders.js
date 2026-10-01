@@ -81,10 +81,17 @@ function canvas(n, out0 = [], stack0 = [], maxNodes = 9) {
 }
 
 // ---------- Inputs and answer text ----------
-const PARTIAL_NOTE = "Some moves are already done. Draw only what can still happen, starting from this state.";
 const isPartial = (out, stack) => out.length > 0 || stack.length > 0;
 const rawInput = (n, out = [], stack = []) => isPartial(out, stack) ? `n=${n}, out=${JSON.stringify(out)}, stack=${JSON.stringify(stack)}` : `n=${n}`;
-const inputText = (n, out = [], stack = []) => isPartial(out, stack) ? `${rawInput(n, out, stack)}\n${PARTIAL_NOTE}` : rawInput(n);
+// Spell out the in-progress state: what is written, what is on the stack, what comes next, and the first node's name.
+function partialNote(n, out, stack) {
+  const list = values => `[${values.join(", ")}]`;
+  const next = out.length + stack.length + 1;
+  const stackText = stack.length ? `the stack holds ${list(stack)} (bottom to top)` : "the stack is empty";
+  const nextText = next <= n ? `${next} is the next number to push` : "every number has been pushed";
+  return `Some moves are already done: out is ${list(out)}, ${stackText}, and ${nextText}. Name your first node "${stateLabel(out, stack)}" and draw only what can still happen from it.`;
+}
+const inputText = (n, out = [], stack = []) => isPartial(out, stack) ? `${rawInput(n, out, stack)}\n${partialNote(n, out, stack)}` : rawInput(n);
 const resultPrompt = (out = [], stack = []) => isPartial(out, stack) ? "Which pop orders can still be finished from this state?" : "Which pop orders are returned?";
 const out = value => JSON.stringify(value);
 // The pop orders may come in any order; the numbers inside one pop order may not.
@@ -293,7 +300,7 @@ const step2Spec = {
   vocabulary: { nodeNames: "states", startNode: "start state", edges: "moves", correctSearch: "states reached", mistakenSearch: "states the flawed search reaches" },
   rounds: [
     { bugs: ["shallow-search"], level: "One move only", presentation: "exact-difference", goal: "Create a valid input where the mistaken search returns a different answer from the correct solution.", startLabel: "start" },
-    { bugs: ["last-branch"], level: "One move from each state", presentation: "predict-first", goal: "Create a valid input where the mistaken search returns a different answer from the correct solution.", startLabel: "start" },
+    { bugs: ["last-branch"], level: "Last move only", presentation: "predict-first", goal: "Create a valid input where the mistaken search returns a different answer from the correct solution.", startLabel: "start" },
     { bugs: ["wrong-start"], level: "Starts after 1 is popped", presentation: "repair-case", goal: "Create a valid input where the mistaken search returns a different answer from the correct solution.", startLabel: "start", mistakenStartLabel: MISTAKEN_START }
   ],
   nodeLabels: { rule: "stack-state", description: "Use start for the first state, then out [...] | stack [...] like out [2] | stack [1,3]." },

@@ -127,7 +127,7 @@ const edgeQuestion = {
   correct: "next-piece",
   choices: [
     { id: "next-piece", label: "Cut the next piece, of any length, right after the last piece. Its number must be at most limit, and it must not start with `0` unless it is exactly `0`.", feedback: "Correct. Each edge cuts one more allowed piece from the digits that are left.", misconception: null },
-    { id: "short", label: "Cut the next piece of 1 or 2 digits, if its number is at most limit and it does not start with `0` unless it is exactly `0`.", feedback: "Pieces can be longer. With limit 400, `314` is one allowed piece of 3 digits.", misconception: "lengths-one-two" },
+    { id: "short", label: "Cut the next piece of 1 or 2 digits, if its number is at most limit and it does not start with `0` unless it is exactly `0`.", feedback: "Pieces can have 3 or more digits. Any length is allowed while the number stays at most limit.", misconception: "lengths-one-two" },
     { id: "strict", label: "Cut the next piece, of any length, if its number is below limit and it does not start with `0` unless it is exactly `0`.", feedback: "A piece exactly equal to limit is allowed. Only a number over limit is left out.", misconception: "strict-limit" },
     { id: "leading", label: "Cut the next piece, of any length, if its number is at most limit. A piece like `05` counts as 5.", feedback: "A piece cannot start with `0` unless it is exactly `0`. `05` is not allowed, even though 5 is small.", misconception: "allow-leading-zero" }
   ]
@@ -330,7 +330,7 @@ const splitUnderLimit = (digits, limit) => {
 const reference = new Function(`${solution}\nreturn splitUnderLimit;`)();
 const examples = [
   { digits: "1234", limit: 30, explanation: "Every single digit is at most 30, and so are 12 and 23. 34, 123, 234, and 1234 are over 30, so no way can use them." },
-  { digits: "105", limit: 20, explanation: "Cutting 1, 0, 5 works because a lone 0 is allowed. Cutting 1, 05 does not: 05 starts with 0. 105 is over 20." },
+  { digits: "105", limit: 20, explanation: "Cutting 1, 0, 5 works because a lone 0 is allowed. Cutting 10, 5 works because 10 and 5 are both at most 20. Cutting 1, 05 does not: 05 starts with 0. 105 is over 20." },
   { digits: "17", limit: 5, explanation: "1 is allowed, but then 7 is over 5. 17 is over 5 too. No way uses every digit, so the answer is empty." }
 ];
 const sourceProblem = {
@@ -433,7 +433,7 @@ files.upsert("visual-lessons-variant.json", lesson);
 files.upsert("step2-specs-variant.json", step2Spec);
 files.upsert("step4-specs-variant.json", step4Spec);
 files.publish(sourceProblem, ["digits", "limit"]);
-files.placeInOrder(ID, "Hardest step: cut a digit string into pieces of any length, keeping each piece at most a limit with no leading zero.", { after: "the-balance-lock" });
+files.placeInOrder(ID, "Harder step: cut a digit string into pieces of any length, keeping each piece at most a limit with no leading zero.", { after: "the-balance-lock" });
 { // Step 5 oracle fixtures: the source examples plus seeded varied inputs.
   let seed = 20260930;
   // Use the generator's high bits: its low bits repeat with a short period.

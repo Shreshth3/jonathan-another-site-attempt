@@ -1908,7 +1908,7 @@
         "bugs": [
           "last-branch"
         ],
-        "level": "One move from each state",
+        "level": "Last move only",
         "presentation": "predict-first",
         "goal": "Create a valid input where the mistaken search returns a different answer from the correct solution.",
         "startLabel": "start"

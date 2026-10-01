@@ -83,7 +83,7 @@
         { "id": "runes-on-the-castle-door", "reason": "Build combinations while rejecting adjacent repeated characters." },
         { "id": "the-balance-lock", "reason": "Follow-up to the runes: carry a running total down each branch and prune a code once it busts." },
         { "id": "balanced-brackets", "reason": "Follow-up to the runes: the next allowed bracket depends on how many are still open, so carry that count down each branch." },
-        { "id": "split-the-digits", "reason": "Hardest step: cut a digit string into pieces of any length, keeping each piece at most a limit with no leading zero." },
+        { "id": "split-the-digits", "reason": "Harder step: cut a digit string into pieces of any length, keeping each piece at most a limit with no leading zero." },
         { "id": "stack-pop-orders", "reason": "Hardest of the group: each step chooses push or pop, and a branch carries both the written numbers and the stack." }
       ]
     },

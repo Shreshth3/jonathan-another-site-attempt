@@ -11342,7 +11342,7 @@ window.PROBLEMS = [
     "title": "Balanced Brackets",
     "category": "variant",
     "difficulty": "Medium",
-    "statement": "You are given two whole numbers, `n` and `maxDepth`.\n\nReturn **every** string made of exactly `n` `(` and `n` `)` that is **balanced** and never more than `maxDepth` deep.\n\nA string is **balanced** when, reading from left to right, the number of `)` never exceeds the number of `(` so far. The **depth** at any point is the number of `(` so far minus the number of `)` so far: how many brackets are open at once. The depth must never be more than `maxDepth`.\n\nYou may return the strings in any order.",
+    "statement": "You are given two whole numbers, `n` and `maxDepth`.\n\nReturn **every** string made of exactly `n` opening brackets `(` and `n` closing brackets `)` that is **balanced** and never more than `maxDepth` deep.\n\nA string is **balanced** when, reading from left to right, the number of `)` never exceeds the number of `(` so far. The **depth** at any point is the number of `(` so far minus the number of `)` so far: how many brackets are open at once. The depth must never be more than `maxDepth`.\n\nYou may return the strings in any order.",
     "examples": [
       {
         "input": "n = 3, maxDepth = 2",
@@ -11428,7 +11428,7 @@ window.PROBLEMS = [
       {
         "input": "digits = \"105\", limit = 20",
         "output": "[[1,0,5],[10,5]]",
-        "explanation": "Cutting 1, 0, 5 works because a lone 0 is allowed. Cutting 1, 05 does not: 05 starts with 0. 105 is over 20."
+        "explanation": "Cutting 1, 0, 5 works because a lone 0 is allowed. Cutting 10, 5 works because 10 and 5 are both at most 20. Cutting 1, 05 does not: 05 starts with 0. 105 is over 20."
       },
       {
         "input": "digits = \"17\", limit = 5",

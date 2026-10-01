@@ -4500,7 +4500,7 @@
         {
           "id": "short",
           "label": "Cut the next piece of 1 or 2 digits, if its number is at most limit and it does not start with `0` unless it is exactly `0`.",
-          "feedback": "Pieces can be longer. With limit 400, `314` is one allowed piece of 3 digits.",
+          "feedback": "Pieces can have 3 or more digits. Any length is allowed while the number stays at most limit.",
           "misconception": "lengths-one-two"
         },
         {

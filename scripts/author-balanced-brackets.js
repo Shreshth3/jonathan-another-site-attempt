@@ -73,7 +73,7 @@ const use = (n, maxDepth) => {
 };
 
 // A two-choice decision whose wrong answer is what the named mistake really returns.
-function decision(n, maxDepth, prompt, mistake, correctFeedback, bugFeedback, format = out) {
+function decision(n, maxDepth, prompt, mistake, correctFeedback, bugFeedback, format = listLabel) {
   use(n, maxDepth);
   const correct = strings(n, maxDepth), buggy = strings(n, maxDepth, mistake);
   if (sameList(correct, buggy) || format(correct) === format(buggy)) throw Error(`${mistake} does not change ${inputText(n, maxDepth)}`);
@@ -416,7 +416,7 @@ const sourceProblem = {
   followsUp: "runes-on-the-castle-door",
   difficulty: "Medium",
   twist: "Builds on Runes on the Castle Door: every position offers the same two brackets, but which one may come next depends on the whole prefix so far: how many brackets are used and how many are still open.",
-  statement: "You are given two whole numbers, `n` and `maxDepth`.\n\nReturn **every** string made of exactly `n` `(` and `n` `)` that is **balanced** and never more than `maxDepth` deep.\n\nA string is **balanced** when, reading from left to right, the number of `)` never exceeds the number of `(` so far. The **depth** at any point is the number of `(` so far minus the number of `)` so far: how many brackets are open at once. The depth must never be more than `maxDepth`.\n\nYou may return the strings in any order.",
+  statement: "You are given two whole numbers, `n` and `maxDepth`.\n\nReturn **every** string made of exactly `n` opening brackets `(` and `n` closing brackets `)` that is **balanced** and never more than `maxDepth` deep.\n\nA string is **balanced** when, reading from left to right, the number of `)` never exceeds the number of `(` so far. The **depth** at any point is the number of `(` so far minus the number of `)` so far: how many brackets are open at once. The depth must never be more than `maxDepth`.\n\nYou may return the strings in any order.",
   examples: examples.map(({ n, maxDepth, explanation }) => ({ input: `n = ${n}, maxDepth = ${maxDepth}`, output: out(strings(n, maxDepth)), explanation })),
   constraints: ["1 <= n <= 5", "1 <= maxDepth <= 5"],
   functionName: "balancedStrings",

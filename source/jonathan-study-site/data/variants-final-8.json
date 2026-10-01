@@ -18,7 +18,7 @@
       {
         "input": "digits = \"105\", limit = 20",
         "output": "[[1,0,5],[10,5]]",
-        "explanation": "Cutting 1, 0, 5 works because a lone 0 is allowed. Cutting 1, 05 does not: 05 starts with 0. 105 is over 20."
+        "explanation": "Cutting 1, 0, 5 works because a lone 0 is allowed. Cutting 10, 5 works because 10 and 5 are both at most 20. Cutting 1, 05 does not: 05 starts with 0. 105 is over 20."
       },
       {
         "input": "digits = \"17\", limit = 5",
