@@ -74,6 +74,14 @@ programs['under-the-limit'] = [
   choice('bust','over','    If sum + nums[i] > limit, skip this number.','atleast','    If sum + nums[i] ≥ limit, skip this number.','A sum exactly at limit still counts. Skipping a number when the sum reaches limit loses combinations that land exactly on it.'),
   fixed('end','    BUILD(i + 1, combo followed by nums[i], sum + nums[i])\nEnd function\nBUILD(0, empty list, 0)\nReturn combos.')
 ];
+programs['stack-pop-orders'] = [
+  fixed('setup','orders ← empty list\nFunction BUILD(out, stack, next):'),
+  choice('finish','all','  If out has n numbers:','empty','  If stack is empty and out is not empty:','A run is finished only when all n numbers are in out. An empty stack can also mean that some numbers have not been pushed yet, so stopping there saves unfinished lists like [1].'),
+  fixed('save','    Add out to orders and return.'),
+  choice('when','any','  If stack is not empty:','end','  If stack is not empty and every number has been pushed (next > n):','A pop is allowed as soon as the stack is not empty. Waiting until every number is pushed allows only one pop order, [n, …, 2, 1].'),
+  choice('take','top','    BUILD(out followed by the top of stack, stack without its top, next)','bottom','    BUILD(out followed by the bottom of stack, stack without its bottom, next)','A pop takes the top number, the newest number still on the stack. Taking the bottom number writes the numbers in the order they were pushed, so every run gives [1, 2, …, n].'),
+  fixed('end','  If next ≤ n:\n    BUILD(out, stack followed by next, next + 1)\nEnd function\nBUILD(empty list, empty list, 1)\nReturn orders.')
+];
 const bustRule = programs['the-balance-lock'].find(line => line.key === 'bust');
 bustRule.options.push({id:'weight',text:'    If weight > limit, skip this weight.'});
 bustRule.buggy = ['atleast', 'weight'];

@@ -11336,5 +11336,102 @@ window.PROBLEMS = [
         "limit"
       ]
     }
+  },
+  {
+    "id": "stack-pop-orders",
+    "title": "Stack Pop Orders",
+    "category": "variant",
+    "difficulty": "Hard",
+    "statement": "A **stack** is a pile of numbers that only changes at its **top**: the top is the newest number still in the pile. To **push** a number means to put it on top of the stack. To **pop** means to take the top number off.\n\nYou are given a whole number `n`. Start with an empty stack and an empty list called `out`. The numbers 1, 2, …, `n` must be pushed in that order. At each step, you may make either move:\n\n• **push**: put the next number on the stack, if some numbers have not been pushed yet.\n• **pop**: take the top number off the stack and write it at the end of `out`, if the stack is not empty.\n\nWhen all `n` numbers are in `out`, the list `out` is one **pop order**. Return a list of **all** possible pop orders. You may return them in any order.\n\nOne run for `n = 3` (the stack is listed from bottom to top):\n1. push 1 → out `[]`, stack `[1]`\n2. push 2 → out `[]`, stack `[1, 2]`\n3. pop → 2 comes off the top: out `[2]`, stack `[1]`\n4. push 3 → out `[2]`, stack `[1, 3]`\n5. pop → 3 comes off the top: out `[2, 3]`, stack `[1]`\n6. pop → 1 comes off: out `[2, 3, 1]`, stack `[]`\nAll three numbers are in `out`, so `[2, 3, 1]` is a pop order.",
+    "examples": [
+      {
+        "input": "n = 1",
+        "output": "[[1]]",
+        "explanation": "Push 1, then pop 1."
+      },
+      {
+        "input": "n = 2",
+        "output": "[[1,2],[2,1]]",
+        "explanation": "Pop 1 before pushing 2 to get `[1, 2]`. Push both numbers first, then pop twice, to get `[2, 1]`."
+      },
+      {
+        "input": "n = 3",
+        "output": "[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,2,1]]",
+        "explanation": "`[3, 1, 2]` is missing because it is impossible: to pop 3 first, 1 and 2 must already be on the stack, with 2 on top of 1. So 2 comes off before 1."
+      }
+    ],
+    "constraints": [
+      "1 <= n <= 5"
+    ],
+    "functionName": "popOrders",
+    "solution": "// CONTRACT for collectOrders(n, out, stack, next, orders):\n//     `out` holds the numbers written down so far, `stack` holds the\n//     pushed numbers that are not written yet (bottom to top), and `next`\n//     is the next number to push. When this call returns, every pop order\n//     that can still be finished from this state has been appended to\n//     `orders`.\nconst collectOrders = (n, out, stack, next, orders) => {\n    // Base case: all n numbers are in out, so this pop order is finished.\n    // An empty stack alone is not enough: some numbers may not have been\n    // pushed yet.\n    if (out.length === n) {\n        orders.push(out);\n        return;\n    }\n\n    // Traverse neighbors: there are at most two moves.\n    // Move 1, pop: take the top number off the stack and write it in out.\n    if (stack.length > 0) {\n        const top = stack[stack.length - 1];\n        // The recursive leap of faith, one level down: this call has the\n        // SAME contract, so when it returns, every order that can be\n        // finished after this pop is in `orders`. Trust it, do not trace\n        // it. It gets new arrays, so it cannot change this call's state.\n        collectOrders(n, [...out, top], stack.slice(0, -1), next, orders);\n    }\n\n    // Move 2, push: put the next number on top of the stack.\n    if (next <= n) {\n        // Leap of faith again: trust this call to collect every order\n        // that can be finished after this push.\n        collectOrders(n, out, [...stack, next], next + 1, orders);\n    }\n};\n\nconst popOrders = (n) => {\n    const orders = [];\n\n    // The recursive leap of faith: trust the contract. Starting with\n    // nothing written, an empty stack, and 1 as the next number collects\n    // every pop order.\n    collectOrders(n, [], [], 1, orders);\n\n    return orders;\n};",
+    "tests": [
+      {
+        "args": [
+          1
+        ],
+        "expected": [
+          [
+            1
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          2
+        ],
+        "expected": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "unordered": true
+      },
+      {
+        "args": [
+          3
+        ],
+        "expected": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            2,
+            1,
+            3
+          ],
+          [
+            2,
+            3,
+            1
+          ],
+          [
+            3,
+            2,
+            1
+          ]
+        ],
+        "unordered": true
+      }
+    ],
+    "runner": {
+      "kind": "function",
+      "parameterNames": [
+        "n"
+      ]
+    }
   }
 ];

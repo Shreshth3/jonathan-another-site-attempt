@@ -252,7 +252,13 @@ module.exports = {
  C('Only small groups fit',[6,4,5,3],10),
  C('Six numbers, small limit',[1,2,3,4,5,6],4),
  C('A bigger number first does not stop later numbers',[5,1,4],5),
- C('A limit smaller than every number leaves only the empty combination',[7,8,9],3)]
+ C('A limit smaller than every number leaves only the empty combination',[7,8,9],3)],
+'stack-pop-orders':[
+ C('One number has exactly one pop order',1),
+ C('Two numbers: pop 1 early, or push 2 first',2),
+ C('Three numbers: [3, 1, 2] is impossible',3),
+ C('Four numbers make 14 pop orders',4),
+ C('Five numbers make 42 pop orders',5)]
 };
 // The zero-edge metro case still has a colors argument.
 module.exports['one-color-metro-ride'][3].args = [9,[],[],6,6];

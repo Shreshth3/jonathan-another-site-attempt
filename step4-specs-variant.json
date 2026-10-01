@@ -7436,5 +7436,397 @@
         }
       }
     ]
+  },
+  {
+    "id": "stack-pop-orders",
+    "cases": [
+      {
+        "id": "stack-pop-orders",
+        "caseId": "authored-deep-case",
+        "bugTitle": "Stops When the Stack Is Empty",
+        "misconception": "stop-when-empty",
+        "input": {
+          "n": 2
+        },
+        "code": "function solve(input) {\n  const orders = [];\n  function build(out, stack, next) {\n    if (stack.length === 0 && out.length > 0) {\n      orders.push(out);\n      return;\n    }\n    if (stack.length > 0) {\n      build([...out, stack[stack.length - 1]], stack.slice(0, -1), next);\n    }\n    if (next <= input.n) {\n      build(out, [...stack, next], next + 1);\n    }\n  }\n  build([], [], 1);\n  return orders;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "out [] | stack [1]",
+              "label": "out [] | stack [1]"
+            },
+            {
+              "id": "out [1] | stack []",
+              "label": "out [1] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2]",
+              "label": "out [1] | stack [2]"
+            },
+            {
+              "id": "out [1,2] | stack []",
+              "label": "out [1,2] | stack []"
+            },
+            {
+              "id": "out [] | stack [1,2]",
+              "label": "out [] | stack [1,2]"
+            },
+            {
+              "id": "out [2] | stack [1]",
+              "label": "out [2] | stack [1]"
+            },
+            {
+              "id": "out [2,1] | stack []",
+              "label": "out [2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "out [] | stack [1]"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [1] | stack []"
+            },
+            {
+              "from": "out [1] | stack []",
+              "to": "out [1] | stack [2]"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1,2] | stack []"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [] | stack [1,2]"
+            },
+            {
+              "from": "out [] | stack [1,2]",
+              "to": "out [2] | stack [1]"
+            },
+            {
+              "from": "out [2] | stack [1]",
+              "to": "out [2,1] | stack []"
+            }
+          ]
+        },
+        "outputFormat": "list of every pop order",
+        "buggyOutput": "[[1],[2,1]]",
+        "correctOutput": "[[1,2],[2,1]]",
+        "correctDiagnosis": "stops-on-empty",
+        "diagnoses": [
+          {
+            "id": "stops-on-empty",
+            "label": "Claim about the code: it saves out as soon as the stack is empty, so after push 1 and pop 1 it saves [1] before 2 is ever pushed.",
+            "feedback": "Correct. A pop order is finished only when all n numbers are in out, so check out.length === input.n."
+          },
+          {
+            "id": "pops-late",
+            "label": "Claim about the code: it pops only after every number has been pushed.",
+            "feedback": "The pop runs whenever the stack is not empty, before any later push."
+          },
+          {
+            "id": "push-off-by-one",
+            "label": "Claim about the code: it never pushes the last number, n.",
+            "feedback": "The push runs while next <= input.n, so n is pushed too."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "For n = 2 the tree is start → out [] | stack [1], which branches to out [1] | stack [] (pop 1) and out [] | stack [1,2] (push 2). The finished states are out [1,2] | stack [] and out [2,1] | stack [].",
+          "codeRule": "A state counts as finished as soon as its stack is empty and out is not empty.",
+          "separatingFeature": "out [1] | stack [] has an empty stack, but 2 has not been pushed yet.",
+          "outputConsequence": "The code returns [[1],[2,1]] instead of [[1,2],[2,1]].",
+          "changedGraph": "The branch below out [1] | stack [] is cut off, and that unfinished state is saved as an answer."
+        }
+      },
+      {
+        "id": "stack-pop-orders",
+        "caseId": "case-2",
+        "bugTitle": "Pops Only After Every Push",
+        "misconception": "pop-only-at-end",
+        "input": {
+          "n": 3
+        },
+        "code": "function solve(input) {\n  const orders = [];\n  function build(out, stack, next) {\n    if (out.length === input.n) {\n      orders.push(out);\n      return;\n    }\n    if (stack.length > 0 && next > input.n) {\n      build([...out, stack[stack.length - 1]], stack.slice(0, -1), next);\n    }\n    if (next <= input.n) {\n      build(out, [...stack, next], next + 1);\n    }\n  }\n  build([], [], 1);\n  return orders;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "out [] | stack [1]",
+              "label": "out [] | stack [1]"
+            },
+            {
+              "id": "out [1] | stack []",
+              "label": "out [1] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2]",
+              "label": "out [1] | stack [2]"
+            },
+            {
+              "id": "out [1,2] | stack []",
+              "label": "out [1,2] | stack []"
+            },
+            {
+              "id": "out [1,2] | stack [3]",
+              "label": "out [1,2] | stack [3]"
+            },
+            {
+              "id": "out [1,2,3] | stack []",
+              "label": "out [1,2,3] | stack []"
+            },
+            {
+              "id": "out [1] | stack [2,3]",
+              "label": "out [1] | stack [2,3]"
+            },
+            {
+              "id": "out [1,3] | stack [2]",
+              "label": "out [1,3] | stack [2]"
+            },
+            {
+              "id": "out [1,3,2] | stack []",
+              "label": "out [1,3,2] | stack []"
+            },
+            {
+              "id": "out [] | stack [1,2]",
+              "label": "out [] | stack [1,2]"
+            },
+            {
+              "id": "out [2] | stack [1]",
+              "label": "out [2] | stack [1]"
+            },
+            {
+              "id": "out [2,1] | stack []",
+              "label": "out [2,1] | stack []"
+            },
+            {
+              "id": "out [2,1] | stack [3]",
+              "label": "out [2,1] | stack [3]"
+            },
+            {
+              "id": "out [2,1,3] | stack []",
+              "label": "out [2,1,3] | stack []"
+            },
+            {
+              "id": "out [2] | stack [1,3]",
+              "label": "out [2] | stack [1,3]"
+            },
+            {
+              "id": "out [2,3] | stack [1]",
+              "label": "out [2,3] | stack [1]"
+            },
+            {
+              "id": "out [2,3,1] | stack []",
+              "label": "out [2,3,1] | stack []"
+            },
+            {
+              "id": "out [] | stack [1,2,3]",
+              "label": "out [] | stack [1,2,3]"
+            },
+            {
+              "id": "out [3] | stack [1,2]",
+              "label": "out [3] | stack [1,2]"
+            },
+            {
+              "id": "out [3,2] | stack [1]",
+              "label": "out [3,2] | stack [1]"
+            },
+            {
+              "id": "out [3,2,1] | stack []",
+              "label": "out [3,2,1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "out [] | stack [1]"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [1] | stack []"
+            },
+            {
+              "from": "out [1] | stack []",
+              "to": "out [1] | stack [2]"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1,2] | stack []"
+            },
+            {
+              "from": "out [1,2] | stack []",
+              "to": "out [1,2] | stack [3]"
+            },
+            {
+              "from": "out [1,2] | stack [3]",
+              "to": "out [1,2,3] | stack []"
+            },
+            {
+              "from": "out [1] | stack [2]",
+              "to": "out [1] | stack [2,3]"
+            },
+            {
+              "from": "out [1] | stack [2,3]",
+              "to": "out [1,3] | stack [2]"
+            },
+            {
+              "from": "out [1,3] | stack [2]",
+              "to": "out [1,3,2] | stack []"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [] | stack [1,2]"
+            },
+            {
+              "from": "out [] | stack [1,2]",
+              "to": "out [2] | stack [1]"
+            },
+            {
+              "from": "out [2] | stack [1]",
+              "to": "out [2,1] | stack []"
+            },
+            {
+              "from": "out [2,1] | stack []",
+              "to": "out [2,1] | stack [3]"
+            },
+            {
+              "from": "out [2,1] | stack [3]",
+              "to": "out [2,1,3] | stack []"
+            },
+            {
+              "from": "out [2] | stack [1]",
+              "to": "out [2] | stack [1,3]"
+            },
+            {
+              "from": "out [2] | stack [1,3]",
+              "to": "out [2,3] | stack [1]"
+            },
+            {
+              "from": "out [2,3] | stack [1]",
+              "to": "out [2,3,1] | stack []"
+            },
+            {
+              "from": "out [] | stack [1,2]",
+              "to": "out [] | stack [1,2,3]"
+            },
+            {
+              "from": "out [] | stack [1,2,3]",
+              "to": "out [3] | stack [1,2]"
+            },
+            {
+              "from": "out [3] | stack [1,2]",
+              "to": "out [3,2] | stack [1]"
+            },
+            {
+              "from": "out [3,2] | stack [1]",
+              "to": "out [3,2,1] | stack []"
+            }
+          ]
+        },
+        "outputFormat": "list of every pop order",
+        "buggyOutput": "[[3,2,1]]",
+        "correctOutput": "[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,2,1]]",
+        "correctDiagnosis": "pops-late",
+        "diagnoses": [
+          {
+            "id": "pops-late",
+            "label": "Claim about the code: it pops only when next > input.n, so every number is pushed before the first pop and only [3,2,1] is saved.",
+            "feedback": "Correct. A pop is allowed whenever the stack is not empty, so remove the next > input.n condition."
+          },
+          {
+            "id": "stops-on-empty",
+            "label": "Claim about the code: it saves a pop order whenever the stack is empty.",
+            "feedback": "It saves out only when out.length === input.n."
+          },
+          {
+            "id": "push-off-by-one",
+            "label": "Claim about the code: it never pushes the last number, n.",
+            "feedback": "The push runs while next <= input.n, so n is pushed too."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "For n = 3 the tree has 22 states. Five of them are finished, one for each pop order.",
+          "codeRule": "A pop is tried only after every number has been pushed.",
+          "separatingFeature": "From out [] | stack [1], the pop edge to out [1] | stack [] is never followed.",
+          "outputConsequence": "The code returns [[3,2,1]] instead of [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,2,1]].",
+          "changedGraph": "Only the path that pushes 1, 2, 3 and then pops three times is left."
+        }
+      },
+      {
+        "id": "stack-pop-orders",
+        "caseId": "case-3",
+        "bugTitle": "Never Pushes n Itself",
+        "misconception": "push-limit",
+        "input": {
+          "n": 1
+        },
+        "code": "function solve(input) {\n  const orders = [];\n  function build(out, stack, next) {\n    if (out.length === input.n) {\n      orders.push(out);\n      return;\n    }\n    if (stack.length > 0) {\n      build([...out, stack[stack.length - 1]], stack.slice(0, -1), next);\n    }\n    if (next < input.n) {\n      build(out, [...stack, next], next + 1);\n    }\n  }\n  build([], [], 1);\n  return orders;\n}",
+        "canvas": {
+          "directed": true,
+          "nodes": [
+            {
+              "id": "start",
+              "label": "start"
+            },
+            {
+              "id": "out [] | stack [1]",
+              "label": "out [] | stack [1]"
+            },
+            {
+              "id": "out [1] | stack []",
+              "label": "out [1] | stack []"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "out [] | stack [1]"
+            },
+            {
+              "from": "out [] | stack [1]",
+              "to": "out [1] | stack []"
+            }
+          ]
+        },
+        "outputFormat": "list of every pop order",
+        "buggyOutput": "[]",
+        "correctOutput": "[[1]]",
+        "correctDiagnosis": "push-off-by-one",
+        "diagnoses": [
+          {
+            "id": "push-off-by-one",
+            "label": "Claim about the code: next < input.n is false when next = n, so the last number is never pushed and no pop order is ever finished.",
+            "feedback": "Correct. The next number may be pushed while next <= input.n, including n itself."
+          },
+          {
+            "id": "pops-late",
+            "label": "Claim about the code: it pops only after every number has been pushed.",
+            "feedback": "The pop runs whenever the stack is not empty."
+          },
+          {
+            "id": "stops-on-empty",
+            "label": "Claim about the code: it saves a pop order whenever the stack is empty.",
+            "feedback": "It saves out only when out.length === input.n."
+          }
+        ],
+        "graphProof": {
+          "realGraph": "For n = 1 the tree is start → out [] | stack [1] → out [1] | stack [].",
+          "codeRule": "A push happens only while next < n, so the number n is never pushed.",
+          "separatingFeature": "With n = 1, next starts at 1, and 1 < 1 is false, so even the first push is skipped.",
+          "outputConsequence": "The code returns [] instead of [[1]].",
+          "changedGraph": "The edge start → out [] | stack [1] is missing, so no other state is reached."
+        }
+      }
+    ]
   }
 ]

@@ -46704,5 +46704,723 @@
         ]
       }
     ]
+  },
+  {
+    "id": "stack-pop-orders",
+    "inputHelp": "n is a whole number from 1 to 5. Explore means visit each reachable item once unless the shown code says otherwise.",
+    "source": "../jonathan-study-site/data/variants-final-*.json",
+    "correctRules": {
+      "setup": "fixed",
+      "finish": "all",
+      "save": "fixed",
+      "when": "any",
+      "take": "top",
+      "end": "fixed"
+    },
+    "cases": [
+      {
+        "id": "stack-pop-orders-finish-empty",
+        "title": "Debug challenge 1",
+        "misconception": "finish-empty",
+        "feedback": "A run is finished only when all n numbers are in out. An empty stack can also mean that some numbers have not been pushed yet, so stopping there saves unfinished lists like [1].",
+        "correctAnswer": "A run is finished only when all n numbers are in out. An empty stack can also mean that some numbers have not been pushed yet, so stopping there saves unfinished lists like [1].\n\nThe corrected rule is:\n  If out has n numbers:",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "orders ← empty list\nFunction BUILD(out, stack, next):"
+              }
+            ]
+          },
+          {
+            "key": "finish",
+            "selected": "empty",
+            "options": [
+              {
+                "id": "all",
+                "text": "  If out has n numbers:"
+              },
+              {
+                "id": "empty",
+                "text": "  If stack is empty and out is not empty:"
+              }
+            ]
+          },
+          {
+            "key": "save",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    Add out to orders and return."
+              }
+            ]
+          },
+          {
+            "key": "when",
+            "selected": "any",
+            "options": [
+              {
+                "id": "end",
+                "text": "  If stack is not empty and every number has been pushed (next > n):"
+              },
+              {
+                "id": "any",
+                "text": "  If stack is not empty:"
+              }
+            ]
+          },
+          {
+            "key": "take",
+            "selected": "top",
+            "options": [
+              {
+                "id": "top",
+                "text": "    BUILD(out followed by the top of stack, stack without its top, next)"
+              },
+              {
+                "id": "bottom",
+                "text": "    BUILD(out followed by the bottom of stack, stack without its bottom, next)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "  If next ≤ n:\n    BUILD(out, stack followed by next, next + 1)\nEnd function\nBUILD(empty list, empty list, 1)\nReturn orders."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 2
+        }
+      },
+      {
+        "id": "stack-pop-orders-when-end",
+        "title": "Debug challenge 2",
+        "misconception": "when-end",
+        "feedback": "A pop is allowed as soon as the stack is not empty. Waiting until every number is pushed allows only one pop order, [n, …, 2, 1].",
+        "correctAnswer": "A pop is allowed as soon as the stack is not empty. Waiting until every number is pushed allows only one pop order, [n, …, 2, 1].\n\nThe corrected rule is:\n  If stack is not empty:",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "orders ← empty list\nFunction BUILD(out, stack, next):"
+              }
+            ]
+          },
+          {
+            "key": "finish",
+            "selected": "all",
+            "options": [
+              {
+                "id": "empty",
+                "text": "  If stack is empty and out is not empty:"
+              },
+              {
+                "id": "all",
+                "text": "  If out has n numbers:"
+              }
+            ]
+          },
+          {
+            "key": "save",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    Add out to orders and return."
+              }
+            ]
+          },
+          {
+            "key": "when",
+            "selected": "end",
+            "options": [
+              {
+                "id": "any",
+                "text": "  If stack is not empty:"
+              },
+              {
+                "id": "end",
+                "text": "  If stack is not empty and every number has been pushed (next > n):"
+              }
+            ]
+          },
+          {
+            "key": "take",
+            "selected": "top",
+            "options": [
+              {
+                "id": "bottom",
+                "text": "    BUILD(out followed by the bottom of stack, stack without its bottom, next)"
+              },
+              {
+                "id": "top",
+                "text": "    BUILD(out followed by the top of stack, stack without its top, next)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "  If next ≤ n:\n    BUILD(out, stack followed by next, next + 1)\nEnd function\nBUILD(empty list, empty list, 1)\nReturn orders."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 2
+        }
+      },
+      {
+        "id": "stack-pop-orders-take-bottom",
+        "title": "Debug challenge 3",
+        "misconception": "take-bottom",
+        "feedback": "A pop takes the top number, the newest number still on the stack. Taking the bottom number writes the numbers in the order they were pushed, so every run gives [1, 2, …, n].",
+        "correctAnswer": "A pop takes the top number, the newest number still on the stack. Taking the bottom number writes the numbers in the order they were pushed, so every run gives [1, 2, …, n].\n\nThe corrected rule is:\n    BUILD(out followed by the top of stack, stack without its top, next)",
+        "lines": [
+          {
+            "key": "setup",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "orders ← empty list\nFunction BUILD(out, stack, next):"
+              }
+            ]
+          },
+          {
+            "key": "finish",
+            "selected": "all",
+            "options": [
+              {
+                "id": "empty",
+                "text": "  If stack is empty and out is not empty:"
+              },
+              {
+                "id": "all",
+                "text": "  If out has n numbers:"
+              }
+            ]
+          },
+          {
+            "key": "save",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "    Add out to orders and return."
+              }
+            ]
+          },
+          {
+            "key": "when",
+            "selected": "any",
+            "options": [
+              {
+                "id": "end",
+                "text": "  If stack is not empty and every number has been pushed (next > n):"
+              },
+              {
+                "id": "any",
+                "text": "  If stack is not empty:"
+              }
+            ]
+          },
+          {
+            "key": "take",
+            "selected": "bottom",
+            "options": [
+              {
+                "id": "bottom",
+                "text": "    BUILD(out followed by the bottom of stack, stack without its bottom, next)"
+              },
+              {
+                "id": "top",
+                "text": "    BUILD(out followed by the top of stack, stack without its top, next)"
+              }
+            ]
+          },
+          {
+            "key": "end",
+            "selected": "fixed",
+            "options": [
+              {
+                "id": "fixed",
+                "text": "  If next ≤ n:\n    BUILD(out, stack followed by next, next + 1)\nEnd function\nBUILD(empty list, empty list, 1)\nReturn orders."
+              }
+            ]
+          }
+        ],
+        "witness": {
+          "n": 2
+        }
+      }
+    ],
+    "tests": [
+      {
+        "input": {
+          "n": 1
+        },
+        "expected": [
+          [
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "n": 2
+        },
+        "expected": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "n": 3
+        },
+        "expected": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            2,
+            1,
+            3
+          ],
+          [
+            2,
+            3,
+            1
+          ],
+          [
+            3,
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "n": 4
+        },
+        "expected": [
+          [
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            1,
+            2,
+            4,
+            3
+          ],
+          [
+            1,
+            3,
+            2,
+            4
+          ],
+          [
+            1,
+            3,
+            4,
+            2
+          ],
+          [
+            1,
+            4,
+            3,
+            2
+          ],
+          [
+            2,
+            1,
+            3,
+            4
+          ],
+          [
+            2,
+            1,
+            4,
+            3
+          ],
+          [
+            2,
+            3,
+            1,
+            4
+          ],
+          [
+            2,
+            3,
+            4,
+            1
+          ],
+          [
+            2,
+            4,
+            3,
+            1
+          ],
+          [
+            3,
+            2,
+            1,
+            4
+          ],
+          [
+            3,
+            2,
+            4,
+            1
+          ],
+          [
+            3,
+            4,
+            2,
+            1
+          ],
+          [
+            4,
+            3,
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "input": {
+          "n": 5
+        },
+        "expected": [
+          [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          [
+            1,
+            2,
+            3,
+            5,
+            4
+          ],
+          [
+            1,
+            2,
+            4,
+            3,
+            5
+          ],
+          [
+            1,
+            2,
+            4,
+            5,
+            3
+          ],
+          [
+            1,
+            2,
+            5,
+            4,
+            3
+          ],
+          [
+            1,
+            3,
+            2,
+            4,
+            5
+          ],
+          [
+            1,
+            3,
+            2,
+            5,
+            4
+          ],
+          [
+            1,
+            3,
+            4,
+            2,
+            5
+          ],
+          [
+            1,
+            3,
+            4,
+            5,
+            2
+          ],
+          [
+            1,
+            3,
+            5,
+            4,
+            2
+          ],
+          [
+            1,
+            4,
+            3,
+            2,
+            5
+          ],
+          [
+            1,
+            4,
+            3,
+            5,
+            2
+          ],
+          [
+            1,
+            4,
+            5,
+            3,
+            2
+          ],
+          [
+            1,
+            5,
+            4,
+            3,
+            2
+          ],
+          [
+            2,
+            1,
+            3,
+            4,
+            5
+          ],
+          [
+            2,
+            1,
+            3,
+            5,
+            4
+          ],
+          [
+            2,
+            1,
+            4,
+            3,
+            5
+          ],
+          [
+            2,
+            1,
+            4,
+            5,
+            3
+          ],
+          [
+            2,
+            1,
+            5,
+            4,
+            3
+          ],
+          [
+            2,
+            3,
+            1,
+            4,
+            5
+          ],
+          [
+            2,
+            3,
+            1,
+            5,
+            4
+          ],
+          [
+            2,
+            3,
+            4,
+            1,
+            5
+          ],
+          [
+            2,
+            3,
+            4,
+            5,
+            1
+          ],
+          [
+            2,
+            3,
+            5,
+            4,
+            1
+          ],
+          [
+            2,
+            4,
+            3,
+            1,
+            5
+          ],
+          [
+            2,
+            4,
+            3,
+            5,
+            1
+          ],
+          [
+            2,
+            4,
+            5,
+            3,
+            1
+          ],
+          [
+            2,
+            5,
+            4,
+            3,
+            1
+          ],
+          [
+            3,
+            2,
+            1,
+            4,
+            5
+          ],
+          [
+            3,
+            2,
+            1,
+            5,
+            4
+          ],
+          [
+            3,
+            2,
+            4,
+            1,
+            5
+          ],
+          [
+            3,
+            2,
+            4,
+            5,
+            1
+          ],
+          [
+            3,
+            2,
+            5,
+            4,
+            1
+          ],
+          [
+            3,
+            4,
+            2,
+            1,
+            5
+          ],
+          [
+            3,
+            4,
+            2,
+            5,
+            1
+          ],
+          [
+            3,
+            4,
+            5,
+            2,
+            1
+          ],
+          [
+            3,
+            5,
+            4,
+            2,
+            1
+          ],
+          [
+            4,
+            3,
+            2,
+            1,
+            5
+          ],
+          [
+            4,
+            3,
+            2,
+            5,
+            1
+          ],
+          [
+            4,
+            3,
+            5,
+            2,
+            1
+          ],
+          [
+            4,
+            5,
+            3,
+            2,
+            1
+          ],
+          [
+            5,
+            4,
+            3,
+            2,
+            1
+          ]
+        ]
+      }
+    ]
   }
 ]

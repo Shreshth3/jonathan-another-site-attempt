@@ -81,7 +81,8 @@
       "variants": [
         { "id": "under-the-limit", "reason": "Warm-up that is only about recursion: list every combination whose sum stays at most a limit." },
         { "id": "runes-on-the-castle-door", "reason": "Build combinations while rejecting adjacent repeated characters." },
-        { "id": "the-balance-lock", "reason": "Follow-up to the runes: carry a running total down each branch and prune a code once it busts." }
+        { "id": "the-balance-lock", "reason": "Follow-up to the runes: carry a running total down each branch and prune a code once it busts." },
+        { "id": "stack-pop-orders", "reason": "Hardest of the group: each step chooses push or pop, and a branch carries both the written numbers and the stack." }
       ]
     },
     {

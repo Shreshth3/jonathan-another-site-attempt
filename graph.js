@@ -171,13 +171,24 @@
     return /^-?\d+$/.test(value) && Number.isSafeInteger(number) && number >= format.min && number <= format.max ? String(number) : null;
   }
 
-  function renamePlaceholder(type = "node") { return type === "edge" ? "5" : arrayNumberMode() ? "7" : nodeLabelRule === "coordinate" ? "(0,2)" : nodeLabelRule === "nested-path" ? "root[0]=7" : nodeLabelRule === "partial-string" ? "ab" : nodeLabelRule === "weight-prefix" ? "4,2" : "2"; }
+  // Stack states read "out [2] | stack [1,3]". Accept loose spacing, missing
+  // brackets, and spaces instead of commas; an empty state is "start".
+  function normalizeStackState(value) {
+    if (/^start$/i.test(value)) return "start";
+    const match = value.match(/^out\s*\[?([\d\s,]*?)\]?\s*\|\s*stack\s*\[?([\d\s,]*?)\]?$/i);
+    if (!match) return value;
+    const list = text => text.split(/[\s,]+/).filter(Boolean).join(",");
+    const out = list(match[1]), stack = list(match[2]);
+    return out || stack ? `out [${out}] | stack [${stack}]` : "start";
+  }
+
+  function renamePlaceholder(type = "node") { return type === "edge" ? "5" : arrayNumberMode() ? "7" : nodeLabelRule === "coordinate" ? "(0,2)" : nodeLabelRule === "nested-path" ? "root[0]=7" : nodeLabelRule === "partial-string" ? "ab" : nodeLabelRule === "weight-prefix" ? "4,2" : nodeLabelRule === "stack-state" ? "out [2] | stack [1,3]" : "2"; }
 
   function setNodeLabelRule(rule, format = {}) {
     nodeLabelRule = String(rule || "nonnegative-integer");
     nodeLabelFormat = format || {};
     renameInput.placeholder = renamePlaceholder();
-    renameInput.maxLength = literalValueMode() ? 10000 : 24;
+    renameInput.maxLength = literalValueMode() ? 10000 : nodeLabelRule === "stack-state" ? 40 : 24;
     lab.classList.toggle("array-number-editor", arrayNumberMode());
     labelButton.textContent = arrayNumberMode() ? "Type / value" : "Rename";
     colorButton.hidden = arrayNumberMode();
@@ -220,6 +231,7 @@
     if (pattern === "^(?:empty prefix|[a-z]+)$") return !used.has("empty prefix") ? "empty prefix" : firstUnused(value => String.fromCharCode(97 + value));
     if (pattern === "^(?:start|[a-z]+)$") return !used.has("start") ? "start" : firstUnused(value => String.fromCharCode(97 + value));
     if (pattern === "^(?:start|[1-9]\\d*(?:,[1-9]\\d*)*)$") return !used.has("start") ? "start" : firstUnused(value => String(value + 1));
+    if (nodeLabelRule === "stack-state") return !used.has("start") ? "start" : firstUnused(value => `out [] | stack [${value + 1}]`);
     if (pattern === "^\\d+:(?:true|false|AND|OR)$") return firstUnused(value => value === 0 ? "0:AND" : `${value}:false`);
     if (pattern === "^node \\d+: -?\\d+$") return firstUnused(value => `node ${value}: 0`);
     if (pattern === "^\\d+:[A-Za-z]$") return firstUnused(value => `${value}:a`);
@@ -485,7 +497,8 @@
     const value = renameInput.value.trim();
     if (!value && renameTarget.type === "node") { announce(arrayNumberMode() ? "Enter a value, or press Esc to cancel." : "A node name cannot be empty."); renameInput.focus(); return; }
     const normalized = arrayNumberMode() && renamedType === "node" ? normalizeArrayValue(value, nodeLabelFormat)
-      : nodeLabelRule === "weight-prefix" && renamedType === "node" ? value.replace(/\s*,\s*/g, ",") : value;
+      : nodeLabelRule === "weight-prefix" && renamedType === "node" ? value.replace(/\s*,\s*/g, ",")
+      : nodeLabelRule === "stack-state" && renamedType === "node" ? normalizeStackState(value) : value;
     if (normalized === null) {
       renameInput.setAttribute("aria-invalid", "true");
       announce(literalValueMode() ? 'Enter a number, quoted text, true, or false.' : `Enter a whole number from ${nodeLabelFormat.min} to ${nodeLabelFormat.max}.`);
@@ -760,7 +773,9 @@
     const text = svgElement("text", { class: "scratch-node-label", "data-node-id": node.id });
     // Keep the path and value visible: nested items often share the same prefix.
     const displayLabel = literalValueMode() && node.label.length > 30 ? `${node.label.slice(0, 27)}…` : node.label;
-    const lines = displayLabel.match(/.{1,10}/g) || [""];
+    // A stack state shows out on one line and the stack on the next.
+    const stackState = nodeLabelRule === "stack-state" && displayLabel.match(/^(out \[[^\]]*\]) \| (stack \[[^\]]*\])$/);
+    const lines = stackState ? [`${stackState[1]} |`, stackState[2]] : displayLabel.match(/.{1,10}/g) || [""];
     lines.forEach((line, index) => {
       const part = svgElement("tspan", { x: 0, y: (index - (lines.length - 1) / 2) * 13 });
       part.textContent = line;
